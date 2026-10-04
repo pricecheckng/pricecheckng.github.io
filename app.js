@@ -39,7 +39,7 @@ function loadCur() {
 const state = { user: null, coins: [], coinMap: new Map(), q: "", page: 0, more: false, req: 0, pushOn: false, installEvt: null, cur: loadCur(), fx: {}, fxReady: null };
 
 const styleTag = document.createElement("style");
-styleTag.textContent = `.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}`;
+styleTag.textContent = `.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}.cp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cp-head h1{margin:0;font-size:1.4rem}.cp-head p{margin:2px 0 0;opacity:.65}.cp-price{background:#effcf3;border-radius:20px;padding:18px;margin-bottom:14px}.cp-price small{display:block;letter-spacing:.04em;opacity:.7;font-size:.78rem;font-weight:600}.cp-price .big{font-size:2rem;font-weight:800;line-height:1.15;margin:4px 0}.cp-price .sub{font-weight:600}.cp-card{border:1px solid rgba(128,128,128,.25);border-radius:20px;padding:16px;margin-bottom:14px}.cp-card h3{margin:0 0 8px;font-size:1rem}.cp-read{min-height:48px;margin-top:8px}.cp-read b{font-size:1.4rem;display:block}.cp-read span{opacity:.65;font-size:.9rem}.cp-svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair}.cp-lh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.cp-lh div,.cp-stat{background:#f6f7f9;border-radius:14px;padding:12px}.cp-lh small,.cp-stat small{display:block;opacity:.65;font-size:.8rem}.cp-lh b,.cp-stat b{display:block;font-size:1rem;margin:2px 0}.cp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.cp-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem}.cp-pill.up{background:#dcf5e5;color:#15803d}.cp-pill.down{background:#fdecec;color:#dc2626}`;
 document.head.appendChild(styleTag);
 
 async function loadFx() {
@@ -144,6 +144,12 @@ const gate = (text) =>
 const routes = { market: renderMarket, alerts: renderAlerts, account: renderAccount };
 function route() {
   const h = (location.hash || "#market").slice(1).split("?")[0];
+  if (h.startsWith("coin/")) {
+    document.querySelectorAll(".tabs a").forEach((a) => a.classList.toggle("on", a.dataset.tab === "market"));
+    renderCoin(decodeURIComponent(h.slice(5)));
+    window.scrollTo(0, 0);
+    return;
+  }
   const tab = routes[h] ? h : "market";
   document.querySelectorAll(".tabs a").forEach((a) => a.classList.toggle("on", a.dataset.tab === tab));
   routes[tab]();
@@ -198,7 +204,7 @@ async function renderMarket() {
   $("#moreBtn").onclick = () => loadCoins(false);
   $("#list").addEventListener("click", (e) => {
     const b = e.target.closest("[data-id]");
-    if (b) openCoin(b.dataset.id);
+    if (b) location.hash = "#coin/" + encodeURIComponent(b.dataset.id);
   });
   loadCoins(true);
 }
@@ -246,30 +252,132 @@ async function loadCoins(reset) {
 }
 
 /* ---------- coin sheet + alert form ---------- */
-function openCoin(id) {
-  const c = state.coinMap.get(id);
-  if (!c) return;
+async function renderCoin(id) {
+  await state.fxReady;
+  const my = ++state.req;
+  view.innerHTML = `<section class="page"><a href="#market" style="display:inline-block;margin:4px 0 14px;color:#15803d;font-weight:600;text-decoration:none">← All coins</a><div id="coinBody">${skeleton(3)}</div></section>${footer()}`;
+  const { data, error } = await sb.from("coins").select(COLS + ",sparkline").eq("id", id).maybeSingle();
+  if (my !== state.req || !$("#coinBody")) return;
+  if (error || !data) {
+    $("#coinBody").innerHTML = emptyBox(error ? "Could not load this coin" : "Coin not found", error ? "Check your connection and try again." : "It may have been removed, or the link is wrong.");
+    return;
+  }
+  state.coinMap.set(data.id, data);
+  paintCoin(data);
+}
+
+function paintCoin(c) {
   const d = chg(c.change_24h_pct);
   const sym = c.symbol.toUpperCase();
   const m = CURRENCIES[state.cur];
-  openSheet(`
-    <div class="sheet-head">
+  const sp = Array.isArray(c.sparkline) ? c.sparkline.map(Number).filter((v) => isFinite(v)) : [];
+  const second = secondPrice(c);
+  const ratio = c.price_usd && second != null ? second / Number(c.price_usd) : 0;
+  const sec = (usd) => (ratio ? fmtLocal(usd * ratio, state.cur) : "–");
+  const secBig = (usd) => (ratio && usd != null ? fmtBig(Number(usd) * ratio, m.sym) : "–");
+  let chartHtml = `<p class="muted" style="margin:8px 0 0">The 7-day chart is not available for this coin yet. Charts cover the top 250 coins.</p>`;
+  if (sp.length >= 2) {
+    const lo = Math.min(...sp);
+    const hi = Math.max(...sp);
+    const wk = (sp[sp.length - 1] / sp[0] - 1) * 100;
+    const wd = chg(wk);
+    chartHtml = `
+      <div class="cp-read" id="cpRead"></div>
+      <div id="cpChart"></div>
+      <div style="display:flex;justify-content:space-between;opacity:.6;font-size:.85rem;margin-top:4px"><span>7 days ago</span><span>Latest</span></div>
+      <div class="cp-lh">
+        <div><small>7-day low</small><b>${fmtUsd(lo)}</b><small>${sec(lo)}</small></div>
+        <div><small>7-day high</small><b>${fmtUsd(hi)}</b><small>${sec(hi)}</small></div>
+      </div>
+      <p class="muted" style="margin:10px 0 0;font-size:.85rem">Touch the chart to see the price at any moment. The chart updates every few hours.</p>`;
+    chartHtml = `<div class="cp-wk"><span class="cp-pill ${wd.c}">${wd.t}</span> <span class="muted">over 7 days</span></div>` + chartHtml;
+  }
+  $("#coinBody").innerHTML = `
+    <div class="cp-head">
       <img class="logo lg" src="${esc(c.image_url || "")}" alt="" width="48" height="48">
-      <div><h2 id="sheetTitle">${esc(c.name)}</h2><p class="muted">${esc(sym)}${c.market_cap_rank ? " · Rank #" + c.market_cap_rank : ""}</p></div>
-      <button class="x" type="button" data-close aria-label="Close">×</button>
+      <div><h1>${esc(c.name)}</h1><p>${esc(sym)}${c.market_cap_rank ? " · Rank #" + c.market_cap_rank : ""}</p></div>
     </div>
-    <div class="prices">
-      <div class="pbox"><span>🇺🇸 USD</span><b>${fmtUsd(c.price_usd)}</b></div>
-      <div class="pbox"><span>${m.flag} ${state.cur}</span><b>${fmtLocal(secondPrice(c), state.cur)}</b></div>
+    <div class="cp-price">
+      <small>PRICE IN USD</small>
+      <div class="big">${fmtUsd(c.price_usd)}</div>
+      <div class="sub">${m.flag} ${fmtLocal(second, state.cur)} <span class="cp-pill ${d.c}" style="margin-left:6px">${d.t}</span> <span class="muted">24h</span></div>
     </div>
-    <dl class="stats">
-      <div><dt>24h change</dt><dd class="${d.c}">${d.t}</dd></div>
-      <div><dt>Market cap</dt><dd>${fmtBig(c.market_cap_usd, "$")}</dd></div>
-      <div><dt>24h volume</dt><dd>${fmtBig(c.volume_24h_usd, "$")}</dd></div>
-      <div><dt>Last updated</dt><dd>${ago(c.last_updated)}</dd></div>
-    </dl>
-    <button class="btn" type="button" id="alertBtn">🔔 Set price alert</button>`);
+    <div class="cp-card"><h3>Last 7 days</h3>${chartHtml}</div>
+    <div class="cp-stats">
+      <div class="cp-stat"><small>Market cap ($)</small><b>${fmtBig(c.market_cap_usd, "$")}</b></div>
+      <div class="cp-stat"><small>Market cap (${esc(state.cur)})</small><b>${secBig(c.market_cap_usd)}</b></div>
+      <div class="cp-stat"><small>24h volume ($)</small><b>${fmtBig(c.volume_24h_usd, "$")}</b></div>
+      <div class="cp-stat"><small>24h volume (${esc(state.cur)})</small><b>${secBig(c.volume_24h_usd)}</b></div>
+      <div class="cp-stat" style="grid-column:1/-1"><small>Last updated</small><b>${ago(c.last_updated)}</b></div>
+    </div>
+    <button class="btn" type="button" id="alertBtn">🔔 Set price alert</button>
+    <div style="height:10px"></div>
+    <button class="btn ghost" type="button" id="shareBtn">Share this coin</button>`;
   $("#alertBtn").onclick = () => alertForm(c);
+  $("#shareBtn").onclick = async () => {
+    const url = location.href;
+    try {
+      if (navigator.share) await navigator.share({ title: `${c.name} price`, text: `${c.name} (${sym}) price on PriceCheck NG`, url });
+      else {
+        await navigator.clipboard.writeText(url);
+        toast("Link copied");
+      }
+    } catch (_) {}
+  };
+  if (sp.length >= 2) mountChart(sp, sec);
+}
+
+function mountChart(sp, sec) {
+  const W = 600, H = 280, P = 8;
+  const n = sp.length;
+  const min = Math.min(...sp);
+  const max = Math.max(...sp);
+  const rng = max - min || Math.abs(max) * 0.01 || 1;
+  const x = (i) => P + (i / (n - 1)) * (W - 2 * P);
+  const y = (v) => P + (1 - (v - min) / rng) * (H - 2 * P);
+  const col = sp[n - 1] >= sp[0] ? "#15803d" : "#dc2626";
+  const pts = sp.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`);
+  $("#cpChart").innerHTML = `<svg id="cpSvg" class="cp-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="7 day price chart">
+    <path d="M${pts.join(" L")} L${x(n - 1).toFixed(1)},${H} L${x(0).toFixed(1)},${H} Z" fill="${col}" opacity=".1"/>
+    <polyline points="${pts.join(" ")}" fill="none" stroke="${col}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <line id="cpLine" x1="0" x2="0" y1="0" y2="${H}" stroke="#94a3b8" stroke-width="1.5" visibility="hidden"/>
+    <circle id="cpDot" r="6" fill="${col}" stroke="#fff" stroke-width="2.5" visibility="hidden"/>
+  </svg>`;
+  const svg = $("#cpSvg");
+  const line = $("#cpLine");
+  const dot = $("#cpDot");
+  const read = $("#cpRead");
+  const label = (i) => {
+    const hrs = (n - 1 - i) * 4;
+    if (hrs === 0) return "Latest";
+    const dd = Math.floor(hrs / 24);
+    const hh = hrs % 24;
+    return `about ${dd ? dd + "d " : ""}${hh ? hh + "h " : ""}ago`;
+  };
+  const paint = (i, active) => {
+    read.innerHTML = `<b>${fmtUsd(sp[i])}</b><span>${sec(sp[i])} · ${label(i)}</span>`;
+    const v = active ? "visible" : "hidden";
+    line.setAttribute("visibility", v);
+    dot.setAttribute("visibility", v);
+    if (active) {
+      line.setAttribute("x1", x(i));
+      line.setAttribute("x2", x(i));
+      dot.setAttribute("cx", x(i));
+      dot.setAttribute("cy", y(sp[i]));
+    }
+  };
+  const at = (e) => {
+    const r = svg.getBoundingClientRect();
+    const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
+    paint(Math.round(f * (n - 1)), true);
+  };
+  const reset = () => paint(n - 1, false);
+  svg.addEventListener("pointerdown", at);
+  svg.addEventListener("pointermove", at);
+  svg.addEventListener("pointerleave", reset);
+  svg.addEventListener("pointerup", reset);
+  svg.addEventListener("pointercancel", reset);
+  reset();
 }
 
 function alertForm(c) {
