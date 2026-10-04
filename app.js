@@ -40,7 +40,7 @@ function loadCur() {
 const state = { user: null, coins: [], coinMap: new Map(), q: "", page: 0, more: false, req: 0, pushOn: false, installEvt: null, cur: loadCur(), fx: {}, fxReady: null };
 
 const styleTag = document.createElement("style");
-styleTag.textContent = `.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}.cp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cp-head h1{margin:0;font-size:1.4rem}.cp-head p{margin:2px 0 0;opacity:.65}.cp-price{background:#effcf3;border-radius:20px;padding:18px;margin-bottom:14px}.cp-price small{display:block;letter-spacing:.04em;opacity:.7;font-size:.78rem;font-weight:600}.cp-price .big{font-size:2rem;font-weight:800;line-height:1.15;margin:4px 0}.cp-price .sub{font-weight:600}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border:1px solid rgba(128,128,128,.25);border-radius:20px;padding:16px;margin-bottom:14px}.cp-card h3{margin:0 0 8px;font-size:1rem}.cp-read{min-height:48px;margin-top:8px}.cp-read b{font-size:1.4rem;display:block}.cp-read span{opacity:.65;font-size:.9rem}.cp-svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.cp-lh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.cp-lh div,.cp-stat{background:#f6f7f9;border-radius:14px;padding:12px}.cp-lh small,.cp-stat small{display:block;opacity:.65;font-size:.8rem}.cp-lh b,.cp-stat b{display:block;font-size:1rem;margin:2px 0}.cp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.cp-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem}.cp-pill.up{background:#dcf5e5;color:#15803d}.cp-pill.down{background:#fdecec;color:#dc2626}.adm-user{border:1px solid rgba(128,128,128,.25);border-radius:16px;padding:14px;margin-bottom:10px}.adm-user b{word-break:break-all}.adm-chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;margin-left:6px;background:#eef2f7;color:#334155}.adm-chip.red{background:#fdecec;color:#dc2626}.adm-chip.amber{background:#fff4dc;color:#b45309}.adm-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.adm-btn{font:inherit;font-weight:600;padding:8px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111}.adm-btn.danger{border-color:#dc2626;color:#dc2626}.adm-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.adm-sum div{background:#f6f7f9;border-radius:14px;padding:10px;text-align:center}.adm-sum b{display:block;font-size:1.2rem}.adm-sum small{opacity:.65}.pf-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid rgba(128,128,128,.2)}.pf-mid{flex:1;min-width:0}.pf-mid a{color:inherit;text-decoration:none}.pf-mid .muted{display:block;font-size:.9rem}.pf-acts{margin-top:6px;display:flex;gap:16px}.pf-val{text-align:right}.pf-val b{display:block}.pf-val span{opacity:.65;font-size:.9rem}.pf-pills{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}.pf-pick{display:flex;align-items:center;gap:12px;margin-bottom:14px}.pf-res{display:flex;align-items:center;gap:10px;width:100%;padding:10px 4px;background:none;border:0;border-bottom:1px solid rgba(128,128,128,.2);font:inherit;text-align:left;color:inherit}.pf-alloc{display:flex;align-items:center;gap:16px}.pf-alloc svg{width:120px;height:120px;flex:none}.pf-leg{flex:1;min-width:0}.pf-leg div{display:flex;align-items:center;gap:8px;font-size:.92rem;padding:4px 0}.pf-leg i{width:10px;height:10px;border-radius:50%;flex:none}.pf-leg span{margin-left:auto;font-weight:600}`;
+styleTag.textContent = `.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}.cp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cp-head h1{margin:0;font-size:1.4rem}.cp-head p{margin:2px 0 0;opacity:.65}.cp-price{background:#effcf3;border-radius:20px;padding:18px;margin-bottom:14px}.cp-price small{display:block;letter-spacing:.04em;opacity:.7;font-size:.78rem;font-weight:600}.cp-price .big{font-size:2rem;font-weight:800;line-height:1.15;margin:4px 0}.cp-price .sub{font-weight:600}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border:1px solid rgba(128,128,128,.25);border-radius:20px;padding:16px;margin-bottom:14px}.cp-card h3{margin:0 0 8px;font-size:1rem}.cp-read{min-height:48px;margin-top:8px}.cp-read b{font-size:1.4rem;display:block}.cp-read span{opacity:.65;font-size:.9rem}.cp-svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.cp-lh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.cp-lh div,.cp-stat{background:#f6f7f9;border-radius:14px;padding:12px}.cp-lh small,.cp-stat small{display:block;opacity:.65;font-size:.8rem}.cp-lh b,.cp-stat b{display:block;font-size:1rem;margin:2px 0}.cp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.cp-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem}.cp-pill.up{background:#dcf5e5;color:#15803d}.cp-pill.down{background:#fdecec;color:#dc2626}.adm-user{border:1px solid rgba(128,128,128,.25);border-radius:16px;padding:14px;margin-bottom:10px}.adm-user b{word-break:break-all}.adm-chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;margin-left:6px;background:#eef2f7;color:#334155}.adm-chip.red{background:#fdecec;color:#dc2626}.adm-chip.amber{background:#fff4dc;color:#b45309}.adm-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.adm-btn{font:inherit;font-weight:600;padding:8px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111}.adm-btn.danger{border-color:#dc2626;color:#dc2626}.adm-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.adm-sum div{background:#f6f7f9;border-radius:14px;padding:10px;text-align:center}.adm-sum b{display:block;font-size:1.2rem}.adm-sum small{opacity:.65}.pf-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid rgba(128,128,128,.2)}.pf-mid{flex:1;min-width:0}.pf-mid a{color:inherit;text-decoration:none}.pf-mid .muted{display:block;font-size:.9rem}.pf-acts{margin-top:6px;display:flex;gap:16px}.pf-val{text-align:right}.pf-val b{display:block}.pf-val span{opacity:.65;font-size:.9rem}.pf-pills{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}.pf-pick{display:flex;align-items:center;gap:12px;margin-bottom:14px}.pf-res{display:flex;align-items:center;gap:10px;width:100%;padding:10px 4px;background:none;border:0;border-bottom:1px solid rgba(128,128,128,.2);font:inherit;text-align:left;color:inherit}.pf-alloc{display:flex;align-items:center;gap:16px}.pf-alloc svg{width:120px;height:120px;flex:none}.pf-leg{flex:1;min-width:0}.pf-leg div{display:flex;align-items:center;gap:8px;font-size:.92rem;padding:4px 0}.pf-leg i{width:10px;height:10px;border-radius:50%;flex:none}.pf-leg span{margin-left:auto;font-weight:600}.pf-lots{margin-top:10px;border-top:1px dashed rgba(128,128,128,.35)}.pf-lot{padding:10px 0;border-bottom:1px solid rgba(128,128,128,.15)}.pf-lot .pf-acts{margin-top:4px}`;
 document.head.appendChild(styleTag);
 
 async function loadFx() {
@@ -631,7 +631,7 @@ async function renderAlerts() {
 }
 
 /* ---------- portfolio ---------- */
-const pf = { rows: [] };
+const pf = { rows: [], open: new Set() };
 const fmtAmt = (n) => Number(n).toLocaleString("en-US", { maximumFractionDigits: 8 });
 const signedUsd = (n) => (n >= 0 ? "+" : "−") + fmtUsd(Math.abs(n));
 
@@ -748,6 +748,53 @@ function paintPortfolio() {
     const legend = parts.map((x, i) => `<div><i style="background:${COLORS[i]}"></i>${esc(x.name)}<span>${((x.val / total) * 100).toFixed(1)}%</span></div>`).join("");
     allocHtml = `<div style="height:14px"></div><div class="cp-card"><h3>Allocation</h3><div class="pf-alloc"><svg viewBox="0 0 42 42" role="img" aria-label="Portfolio allocation">${arcs}</svg><div class="pf-leg">${legend}</div></div></div>`;
   }
+  const groups = new Map();
+  for (const it of items) {
+    const k = it.r.coin_id;
+    const g = groups.get(k) || { id: k, coin: it.r.coins, lots: [], amt: 0, val: 0, cost: 0, costVal: 0, costAmt: 0 };
+    g.lots.push(it);
+    g.amt += Number(it.r.amount);
+    g.val += it.val;
+    if (it.r.buy_price_usd != null && Number(it.r.buy_price_usd) > 0) {
+      g.cost += Number(it.r.amount) * Number(it.r.buy_price_usd);
+      g.costVal += it.val;
+      g.costAmt += Number(it.r.amount);
+    }
+    groups.set(k, g);
+  }
+  const lotRow = ({ r, pnl, pct }, sym) => {
+    const p = pnl != null ? chg(pct) : null;
+    const bp = r.buy_price_usd != null && Number(r.buy_price_usd) > 0 ? `bought at ${fmtUsd(r.buy_price_usd)}` : "no buy price";
+    return `<div class="pf-lot"><div><b>${fmtAmt(r.amount)} ${esc(sym)}</b> <span class="muted" style="display:inline">· ${bp}</span>${p ? ` <span class="cp-pill ${p.c}">${signedUsd(pnl)} (${p.t})</span>` : ""}</div><div class="pf-acts"><button class="link" type="button" data-pa="edit" data-id="${esc(r.id)}">Edit</button><button class="link" type="button" data-pa="del" data-id="${esc(r.id)}">Delete</button></div></div>`;
+  };
+  const groupHtml = [...groups.values()]
+    .sort((a, b) => b.val - a.val)
+    .map((g) => {
+      const many = g.lots.length > 1;
+      const open = pf.open.has(g.id);
+      const sym = g.coin.symbol.toUpperCase();
+      const gpnl = g.cost > 0 ? g.costVal - g.cost : null;
+      const gp = gpnl != null ? chg((gpnl / g.cost) * 100) : null;
+      const avg = g.costAmt > 0 ? fmtUsd(g.cost / g.costAmt) : null;
+      const one = g.lots[0].r.id;
+      return `<div class="pf-row">
+        <img class="logo" src="${esc(g.coin.image_url || "")}" alt="" loading="lazy" width="40" height="40">
+        <div class="pf-mid">
+          <a href="#coin/${encodeURIComponent(g.id)}"><b>${esc(g.coin.name)}</b></a>
+          <span class="muted">${fmtAmt(g.amt)} ${esc(sym)}</span>
+          ${gp ? `<span class="cp-pill ${gp.c}" style="margin-top:4px">${signedUsd(gpnl)} (${gp.t})</span>` : ""}
+          ${avg ? `<span class="muted">Average buy price ${avg}</span>` : ""}
+          <div class="pf-acts">${
+            many
+              ? `<button class="link" type="button" data-pa="toggle" data-id="${esc(g.id)}">${open ? "Hide" : "Show"} ${g.lots.length} entries</button>`
+              : `<button class="link" type="button" data-pa="edit" data-id="${esc(one)}">Edit</button><button class="link" type="button" data-pa="del" data-id="${esc(one)}">Delete</button>`
+          }</div>
+          ${many && open ? `<div class="pf-lots">${g.lots.map((it) => lotRow(it, sym)).join("")}</div>` : ""}
+        </div>
+        <div class="pf-val"><b>${fmtUsd(g.val)}</b><span>${sec(g.val)}</span></div>
+      </div>`;
+    })
+    .join("");
   box.innerHTML = `
     <div class="cp-price">
       <small>TOTAL VALUE</small>
@@ -761,21 +808,7 @@ function paintPortfolio() {
     <button class="btn" type="button" id="pfAdd">Add holding</button>
     ${allocHtml}
     <div style="margin-top:6px">
-      ${items
-        .map(({ r, val, pnl, pct }) => {
-          const p = pnl != null ? chg(pct) : null;
-          return `<div class="pf-row">
-            <img class="logo" src="${esc(r.coins.image_url || "")}" alt="" loading="lazy" width="40" height="40">
-            <div class="pf-mid">
-              <a href="#coin/${encodeURIComponent(r.coin_id)}"><b>${esc(r.coins.name)}</b></a>
-              <span class="muted">${fmtAmt(r.amount)} ${esc(r.coins.symbol.toUpperCase())}</span>
-              ${p ? `<span class="cp-pill ${p.c}" style="margin-top:4px">${signedUsd(pnl)} (${p.t})</span>` : ""}
-              <div class="pf-acts"><button class="link" type="button" data-pa="edit" data-id="${esc(r.id)}">Edit</button><button class="link" type="button" data-pa="del" data-id="${esc(r.id)}">Delete</button></div>
-            </div>
-            <div class="pf-val"><b>${fmtUsd(val)}</b><span>${sec(val)}</span></div>
-          </div>`;
-        })
-        .join("")}
+      ${groupHtml}
     </div>`;
   $("#pfAdd").onclick = () => holdingSheet();
 }
@@ -783,6 +816,13 @@ function paintPortfolio() {
 async function onPortfolioClick(e) {
   const b = e.target.closest("[data-pa]");
   if (!b) return;
+  if (b.dataset.pa === "toggle") {
+    const id = b.dataset.id;
+    if (pf.open.has(id)) pf.open.delete(id);
+    else pf.open.add(id);
+    paintPortfolio();
+    return;
+  }
   const row = pf.rows.find((r) => r.id === b.dataset.id);
   if (!row) return;
   if (b.dataset.pa === "edit") return holdingSheet(row);
