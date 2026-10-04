@@ -3,6 +3,7 @@ import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
 
 const $ = (s, r = document) => r.querySelector(s);
 const view = $("#view");
+const authErr = new URLSearchParams((location.hash || "").slice(1) + "&" + (location.search || "").slice(1)).get("error_description") || "";
 const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
@@ -545,7 +546,7 @@ function authSheet(mode = "in", msg = "") {
     }
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
     btn.disabled = false;
-    if (error) return showErr(err, /banned/i.test(error.message) ? "This account has been suspended." : /confirm/i.test(error.message) ? "Confirm your email first. Check your inbox for the link." : "Wrong email or password.");
+    if (error) return showErr(err, /banned/i.test(error.message) ? "Your account has been banned." : /confirm/i.test(error.message) ? "Confirm your email first. Check your inbox for the link." : "Wrong email or password.");
     state.user = data.user;
     closeSheet();
     toast("Signed in");
@@ -746,7 +747,7 @@ function renderAccount() {
   $("#signOut").onclick = signOut;
   sb.rpc("is_admin").then(({ data }) => {
     if (data && $("#signOut")) {
-      $("#signOut").insertAdjacentHTML("beforebegin", `<a class="btn" href="#admin" style="display:block;box-sizing:border-box;text-align:center;text-decoration:none;margin-bottom:10px">Admin</a>`);
+      $("#signOut").insertAdjacentHTML("beforebegin", `<a class="btn" href="#admin" style="display:flex;align-items:center;justify-content:center;box-sizing:border-box;text-align:center;text-decoration:none;margin-bottom:10px">Admin</a>`);
     }
   });
 }
@@ -878,6 +879,11 @@ sb.auth.onAuthStateChange((ev, session) => {
     data: { session },
   } = await sb.auth.getSession();
   state.user = session?.user ?? null;
+  const wasBanned = /banned/i.test(authErr);
+  if (wasBanned) history.replaceState(null, "", location.pathname + "#market");
   route();
   checkPush();
+  if (wasBanned) {
+    openSheet(`<div class="done"><div class="big">🚫</div><h2 id="sheetTitle">Account banned</h2><p>Your account has been banned and can't sign in.</p><button class="btn" type="button" data-close>OK</button></div>`);
+  }
 })();
