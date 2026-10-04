@@ -40,7 +40,7 @@ function loadCur() {
 const state = { user: null, coins: [], coinMap: new Map(), q: "", page: 0, more: false, req: 0, pushOn: false, installEvt: null, cur: loadCur(), fx: {}, fxReady: null };
 
 const styleTag = document.createElement("style");
-styleTag.textContent = `.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}.cp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cp-head h1{margin:0;font-size:1.4rem}.cp-head p{margin:2px 0 0;opacity:.65}.cp-price{background:#effcf3;border-radius:20px;padding:18px;margin-bottom:14px}.cp-price small{display:block;letter-spacing:.04em;opacity:.7;font-size:.78rem;font-weight:600}.cp-price .big{font-size:2rem;font-weight:800;line-height:1.15;margin:4px 0}.cp-price .sub{font-weight:600}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border:1px solid rgba(128,128,128,.25);border-radius:20px;padding:16px;margin-bottom:14px}.cp-card h3{margin:0 0 8px;font-size:1rem}.cp-read{min-height:48px;margin-top:8px}.cp-read b{font-size:1.4rem;display:block}.cp-read span{opacity:.65;font-size:.9rem}.cp-svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.cp-lh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.cp-lh div,.cp-stat{background:#f6f7f9;border-radius:14px;padding:12px}.cp-lh small,.cp-stat small{display:block;opacity:.65;font-size:.8rem}.cp-lh b,.cp-stat b{display:block;font-size:1rem;margin:2px 0}.cp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.cp-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem}.cp-pill.up{background:#dcf5e5;color:#15803d}.cp-pill.down{background:#fdecec;color:#dc2626}.adm-user{border:1px solid rgba(128,128,128,.25);border-radius:16px;padding:14px;margin-bottom:10px}.adm-user b{word-break:break-all}.adm-chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;margin-left:6px;background:#eef2f7;color:#334155}.adm-chip.red{background:#fdecec;color:#dc2626}.adm-chip.amber{background:#fff4dc;color:#b45309}.adm-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.adm-btn{font:inherit;font-weight:600;padding:8px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111}.adm-btn.danger{border-color:#dc2626;color:#dc2626}.adm-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.adm-sum div{background:#f6f7f9;border-radius:14px;padding:10px;text-align:center}.adm-sum b{display:block;font-size:1.2rem}.adm-sum small{opacity:.65}`;
+styleTag.textContent = `.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}.cp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cp-head h1{margin:0;font-size:1.4rem}.cp-head p{margin:2px 0 0;opacity:.65}.cp-price{background:#effcf3;border-radius:20px;padding:18px;margin-bottom:14px}.cp-price small{display:block;letter-spacing:.04em;opacity:.7;font-size:.78rem;font-weight:600}.cp-price .big{font-size:2rem;font-weight:800;line-height:1.15;margin:4px 0}.cp-price .sub{font-weight:600}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border:1px solid rgba(128,128,128,.25);border-radius:20px;padding:16px;margin-bottom:14px}.cp-card h3{margin:0 0 8px;font-size:1rem}.cp-read{min-height:48px;margin-top:8px}.cp-read b{font-size:1.4rem;display:block}.cp-read span{opacity:.65;font-size:.9rem}.cp-svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.cp-lh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.cp-lh div,.cp-stat{background:#f6f7f9;border-radius:14px;padding:12px}.cp-lh small,.cp-stat small{display:block;opacity:.65;font-size:.8rem}.cp-lh b,.cp-stat b{display:block;font-size:1rem;margin:2px 0}.cp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.cp-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem}.cp-pill.up{background:#dcf5e5;color:#15803d}.cp-pill.down{background:#fdecec;color:#dc2626}.adm-user{border:1px solid rgba(128,128,128,.25);border-radius:16px;padding:14px;margin-bottom:10px}.adm-user b{word-break:break-all}.adm-chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;margin-left:6px;background:#eef2f7;color:#334155}.adm-chip.red{background:#fdecec;color:#dc2626}.adm-chip.amber{background:#fff4dc;color:#b45309}.adm-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.adm-btn{font:inherit;font-weight:600;padding:8px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111}.adm-btn.danger{border-color:#dc2626;color:#dc2626}.adm-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.adm-sum div{background:#f6f7f9;border-radius:14px;padding:10px;text-align:center}.adm-sum b{display:block;font-size:1.2rem}.adm-sum small{opacity:.65}.pf-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid rgba(128,128,128,.2)}.pf-mid{flex:1;min-width:0}.pf-mid a{color:inherit;text-decoration:none}.pf-mid .muted{display:block;font-size:.9rem}.pf-acts{margin-top:6px;display:flex;gap:16px}.pf-val{text-align:right}.pf-val b{display:block}.pf-val span{opacity:.65;font-size:.9rem}.pf-pills{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}.pf-pick{display:flex;align-items:center;gap:12px;margin-bottom:14px}.pf-res{display:flex;align-items:center;gap:10px;width:100%;padding:10px 4px;background:none;border:0;border-bottom:1px solid rgba(128,128,128,.2);font:inherit;text-align:left;color:inherit}`;
 document.head.appendChild(styleTag);
 
 async function loadFx() {
@@ -142,7 +142,7 @@ const gate = (text) =>
   `<section class="page"><h1>Sign in</h1><div class="card"><p>${esc(text)}</p><button class="btn" data-auth>Sign in or create account</button></div></section>`;
 
 /* ---------- router ---------- */
-const routes = { market: renderMarket, alerts: renderAlerts, account: renderAccount, admin: renderAdmin };
+const routes = { market: renderMarket, alerts: renderAlerts, account: renderAccount, portfolio: renderPortfolio, admin: renderAdmin };
 function route() {
   const h = (location.hash || "#market").slice(1).split("?")[0];
   if (h.startsWith("coin/")) {
@@ -630,6 +630,245 @@ async function renderAlerts() {
   };
 }
 
+/* ---------- portfolio ---------- */
+const pf = { rows: [] };
+const fmtAmt = (n) => Number(n).toLocaleString("en-US", { maximumFractionDigits: 8 });
+const signedUsd = (n) => (n >= 0 ? "+" : "−") + fmtUsd(Math.abs(n));
+
+function addPortfolioTab() {
+  const src = document.querySelector('.tabs a[data-tab="alerts"]');
+  if (!src || document.querySelector('.tabs a[data-tab="portfolio"]')) return;
+  const t = src.cloneNode(true);
+  t.setAttribute("href", "#portfolio");
+  t.dataset.tab = "portfolio";
+  t.classList.remove("on");
+  const svg = t.querySelector("svg");
+  if (svg) svg.innerHTML = '<path d="M21 12a9 9 0 1 1-9-9v9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/>';
+  const walker = document.createTreeWalker(t, NodeFilter.SHOW_TEXT);
+  let n;
+  while ((n = walker.nextNode())) {
+    if (n.nodeValue.trim()) {
+      n.nodeValue = "Portfolio";
+      break;
+    }
+  }
+  const bar = src.parentElement;
+  bar.style.display = "grid";
+  bar.style.gridAutoFlow = "column";
+  bar.style.gridAutoColumns = "1fr";
+  src.before(t);
+}
+
+async function renderPortfolio() {
+  if (!state.user) {
+    view.innerHTML = gate("Sign in to track the coins you own and see your profit and loss.");
+    return;
+  }
+  await state.fxReady;
+  view.innerHTML = `<section class="page"><h1>Portfolio</h1><div id="pf">${skeleton(3)}</div></section>${footer()}`;
+  await loadPortfolio();
+}
+
+async function loadPortfolio() {
+  const { data, error } = await sb
+    .from("portfolio_holdings")
+    .select("id,coin_id,amount,buy_price_usd,created_at,coins(id,name,symbol,image_url,price_usd,change_24h_pct)")
+    .order("created_at", { ascending: false });
+  const box = $("#pf");
+  if (!box) return;
+  if (error) {
+    box.innerHTML = emptyBox("Could not load your portfolio", "Check your connection and try again.");
+    return;
+  }
+  pf.rows = data || [];
+  paintPortfolio();
+  box.onclick = onPortfolioClick;
+}
+
+function paintPortfolio() {
+  const box = $("#pf");
+  if (!box) return;
+  const rows = pf.rows.filter((r) => r.coins);
+  if (!rows.length) {
+    box.innerHTML = emptyBox("No holdings yet", "Add the coins you own to see their value and your profit or loss.") + `<button class="btn" type="button" id="pfAdd">Add holding</button>`;
+    $("#pfAdd").onclick = () => holdingSheet();
+    return;
+  }
+  const rate = state.fx[state.cur];
+  const sec = (usd) => (rate ? fmtLocal(usd * rate, state.cur) : "–");
+  let total = 0, chg24 = 0, cost = 0, costVal = 0;
+  const items = rows.map((r) => {
+    const price = Number(r.coins.price_usd);
+    const amt = Number(r.amount);
+    const val = isFinite(price) ? amt * price : 0;
+    const ch = r.coins.change_24h_pct != null ? Number(r.coins.change_24h_pct) : 0;
+    const d = 1 + ch / 100;
+    total += val;
+    chg24 += d > 0 ? val - val / d : 0;
+    let pnl = null, pct = null;
+    if (r.buy_price_usd != null && Number(r.buy_price_usd) > 0) {
+      const c = amt * Number(r.buy_price_usd);
+      pnl = val - c;
+      pct = (pnl / c) * 100;
+      cost += c;
+      costVal += val;
+    }
+    return { r, val, pnl, pct };
+  });
+  items.sort((a, b) => b.val - a.val);
+  const prev = total - chg24;
+  const day = prev > 0 ? chg(((chg24 / prev) * 100)) : null;
+  const pnlTotal = cost > 0 ? costVal - cost : null;
+  const pnlPct = cost > 0 ? chg((pnlTotal / cost) * 100) : null;
+  const m = CURRENCIES[state.cur];
+  box.innerHTML = `
+    <div class="cp-price">
+      <small>TOTAL VALUE</small>
+      <div class="big">${fmtUsd(total)}</div>
+      <div class="sub">${m.flag} ${sec(total)}</div>
+      <div class="pf-pills">
+        ${day ? `<span><span class="cp-pill ${day.c}">${day.t}</span> <span class="muted">today</span></span>` : ""}
+        ${pnlPct ? `<span><span class="cp-pill ${pnlPct.c}">${signedUsd(pnlTotal)} (${pnlPct.t})</span> <span class="muted">profit / loss</span></span>` : ""}
+      </div>
+    </div>
+    <button class="btn" type="button" id="pfAdd">Add holding</button>
+    <div style="margin-top:6px">
+      ${items
+        .map(({ r, val, pnl, pct }) => {
+          const p = pnl != null ? chg(pct) : null;
+          return `<div class="pf-row">
+            <img class="logo" src="${esc(r.coins.image_url || "")}" alt="" loading="lazy" width="40" height="40">
+            <div class="pf-mid">
+              <a href="#coin/${encodeURIComponent(r.coin_id)}"><b>${esc(r.coins.name)}</b></a>
+              <span class="muted">${fmtAmt(r.amount)} ${esc(r.coins.symbol.toUpperCase())}</span>
+              ${p ? `<span class="cp-pill ${p.c}" style="margin-top:4px">${signedUsd(pnl)} (${p.t})</span>` : ""}
+              <div class="pf-acts"><button class="link" type="button" data-pa="edit" data-id="${esc(r.id)}">Edit</button><button class="link" type="button" data-pa="del" data-id="${esc(r.id)}">Delete</button></div>
+            </div>
+            <div class="pf-val"><b>${fmtUsd(val)}</b><span>${sec(val)}</span></div>
+          </div>`;
+        })
+        .join("")}
+    </div>`;
+  $("#pfAdd").onclick = () => holdingSheet();
+}
+
+async function onPortfolioClick(e) {
+  const b = e.target.closest("[data-pa]");
+  if (!b) return;
+  const row = pf.rows.find((r) => r.id === b.dataset.id);
+  if (!row) return;
+  if (b.dataset.pa === "edit") return holdingSheet(row);
+  if (!confirm(`Remove ${row.coins?.name || "this coin"} from your portfolio?`)) return;
+  const { error } = await sb.from("portfolio_holdings").delete().eq("id", row.id);
+  if (error) return toast("Could not remove it. Please try again.");
+  toast("Removed");
+  loadPortfolio();
+}
+
+function holdingSheet(row) {
+  const edit = !!row;
+  let coin = row ? row.coins : null;
+  let cur = "usd";
+  const second = state.cur;
+  const sm = CURRENCIES[second];
+  const hasSecond = !!state.fx[second];
+  openSheet(`
+    <div class="sheet-head"><span></span><div><h2 id="sheetTitle">${edit ? "Edit holding" : "Add holding"}</h2></div><button class="x" type="button" data-close aria-label="Close">×</button></div>
+    <div id="pfCoin"></div>
+    <label class="field"><span>Amount you own</span><input id="pfAmt" inputmode="decimal" autocomplete="off" placeholder="e.g. 0.5"></label>
+    <div class="seg" role="group" aria-label="Buy price currency">
+      <button type="button" data-pc="usd" aria-pressed="true">🇺🇸 USD</button>
+      ${hasSecond ? `<button type="button" data-pc="${second}" aria-pressed="false">${sm.flag} ${second}</button>` : ""}
+    </div>
+    <label class="field"><span>Buy price per coin (optional)</span><input id="pfBuy" inputmode="decimal" autocomplete="off" placeholder="Leave empty to skip"></label>
+    <p class="hint">Add a buy price to see your profit or loss.</p>
+    <p class="err" id="err" hidden></p>
+    <button class="btn" type="button" id="pfSave">${edit ? "Save changes" : "Add to portfolio"}</button>`);
+  if (edit) {
+    $("#pfAmt").value = String(row.amount);
+    if (row.buy_price_usd != null) $("#pfBuy").value = String(Number(row.buy_price_usd));
+  }
+
+  const drawCoin = () => {
+    const box = $("#pfCoin");
+    if (coin) {
+      box.innerHTML = `<div class="pf-pick"><img class="logo" src="${esc(coin.image_url || "")}" alt="" width="40" height="40"><div style="flex:1"><b>${esc(coin.name)}</b><span class="muted" style="display:block;font-size:.9rem">${esc(coin.symbol.toUpperCase())} · ${fmtUsd(coin.price_usd)}</span></div>${edit ? "" : `<button class="link" type="button" id="pfChange">Change</button>`}</div>`;
+      const ch = $("#pfChange");
+      if (ch) ch.onclick = () => {
+        coin = null;
+        drawCoin();
+      };
+    } else {
+      box.innerHTML = `<label class="field"><span>Coin</span><input id="pfSearch" type="search" autocomplete="off" placeholder="Search Bitcoin, ETH, Solana…"></label><div id="pfResults"></div>`;
+      const run = debounce(async () => {
+        const term = $("#pfSearch").value.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
+        const out = $("#pfResults");
+        if (!out) return;
+        if (!term) {
+          out.innerHTML = "";
+          return;
+        }
+        const { data } = await sb
+          .from("coins")
+          .select("id,symbol,name,image_url,price_usd")
+          .or(`name.ilike.%${term}%,symbol.ilike.%${term}%`)
+          .order("market_cap_rank", { ascending: true, nullsFirst: false })
+          .limit(8);
+        if (!$("#pfResults")) return;
+        $("#pfResults").innerHTML = (data || []).length
+          ? data.map((c) => `<button type="button" class="pf-res" data-pick="${esc(c.id)}"><img class="logo" src="${esc(c.image_url || "")}" alt="" width="32" height="32"><span><b>${esc(c.name)}</b> <span class="muted">${esc(c.symbol.toUpperCase())}</span></span></button>`).join("")
+          : `<p class="muted">No coins found.</p>`;
+        $("#pfResults").onclick = (e) => {
+          const b = e.target.closest("[data-pick]");
+          if (!b) return;
+          coin = data.find((c) => c.id === b.dataset.pick);
+          drawCoin();
+        };
+      }, 250);
+      $("#pfSearch").addEventListener("input", run);
+    }
+  };
+  drawCoin();
+
+  document.querySelectorAll("[data-pc]").forEach((b) => {
+    b.onclick = () => {
+      cur = b.dataset.pc;
+      document.querySelectorAll("[data-pc]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    };
+  });
+
+  $("#pfSave").onclick = async () => {
+    const err = $("#err");
+    err.hidden = true;
+    if (!coin) return showErr(err, "Pick a coin first.");
+    const amt = parseFloat(($("#pfAmt").value || "").replace(/,/g, ""));
+    if (!(amt > 0) || !isFinite(amt)) return showErr(err, "Enter how much you own.");
+    const raw = ($("#pfBuy").value || "").replace(/,/g, "").trim();
+    let buy = null;
+    if (raw) {
+      const b = parseFloat(raw);
+      if (!(b > 0) || !isFinite(b)) return showErr(err, "Buy price must be greater than zero.");
+      buy = cur === "usd" ? b : b / state.fx[cur];
+      buy = Number(buy.toPrecision(12));
+    }
+    const btn = $("#pfSave");
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+    const payload = { amount: amt, buy_price_usd: buy };
+    const { error } = edit
+      ? await sb.from("portfolio_holdings").update({ ...payload, updated_at: new Date().toISOString() }).eq("id", row.id)
+      : await sb.from("portfolio_holdings").insert({ ...payload, user_id: state.user.id, coin_id: coin.id });
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = edit ? "Save changes" : "Add to portfolio";
+      return showErr(err, /limit/i.test(error.message || "") ? "You have reached the limit of 100 holdings." : "Could not save. Please try again.");
+    }
+    closeSheet();
+    toast("Saved");
+    if ($("#pf")) loadPortfolio();
+  };
+}
+
 /* ---------- admin (hidden, #admin) ---------- */
 const adm = { users: [], q: "" };
 
@@ -866,6 +1105,8 @@ if ("serviceWorker" in navigator) {
     if (e.data?.type === "goto") location.hash = e.data.hash || "#alerts";
   });
 }
+
+addPortfolioTab();
 
 /* ---------- boot ---------- */
 sb.auth.onAuthStateChange((ev, session) => {
