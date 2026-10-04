@@ -68,12 +68,12 @@ function fmtNgn(n) {
   const max = n >= 100 ? 0 : n >= 1 ? 2 : 4;
   return "₦" + n.toLocaleString("en-US", { maximumFractionDigits: max });
 }
-const fmtCur = (n, cur) => (cur === "ngn" ? fmtNgn(n) : fmtUsd(n));
+const fmtCur = (n, cur) => (String(cur).toLowerCase() === "usd" ? fmtUsd(n) : fmtLocal(n, String(cur).toUpperCase()));
 function fmtLocal(n, code) {
   if (n == null || isNaN(n)) return "–";
   n = Number(n);
   const max = code === "NGN" ? (n >= 100 ? 0 : n >= 1 ? 2 : 4) : n >= 1000 ? 0 : n >= 1 ? 2 : n >= 0.01 ? 4 : 8;
-  return CURRENCIES[code].sym + n.toLocaleString("en-US", { maximumFractionDigits: max });
+  return (CURRENCIES[code]?.sym ?? code + " ") + n.toLocaleString("en-US", { maximumFractionDigits: max });
 }
 // Price in the chosen second currency. NGN uses CoinGecko's own Naira price; others convert from USD.
 function secondPrice(c, code = state.cur) {
@@ -275,7 +275,9 @@ function openCoin(id) {
 function alertForm(c) {
   const sym = c.symbol.toUpperCase();
   let cur = "usd";
-  const price = () => Number(cur === "usd" ? c.price_usd : c.price_ngn);
+  const second = state.cur.toLowerCase();
+  const sm = CURRENCIES[state.cur];
+  const price = () => Number(cur === "usd" ? c.price_usd : secondPrice(c, cur.toUpperCase()));
   openSheet(`
     <div class="sheet-head">
       <img class="logo lg" src="${esc(c.image_url || "")}" alt="" width="48" height="48">
@@ -283,8 +285,8 @@ function alertForm(c) {
       <button class="x" type="button" data-close aria-label="Close">×</button>
     </div>
     <div class="seg" role="group" aria-label="Currency">
-      <button type="button" data-cur="usd" aria-pressed="true">USD</button>
-      <button type="button" data-cur="ngn" aria-pressed="false">₦ NGN</button>
+      <button type="button" data-cur="usd" aria-pressed="true">🇺🇸 USD</button>
+      <button type="button" data-cur="${second}" aria-pressed="false">${sm.flag} ${state.cur}</button>
     </div>
     <label class="field"><span>Target price</span>
       <input id="target" inputmode="decimal" autocomplete="off" placeholder="Enter price"></label>
