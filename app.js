@@ -744,6 +744,11 @@ function renderAccount() {
     <button class="btn ghost" type="button" id="signOut">Sign out</button></section>${footer()}`;
   renderPushCard($("#pushCard"));
   $("#signOut").onclick = signOut;
+  sb.rpc("is_admin").then(({ data }) => {
+    if (data && $("#signOut")) {
+      $("#signOut").insertAdjacentHTML("beforebegin", `<a class="btn" href="#admin" style="display:block;box-sizing:border-box;text-align:center;text-decoration:none;margin-bottom:10px">Admin</a>`);
+    }
+  });
 }
 
 async function signOut() {
