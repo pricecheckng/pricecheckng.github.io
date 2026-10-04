@@ -15,7 +15,44 @@ const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const PAGE = 50;
 const COLS = "id,symbol,name,image_url,market_cap_rank,price_usd,price_ngn,market_cap_usd,volume_24h_usd,change_24h_pct,tier,last_updated";
 
-const state = { user: null, coins: [], coinMap: new Map(), q: "", page: 0, more: false, req: 0, pushOn: false, installEvt: null };
+/* ---------- currencies (USD is always shown on top; one more is chosen) ---------- */
+const CURRENCIES = {
+  NGN: { flag: "🇳🇬", sym: "₦", name: "Nigerian naira" },
+  GBP: { flag: "🇬🇧", sym: "£", name: "British pound" },
+  EUR: { flag: "🇪🇺", sym: "€", name: "Euro" },
+  GHS: { flag: "🇬🇭", sym: "GH₵", name: "Ghanaian cedi" },
+  ZAR: { flag: "🇿🇦", sym: "R", name: "South African rand" },
+  CAD: { flag: "🇨🇦", sym: "CA$", name: "Canadian dollar" },
+  AUD: { flag: "🇦🇺", sym: "A$", name: "Australian dollar" },
+  AED: { flag: "🇦🇪", sym: "AED ", name: "UAE dirham" },
+  CNY: { flag: "🇨🇳", sym: "CN¥", name: "Chinese yuan" },
+};
+function loadCur() {
+  try {
+    const c = localStorage.getItem("pc_cur");
+    return CURRENCIES[c] ? c : "NGN";
+  } catch (_) {
+    return "NGN";
+  }
+}
+
+const state = { user: null, coins: [], coinMap: new Map(), q: "", page: 0, more: false, req: 0, pushOn: false, installEvt: null, cur: loadCur(), fx: {}, fxReady: null };
+
+const styleTag = document.createElement("style");
+styleTag.textContent = `.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}`;
+document.head.appendChild(styleTag);
+
+async function loadFx() {
+  try {
+    const { data, error } = await sb.from("fx_rates").select("currency,per_usd");
+    if (!error && data) {
+      for (const r of data) state.fx[r.currency] = Number(r.per_usd);
+    }
+  } catch (_) {}
+  // If the saved currency has no rate (and is not NGN, which has its own price), fall back to NGN
+  if (state.cur !== "NGN" && !state.fx[state.cur]) state.cur = "NGN";
+}
+state.fxReady = loadFx();
 
 /* ---------- formatting ---------- */
 function fmtUsd(n) {
@@ -32,6 +69,18 @@ function fmtNgn(n) {
   return "₦" + n.toLocaleString("en-US", { maximumFractionDigits: max });
 }
 const fmtCur = (n, cur) => (cur === "ngn" ? fmtNgn(n) : fmtUsd(n));
+function fmtLocal(n, code) {
+  if (n == null || isNaN(n)) return "–";
+  n = Number(n);
+  const max = code === "NGN" ? (n >= 100 ? 0 : n >= 1 ? 2 : 4) : n >= 1000 ? 0 : n >= 1 ? 2 : n >= 0.01 ? 4 : 8;
+  return CURRENCIES[code].sym + n.toLocaleString("en-US", { maximumFractionDigits: max });
+}
+// Price in the chosen second currency. NGN uses CoinGecko's own Naira price; others convert from USD.
+function secondPrice(c, code = state.cur) {
+  if (code === "NGN" && c.price_ngn != null) return Number(c.price_ngn);
+  const r = state.fx[code];
+  return c.price_usd != null && r ? Number(c.price_usd) * r : null;
+}
 const fmtBig = (n, pre) => (n == null ? "–" : pre + Number(n).toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 2 }));
 function chg(v) {
   if (v == null) return { t: "–", c: "" };
@@ -103,17 +152,30 @@ function route() {
 window.addEventListener("hashchange", route);
 
 /* ---------- market ---------- */
-function renderMarket() {
+const fxNoteText = () => (state.cur === "NGN" ? "" : "Converted from USD at market rates, refreshed every few hours.");
+
+async function renderMarket() {
+  await state.fxReady;
   view.innerHTML = `
     <section class="hero">
       <h1>Check the price <span>before you buy.</span></h1>
-      <p>Live crypto prices in <b>USD</b> and <b>₦ Naira</b>.</p>
+      <p>Live crypto prices in <b>USD</b> and your own currency.</p>
       <label class="search">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="q" type="search" inputmode="search" placeholder="Search Bitcoin, ETH, Solana…" autocomplete="off" aria-label="Search coins" value="${esc(state.q)}">
       </label>
     </section>
+    <div class="curbar">
+      <label for="curSel">Second price in</label>
+      <select id="curSel" aria-label="Choose second currency">
+        ${Object.entries(CURRENCIES)
+          .filter(([code]) => code === "NGN" || state.fx[code])
+          .map(([code, m]) => `<option value="${code}"${code === state.cur ? " selected" : ""}>${m.flag} ${code} · ${esc(m.name)}</option>`)
+          .join("")}
+      </select>
+    </div>
     <p class="note">Top 250 coins update every 15 minutes. All other coins update daily.</p>
+    <p class="note" id="fxNote">${fxNoteText()}</p>
     <div id="list" class="list" aria-label="Coins"></div>
     <div class="more"><button id="moreBtn" class="btn ghost" type="button" hidden>Show more coins</button></div>
     ${footer()}`;
@@ -124,6 +186,15 @@ function renderMarket() {
       loadCoins(true);
     }, 250)
   );
+  $("#curSel").onchange = (e) => {
+    state.cur = e.target.value;
+    try {
+      localStorage.setItem("pc_cur", state.cur);
+    } catch (_) {}
+    const list = $("#list");
+    if (list && state.coins.length) list.innerHTML = state.coins.map(coinRow).join("");
+    $("#fxNote").textContent = fxNoteText();
+  };
   $("#moreBtn").onclick = () => loadCoins(false);
   $("#list").addEventListener("click", (e) => {
     const b = e.target.closest("[data-id]");
@@ -138,7 +209,7 @@ function coinRow(c) {
   return `<button class="coin" type="button" data-id="${esc(c.id)}">
     <img class="logo" src="${esc(c.image_url || "")}" alt="" loading="lazy" width="40" height="40">
     <div class="meta"><b>${esc(c.name)}</b><span>${sym} · <span class="chg ${d.c}">${d.t}</span></span></div>
-    <div class="px"><b>${fmtUsd(c.price_usd)}</b><span>${fmtNgn(c.price_ngn)}</span></div>
+    <div class="px"><b>${fmtUsd(c.price_usd)}</b><span>${fmtLocal(secondPrice(c), state.cur)}</span></div>
   </button>`;
 }
 
@@ -180,6 +251,7 @@ function openCoin(id) {
   if (!c) return;
   const d = chg(c.change_24h_pct);
   const sym = c.symbol.toUpperCase();
+  const m = CURRENCIES[state.cur];
   openSheet(`
     <div class="sheet-head">
       <img class="logo lg" src="${esc(c.image_url || "")}" alt="" width="48" height="48">
@@ -187,8 +259,8 @@ function openCoin(id) {
       <button class="x" type="button" data-close aria-label="Close">×</button>
     </div>
     <div class="prices">
-      <div class="pbox"><span>USD</span><b>${fmtUsd(c.price_usd)}</b></div>
-      <div class="pbox"><span>NGN</span><b>${fmtNgn(c.price_ngn)}</b></div>
+      <div class="pbox"><span>🇺🇸 USD</span><b>${fmtUsd(c.price_usd)}</b></div>
+      <div class="pbox"><span>${m.flag} ${state.cur}</span><b>${fmtLocal(secondPrice(c), state.cur)}</b></div>
     </div>
     <dl class="stats">
       <div><dt>24h change</dt><dd class="${d.c}">${d.t}</dd></div>
