@@ -146,6 +146,11 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
 .seg button { border: 0; background: transparent; min-height: 44px; border-radius: 11px; font-weight: 700; color: var(--muted); }
 .seg button[aria-pressed="true"] { background: #fff; color: var(--green); box-shadow: 0 1px 4px rgba(14,26,19,.12); }
 
+.btn.google { background: #fff; color: var(--ink); border: 1.5px solid var(--line); margin-bottom: 14px; }
+.btn.google:active { background: var(--surface); }
+.or { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 12.5px; margin: 0 0 14px; }
+.or::before, .or::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
 /* Bottom nav */
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
@@ -203,3 +208,12 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* Legal pages */
+.doc { max-width: 640px; margin: 0 auto; padding: 22px 16px 40px; }
+.doc h1 { font-size: 26px; letter-spacing: -.03em; font-weight: 800; margin-bottom: 4px; }
+.doc h2 { font-size: 17px; margin: 22px 0 6px; }
+.doc p, .doc li { color: #2b3a31; margin-bottom: 8px; }
+.doc ul { padding-left: 20px; margin-bottom: 8px; }
+.doc a { color: var(--green); text-decoration: underline; }
+.doc .muted { margin-bottom: 14px; }

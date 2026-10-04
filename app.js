@@ -87,7 +87,7 @@ const skeleton = (n = 6) =>
   Array.from({ length: n }, () => `<div class="sk"><i></i><div><i style="width:60%"></i><i style="width:35%;margin-top:8px"></i></div><i></i></div>`).join("");
 const emptyBox = (title, text) => `<div class="empty"><b>${esc(title)}</b>${esc(text)}</div>`;
 const footer = () =>
-  `<p class="foot">Price data by <a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a>. Prices are for information only and are not financial advice.</p>`;
+  `<p class="foot">Price data by <a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a>. Prices are for information only and are not financial advice.<br><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a></p>`;
 const gate = (text) =>
   `<section class="page"><h1>Sign in</h1><div class="card"><p>${esc(text)}</p><button class="btn" data-auth>Sign in or create account</button></div></section>`;
 
@@ -303,6 +303,11 @@ function authSheet(mode = "in", msg = "") {
       <button class="x" type="button" data-close aria-label="Close">×</button>
     </div>
     ${msg ? `<p class="hint" style="margin-top:0">${esc(msg)}</p>` : ""}
+    <button class="btn google" type="button" id="googleBtn">
+      <svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Continue with Google
+    </button>
+    <div class="or"><span>or use email</span></div>
     <form id="authForm" novalidate>
       <label class="field"><span>Email</span><input id="email" type="email" autocomplete="email" inputmode="email" required></label>
       <label class="field"><span>Password</span><input id="pw" type="password" autocomplete="${up ? "new-password" : "current-password"}" minlength="8" required></label>
@@ -313,6 +318,10 @@ function authSheet(mode = "in", msg = "") {
       <button class="link" type="button" id="swap">${up ? "I already have an account" : "Create a new account"}</button>
       ${up ? "" : ` · <button class="link" type="button" id="forgot">Forgot password?</button>`}
     </p>`);
+  $("#googleBtn").onclick = async () => {
+    const { error } = await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname } });
+    if (error) showErr($("#err"), "Google sign-in is not available right now. Use email instead.");
+  };
   $("#swap").onclick = () => authSheet(up ? "in" : "up");
   const f = $("#forgot");
   if (f) f.onclick = async () => {
@@ -344,7 +353,7 @@ function authSheet(mode = "in", msg = "") {
         return;
       }
       openSheet(`<div class="done"><div class="big">📧</div><h2 id="sheetTitle">Check your email</h2>
-        <p>We sent a confirmation link to ${esc(email)}. Tap it, then come back and sign in.</p>
+        <p>We sent a confirmation link to ${esc(email)}. If you don't see it in a minute, check your Spam or Junk folder. Tap the link, then come back and sign in.</p>
         <button class="btn" type="button" data-close>OK</button></div>`);
       return;
     }
