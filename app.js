@@ -39,7 +39,7 @@ function loadCur() {
 const state = { user: null, coins: [], coinMap: new Map(), q: "", page: 0, more: false, req: 0, pushOn: false, installEvt: null, cur: loadCur(), fx: {}, fxReady: null };
 
 const styleTag = document.createElement("style");
-styleTag.textContent = `.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}.cp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cp-head h1{margin:0;font-size:1.4rem}.cp-head p{margin:2px 0 0;opacity:.65}.cp-price{background:#effcf3;border-radius:20px;padding:18px;margin-bottom:14px}.cp-price small{display:block;letter-spacing:.04em;opacity:.7;font-size:.78rem;font-weight:600}.cp-price .big{font-size:2rem;font-weight:800;line-height:1.15;margin:4px 0}.cp-price .sub{font-weight:600}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border:1px solid rgba(128,128,128,.25);border-radius:20px;padding:16px;margin-bottom:14px}.cp-card h3{margin:0 0 8px;font-size:1rem}.cp-read{min-height:48px;margin-top:8px}.cp-read b{font-size:1.4rem;display:block}.cp-read span{opacity:.65;font-size:.9rem}.cp-svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.cp-lh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.cp-lh div,.cp-stat{background:#f6f7f9;border-radius:14px;padding:12px}.cp-lh small,.cp-stat small{display:block;opacity:.65;font-size:.8rem}.cp-lh b,.cp-stat b{display:block;font-size:1rem;margin:2px 0}.cp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.cp-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem}.cp-pill.up{background:#dcf5e5;color:#15803d}.cp-pill.down{background:#fdecec;color:#dc2626}`;
+styleTag.textContent = `.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}.cp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cp-head h1{margin:0;font-size:1.4rem}.cp-head p{margin:2px 0 0;opacity:.65}.cp-price{background:#effcf3;border-radius:20px;padding:18px;margin-bottom:14px}.cp-price small{display:block;letter-spacing:.04em;opacity:.7;font-size:.78rem;font-weight:600}.cp-price .big{font-size:2rem;font-weight:800;line-height:1.15;margin:4px 0}.cp-price .sub{font-weight:600}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border:1px solid rgba(128,128,128,.25);border-radius:20px;padding:16px;margin-bottom:14px}.cp-card h3{margin:0 0 8px;font-size:1rem}.cp-read{min-height:48px;margin-top:8px}.cp-read b{font-size:1.4rem;display:block}.cp-read span{opacity:.65;font-size:.9rem}.cp-svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.cp-lh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.cp-lh div,.cp-stat{background:#f6f7f9;border-radius:14px;padding:12px}.cp-lh small,.cp-stat small{display:block;opacity:.65;font-size:.8rem}.cp-lh b,.cp-stat b{display:block;font-size:1rem;margin:2px 0}.cp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.cp-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem}.cp-pill.up{background:#dcf5e5;color:#15803d}.cp-pill.down{background:#fdecec;color:#dc2626}.adm-user{border:1px solid rgba(128,128,128,.25);border-radius:16px;padding:14px;margin-bottom:10px}.adm-user b{word-break:break-all}.adm-chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;margin-left:6px;background:#eef2f7;color:#334155}.adm-chip.red{background:#fdecec;color:#dc2626}.adm-chip.amber{background:#fff4dc;color:#b45309}.adm-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.adm-btn{font:inherit;font-weight:600;padding:8px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111}.adm-btn.danger{border-color:#dc2626;color:#dc2626}.adm-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.adm-sum div{background:#f6f7f9;border-radius:14px;padding:10px;text-align:center}.adm-sum b{display:block;font-size:1.2rem}.adm-sum small{opacity:.65}`;
 document.head.appendChild(styleTag);
 
 async function loadFx() {
@@ -141,7 +141,7 @@ const gate = (text) =>
   `<section class="page"><h1>Sign in</h1><div class="card"><p>${esc(text)}</p><button class="btn" data-auth>Sign in or create account</button></div></section>`;
 
 /* ---------- router ---------- */
-const routes = { market: renderMarket, alerts: renderAlerts, account: renderAccount };
+const routes = { market: renderMarket, alerts: renderAlerts, account: renderAccount, admin: renderAdmin };
 function route() {
   const h = (location.hash || "#market").slice(1).split("?")[0];
   if (h.startsWith("coin/")) {
@@ -450,7 +450,11 @@ function alertForm(c) {
     if (error) {
       btn.disabled = false;
       btn.textContent = "Create alert";
-      return showErr(err, error.code === "42501" ? "Confirm your email before setting alerts." : "Could not save the alert. Please try again.");
+      if (error.code === "42501") {
+        const { data: fl } = await sb.from("user_flags").select("banned,alerts_blocked").maybeSingle();
+        return showErr(err, fl && (fl.banned || fl.alerts_blocked) ? "Alerts are turned off for your account." : "Confirm your email before setting alerts.");
+      }
+      return showErr(err, "Could not save the alert. Please try again.");
     }
     alertDone(c, t, cur, t > p);
   };
@@ -541,7 +545,7 @@ function authSheet(mode = "in", msg = "") {
     }
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
     btn.disabled = false;
-    if (error) return showErr(err, /confirm/i.test(error.message) ? "Confirm your email first. Check your inbox for the link." : "Wrong email or password.");
+    if (error) return showErr(err, /banned/i.test(error.message) ? "This account has been suspended." : /confirm/i.test(error.message) ? "Confirm your email first. Check your inbox for the link." : "Wrong email or password.");
     state.user = data.user;
     closeSheet();
     toast("Signed in");
@@ -623,6 +627,108 @@ async function renderAlerts() {
     }
     renderAlerts();
   };
+}
+
+/* ---------- admin (hidden, #admin) ---------- */
+const adm = { users: [], q: "" };
+
+async function renderAdmin() {
+  if (!state.user) {
+    view.innerHTML = gate("Sign in to continue.");
+    return;
+  }
+  view.innerHTML = `<section class="page"><h1>Admin</h1><div id="adm">${skeleton(3)}</div></section>`;
+  const { data: ok } = await sb.rpc("is_admin");
+  if (!$("#adm")) return;
+  if (!ok) {
+    $("#adm").innerHTML = emptyBox("Page not available", "This page does not exist.");
+    return;
+  }
+  await loadAdminUsers();
+}
+
+async function loadAdminUsers() {
+  const box = $("#adm");
+  if (!box) return;
+  const { data, error } = await sb.rpc("admin_list_users");
+  if (!$("#adm")) return;
+  if (error) {
+    box.innerHTML = emptyBox("Could not load users", "Check your connection and try again.");
+    return;
+  }
+  adm.users = data || [];
+  box.innerHTML = `
+    <div class="adm-sum" id="admSum"></div>
+    <input id="admQ" type="search" placeholder="Search by email…" autocomplete="off" value="${esc(adm.q)}" style="width:100%;font:inherit;padding:12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);margin-bottom:12px">
+    <div id="admList"></div>`;
+  $("#admQ").addEventListener("input", (e) => {
+    adm.q = e.target.value.trim().toLowerCase();
+    paintAdminList();
+  });
+  $("#admList").addEventListener("click", onAdminAction);
+  paintAdminList();
+}
+
+function paintAdminList() {
+  const u = adm.users;
+  $("#admSum").innerHTML = `
+    <div><b>${u.length}</b><small>Users</small></div>
+    <div><b>${u.filter((x) => x.banned).length}</b><small>Banned</small></div>
+    <div><b>${u.filter((x) => x.alerts_blocked && !x.banned).length}</b><small>Alerts blocked</small></div>`;
+  const list = u.filter((x) => !adm.q || (x.email || "").toLowerCase().includes(adm.q));
+  $("#admList").innerHTML = list.length
+    ? list
+        .map((x) => {
+          const chips =
+            (x.is_admin ? `<span class="adm-chip">Admin</span>` : "") +
+            (x.banned ? `<span class="adm-chip red">Banned</span>` : "") +
+            (x.alerts_blocked && !x.banned ? `<span class="adm-chip amber">Alerts blocked</span>` : "") +
+            (!x.confirmed ? `<span class="adm-chip amber">Unconfirmed</span>` : "");
+          const acts = x.is_admin
+            ? ""
+            : `<div class="adm-acts">
+                <button class="adm-btn ${x.banned ? "" : "danger"}" data-a="ban" data-uid="${esc(x.user_id)}" data-v="${x.banned ? "0" : "1"}">${x.banned ? "Unban" : "Ban"}</button>
+                ${x.banned ? "" : `<button class="adm-btn" data-a="block" data-uid="${esc(x.user_id)}" data-v="${x.alerts_blocked ? "0" : "1"}">${x.alerts_blocked ? "Allow alerts" : "Block alerts"}</button>`}
+              </div>`;
+          return `<div class="adm-user">
+            <div><b>${esc(x.email || "(no email)")}</b>${chips}</div>
+            <div class="muted" style="font-size:.88rem;margin-top:4px">Joined ${ago(x.joined_at)} · last seen ${ago(x.last_seen_at)} · ${esc(x.provider)}<br>${x.alerts_active} active / ${x.alerts_total} total alerts · ${x.push_devices} device${x.push_devices === 1 ? "" : "s"}</div>
+            ${acts}
+          </div>`;
+        })
+        .join("")
+    : emptyBox("No users found", adm.q ? "Nothing matches that search." : "No one has signed up yet.");
+}
+
+async function onAdminAction(e) {
+  const b = e.target.closest("[data-a]");
+  if (!b) return;
+  const uid = b.dataset.uid;
+  const on = b.dataset.v === "1";
+  const user = adm.users.find((x) => x.user_id === uid);
+  const who = user?.email || "this user";
+  let call;
+  if (b.dataset.a === "ban") {
+    const msg = on
+      ? `Ban ${who}?\n\nThey will be signed out everywhere, can't sign in, and their alerts and notifications will be removed.`
+      : `Unban ${who}? They will be able to sign in again.`;
+    if (!confirm(msg)) return;
+    call = sb.rpc("admin_set_ban", { target: uid, ban: on });
+  } else {
+    const msg = on
+      ? `Block alerts for ${who}?\n\nThey can still sign in and browse, but can't create alerts. Their active alerts will be cancelled.`
+      : `Allow ${who} to create alerts again?`;
+    if (!confirm(msg)) return;
+    call = sb.rpc("admin_set_alerts_block", { target: uid, blocked: on });
+  }
+  b.disabled = true;
+  const { error } = await call;
+  if (error) {
+    b.disabled = false;
+    return toast(error.message && /admin/i.test(error.message) ? "You can't change an admin." : "That didn't work. Please try again.");
+  }
+  toast("Done");
+  loadAdminUsers();
 }
 
 /* ---------- account view ---------- */
