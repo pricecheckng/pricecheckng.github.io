@@ -772,10 +772,52 @@ function holdingSheet(row) {
   const second = state.cur;
   const sm = CURRENCIES[second];
   const hasSecond = !!state.fx[second];
+  let mode = "coins";
+  const moneyCodes = ["USD", ...Object.keys(CURRENCIES).filter((c) => state.fx[c])];
+  let moneyCur = moneyCodes.includes(second) ? second : "USD";
+  const rateOf = (code) => (code === "USD" ? 1 : state.fx[code]);
+  function moneyToCoins() {
+    const inp = $("#pfAmt");
+    if (!inp || !coin) return null;
+    const v = parseFloat((inp.value || "").replace(/,/g, ""));
+    const r = rateOf(moneyCur);
+    const px = Number(coin.price_usd);
+    if (!(v > 0) || !r || !(px > 0)) return null;
+    return v / r / px;
+  }
+  function updatePrev() {
+    const p = $("#pfPrev");
+    if (!p) return;
+    const n = moneyToCoins();
+    p.textContent = n ? `That is about ${fmtAmt(Number(n.toPrecision(6)))} ${coin.symbol.toUpperCase()} at today's price.` : "Enter the money value to see how many coins that is.";
+  }
+  function drawAmt() {
+    const box = $("#pfAmtBox");
+    if (!box) return;
+    if (mode === "coins") {
+      box.innerHTML = `<label class="field"><span>Amount you own</span><input id="pfAmt" inputmode="decimal" autocomplete="off" placeholder="e.g. 0.5"></label>`;
+      return;
+    }
+    box.innerHTML = `<label class="field"><span>How much money is it worth?</span><input id="pfAmt" inputmode="decimal" autocomplete="off" placeholder="e.g. 50,000"></label>
+      <label class="field"><span>In which currency?</span><select id="pfMoneyCur" style="font:inherit;padding:12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;width:100%">${moneyCodes
+        .map((c) => `<option value="${c}"${c === moneyCur ? " selected" : ""}>${c === "USD" ? "🇺🇸 USD" : CURRENCIES[c].flag + " " + c}</option>`)
+        .join("")}</select></label>
+      <p class="hint" id="pfPrev"></p>`;
+    $("#pfAmt").addEventListener("input", updatePrev);
+    $("#pfMoneyCur").onchange = (e) => {
+      moneyCur = e.target.value;
+      updatePrev();
+    };
+    updatePrev();
+  }
   openSheet(`
     <div class="sheet-head"><span></span><div><h2 id="sheetTitle">${edit ? "Edit holding" : "Add holding"}</h2></div><button class="x" type="button" data-close aria-label="Close">×</button></div>
     <div id="pfCoin"></div>
-    <label class="field"><span>Amount you own</span><input id="pfAmt" inputmode="decimal" autocomplete="off" placeholder="e.g. 0.5"></label>
+    <div class="seg" role="group" aria-label="How do you want to enter it">
+      <button type="button" data-pm="coins" aria-pressed="true">Coins I own</button>
+      <button type="button" data-pm="money" aria-pressed="false">Money value</button>
+    </div>
+    <div id="pfAmtBox"></div>
     <div class="seg" role="group" aria-label="Buy price currency">
       <button type="button" data-pc="usd" aria-pressed="true">🇺🇸 USD</button>
       ${hasSecond ? `<button type="button" data-pc="${second}" aria-pressed="false">${sm.flag} ${second}</button>` : ""}
@@ -784,6 +826,7 @@ function holdingSheet(row) {
     <p class="hint">Add a buy price to see your profit or loss.</p>
     <p class="err" id="err" hidden></p>
     <button class="btn" type="button" id="pfSave">${edit ? "Save changes" : "Add to portfolio"}</button>`);
+  drawAmt();
   if (edit) {
     $("#pfAmt").value = String(row.amount);
     if (row.buy_price_usd != null) $("#pfBuy").value = String(Number(row.buy_price_usd));
@@ -823,12 +866,21 @@ function holdingSheet(row) {
           if (!b) return;
           coin = data.find((c) => c.id === b.dataset.pick);
           drawCoin();
+          updatePrev();
         };
       }, 250);
       $("#pfSearch").addEventListener("input", run);
     }
   };
   drawCoin();
+
+  document.querySelectorAll("[data-pm]").forEach((b) => {
+    b.onclick = () => {
+      mode = b.dataset.pm;
+      document.querySelectorAll("[data-pm]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      drawAmt();
+    };
+  });
 
   document.querySelectorAll("[data-pc]").forEach((b) => {
     b.onclick = () => {
@@ -841,7 +893,14 @@ function holdingSheet(row) {
     const err = $("#err");
     err.hidden = true;
     if (!coin) return showErr(err, "Pick a coin first.");
-    const amt = parseFloat(($("#pfAmt").value || "").replace(/,/g, ""));
+    let amt;
+    if (mode === "money") {
+      const n = moneyToCoins();
+      if (!n || !isFinite(n)) return showErr(err, "Enter the money value of your holding.");
+      amt = Number(n.toPrecision(10));
+    } else {
+      amt = parseFloat(($("#pfAmt").value || "").replace(/,/g, ""));
+    }
     if (!(amt > 0) || !isFinite(amt)) return showErr(err, "Enter how much you own.");
     const raw = ($("#pfBuy").value || "").replace(/,/g, "").trim();
     let buy = null;
