@@ -631,7 +631,7 @@ async function renderAlerts() {
 }
 
 /* ---------- portfolio ---------- */
-const pf = { rows: [], open: new Set() };
+const pf = { rows: [], open: new Set(), alerts: [], total: 0 };
 const fmtAmt = (n) => Number(n).toLocaleString("en-US", { maximumFractionDigits: 8 });
 const signedUsd = (n) => (n >= 0 ? "+" : "−") + fmtUsd(Math.abs(n));
 
@@ -681,6 +681,12 @@ async function loadPortfolio() {
     return;
   }
   pf.rows = data || [];
+  const { data: al } = await sb
+    .from("portfolio_alerts")
+    .select("id,target_value,currency,direction,status,created_at,triggered_at")
+    .order("created_at", { ascending: false })
+    .limit(20);
+  pf.alerts = al || [];
   paintPortfolio();
   box.onclick = onPortfolioClick;
 }
@@ -716,6 +722,7 @@ function paintPortfolio() {
     return { r, val, pnl, pct };
   });
   items.sort((a, b) => b.val - a.val);
+  pf.total = total;
   const prev = total - chg24;
   const day = prev > 0 ? chg(((chg24 / prev) * 100)) : null;
   const pnlTotal = cost > 0 ? costVal - cost : null;
@@ -733,6 +740,19 @@ function paintPortfolio() {
     const rest = parts.slice(5).reduce((a, x) => a + x.val, 0);
     parts = [...parts.slice(0, 5), { name: "Others", val: rest }];
   }
+  const activeAlerts = pf.alerts.filter((a) => a.status === "active").length;
+  const alertsHtml = pf.alerts.length
+    ? `<div style="height:14px"></div><div class="cp-card"><h3>Portfolio alerts · ${activeAlerts} of ${PORTFOLIO_ALERT_LIMIT} active</h3>${pf.alerts
+        .map((a) => {
+          const when = a.status === "triggered" ? `Triggered ${ago(a.triggered_at)}` : `Created ${ago(a.created_at)}`;
+          const act =
+            a.status === "active"
+              ? `<button class="link" type="button" data-pa="acancel" data-id="${esc(a.id)}">Cancel</button>`
+              : `<button class="link" type="button" data-pa="adel" data-id="${esc(a.id)}">Delete</button>`;
+          return `<div class="pf-lot"><div><b>Total ${a.direction === "above" ? "rises to" : "falls to"} ${esc(fmtCur(a.target_value, a.currency))}</b></div><div class="muted" style="font-size:.9rem;margin-top:2px"><span class="chip ${a.status}">${a.status[0].toUpperCase() + a.status.slice(1)}</span> ${when}</div><div class="pf-acts">${act}</div></div>`;
+        })
+        .join("")}</div>`
+    : "";
   let allocHtml = "";
   if (parts.length >= 2 && total > 0) {
     const COLORS = ["#15803d", "#0ea5e9", "#f59e0b", "#8b5cf6", "#ef4444", "#94a3b8"];
@@ -806,16 +826,32 @@ function paintPortfolio() {
       </div>
     </div>
     <button class="btn" type="button" id="pfAdd">Add holding</button>
+    <div style="height:10px"></div>
+    <button class="btn ghost" type="button" id="pfAlertBtn">🔔 Alert me about my total</button>
     ${allocHtml}
     <div style="margin-top:6px">
       ${groupHtml}
-    </div>`;
+    </div>${alertsHtml}`;
   $("#pfAdd").onclick = () => holdingSheet();
+  $("#pfAlertBtn").onclick = () => portfolioAlertSheet();
 }
 
 async function onPortfolioClick(e) {
   const b = e.target.closest("[data-pa]");
   if (!b) return;
+  if (b.dataset.pa === "acancel" || b.dataset.pa === "adel") {
+    const aid = b.dataset.id;
+    let er;
+    if (b.dataset.pa === "acancel") {
+      ({ error: er } = await sb.from("portfolio_alerts").update({ status: "cancelled" }).eq("id", aid));
+    } else {
+      if (!confirm("Delete this alert?")) return;
+      ({ error: er } = await sb.from("portfolio_alerts").delete().eq("id", aid));
+    }
+    if (er) return toast("That did not work. Please try again.");
+    loadPortfolio();
+    return;
+  }
   if (b.dataset.pa === "toggle") {
     const id = b.dataset.id;
     if (pf.open.has(id)) pf.open.delete(id);
@@ -992,6 +1028,85 @@ function holdingSheet(row) {
     }
     closeSheet();
     toast("Saved");
+    if ($("#pf")) loadPortfolio();
+  };
+}
+
+const PORTFOLIO_ALERT_LIMIT = 5;
+
+function portfolioAlertSheet() {
+  const second = state.cur;
+  const sm = CURRENCIES[second];
+  const hasSecond = !!state.fx[second];
+  let cur = "USD";
+  const totalIn = () => (cur === "USD" ? pf.total : pf.total * state.fx[cur]);
+  const money = (n) => fmtCur(n, cur.toLowerCase());
+  openSheet(`
+    <div class="sheet-head"><span></span><div><h2 id="sheetTitle">Portfolio alert</h2><p class="muted" id="paNow"></p></div><button class="x" type="button" data-close aria-label="Close">×</button></div>
+    <div class="seg" role="group" aria-label="Currency">
+      <button type="button" data-pac="USD" aria-pressed="true">🇺🇸 USD</button>
+      ${hasSecond ? `<button type="button" data-pac="${second}" aria-pressed="false">${sm.flag} ${second}</button>` : ""}
+    </div>
+    <label class="field"><span>Alert me when my total reaches</span><input id="paTarget" inputmode="decimal" autocomplete="off" placeholder="Enter an amount"></label>
+    <p class="hint" id="paHint">Enter the total value you want to be alerted at.</p>
+    ${state.pushOn ? "" : `<p class="hint">Turn on notifications on the Account tab to get this alert on your phone.</p>`}
+    <p class="err" id="err" hidden></p>
+    <button class="btn" type="button" id="paSave">Create alert</button>`);
+  const parse = () => parseFloat(($("#paTarget").value || "").replace(/,/g, ""));
+  const refresh = () => {
+    const p = totalIn();
+    $("#paNow").textContent = `Your portfolio is worth ${money(p)} now`;
+    const t = parse();
+    const hint = $("#paHint");
+    if (!(t > 0)) {
+      hint.textContent = "Enter the total value you want to be alerted at.";
+      return;
+    }
+    if (Math.abs(t - p) < 1e-9) {
+      hint.textContent = "That is your current total. Pick a higher or lower amount.";
+      return;
+    }
+    const pct = (t / p - 1) * 100;
+    hint.textContent = `We’ll alert you when your portfolio ${t > p ? "rises to" : "falls to"} ${money(t)} (${pct > 0 ? "+" : ""}${pct.toFixed(2)}% from now).`;
+  };
+  refresh();
+  $("#paTarget").addEventListener("input", refresh);
+  document.querySelectorAll("[data-pac]").forEach((b) => {
+    b.onclick = () => {
+      cur = b.dataset.pac;
+      document.querySelectorAll("[data-pac]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      refresh();
+    };
+  });
+  $("#paSave").onclick = async () => {
+    const err = $("#err");
+    err.hidden = true;
+    const t = parse();
+    const p = totalIn();
+    if (!(t > 0) || !isFinite(t)) return showErr(err, "Enter a target amount greater than zero.");
+    if (Math.abs(t - p) < 1e-9) return showErr(err, "That is your current total.");
+    if (!state.user.email_confirmed_at) return showErr(err, "Confirm your email first. Check your inbox for the confirmation link.");
+    const btn = $("#paSave");
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+    const { error } = await sb.from("portfolio_alerts").insert({
+      user_id: state.user.id,
+      target_value: t,
+      currency: cur.toLowerCase(),
+      direction: t > p ? "above" : "below",
+    });
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = "Create alert";
+      if (/limit/i.test(error.message || "")) return showErr(err, `You can have up to ${PORTFOLIO_ALERT_LIMIT} active portfolio alerts. Cancel one first.`);
+      if (error.code === "42501") {
+        const { data: fl } = await sb.from("user_flags").select("banned,alerts_blocked").maybeSingle();
+        return showErr(err, fl && (fl.banned || fl.alerts_blocked) ? "Alerts are turned off for your account." : "Confirm your email before setting alerts.");
+      }
+      return showErr(err, "Could not save the alert. Please try again.");
+    }
+    closeSheet();
+    toast("Portfolio alert set");
     if ($("#pf")) loadPortfolio();
   };
 }
