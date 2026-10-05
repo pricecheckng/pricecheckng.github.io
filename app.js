@@ -1280,7 +1280,7 @@ function deleteAccountSheet() {
     if (error) {
       go.disabled = false;
       go.textContent = "Delete my account";
-      return showErr(err, /admin/i.test(error.message || "") ? "Admin accounts can't be deleted from here." : "Could not delete the account. Please try again.");
+      return showErr(err, /restricted/i.test(error.message || "") ? "This account is restricted and can't be deleted. Please contact support." : /admin/i.test(error.message || "") ? "Admin accounts can't be deleted from here." : "Could not delete the account. Please try again.");
     }
     try {
       if ("serviceWorker" in navigator && "PushManager" in window) {
