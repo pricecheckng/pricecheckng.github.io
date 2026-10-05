@@ -472,6 +472,7 @@ function alertForm(c) {
       }
       return showErr(err, "Could not save the alert. Please try again.");
     }
+    if ($("#alerts")) renderAlerts();
     alertDone(c, t, cur, t > p);
   };
 }
@@ -595,54 +596,129 @@ function recoverySheet() {
 /* ---------- alerts view ---------- */
 async function renderAlerts() {
   if (!state.user) {
-    view.innerHTML = gate("Sign in to set and manage price alerts.");
+    view.innerHTML = gate("Sign in to set and manage your alerts.");
     return;
   }
-  view.innerHTML = `<section class="page"><h1>Price alerts</h1><div id="pushCard"></div><div id="alerts" class="list">${skeleton(3)}</div></section>${footer()}`;
-  renderPushCard($("#pushCard"));
-  const { data, error } = await sb
-    .from("price_alerts")
-    .select("id,target_price,currency,direction,status,created_at,triggered_at,coins(name,symbol,image_url)")
-    .order("created_at", { ascending: false });
+  if (!$("#alerts")) {
+    view.innerHTML = `<section class="page"><h1>Alerts</h1><div id="pushCard"></div><button class="btn" type="button" id="newAlert">+ New alert</button><div style="height:14px"></div><div id="alerts" class="list">${skeleton(3)}</div></section>${footer()}`;
+    renderPushCard($("#pushCard"));
+    $("#newAlert").onclick = newAlertSheet;
+  }
+  const [pa, po] = await Promise.all([
+    sb
+      .from("price_alerts")
+      .select("id,target_price,currency,direction,status,created_at,triggered_at,coins(name,symbol,image_url)")
+      .order("created_at", { ascending: false }),
+    sb.from("portfolio_alerts").select("id,target_value,currency,direction,status,created_at,triggered_at").order("created_at", { ascending: false }),
+  ]);
   const box = $("#alerts");
   if (!box) return;
-  if (error) {
+  if (pa.error) {
     box.innerHTML = emptyBox("Could not load alerts", "Check your connection and try again.");
     return;
   }
-  if (!data.length) {
-    box.innerHTML = emptyBox("No alerts yet", "Open any coin on the Market tab and tap Set price alert.");
+  const items = [...(pa.data || []).map((a) => ({ kind: "price", a })), ...(po.data || []).map((a) => ({ kind: "portfolio", a }))].sort(
+    (x, y) => new Date(y.a.created_at) - new Date(x.a.created_at)
+  );
+  if (!items.length) {
+    box.innerHTML = emptyBox("No alerts yet", "Tap + New alert, or open any coin and tap Set price alert.");
     return;
   }
-  box.innerHTML = data
-    .map((a) => {
-      const sym = (a.coins?.symbol || "").toUpperCase();
-      const when = a.status === "triggered" ? `Triggered ${ago(a.triggered_at)}` : `Created ${ago(a.created_at)}`;
-      const act =
-        a.status === "active"
-          ? `<button class="link" data-act="cancel" data-aid="${a.id}">Cancel</button>`
-          : `<button class="link" data-act="delete" data-aid="${a.id}">Delete</button>`;
-      return `<div class="alert">
-        <img class="logo" src="${esc(a.coins?.image_url || "")}" alt="" loading="lazy" width="40" height="40">
-        <div class="meta"><b>${esc(sym)} ${a.direction === "above" ? "rises to" : "falls to"} ${esc(fmtCur(a.target_price, a.currency))}</b><span>${when}</span></div>
-        <div class="acts"><span class="chip ${a.status}">${a.status[0].toUpperCase() + a.status.slice(1)}</span>${act}</div>
-      </div>`;
-    })
-    .join("");
+  const pfActive = (po.data || []).filter((a) => a.status === "active").length;
+  const countLine = pfActive ? `<p class="muted" style="margin:0 2px 8px;font-size:.9rem">Portfolio alerts: ${pfActive} of ${PORTFOLIO_ALERT_LIMIT} active</p>` : "";
+  box.innerHTML =
+    countLine +
+    items
+      .map(({ kind, a }) => {
+        const when = a.status === "triggered" ? `Triggered ${ago(a.triggered_at)}` : `Created ${ago(a.created_at)}`;
+        const act =
+          a.status === "active"
+            ? `<button class="link" data-act="cancel" data-aid="${a.id}" data-kind="${kind}">Cancel</button>`
+            : `<button class="link" data-act="delete" data-aid="${a.id}" data-kind="${kind}">Delete</button>`;
+        const chip = `<span class="chip ${a.status}">${a.status[0].toUpperCase() + a.status.slice(1)}</span>`;
+        if (kind === "portfolio") {
+          return `<div class="alert">
+            <div class="logo" aria-hidden="true" style="display:flex;align-items:center;justify-content:center;background:#effcf3;border-radius:50%;font-size:20px;width:40px;height:40px">📊</div>
+            <div class="meta"><b>Portfolio ${a.direction === "above" ? "rises to" : "falls to"} ${esc(fmtCur(a.target_value, a.currency))}</b><span>${when}</span></div>
+            <div class="acts">${chip}${act}</div>
+          </div>`;
+        }
+        const sym = (a.coins?.symbol || "").toUpperCase();
+        return `<div class="alert">
+          <img class="logo" src="${esc(a.coins?.image_url || "")}" alt="" loading="lazy" width="40" height="40">
+          <div class="meta"><b>${esc(sym)} ${a.direction === "above" ? "rises to" : "falls to"} ${esc(fmtCur(a.target_price, a.currency))}</b><span>${when}</span></div>
+          <div class="acts">${chip}${act}</div>
+        </div>`;
+      })
+      .join("");
   box.onclick = async (e) => {
     const b = e.target.closest("[data-act]");
     if (!b) return;
     const aid = b.dataset.aid;
+    const table = b.dataset.kind === "portfolio" ? "portfolio_alerts" : "price_alerts";
     if (b.dataset.act === "cancel") {
-      const { error: er } = await sb.from("price_alerts").update({ status: "cancelled" }).eq("id", aid);
+      const { error: er } = await sb.from(table).update({ status: "cancelled" }).eq("id", aid);
       if (er) return toast("Could not cancel the alert.");
     } else {
       if (!confirm("Delete this alert?")) return;
-      const { error: er } = await sb.from("price_alerts").delete().eq("id", aid);
+      const { error: er } = await sb.from(table).delete().eq("id", aid);
       if (er) return toast("Could not delete the alert.");
     }
     renderAlerts();
   };
+}
+
+function newAlertSheet() {
+  openSheet(`
+    <div class="sheet-head"><span></span><div><h2 id="sheetTitle">New alert</h2></div><button class="x" type="button" data-close aria-label="Close">×</button></div>
+    <button class="btn" type="button" id="naCoin">🪙 Coin price alert</button>
+    <p class="hint" style="margin-top:6px">Get notified when one coin reaches a price.</p>
+    <div style="height:10px"></div>
+    <button class="btn ghost" type="button" id="naPf">📊 Portfolio alert</button>
+    <p class="hint" style="margin-top:6px">Get notified when your total portfolio value reaches an amount.</p>`);
+  $("#naCoin").onclick = coinPickSheet;
+  $("#naPf").onclick = async () => {
+    const { data, error } = await sb.from("portfolio_holdings").select("amount,coins(price_usd)");
+    if (error) return toast("Could not load your portfolio. Please try again.");
+    let total = 0;
+    for (const r of data || []) total += Number(r.amount) * Number(r.coins?.price_usd || 0);
+    if (!(total > 0)) {
+      closeSheet();
+      toast("Add a holding in Portfolio first");
+      location.hash = "#portfolio";
+      return;
+    }
+    pf.total = total;
+    portfolioAlertSheet();
+  };
+}
+
+function coinPickSheet() {
+  openSheet(`
+    <div class="sheet-head"><span></span><div><h2 id="sheetTitle">Pick a coin</h2></div><button class="x" type="button" data-close aria-label="Close">×</button></div>
+    <label class="field"><span>Coin</span><input id="cpSearch" type="search" autocomplete="off" placeholder="Search Bitcoin, ETH, Solana…"></label>
+    <div id="cpResults"></div>`);
+  const go = async () => {
+    const input = $("#cpSearch");
+    if (!input) return;
+    const term = input.value.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
+    let q = sb.from("coins").select("id,symbol,name,image_url,price_usd,price_ngn").order("market_cap_rank", { ascending: true, nullsFirst: false }).limit(8);
+    if (term) q = q.or(`name.ilike.%${term}%,symbol.ilike.%${term}%`);
+    const { data } = await q;
+    const out = $("#cpResults");
+    if (!out) return;
+    out.innerHTML = (data || []).length
+      ? data.map((c) => `<button type="button" class="pf-res" data-pick="${esc(c.id)}"><img class="logo" src="${esc(c.image_url || "")}" alt="" width="32" height="32"><span><b>${esc(c.name)}</b> <span class="muted">${esc(c.symbol.toUpperCase())}</span></span></button>`).join("")
+      : `<p class="muted">No coins found.</p>`;
+    out.onclick = (e) => {
+      const b = e.target.closest("[data-pick]");
+      if (!b) return;
+      const coin = data.find((c) => c.id === b.dataset.pick);
+      if (coin) alertForm(coin);
+    };
+  };
+  $("#cpSearch").addEventListener("input", debounce(go, 250));
+  go();
 }
 
 /* ---------- portfolio ---------- */
@@ -756,17 +832,8 @@ function paintPortfolio() {
     parts = [...parts.slice(0, 5), { name: "Others", val: rest }];
   }
   const activeAlerts = pf.alerts.filter((a) => a.status === "active").length;
-  const alertsHtml = pf.alerts.length
-    ? `<div style="height:14px"></div><div class="cp-card"><h3>Portfolio alerts · ${activeAlerts} of ${PORTFOLIO_ALERT_LIMIT} active</h3>${pf.alerts
-        .map((a) => {
-          const when = a.status === "triggered" ? `Triggered ${ago(a.triggered_at)}` : `Created ${ago(a.created_at)}`;
-          const act =
-            a.status === "active"
-              ? `<button class="link" type="button" data-pa="acancel" data-id="${esc(a.id)}">Cancel</button>`
-              : `<button class="link" type="button" data-pa="adel" data-id="${esc(a.id)}">Delete</button>`;
-          return `<div class="pf-lot"><div><b>Total ${a.direction === "above" ? "rises to" : "falls to"} ${esc(fmtCur(a.target_value, a.currency))}</b></div><div class="muted" style="font-size:.9rem;margin-top:2px"><span class="chip ${a.status}">${a.status[0].toUpperCase() + a.status.slice(1)}</span> ${when}</div><div class="pf-acts">${act}</div></div>`;
-        })
-        .join("")}</div>`
+  const alertsLine = activeAlerts
+    ? `<p style="margin:12px 2px 0"><a href="#alerts" style="color:#15803d;font-weight:600;text-decoration:none">🔔 ${activeAlerts} active portfolio alert${activeAlerts === 1 ? "" : "s"}</a> <span class="muted" style="display:inline">· manage them in Alerts</span></p>`
     : "";
   let allocHtml = "";
   if (parts.length >= 2 && total > 0) {
@@ -843,10 +910,11 @@ function paintPortfolio() {
     <button class="btn" type="button" id="pfAdd">Add holding</button>
     <div style="height:10px"></div>
     <button class="btn ghost" type="button" id="pfAlertBtn">🔔 Alert me about my total</button>
+    ${alertsLine}
     ${allocHtml}
     <div style="margin-top:6px">
       ${groupHtml}
-    </div>${alertsHtml}`;
+    </div>`;
   $("#pfAdd").onclick = () => holdingSheet();
   $("#pfAlertBtn").onclick = () => portfolioAlertSheet();
 }
@@ -1127,6 +1195,7 @@ function portfolioAlertSheet() {
     closeSheet();
     toast("Portfolio alert set");
     if ($("#pf")) loadPortfolio();
+    if ($("#alerts")) renderAlerts();
   };
 }
 
