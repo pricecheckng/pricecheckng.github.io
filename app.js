@@ -172,6 +172,7 @@ async function renderMarket() {
         <input id="q" type="search" inputmode="search" placeholder="Search Bitcoin, ETH, Solana…" autocomplete="off" aria-label="Search coins" value="${esc(state.q)}">
       </label>
     </section>
+    ${iosBannerHtml()}
     <div class="curbar">
       <label for="curSel">Second price in</label>
       <select id="curSel" aria-label="Choose second currency">
@@ -203,6 +204,15 @@ async function renderMarket() {
     $("#fxNote").textContent = fxNoteText();
   };
   $("#moreBtn").onclick = () => loadCoins(false);
+  const iosBox = $("#iosBanner");
+  if (iosBox) {
+    $("#iosClose").onclick = () => {
+      try {
+        localStorage.setItem("pc_ios_hide", String(Date.now()));
+      } catch (_) {}
+      iosBox.remove();
+    };
+  }
   $("#list").addEventListener("click", (e) => {
     const b = e.target.closest("[data-id]");
     if (b) location.hash = "#coin/" + encodeURIComponent(b.dataset.id);
@@ -400,6 +410,7 @@ function alertForm(c) {
     <label class="field"><span>Target price</span>
       <input id="target" inputmode="decimal" autocomplete="off" placeholder="Enter price"></label>
     <p class="hint" id="hint">Enter the price you want to be alerted at.</p>
+    ${state.pushOn ? "" : `<p class="hint">Alerts need notifications. We’ll ask you to turn them on when you save.</p>`}
     <p class="err" id="err" hidden></p>
     <button class="btn" type="button" id="saveAlert">Create alert</button>`);
 
@@ -438,6 +449,8 @@ function alertForm(c) {
     if (t === p) return showErr(err, "Target price equals the current price.");
     if (!state.user) return authSheet("in", "Sign in to save your alert.");
     if (!state.user.email_confirmed_at) return showErr(err, "Confirm your email first. Check your inbox for the confirmation link.");
+    if (needsIosInstall()) return showErr(err, IOS_MSG);
+    if (!(await ensurePush())) return showErr(err, NEED_PUSH_MSG);
     const btn = $("#saveAlert");
     btn.disabled = true;
     btn.textContent = "Saving…";
@@ -453,7 +466,9 @@ function alertForm(c) {
       btn.textContent = "Create alert";
       if (error.code === "42501") {
         const { data: fl } = await sb.from("user_flags").select("banned,alerts_blocked").maybeSingle();
-        return showErr(err, fl && (fl.banned || fl.alerts_blocked) ? "Alerts are turned off for your account." : "Confirm your email before setting alerts.");
+        if (fl && (fl.banned || fl.alerts_blocked)) return showErr(err, "Alerts are turned off for your account.");
+        const { data: hp } = await sb.rpc("has_push");
+        return showErr(err, hp === false ? NEED_PUSH_MSG : "Confirm your email before setting alerts.");
       }
       return showErr(err, "Could not save the alert. Please try again.");
     }
@@ -1049,7 +1064,7 @@ function portfolioAlertSheet() {
     </div>
     <label class="field"><span>Alert me when my total reaches</span><input id="paTarget" inputmode="decimal" autocomplete="off" placeholder="Enter an amount"></label>
     <p class="hint" id="paHint">Enter the total value you want to be alerted at.</p>
-    ${state.pushOn ? "" : `<p class="hint">Turn on notifications on the Account tab to get this alert on your phone.</p>`}
+    ${state.pushOn ? "" : `<p class="hint">Alerts need notifications. We’ll ask you to turn them on when you save.</p>`}
     <p class="err" id="err" hidden></p>
     <button class="btn" type="button" id="paSave">Create alert</button>`);
   const parse = () => parseFloat(($("#paTarget").value || "").replace(/,/g, ""));
@@ -1086,6 +1101,8 @@ function portfolioAlertSheet() {
     if (!(t > 0) || !isFinite(t)) return showErr(err, "Enter a target amount greater than zero.");
     if (Math.abs(t - p) < 1e-9) return showErr(err, "That is your current total.");
     if (!state.user.email_confirmed_at) return showErr(err, "Confirm your email first. Check your inbox for the confirmation link.");
+    if (needsIosInstall()) return showErr(err, IOS_MSG);
+    if (!(await ensurePush())) return showErr(err, NEED_PUSH_MSG);
     const btn = $("#paSave");
     btn.disabled = true;
     btn.textContent = "Saving…";
@@ -1101,7 +1118,9 @@ function portfolioAlertSheet() {
       if (/limit/i.test(error.message || "")) return showErr(err, `You can have up to ${PORTFOLIO_ALERT_LIMIT} active portfolio alerts. Cancel one first.`);
       if (error.code === "42501") {
         const { data: fl } = await sb.from("user_flags").select("banned,alerts_blocked").maybeSingle();
-        return showErr(err, fl && (fl.banned || fl.alerts_blocked) ? "Alerts are turned off for your account." : "Confirm your email before setting alerts.");
+        if (fl && (fl.banned || fl.alerts_blocked)) return showErr(err, "Alerts are turned off for your account.");
+        const { data: hp } = await sb.rpc("has_push");
+        return showErr(err, hp === false ? NEED_PUSH_MSG : "Confirm your email before setting alerts.");
       }
       return showErr(err, "Could not save the alert. Please try again.");
     }
@@ -1254,6 +1273,16 @@ async function signOut() {
 /* ---------- push notifications ---------- */
 const pushSupported = () => "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
 const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = () => (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+const needsIosInstall = () => isIos() && !isStandalone();
+function iosBannerHtml() {
+  if (!needsIosInstall()) return "";
+  try {
+    const t = Number(localStorage.getItem("pc_ios_hide") || 0);
+    if (t && Date.now() - t < 7 * 864e5) return "";
+  } catch (_) {}
+  return `<div class="card" id="iosBanner" style="margin-top:14px"><b>📲 Get alerts on your iPhone</b><p>Alerts only work from the home screen app. Tap <b>Share</b>, then <b>Add to Home Screen</b>, then open PriceCheck NG from your home screen.</p><button class="link" type="button" id="iosClose">Not now</button></div>`;
+}
 
 function renderPushCard(el) {
   if (!el) return;
@@ -1325,6 +1354,26 @@ async function enablePush() {
     return false;
   }
 }
+
+// Alerts need notifications: make sure this device is subscribed and saved for this account.
+async function ensurePush() {
+  if (!state.user) return false;
+  if (!state.pushOn) return await enablePush();
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (!sub) return await enablePush();
+    const j = sub.toJSON();
+    const { error } = await sb
+      .from("push_subscriptions")
+      .upsert({ user_id: state.user.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth }, { onConflict: "endpoint" });
+    return !error;
+  } catch (_) {
+    return false;
+  }
+}
+const IOS_MSG = "On iPhone, tap Share, then Add to Home Screen, and open PriceCheck NG from your home screen. Then you can set alerts.";
+const NEED_PUSH_MSG = "Turn on notifications to set alerts. Without them we can't tell you when the price is reached.";
 
 /* ---------- install + service worker ---------- */
 window.addEventListener("beforeinstallprompt", (e) => {
