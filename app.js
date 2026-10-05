@@ -1246,10 +1246,59 @@ function renderAccount() {
   renderPushCard($("#pushCard"));
   $("#signOut").onclick = signOut;
   sb.rpc("is_admin").then(({ data }) => {
-    if (data && $("#signOut")) {
+    if (!$("#signOut")) return;
+    if (data) {
       $("#signOut").insertAdjacentHTML("beforebegin", `<a class="btn" href="#admin" style="display:flex;align-items:center;justify-content:center;box-sizing:border-box;text-align:center;text-decoration:none;margin-bottom:10px">Admin</a>`);
+    } else {
+      $("#signOut").insertAdjacentHTML("afterend", `<button class="btn ghost" type="button" id="delAcct" style="color:#dc2626;border-color:#dc2626;margin-top:10px">Delete my account</button>`);
+      $("#delAcct").onclick = deleteAccountSheet;
     }
   });
+}
+
+function deleteAccountSheet() {
+  openSheet(`
+    <div class="sheet-head"><span></span><div><h2 id="sheetTitle">Delete account</h2></div><button class="x" type="button" data-close aria-label="Close">×</button></div>
+    <p>This permanently deletes your account and everything in it: your portfolio, price alerts, portfolio alerts and notification settings. <b>This cannot be undone.</b></p>
+    <label class="field"><span>Type DELETE to confirm</span><input id="delConfirm" autocomplete="off" autocapitalize="characters" placeholder="DELETE"></label>
+    <p class="err" id="err" hidden></p>
+    <button class="btn" type="button" id="delGo" disabled style="background:#dc2626;opacity:.5">Delete my account</button>
+    <div style="height:10px"></div>
+    <button class="btn ghost" type="button" data-close>Cancel</button>`);
+  const go = $("#delGo");
+  $("#delConfirm").addEventListener("input", (e) => {
+    const ok = e.target.value.trim() === "DELETE";
+    go.disabled = !ok;
+    go.style.opacity = ok ? "1" : ".5";
+  });
+  go.onclick = async () => {
+    const err = $("#err");
+    err.hidden = true;
+    go.disabled = true;
+    go.textContent = "Deleting…";
+    const { error } = await sb.rpc("delete_my_account");
+    if (error) {
+      go.disabled = false;
+      go.textContent = "Delete my account";
+      return showErr(err, /admin/i.test(error.message || "") ? "Admin accounts can't be deleted from here." : "Could not delete the account. Please try again.");
+    }
+    try {
+      if ("serviceWorker" in navigator && "PushManager" in window) {
+        const reg = await navigator.serviceWorker.getRegistration();
+        const sub = await reg?.pushManager.getSubscription();
+        if (sub) await sub.unsubscribe();
+      }
+    } catch (_) {}
+    try {
+      await sb.auth.signOut({ scope: "local" });
+    } catch (_) {}
+    state.user = null;
+    state.pushOn = false;
+    closeSheet();
+    toast("Your account has been deleted");
+    location.hash = "#market";
+    route();
+  };
 }
 
 async function signOut() {
