@@ -1568,3 +1568,14 @@ document.addEventListener("click", (e) => {
   if (e.target.closest("[data-tg-connect]")) connectTelegram();
   if (e.target.closest("[data-tg-disconnect]")) disconnectTelegram();
 });
+/* ---------- show Telegram card on Account page ---------- */
+new MutationObserver(() => {
+  const push = $("#pushCard");
+  if (!push || !$("#signOut") || $("#tgCard")) return;
+  const box = document.createElement("div");
+  box.id = "tgCard";
+  push.insertAdjacentElement("afterend", box);
+  telegramCardHtml().then((h) => {
+    box.innerHTML = h;
+  });
+}).observe(view, { childList: true, subtree: true });
