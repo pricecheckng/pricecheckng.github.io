@@ -1537,3 +1537,34 @@ sb.auth.onAuthStateChange((ev, session) => {
     openSheet(`<div class="done"><div class="big">🚫</div><h2 id="sheetTitle">Account banned</h2><p>Your account has been banned and can't sign in.</p><button class="btn" type="button" data-close>OK</button></div>`);
   }
 })();
+/* ---------- Telegram link ---------- */
+const TG_BOT = "pricecheck_ng_alerts_bot";
+
+async function connectTelegram() {
+  const { data: token, error } = await sb.rpc("create_telegram_link");
+  if (error || !token) {
+    toast("Please sign in first, then try again.");
+    return;
+  }
+  location.href = `https://t.me/${TG_BOT}?start=${encodeURIComponent(token)}`;
+}
+
+async function disconnectTelegram() {
+  const { data } = await sb.auth.getUser();
+  if (!data?.user) return;
+  const { error } = await sb.from("telegram_links").delete().eq("user_id", data.user.id);
+  toast(error ? "Could not disconnect. Try again." : "Telegram disconnected");
+  route();
+}
+
+async function telegramCardHtml() {
+  const { data } = await sb.from("telegram_links").select("chat_id").maybeSingle();
+  return data
+    ? `<div class="card"><h3>Telegram alerts</h3><p>Connected. Price alerts will be sent to your Telegram.</p><button class="btn ghost" type="button" data-tg-disconnect>Disconnect Telegram</button></div>`
+    : `<div class="card"><h3>Telegram alerts</h3><p>Get your price alerts in Telegram.</p><button class="btn" type="button" data-tg-connect>Connect Telegram</button></div>`;
+}
+
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-tg-connect]")) connectTelegram();
+  if (e.target.closest("[data-tg-disconnect]")) disconnectTelegram();
+});
