@@ -286,23 +286,13 @@ function paintCoin(c) {
   const ratio = c.price_usd && second != null ? second / Number(c.price_usd) : 0;
   const sec = (usd) => (ratio ? fmtLocal(usd * ratio, state.cur) : "–");
   const secBig = (usd) => (ratio && usd != null ? fmtBig(Number(usd) * ratio, m.sym) : "–");
-  let chartHtml = `<p class="muted" style="margin:8px 0 0">The 7-day chart is not available for this coin yet. Charts cover the top 250 coins.</p>`;
-  if (sp.length >= 2) {
-    const lo = Math.min(...sp);
-    const hi = Math.max(...sp);
-    const wk = (sp[sp.length - 1] / sp[0] - 1) * 100;
-    const wd = chg(wk);
-    chartHtml = `
-      <div class="cp-read" id="cpRead"></div>
-      <div id="cpChart"></div>
-      <div style="display:flex;justify-content:space-between;opacity:.6;font-size:.85rem;margin-top:4px"><span>7 days ago</span><span>Latest</span></div>
-      <div class="cp-lh">
-        <div><small>7-day low</small><b>${fmtUsd(lo)}</b><small>${sec(lo)}</small></div>
-        <div><small>7-day high</small><b>${fmtUsd(hi)}</b><small>${sec(hi)}</small></div>
-      </div>
-      <p class="muted" style="margin:10px 0 0;font-size:.85rem">Touch the chart to see the price at any moment. The chart updates every few hours.</p>`;
-    chartHtml = `<div class="cp-wk"><span class="cp-pill ${wd.c}">${wd.t}</span> <span class="muted">over 7 days</span></div>` + chartHtml;
-  }
+  const chartHtml = `<div class="cp-wk" id="cpWk"></div>
+    <div class="seg" id="cpRanges" role="group" aria-label="Chart range" style="margin:10px 0">${Object.keys(CHART_RANGES).map((k) => `<button type="button" data-r="${k}" aria-pressed="${k === "7D"}">${k}</button>`).join("")}</div>
+    <div class="cp-read" id="cpRead"></div>
+    <div id="cpChart"><p class="muted" style="margin:8px 0 0">Loading chart…</p></div>
+    <div id="cpAxis" style="display:flex;justify-content:space-between;opacity:.6;font-size:.85rem;margin-top:4px"></div>
+    <div class="cp-lh" id="cpLH"></div>
+    <p class="muted" id="cpNote" style="margin:10px 0 0;font-size:.85rem">Touch the chart to see the price at any moment.</p>`;
   $("#coinBody").innerHTML = `
     <div class="cp-head">
       <img class="logo lg" src="${esc(c.image_url || "")}" alt="" width="48" height="48">
@@ -313,7 +303,7 @@ function paintCoin(c) {
       <div class="big">${fmtUsd(c.price_usd)}</div>
       <div class="sub">${m.flag} ${fmtLocal(second, state.cur)} <span class="cp-pill ${d.c}" style="margin-left:6px">${d.t}</span> <span class="muted">24h</span></div>
     </div>
-    <div class="cp-card"><h3>Last 7 days</h3>${chartHtml}</div>
+    <div class="cp-card"><h3>Price chart</h3>${chartHtml}</div>
     <div class="cp-stats">
       <div class="cp-stat"><small>Market cap ($)</small><b>${fmtBig(c.market_cap_usd, "$")}</b></div>
       <div class="cp-stat"><small>Market cap (${esc(state.cur)})</small><b>${secBig(c.market_cap_usd)}</b></div>
@@ -335,10 +325,87 @@ function paintCoin(c) {
       }
     } catch (_) {}
   };
-  if (sp.length >= 2) mountChart(sp, sec);
+  initChart(c, sp, sec);
 }
 
-function mountChart(sp, sec) {
+/* ---------- coin chart (ranges) ---------- */
+const CHART_RANGES = {
+  "1D": { iv: "15m", lim: 96, name: "24 hours" },
+  "7D": { iv: "1h", lim: 168, name: "7 days" },
+  "30D": { iv: "4h", lim: 180, name: "30 days" },
+  "90D": { iv: "1d", lim: 90, name: "90 days" },
+  "1Y": { iv: "1d", lim: 365, name: "1 year" },
+};
+const chartCache = new Map();
+let chartTok = 0;
+
+async function getSeries(c, r, sp) {
+  const key = c.id + ":" + r;
+  const hit = chartCache.get(key);
+  if (hit && Date.now() - hit.at < 60000) return hit.s;
+  let out = null;
+  try {
+    const { iv, lim } = CHART_RANGES[r];
+    const ctl = new AbortController();
+    const to = setTimeout(() => ctl.abort(), 8000);
+    const res = await fetch(
+      `https://data-api.binance.vision/api/v3/klines?symbol=${encodeURIComponent(c.symbol.toUpperCase())}USDT&interval=${iv}&limit=${lim}`,
+      { signal: ctl.signal }
+    );
+    clearTimeout(to);
+    if (res.ok) {
+      const rows = await res.json();
+      if (Array.isArray(rows) && rows.length >= 2) {
+        const s = rows.map((k) => ({ t: k[0], p: Number(k[4]) })).filter((o) => isFinite(o.p) && o.p > 0);
+        const px = Number(c.price_usd);
+        const ratio = px ? px / s[s.length - 1].p : 1;
+        if (s.length >= 2 && ratio > 0.8 && ratio < 1.25) {
+          if (px) s[s.length - 1].p = px;
+          out = s;
+        }
+      }
+    }
+  } catch (_) {}
+  if (!out && r === "7D" && sp.length >= 2) {
+    const now = Date.now();
+    out = sp.map((p, i) => ({ t: now - (sp.length - 1 - i) * 4 * 3600000, p }));
+  }
+  if (out) chartCache.set(key, { at: Date.now(), s: out });
+  return out;
+}
+
+function initChart(c, sp, sec) {
+  const load = async (r) => {
+    const my = ++chartTok;
+    document.querySelectorAll("#cpRanges button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.r === r)));
+    const s = await getSeries(c, r, sp);
+    if (my !== chartTok || !$("#cpChart")) return;
+    if (!s) {
+      $("#cpChart").innerHTML = `<p class="muted" style="margin:8px 0 0">This chart is not available for this coin.</p>`;
+      $("#cpWk").innerHTML = "";
+      $("#cpRead").innerHTML = "";
+      $("#cpAxis").innerHTML = "";
+      $("#cpLH").innerHTML = "";
+      return;
+    }
+    const vals = s.map((o) => o.p);
+    const lo = Math.min(...vals);
+    const hi = Math.max(...vals);
+    const wd = chg((vals[vals.length - 1] / vals[0] - 1) * 100);
+    const nm = CHART_RANGES[r].name;
+    $("#cpWk").innerHTML = `<span class="cp-pill ${wd.c}">${wd.t}</span> <span class="muted">over ${nm}</span>`;
+    $("#cpAxis").innerHTML = `<span>${nm} ago</span><span>Latest</span>`;
+    $("#cpLH").innerHTML = `
+      <div><small>${r} low</small><b>${fmtUsd(lo)}</b><small>${sec(lo)}</small></div>
+      <div><small>${r} high</small><b>${fmtUsd(hi)}</b><small>${sec(hi)}</small></div>`;
+    mountChart(s, sec, r);
+  };
+  document.querySelectorAll("#cpRanges button").forEach((b) => (b.onclick = () => load(b.dataset.r)));
+  load("7D");
+}
+
+function mountChart(series, sec, range) {
+  const sp = series.map((o) => o.p);
   const W = 600, H = 280, P = 8;
   const n = sp.length;
   const min = Math.min(...sp);
@@ -348,7 +415,7 @@ function mountChart(sp, sec) {
   const y = (v) => P + (1 - (v - min) / rng) * (H - 2 * P);
   const col = sp[n - 1] >= sp[0] ? "#15803d" : "#dc2626";
   const pts = sp.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`);
-  $("#cpChart").innerHTML = `<svg id="cpSvg" class="cp-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="7 day price chart">
+  $("#cpChart").innerHTML = `<svg id="cpSvg" class="cp-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${range} price chart">
     <path d="M${pts.join(" L")} L${x(n - 1).toFixed(1)},${H} L${x(0).toFixed(1)},${H} Z" fill="${col}" opacity=".1"/>
     <polyline points="${pts.join(" ")}" fill="none" stroke="${col}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
     <line id="cpLine" x1="0" x2="0" y1="0" y2="${H}" stroke="#94a3b8" stroke-width="1.5" visibility="hidden"/>
@@ -359,11 +426,11 @@ function mountChart(sp, sec) {
   const dot = $("#cpDot");
   const read = $("#cpRead");
   const label = (i) => {
-    const hrs = (n - 1 - i) * 4;
-    if (hrs === 0) return "Latest";
-    const dd = Math.floor(hrs / 24);
-    const hh = hrs % 24;
-    return `about ${dd ? dd + "d " : ""}${hh ? hh + "h " : ""}ago`;
+    if (i === n - 1) return "Latest";
+    const dt = new Date(series[i].t);
+    if (range === "1D") return dt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const day = dt.toLocaleDateString([], { month: "short", day: "numeric", year: range === "1Y" ? "numeric" : undefined });
+    return range === "7D" || range === "30D" ? `${day}, ${dt.toLocaleTimeString([], { hour: "numeric" })}` : day;
   };
   const paint = (i, active) => {
     read.innerHTML = `<b>${fmtUsd(sp[i])}</b><span>${sec(sp[i])} · ${label(i)}</span>`;
@@ -1568,14 +1635,3 @@ document.addEventListener("click", (e) => {
   if (e.target.closest("[data-tg-connect]")) connectTelegram();
   if (e.target.closest("[data-tg-disconnect]")) disconnectTelegram();
 });
-/* ---------- show Telegram card on Account page ---------- */
-new MutationObserver(() => {
-  const push = $("#pushCard");
-  if (!push || !$("#signOut") || $("#tgCard")) return;
-  const box = document.createElement("div");
-  box.id = "tgCard";
-  push.insertAdjacentElement("afterend", box);
-  telegramCardHtml().then((h) => {
-    box.innerHTML = h;
-  });
-}).observe(view, { childList: true, subtree: true });
