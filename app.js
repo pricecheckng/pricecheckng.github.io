@@ -27,6 +27,11 @@ const CURRENCIES = {
   AUD: { flag: "🇦🇺", sym: "A$", name: "Australian dollar" },
   AED: { flag: "🇦🇪", sym: "AED ", name: "UAE dirham" },
   CNY: { flag: "🇨🇳", sym: "CN¥", name: "Chinese yuan" },
+  KES: { flag: "🇰🇪", sym: "KSh ", name: "Kenyan shilling" },
+  TZS: { flag: "🇹🇿", sym: "TSh ", name: "Tanzanian shilling" },
+  UGX: { flag: "🇺🇬", sym: "USh ", name: "Ugandan shilling" },
+  INR: { flag: "🇮🇳", sym: "₹", name: "Indian rupee" },
+  JPY: { flag: "🇯🇵", sym: "¥", name: "Japanese yen" },
 };
 function loadCur() {
   try {
