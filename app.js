@@ -1382,7 +1382,7 @@ function renderAccount() {
   const confirmed = !!state.user.email_confirmed_at;
   view.innerHTML = `<section class="page"><h1>Account</h1>
     <div class="card"><b>${esc(state.user.email)}</b><p>${confirmed ? "Email confirmed" : "Email not confirmed yet. Alerts need a confirmed email."}</p></div>
-    <div id="pushCard"></div>
+    <div id="pushCard" data-full="1"></div>
     <div id="tgCard"></div>
     <button class="btn ghost" type="button" id="signOut">Sign out</button></section>${footer()}`;
   renderPushCard($("#pushCard"));
@@ -1480,18 +1480,44 @@ function iosBannerHtml() {
   return `<div class="card" id="iosBanner" style="margin-top:14px"><b>📲 Get alerts on your iPhone</b><p>Alerts only work from the home screen app. Tap <b>Share</b>, then <b>Add to Home Screen</b>, then open PriceCheck NG from your home screen.</p><button class="link" type="button" id="iosClose">Not now</button></div>`;
 }
 
+const PUSH_HELP = `<details class="card" style="margin-top:10px"><summary><b>Notifications not working?</b></summary>
+  <ol style="margin:10px 0 0;padding-left:20px;line-height:1.6">
+    <li>Tap <b>Turn on notifications</b> above and allow the permission.</li>
+    <li>In Chrome: menu (⋮) → Settings → Site settings → Notifications → allow this site.</li>
+    <li>In your phone settings, open Apps → Chrome (or PriceCheck) → Notifications, and turn them on.</li>
+    <li>Set the app's battery use to <b>Unrestricted</b>, and turn off battery saver and Do not disturb.</li>
+    <li>On iPhone, alerts only work from the home screen app: tap Share, then Add to Home Screen, and open it from there.</li>
+    <li>Sign out, sign in again, then tap <b>Send test notification</b>.</li>
+  </ol>
+  <p style="margin:10px 0 0">Telegram alerts also work as a backup. You can connect Telegram below.</p></details>`;
+
 function renderPushCard(el) {
   if (!el) return;
+  const full = el.dataset.full === "1";
   if (!pushSupported()) {
     el.innerHTML = `<div class="card"><b>Notifications unavailable</b><p>${
       isIos() ? "On iPhone, tap Share, then Add to Home Screen, and open PriceCheck NG from there to enable notifications." : "This browser does not support push notifications. Try Chrome."
     }</p></div>`;
   } else if (Notification.permission === "denied") {
-    el.innerHTML = `<div class="card"><b>Notifications are blocked</b><p>Allow notifications for this site in your browser settings, then come back.</p></div>`;
+    el.innerHTML = `<div class="card"><b>Notifications are blocked</b><p>Allow notifications for this site in your browser settings, then come back.</p></div>${full ? PUSH_HELP : ""}`;
   } else if (state.pushOn) {
-    el.innerHTML = `<div class="card ok"><p>🔔 Notifications are on for this device.</p></div>`;
+    el.innerHTML = `<div class="card ok"><p>🔔 Notifications are on for this device.</p>${full ? '<button class="btn ghost" type="button" id="pushTest">Send test notification</button>' : ""}</div>${full ? PUSH_HELP : ""}`;
+    const t = $("#pushTest");
+    if (t) {
+      t.onclick = async () => {
+        t.disabled = true;
+        const { error } = await sb.rpc("send_test_notification");
+        if (error) {
+          toast(/wait/i.test(error.message || "") ? "Please wait a minute before sending another test." : "Could not send the test. Please try again.");
+          setTimeout(() => (t.disabled = false), 5000);
+          return;
+        }
+        toast("Test sent. It should arrive within a minute or two 🔔");
+        setTimeout(() => (t.disabled = false), 60000);
+      };
+    }
   } else {
-    el.innerHTML = `<div class="card"><b>Get alerts on your phone</b><p>Turn on notifications so you hear about it the moment a price is reached.</p><button class="btn" type="button" id="pushBtn2">Turn on notifications</button></div>`;
+    el.innerHTML = `<div class="card"><b>Get alerts on your phone</b><p>Turn on notifications so you hear about it the moment a price is reached.</p><button class="btn" type="button" id="pushBtn2">Turn on notifications</button></div>${full ? PUSH_HELP : ""}`;
     $("#pushBtn2").onclick = async () => {
       if (await enablePush()) renderPushCard(el);
     };
