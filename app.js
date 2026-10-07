@@ -1510,6 +1510,7 @@ async function checkPush() {
       state.pushOn = !!(await reg.pushManager.getSubscription());
     }
   } catch (_) {}
+  if ($("#pushCard")) renderPushCard($("#pushCard"));
 }
 
 async function enablePush() {
@@ -1593,9 +1594,15 @@ if ("serviceWorker" in navigator) {
 
 addPortfolioTab();
 
+// Ask the browser to keep this site's data (sign-in, notification setup) instead of clearing it when space or battery is low.
+try {
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+} catch (_) {}
+
 /* ---------- boot ---------- */
 sb.auth.onAuthStateChange((ev, session) => {
   state.user = session?.user ?? null;
+  if (state.user && (ev === "SIGNED_IN" || ev === "INITIAL_SESSION")) setTimeout(checkPush, 0);
   if (ev === "PASSWORD_RECOVERY") setTimeout(recoverySheet, 0);
   if (ev === "SIGNED_OUT" || ev === "USER_UPDATED") setTimeout(route, 0);
 });
