@@ -182,7 +182,7 @@ async function renderMarket() {
           .join("")}
       </select>
     </div>
-    <p class="note">Top 250 coins update every 15 minutes. All other coins update daily.</p>
+    <p class="note">Prices update every minute for most major coins. Other coins update less often.</p>
     <p class="note" id="fxNote">${fxNoteText()}</p>
     <div id="list" class="list" aria-label="Coins"></div>
     <div class="more"><button id="moreBtn" class="btn ghost" type="button" hidden>Show more coins</button></div>
@@ -287,7 +287,7 @@ function paintCoin(c) {
   const sec = (usd) => (ratio ? fmtLocal(usd * ratio, state.cur) : "–");
   const secBig = (usd) => (ratio && usd != null ? fmtBig(Number(usd) * ratio, m.sym) : "–");
   const chartHtml = `<div class="cp-wk" id="cpWk"></div>
-    <div class="seg" id="cpRanges" role="group" aria-label="Chart range" style="margin:10px 0">${Object.keys(CHART_RANGES).map((k) => `<button type="button" data-r="${k}" aria-pressed="${k === "7D"}">${k}</button>`).join("")}</div>
+    <div class="seg" id="cpRanges" role="group" aria-label="Chart range" style="margin:10px 0;display:grid;grid-template-columns:repeat(5,1fr);gap:4px">${Object.keys(CHART_RANGES).map((k) => `<button type="button" data-r="${k}" aria-pressed="${k === "7D"}">${k}</button>`).join("")}</div>
     <div class="cp-read" id="cpRead"></div>
     <div id="cpChart"><p class="muted" style="margin:8px 0 0">Loading chart…</p></div>
     <div id="cpAxis" style="display:flex;justify-content:space-between;opacity:.6;font-size:.85rem;margin-top:4px"></div>
