@@ -1378,8 +1378,12 @@ function renderAccount() {
   view.innerHTML = `<section class="page"><h1>Account</h1>
     <div class="card"><b>${esc(state.user.email)}</b><p>${confirmed ? "Email confirmed" : "Email not confirmed yet. Alerts need a confirmed email."}</p></div>
     <div id="pushCard"></div>
+    <div id="tgCard"></div>
     <button class="btn ghost" type="button" id="signOut">Sign out</button></section>${footer()}`;
   renderPushCard($("#pushCard"));
+  telegramCardHtml().then((h) => {
+    if ($("#tgCard")) $("#tgCard").innerHTML = h;
+  });
   $("#signOut").onclick = signOut;
   sb.rpc("is_admin").then(({ data }) => {
     if (!$("#signOut")) return;
