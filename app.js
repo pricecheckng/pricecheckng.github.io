@@ -164,7 +164,7 @@ function route() {
 window.addEventListener("hashchange", route);
 
 /* ---------- market ---------- */
-const fxNoteText = () => (state.cur === "NGN" ? "" : "Converted from USD at market rates, refreshed every few hours.");
+const fxNoteText = () => "Second price is converted from the USD price at market exchange rates, which are updated regularly.";
 
 async function renderMarket() {
   await state.fxReady;
