@@ -142,7 +142,7 @@ const skeleton = (n = 6) =>
   Array.from({ length: n }, () => `<div class="sk"><i></i><div><i style="width:60%"></i><i style="width:35%;margin-top:8px"></i></div><i></i></div>`).join("");
 const emptyBox = (title, text) => `<div class="empty"><b>${esc(title)}</b>${esc(text)}</div>`;
 const footer = () =>
-  `<p class="foot">Price data by <a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a>. Prices are for information only and are not financial advice.<br><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a></p>`;
+  `<p class="foot">Price data by <a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a>. <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Rates By Exchange Rate API</a>. Prices are for information only and are not financial advice.<br><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a></p>`;
 const gate = (text) =>
   `<section class="page"><h1>Sign in</h1><div class="card"><p>${esc(text)}</p><button class="btn" data-auth>Sign in or create account</button></div></section>`;
 
