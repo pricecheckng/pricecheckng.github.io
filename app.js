@@ -1439,6 +1439,7 @@ function deleteAccountSheet() {
     } catch (_) {}
     state.user = null;
     state.pushOn = false;
+    state.pushSyncedFor = null;
     closeSheet();
     toast("Your account has been deleted");
     location.hash = "#market";
@@ -1460,6 +1461,7 @@ async function signOut() {
   await sb.auth.signOut();
   state.user = null;
   state.pushOn = false;
+  state.pushSyncedFor = null;
   toast("Signed out");
   route();
 }
@@ -1550,6 +1552,27 @@ async function enablePush() {
   }
 }
 
+// After sign-in, if this browser already allowed notifications, switch them back on quietly (no prompt, no message).
+async function silentPush() {
+  try {
+    if (state.user && pushSupported() && Notification.permission === "granted" && state.pushSyncedFor !== state.user.id) {
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (!sub) {
+        const { data: key, error } = await sb.rpc("vapid_public_key");
+        if (error || !key) throw new Error("no key");
+        sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToU8(key.trim()) });
+      }
+      const j = sub.toJSON();
+      const { error: e2 } = await sb
+        .from("push_subscriptions")
+        .upsert({ user_id: state.user.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth }, { onConflict: "endpoint" });
+      if (!e2) state.pushSyncedFor = state.user.id;
+    }
+  } catch (_) {}
+  await checkPush();
+}
+
 // Alerts need notifications: make sure this device is subscribed and saved for this account.
 async function ensurePush() {
   if (!state.user) return false;
@@ -1602,7 +1625,8 @@ try {
 /* ---------- boot ---------- */
 sb.auth.onAuthStateChange((ev, session) => {
   state.user = session?.user ?? null;
-  if (state.user && (ev === "SIGNED_IN" || ev === "INITIAL_SESSION")) setTimeout(checkPush, 0);
+  if (ev === "SIGNED_OUT") state.pushSyncedFor = null;
+  if (state.user && (ev === "SIGNED_IN" || ev === "INITIAL_SESSION")) setTimeout(silentPush, 0);
   if (ev === "PASSWORD_RECOVERY") setTimeout(recoverySheet, 0);
   if (ev === "SIGNED_OUT" || ev === "USER_UPDATED") setTimeout(route, 0);
 });
@@ -1615,7 +1639,7 @@ sb.auth.onAuthStateChange((ev, session) => {
   const wasBanned = /banned/i.test(authErr);
   if (wasBanned) history.replaceState(null, "", location.pathname + "#market");
   route();
-  checkPush();
+  silentPush();
   if (wasBanned) {
     openSheet(`<div class="done"><div class="big">🚫</div><h2 id="sheetTitle">Account banned</h2><p>Your account has been banned and can't sign in.</p><button class="btn" type="button" data-close>OK</button></div>`);
   }
