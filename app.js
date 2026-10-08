@@ -1686,18 +1686,55 @@ async function disconnectTelegram() {
   const { data } = await sb.auth.getUser();
   if (!data?.user) return;
   const { error } = await sb.from("telegram_links").delete().eq("user_id", data.user.id);
+  if (!error) {
+    // Without Telegram, "Telegram only" would send nothing: reset to both
+    await sb
+      .from("notification_prefs")
+      .update({ channel: "both", updated_at: new Date().toISOString() })
+      .eq("user_id", data.user.id);
+  }
   toast(error ? "Could not disconnect. Try again." : "Telegram disconnected");
+  route();
+}
+
+async function setAlertChannel(value) {
+  const { data } = await sb.auth.getUser();
+  if (!data?.user) return;
+  if (
+    value === "push" &&
+    !("Notification" in window && Notification.permission === "granted")
+  ) {
+    toast("Turn on notifications for this device first.");
+    return;
+  }
+  const { error } = await sb
+    .from("notification_prefs")
+    .upsert(
+      { user_id: data.user.id, channel: value, updated_at: new Date().toISOString() },
+      { onConflict: "user_id" }
+    );
+  toast(error ? "Could not save. Try again." : "Saved");
   route();
 }
 
 async function telegramCardHtml() {
   const { data } = await sb.from("telegram_links").select("chat_id").maybeSingle();
-  return data
-    ? `<div class="card"><h3>Telegram alerts</h3><p>Connected. Price alerts will be sent to your Telegram.</p><button class="btn ghost" type="button" data-tg-disconnect>Disconnect Telegram</button></div>`
-    : `<div class="card"><h3>Telegram alerts</h3><p>Get your price alerts in Telegram.</p><button class="btn" type="button" data-tg-connect>Connect Telegram</button></div>`;
+  if (!data) {
+    return `<div class="card"><h3>Telegram alerts</h3><p>Get your price alerts in Telegram.</p><button class="btn" type="button" data-tg-connect>Connect Telegram</button></div>`;
+  }
+  const { data: pref } = await sb.from("notification_prefs").select("channel").maybeSingle();
+  const ch = pref?.channel || "both";
+  const opt = (v, label) =>
+    `<button class="btn${ch === v ? "" : " ghost"}" type="button" data-alert-channel="${v}">${label}</button>`;
+  return (
+    `<div class="card"><h3>Telegram alerts</h3><p>Connected. Price alerts will be sent to your Telegram.</p><button class="btn ghost" type="button" data-tg-disconnect>Disconnect Telegram</button></div>` +
+    `<div class="card"><h3>Where to get alerts</h3><p>Choose where your price and portfolio alerts are sent.</p><div style="display:grid;gap:8px">${opt("both", "Both (push + Telegram)")}${opt("push", "Push only")}${opt("telegram", "Telegram only")}</div></div>`
+  );
 }
 
 document.addEventListener("click", (e) => {
   if (e.target.closest("[data-tg-connect]")) connectTelegram();
   if (e.target.closest("[data-tg-disconnect]")) disconnectTelegram();
+  const ch = e.target.closest("[data-alert-channel]");
+  if (ch) setAlertChannel(ch.getAttribute("data-alert-channel"));
 });
