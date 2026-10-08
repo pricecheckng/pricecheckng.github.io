@@ -289,7 +289,7 @@ function referralCardHtml() {
   return `<div class="cp-card" style="margin-top:14px">
       <h3>Want to start trading?</h3>
       <p class="muted" style="margin:6px 0 12px;font-size:.9rem">Create an account on Bybit, a crypto exchange. Availability depends on your country.</p>
-      <a class="btn ghost" href="${esc(BYBIT_REF)}" target="_blank" rel="noopener sponsored" style="display:block;text-align:center;text-decoration:none">Open Bybit</a>
+      <a class="btn ghost" href="${esc(BYBIT_REF)}" target="_blank" rel="noopener sponsored" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Open Bybit</a>
       <p class="muted" style="margin:10px 0 0;font-size:.78rem">Referral link: PriceCheck NG may earn a commission if you sign up. Trading is risky and this is not financial advice.</p>
     </div>`;
 }
