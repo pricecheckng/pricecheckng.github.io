@@ -1294,10 +1294,10 @@ async function paintPortfolioHistory(liveTotal) {
   await loadPlan();
   if (!$("#pfHist")) return;
   if (!state.plusUntil) {
-    box.innerHTML = `<div class="cp-card"><div style="display:flex;align-items:center;gap:10px"><h3 style="margin:0;flex:1">Value history</h3><span class="ac-plusbadge" style="margin:0">★ PLUS</span></div><p class="muted" style="margin:8px 0 0;font-size:.9rem">See how your portfolio value changes day by day and download your portfolio as a CSV file. This is part of PriceCheck Plus.</p></div>`;
+    box.innerHTML = `<div class="cp-card"><div style="display:flex;align-items:center;gap:10px"><h3 style="margin:0;flex:1">Value history</h3><span class="ac-plusbadge" style="margin:0">★ PLUS</span></div><p class="muted" style="margin:8px 0 0;font-size:.9rem">See how your portfolio value changes day by day for up to 1 year, and download your portfolio as a CSV file. This is part of PriceCheck Plus.</p></div>`;
     return;
   }
-  const since = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10);
+  const since = new Date(Date.now() - 365 * 864e5).toISOString().slice(0, 10);
   const { data, error } = await sb.from("portfolio_snapshots").select("day,value_usd").gte("day", since).order("day");
   if (!$("#pfHist")) return;
   if (error) {
@@ -1328,7 +1328,7 @@ async function paintPortfolioHistory(liveTotal) {
   box.innerHTML = `<div class="cp-card"><div style="display:flex;align-items:center;gap:10px"><h3 style="margin:0;flex:1">Value history</h3>${d ? `<span class="cp-pill ${d.c}">${d.t}</span>` : ""}</div>
     <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Portfolio value over time" style="display:block;margin-top:10px;color:#0b7d4d"><path d="${area}" fill="currentColor" opacity=".12"/><path d="${line}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${x(pts.length - 1).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="3.5" fill="currentColor"/></svg>
     <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-top:6px" class="muted"><span>${fd(first.day)} · ${esc(fmtUsd(first.v))}</span><span>${fd(last.day)} · ${esc(fmtUsd(last.v))}</span></div>
-    <p class="muted" style="margin:8px 0 0;font-size:.78rem">Saved once a day, shown in USD. Today's point uses live prices.</p>
+    <p class="muted" style="margin:8px 0 0;font-size:.78rem">Shows up to the last 1 year. Saved once a day, in USD. Today's point uses live prices.</p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="ac-btn" type="button" data-export="portfolio">⬇ Portfolio CSV</button><button class="ac-btn" type="button" data-export="history">⬇ History CSV</button></div></div>`;
 }
 
@@ -2407,7 +2407,7 @@ function plusCardHtml() {
       ${row("Coin price alerts", 10, 50)}
       ${row("Move alerts", 5, 20)}
       ${row("Portfolio alerts", 5, 20)}
-      ${row("Portfolio value history", "–", "✓")}
+      ${row("Value history (1 year)", "–", "✓")}
     </div>
     ${buy}
     <p class="ac-note" style="margin-top:12px">Everything you use today stays free.${on || PLUS_PAYMENTS_LIVE ? "" : " We'll tell you here when Plus is ready."}</p>
