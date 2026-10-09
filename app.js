@@ -1105,7 +1105,6 @@ function paintPortfolio() {
   const rows = pf.rows.filter((r) => r.coins);
   if (!rows.length) {
     box.innerHTML = emptyBox("No holdings yet", "Add the coins you own to see their value and your profit or loss.") + `<button class="btn" type="button" id="pfAdd">Add holding</button>`;
-    paintPortfolioHistory(pf.total);
   $("#pfAdd").onclick = () => holdingSheet();
     return;
   }
@@ -1233,6 +1232,7 @@ function paintPortfolio() {
       ${groupHtml}
     </div>
     ${referralCardHtml()}`;
+  paintPortfolioHistory(pf.total);
   $("#pfAdd").onclick = () => holdingSheet();
   $("#pfAlertBtn").onclick = () => portfolioAlertSheet();
 }
