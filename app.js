@@ -2301,11 +2301,11 @@ function percentAlertSheet(c) {
       <button class="x" type="button" data-close aria-label="Close">×</button>
     </div>
     <p class="hint" style="margin-top:0">Alert me if the price moves by</p>
-    <div class="seg" role="group" aria-label="Percent">
+    <div class="seg" role="group" aria-label="Percent" style="grid-template-columns:repeat(4,1fr);display:grid">
       ${[3, 5, 10, 20].map((v) => `<button type="button" data-pct="${v}" aria-pressed="${v === 5}">${v}%</button>`).join("")}
     </div>
     <label class="field"><span>Or type your own percent</span><input id="pctIn" inputmode="decimal" autocomplete="off" placeholder="e.g. 7.5"></label>
-    <div class="seg" role="group" aria-label="Direction">
+    <div class="seg" role="group" aria-label="Direction" style="grid-template-columns:repeat(3,1fr);display:grid;margin-top:10px">
       <button type="button" data-dir="up" aria-pressed="false">📈 Up</button>
       <button type="button" data-dir="down" aria-pressed="false">📉 Down</button>
       <button type="button" data-dir="either" aria-pressed="true">↕ Either</button>
