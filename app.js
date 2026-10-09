@@ -1105,7 +1105,8 @@ function paintPortfolio() {
   const rows = pf.rows.filter((r) => r.coins);
   if (!rows.length) {
     box.innerHTML = emptyBox("No holdings yet", "Add the coins you own to see their value and your profit or loss.") + `<button class="btn" type="button" id="pfAdd">Add holding</button>`;
-    $("#pfAdd").onclick = () => holdingSheet();
+    paintPortfolioHistory(pf.total);
+  $("#pfAdd").onclick = () => holdingSheet();
     return;
   }
   const rate = state.fx[state.cur];
@@ -1227,12 +1228,55 @@ function paintPortfolio() {
     <div class="pf-btns"><button class="btn" type="button" id="pfAdd">+ Add holding</button><button class="ac-btn" type="button" id="pfAlertBtn">🔔 Alert on total</button></div>
     ${alertsLine}
     ${allocHtml}
+    <div id="pfHist" style="margin-top:14px"></div>
     <div style="margin-top:6px">
       ${groupHtml}
     </div>
     ${referralCardHtml()}`;
   $("#pfAdd").onclick = () => holdingSheet();
   $("#pfAlertBtn").onclick = () => portfolioAlertSheet();
+}
+
+async function paintPortfolioHistory(liveTotal) {
+  const box = $("#pfHist");
+  if (!box) return;
+  acctCss();
+  await loadPlan();
+  if (!$("#pfHist")) return;
+  if (!state.plusUntil) {
+    box.innerHTML = `<div class="cp-card"><div style="display:flex;align-items:center;gap:10px"><h3 style="margin:0;flex:1">Value history</h3><span class="ac-plusbadge" style="margin:0">★ PLUS</span></div><p class="muted" style="margin:8px 0 0;font-size:.9rem">See how your portfolio value changes day by day. This is part of PriceCheck Plus.</p></div>`;
+    return;
+  }
+  const since = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10);
+  const { data, error } = await sb.from("portfolio_snapshots").select("day,value_usd").gte("day", since).order("day");
+  if (!$("#pfHist")) return;
+  if (error) {
+    box.innerHTML = `<div class="cp-card"><h3>Value history</h3><p class="muted" style="margin:6px 0 0;font-size:.9rem">Could not load your history. Try again later.</p></div>`;
+    return;
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const pts = (data || []).map((r) => ({ day: r.day, v: Number(r.value_usd) })).filter((p) => p.day !== today);
+  if (Number.isFinite(liveTotal) && liveTotal > 0) pts.push({ day: today, v: liveTotal });
+  if (pts.length < 2) {
+    box.innerHTML = `<div class="cp-card"><h3>Value history</h3><p class="muted" style="margin:6px 0 0;font-size:.9rem">We save your portfolio value once a day. Come back tomorrow to see your first line.</p></div>`;
+    return;
+  }
+  const W = 320, H = 130, P = 8;
+  const vs = pts.map((p) => p.v);
+  let lo = Math.min(...vs), hi = Math.max(...vs);
+  if (hi === lo) { hi += 1; lo -= 1; }
+  const x = (i) => P + (i * (W - 2 * P)) / (pts.length - 1);
+  const y = (v) => H - P - ((v - lo) / (hi - lo)) * (H - 2 * P);
+  const line = pts.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(p.v).toFixed(1)}`).join(" ");
+  const area = `${line} L${x(pts.length - 1).toFixed(1)} ${H - P} L${x(0).toFixed(1)} ${H - P} Z`;
+  const first = pts[0], last = pts[pts.length - 1];
+  const chgPct = first.v > 0 ? ((last.v - first.v) / first.v) * 100 : 0;
+  const d = chg(chgPct);
+  const fd = (s) => new Date(s + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" });
+  box.innerHTML = `<div class="cp-card"><div style="display:flex;align-items:center;gap:10px"><h3 style="margin:0;flex:1">Value history</h3>${d ? `<span class="cp-pill ${d.c}">${d.t}</span>` : ""}</div>
+    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Portfolio value over time" style="display:block;margin-top:10px;color:#0b7d4d"><path d="${area}" fill="currentColor" opacity=".12"/><path d="${line}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${x(pts.length - 1).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="3.5" fill="currentColor"/></svg>
+    <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-top:6px" class="muted"><span>${fd(first.day)} · ${esc(fmtUsd(first.v))}</span><span>${fd(last.day)} · ${esc(fmtUsd(last.v))}</span></div>
+    <p class="muted" style="margin:8px 0 0;font-size:.78rem">Saved once a day, shown in USD. Today's point uses live prices.</p></div>`;
 }
 
 async function onPortfolioClick(e) {
