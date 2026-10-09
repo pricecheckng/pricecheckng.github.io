@@ -973,7 +973,7 @@ async function renderAlerts() {
   }
   const pfActive = (po.data || []).filter((a) => a.status === "active").length;
   const cnt = (arr) => (arr || []).filter((a) => a.status === "active").length;
-  const countLine = `<p class="muted" style="margin:0;padding:12px 14px;font-size:.88rem;border-bottom:1px solid rgba(127,127,127,.18)">Active alerts: coin ${cnt(pa.data)} of ${PRICE_ALERT_LIMIT} · move ${cnt(pp.data)} of ${PCT_ALERT_LIMIT} · portfolio ${pfActive} of ${PORTFOLIO_ALERT_LIMIT}</p>`;
+  const countLine = `<p class="muted" style="margin:0;padding:12px 14px;font-size:.88rem;border-bottom:1px solid rgba(127,127,127,.18)">Active: coin ${cnt(pa.data)}/${PRICE_ALERT_LIMIT} · move ${cnt(pp.data)}/${PCT_ALERT_LIMIT} · portfolio ${pfActive}/${PORTFOLIO_ALERT_LIMIT}</p>`;
   box.innerHTML =
     countLine +
     items
@@ -2252,7 +2252,7 @@ function plusCardHtml() {
       ${row("Portfolio alerts", PORTFOLIO_ALERT_LIMIT, 20)}
       ${row("Portfolio value history", "–", "✓")}
     </div>
-    <p class="ac-note">Everything you use today stays free. We'll tell you here when Plus is ready.</p>
+    <p class="ac-note" style="margin-top:12px">Everything you use today stays free. We'll tell you here when Plus is ready.</p>
   </div>`;
 }
 
