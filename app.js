@@ -2262,6 +2262,7 @@ function acctCss() {
 .pl-r span:not(:first-child),.pl-r b{text-align:center}
 .pl-r b{color:#0b7d4d}
 .pl-h{border-top:0;font-size:.8rem;opacity:.75;font-weight:700}
+.ac-plusbadge{display:inline-block;margin-top:4px;font-size:.72rem;font-weight:800;letter-spacing:.04em;padding:3px 9px;border-radius:999px;background:linear-gradient(135deg,#f5c542,#e8a317);color:#4a3200}
 .pl-buy{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
 .pl-b{background:#0b7d4d;color:#fff;border:0;border-radius:12px;padding:10px 4px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
 .pl-b b{font-size:1.1rem;color:#fff}
@@ -2286,7 +2287,7 @@ function renderAccount() {
   const confirmed = !!state.user.email_confirmed_at;
   const chev = `<span class="ac-chev">${acIco("chev")}</span>`;
   view.innerHTML = `<section class="page acct"><h1>Account</h1><p class="acct-sub">Manage your profile, notifications and alert settings.</p>
-    <div class="ac-card ac-prof"><div class="ac-av">${acIco("user")}</div><div class="ac-pt"><b>${esc(state.user.email)}</b>${
+    <div class="ac-card ac-prof"><div class="ac-av">${acIco("user")}</div><div class="ac-pt"><b>${esc(state.user.email)}</b><span id="plusBadge">${state.plusUntil ? plusBadgeHtml() : ""}</span>${
       confirmed ? `<span class="ac-ok">${acIco("check")} Email verified</span>` : `<span class="ac-warn">Email not confirmed yet. Alerts need a confirmed email.</span>`
     }</div></div>
     <div id="pushCard" data-full="1"></div>
@@ -2300,6 +2301,8 @@ function renderAccount() {
     <div id="delSlot"></div></section>${footer()}`;
   renderPushCard($("#pushCard"));
   loadPlan().then(() => {
+    const pb = $("#plusBadge");
+    if (pb) pb.innerHTML = state.plusUntil ? plusBadgeHtml() : "";
     const el = $("#plusSlot");
     if (el) {
       const wasOpen = el.querySelector("details")?.open;
@@ -2330,6 +2333,10 @@ const PLUS_PLANS = [
   { id: "quarter", label: "3 months", price: "$5" },
   { id: "year", label: "1 year", price: "$15" },
 ];
+
+function plusBadgeHtml() {
+  return `<span class="ac-plusbadge">★ PLUS</span>`;
+}
 
 function plusCardHtml() {
   const row = (label, free, plus) => `<div class="pl-r"><span>${label}</span><span>${free}</span><b>${plus}</b></div>`;
