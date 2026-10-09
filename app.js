@@ -1246,7 +1246,7 @@ function downloadCsv(name, rows) {
     const s = v == null ? "" : String(v);
     return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
   };
-  const text = "\ufeff" + rows.map((r) => r.map(cell).join(",")).join("\r\n");
+  const text = rows.map((r) => r.map(cell).join(",")).join("\r\n");
   const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));
   const l = document.createElement("a");
   l.href = url;
@@ -1257,6 +1257,7 @@ function downloadCsv(name, rows) {
   setTimeout(() => URL.revokeObjectURL(url), 2000);
   toast("File saved to your downloads");
 }
+const rnd = (n, d) => (n === "" || n == null || !Number.isFinite(Number(n)) ? "" : Number(Number(n).toFixed(d)));
 const csvDay = () => new Date().toISOString().slice(0, 10);
 let lastAlertItems = [];
 let lastHistoryPts = [];
@@ -1269,11 +1270,11 @@ document.addEventListener("click", (e) => {
     const rows = [["Coin", "Symbol", "Amount", "Buy price (USD)", "Current price (USD)", "Value (USD)", "Profit/loss (USD)", "Added"]];
     pf.rows.filter((r) => r.coins).forEach((r) => {
       const amt = Number(r.amount), cur = Number(r.coins.price_usd), buy = r.buy_price_usd == null ? null : Number(r.buy_price_usd);
-      rows.push([r.coins.name, (r.coins.symbol || "").toUpperCase(), amt, buy ?? "", cur, amt * cur, buy == null ? "" : amt * (cur - buy), (r.created_at || "").slice(0, 10)]);
+      rows.push([r.coins.name, (r.coins.symbol || "").toUpperCase(), rnd(amt, 8), rnd(buy, 8), rnd(cur, 8), rnd(amt * cur, 2), buy == null ? "" : rnd(amt * (cur - buy), 2), (r.created_at || "").slice(0, 10)]);
     });
     downloadCsv(`pricecheck-portfolio-${csvDay()}.csv`, rows);
   } else if (kind === "history") {
-    downloadCsv(`pricecheck-value-history-${csvDay()}.csv`, [["Date", "Value (USD)"], ...lastHistoryPts.map((p) => [p.day, p.v])]);
+    downloadCsv(`pricecheck-value-history-${csvDay()}.csv`, [["Date", "Value (USD)"], ...lastHistoryPts.map((p) => [p.day, rnd(p.v, 2)])]);
   } else if (kind === "alerts") {
     const rows = [["Type", "Coin", "Condition", "Target", "Currency", "Status", "Created", "Triggered"]];
     lastAlertItems.forEach(({ kind: k, a }) => {
