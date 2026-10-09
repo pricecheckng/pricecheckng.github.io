@@ -1640,33 +1640,6 @@ async function onAdminAction(e) {
 }
 
 /* ---------- account view ---------- */
-function renderAccount() {
-  if (!state.user) {
-    view.innerHTML = gate("Create a free account to set price alerts and get notified on your phone.");
-    return;
-  }
-  const confirmed = !!state.user.email_confirmed_at;
-  view.innerHTML = `<section class="page"><h1>Account</h1>
-    <div class="card"><b>${esc(state.user.email)}</b><p>${confirmed ? "Email confirmed" : "Email not confirmed yet. Alerts need a confirmed email."}</p></div>
-    <div id="pushCard" data-full="1"></div>
-    <div id="tgCard"></div>
-    <button class="btn ghost" type="button" id="signOut">Sign out</button></section>${footer()}`;
-  renderPushCard($("#pushCard"));
-  telegramCardHtml().then((h) => {
-    if ($("#tgCard")) $("#tgCard").innerHTML = h;
-  });
-  $("#signOut").onclick = signOut;
-  sb.rpc("is_admin").then(({ data }) => {
-    if (!$("#signOut")) return;
-    if (data) {
-      $("#signOut").insertAdjacentHTML("beforebegin", `<a class="btn" href="#admin" style="display:flex;align-items:center;justify-content:center;box-sizing:border-box;text-align:center;text-decoration:none;margin-bottom:10px">Admin</a>`);
-    } else {
-      $("#signOut").insertAdjacentHTML("afterend", `<button class="btn ghost" type="button" id="delAcct" style="color:#dc2626;border-color:#dc2626;margin-top:10px">Delete my account</button>`);
-      $("#delAcct").onclick = deleteAccountSheet;
-    }
-  });
-}
-
 function deleteAccountSheet() {
   openSheet(`
     <div class="sheet-head"><span></span><div><h2 id="sheetTitle">Delete account</h2></div><button class="x" type="button" data-close aria-label="Close">×</button></div>
@@ -1746,8 +1719,7 @@ function iosBannerHtml() {
   return `<div class="card" id="iosBanner" style="margin-top:14px"><b>📲 Get alerts on your iPhone</b><p>Alerts only work from the home screen app. Tap <b>Share</b>, then <b>Add to Home Screen</b>, then open PriceCheck NG from your home screen.</p><button class="link" type="button" id="iosClose">Not now</button></div>`;
 }
 
-const PUSH_HELP = `<details class="card" style="margin-top:10px"><summary><b>Notifications not working?</b></summary>
-  <ol style="margin:10px 0 0;padding-left:20px;line-height:1.6">
+const PUSH_STEPS = `<ol style="margin:10px 0 0;padding-left:20px;line-height:1.6">
     <li>Tap <b>Turn on notifications</b> above and allow the permission.</li>
     <li>In Chrome: menu (⋮) → Settings → Site settings → Notifications → allow this site.</li>
     <li>In your phone settings, open Apps → Chrome (or PriceCheck) → Notifications, and turn them on.</li>
@@ -1755,11 +1727,13 @@ const PUSH_HELP = `<details class="card" style="margin-top:10px"><summary><b>Not
     <li>On iPhone, alerts only work from the home screen app: tap Share, then Add to Home Screen, and open it from there.</li>
     <li>Sign out, sign in again, then tap <b>Send test notification</b>.</li>
   </ol>
-  <p style="margin:10px 0 0">Telegram alerts also work as a backup. You can connect Telegram below.</p></details>`;
+  <p style="margin:10px 0 0">Telegram alerts also work as a backup. You can connect Telegram below.</p>`;
+const PUSH_HELP = `<details class="card" style="margin-top:10px"><summary><b>Notifications not working?</b></summary>${PUSH_STEPS}</details>`;
 
 function renderPushCard(el) {
   if (!el) return;
   const full = el.dataset.full === "1";
+  if (full) return renderAcctPush(el);
   if (!pushSupported()) {
     el.innerHTML = `<div class="card"><b>Notifications unavailable</b><p>${
       isIos() ? "On iPhone, tap Share, then Add to Home Screen, and open PriceCheck NG from there to enable notifications." : "This browser does not support push notifications. Try Chrome."
@@ -1822,6 +1796,9 @@ async function enablePush() {
       toast("Notifications were not allowed.");
       return false;
     }
+    try {
+      localStorage.removeItem("pc_push_off");
+    } catch (_) {}
     const reg = await navigator.serviceWorker.ready;
     let sub = await reg.pushManager.getSubscription();
     if (!sub) {
@@ -1846,8 +1823,12 @@ async function enablePush() {
 
 // After sign-in, if this browser already allowed notifications, switch them back on quietly (no prompt, no message).
 async function silentPush() {
+  let off = false;
   try {
-    if (state.user && pushSupported() && Notification.permission === "granted" && state.pushSyncedFor !== state.user.id) {
+    off = localStorage.getItem("pc_push_off") === "1";
+  } catch (_) {}
+  try {
+    if (!off && state.user && pushSupported() && Notification.permission === "granted" && state.pushSyncedFor !== state.user.id) {
       const reg = await navigator.serviceWorker.ready;
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
@@ -2031,23 +2012,6 @@ async function setAlertChannel(value) {
   route();
 }
 
-async function telegramCardHtml() {
-  const { data } = await sb.from("telegram_links").select("chat_id").maybeSingle();
-  if (!data) {
-    return `<div class="card"><h3>Telegram alerts</h3><p>Get your price alerts in Telegram.</p><button class="btn" type="button" data-tg-connect>Connect Telegram</button></div>`;
-  }
-  const { data: pref } = await sb.from("notification_prefs").select("channel").maybeSingle();
-  const ch = pref?.channel || "both";
-  const opt = (v, label) =>
-    `<button class="btn${ch === v ? "" : " ghost"}" type="button" data-alert-channel="${v}">${label}</button>`;
-  const dsHtml = await dailySummaryCardHtml(ch);
-  return (
-    `<div class="card"><h3>Telegram alerts</h3><p>Connected. Price alerts will be sent to your Telegram.</p><button class="btn ghost" type="button" data-tg-disconnect>Disconnect Telegram</button></div>` +
-    `<div class="card"><h3>Where to get alerts</h3><p>Choose where your price and portfolio alerts are sent.</p><div style="display:grid;gap:8px">${opt("both", "Both (push + Telegram)")}${opt("push", "Push only")}${opt("telegram", "Telegram only")}</div></div>` +
-    dsHtml
-  );
-}
-
 /* ---------- daily summary (Telegram) ---------- */
 const browserTz = () => {
   try {
@@ -2057,23 +2021,6 @@ const browserTz = () => {
   }
 };
 const hourLabel = (h) => `${h % 12 || 12}:00 ${h < 12 ? "AM" : "PM"}`;
-
-async function dailySummaryCardHtml(channel) {
-  const { data: row } = await sb.from("daily_summary").select("enabled,hour,tz").maybeSingle();
-  const on = !!row?.enabled;
-  const hour = row?.hour ?? 8;
-  const tz = browserTz();
-  if (on && row.tz !== tz) {
-    sb.from("daily_summary").update({ tz, updated_at: new Date().toISOString() }).eq("user_id", state.user.id).then(() => {});
-  }
-  const opts = Array.from({ length: 24 }, (_, h) => `<option value="${h}"${h === hour ? " selected" : ""}>${hourLabel(h)}</option>`).join("");
-  return `<div class="card"><h3>Daily summary</h3>
-    <p>Get a short Telegram message each day with your watchlist prices. It arrives at your own local time.</p>
-    <div class="curbar" style="margin:8px 0"><label for="dsHour">Send at</label><select id="dsHour" data-ds-hour>${opts}</select></div>
-    <p class="muted" style="font-size:.85rem;margin:0 0 10px">Your time zone: ${esc(tz)} (found automatically from your device). Sent around that hour.</p>
-    ${channel === "push" ? `<p class="muted" style="font-size:.85rem;margin:0 0 10px">Your alerts are set to Push only, so the summary won't be sent. Choose Both or Telegram only above.</p>` : ""}
-    <button class="btn${on ? " ghost" : ""}" type="button" data-ds-toggle>${on ? "Turn off daily summary" : "Turn on daily summary"}</button></div>`;
-}
 
 async function saveSummary(patch) {
   if (!state.user) return;
@@ -2103,3 +2050,223 @@ document.addEventListener("change", async (e) => {
   const err = await saveSummary({ hour: Number(sel.value) });
   toast(err ? "Could not save. Try again." : "Saved");
 });
+
+/* ---------- account page (new layout) ---------- */
+function acIco(n) {
+  const P = {
+    user: '<circle cx="12" cy="8" r="4" fill="currentColor" stroke="none"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7z" fill="currentColor" stroke="none"/>',
+    check: '<circle cx="12" cy="12" r="10" fill="currentColor" stroke="none"/><path d="M7.5 12.5l3 3 6-6.5" stroke="#fff"/>',
+    bell: '<path d="M6 16v-5a6 6 0 1 1 12 0v5l2 2H4z"/><path d="M10 21h4"/>',
+    send: '<path d="M3 11l18-8-8 18-2-8z" fill="currentColor"/>',
+    chev: '<path d="M9 6l6 6-6 6"/>',
+    help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.4-1 .9-1 1.7M12 17h.01"/>',
+    shield: '<path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/>',
+    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5h.01"/>',
+    clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    doc: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>',
+    unlink: '<path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/><path d="M4 4l16 16"/>',
+    tg: '<circle cx="12" cy="12" r="12" fill="#229ed9" stroke="none"/><path d="M5.5 11.8l12-4.7c.6-.2 1 .1.9.8l-2 9.6c-.1.6-.5.8-1 .5l-3-2.2-1.5 1.4c-.2.2-.3.3-.6.3l.2-3.1 5.6-5c.2-.2 0-.3-.4-.1l-6.9 4.4-3-.9c-.6-.2-.6-.6.1-.9z" fill="#fff" stroke="none"/>',
+  };
+  return `<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n] || ""}</svg>`;
+}
+
+function acRow(icon, title, sub, tail, tag, attrs) {
+  const ic = icon === "tg" ? `<span class="ac-ic tg">${acIco("tg")}</span>` : `<span class="ac-ic">${acIco(icon)}</span>`;
+  const body = `${ic}<div class="ac-rt"><b>${title}</b>${sub ? `<small>${sub}</small>` : ""}</div>${tail || ""}`;
+  return `<${tag || "div"} class="ac-row"${attrs ? " " + attrs : ""}>${body}</${tag || "div"}>`;
+}
+
+function acctCss() {
+  if (document.getElementById("acctCss")) return;
+  const s = document.createElement("style");
+  s.id = "acctCss";
+  s.textContent = `
+.acct h1{margin-bottom:2px}.acct-sub{margin:0 0 14px;opacity:.7}
+.ac-card{border:1px solid rgba(127,127,127,.22);border-radius:18px;padding:14px;margin:0 0 12px;background:rgba(127,127,127,.05)}
+.ac-card h3{margin:0 0 2px;font-size:1.05rem}
+.ac-card>p{margin:0 0 6px;opacity:.7;font-size:.9rem}
+.ac-prof{display:flex;align-items:center;gap:14px;background:rgba(11,125,77,.08)}
+.ac-av{width:52px;height:52px;border-radius:50%;background:#0b7d4d;color:#fff;display:grid;place-items:center;flex:none}
+.ac-av svg{width:30px;height:30px}
+.ac-pt{display:flex;flex-direction:column;gap:3px;min-width:0}
+.ac-pt b{overflow-wrap:anywhere}
+.ac-ok{color:#0b7d4d;display:flex;align-items:center;gap:6px;font-size:.9rem}
+.ac-ok svg{width:18px;height:18px}
+.ac-warn{font-size:.85rem;color:#b45309}
+.ac-row{display:flex;align-items:center;gap:12px;padding:10px 0;color:inherit;text-decoration:none;border-top:1px solid rgba(127,127,127,.18)}
+.ac-card>.ac-row:first-child,.ac-card>p+.ac-row,.ac-card>h3+.ac-row{border-top:0}
+.ac-ic{width:42px;height:42px;border-radius:50%;background:rgba(11,125,77,.1);color:#0b7d4d;display:grid;place-items:center;flex:none}
+.ac-ic.tg{background:none}.ac-ic.tg svg{width:42px;height:42px}
+.ac-rt{flex:1;min-width:0;display:flex;flex-direction:column}
+.ac-rt b{font-size:1rem}.ac-rt small{opacity:.7;font-size:.85rem;line-height:1.35}
+.ac-pill{border:0;font:inherit;font-size:.75rem;font-weight:700;letter-spacing:.03em;padding:6px 12px;border-radius:999px;background:#0b7d4d;color:#fff;flex:none}
+.ac-pill.soft{background:rgba(11,125,77,.15);color:#0b7d4d}
+.ac-pill.off{background:rgba(127,127,127,.2);color:inherit}
+.ac-chev{width:18px;height:18px;opacity:.5;flex:none}
+.ac-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin-top:8px;padding:12px;border-radius:12px;border:1px solid rgba(11,125,77,.3);background:rgba(11,125,77,.07);color:#0b7d4d;font:inherit;font-weight:600}
+.ac-btn svg{width:18px;height:18px}
+.ac-sw{position:relative;width:52px;height:30px;border-radius:999px;border:0;background:rgba(127,127,127,.35);flex:none;padding:0;transition:background .2s}
+.ac-sw i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s}
+.ac-sw.on{background:#0b7d4d}.ac-sw.on i{transform:translateX(22px)}
+.ac-seg{display:grid;grid-template-columns:repeat(3,1fr);margin-top:10px;border:1px solid rgba(127,127,127,.25);border-radius:14px;overflow:hidden}
+.ac-seg button{display:flex;align-items:center;justify-content:center;gap:8px;padding:14px 4px;border:0;background:none;color:inherit;font:inherit;font-weight:600}
+.ac-seg button+button{border-left:1px solid rgba(127,127,127,.22)}
+.ac-seg .rd{width:18px;height:18px;border-radius:50%;border:2px solid currentColor;opacity:.55;box-sizing:border-box}
+.ac-seg .on{background:#0b7d4d;color:#fff}
+.ac-seg .on .rd{opacity:1;border:5px solid #fff;background:#0b7d4d}
+.ac-sel{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(127,127,127,.3);background:transparent;color:inherit}
+.ac-note{margin:4px 0 0;font-size:.82rem;opacity:.7;line-height:1.4}
+.ac-help summary{list-style:none;cursor:pointer}
+.ac-help summary::-webkit-details-marker{display:none}
+.ac-help-body{padding:0 0 10px 54px;font-size:.9rem;line-height:1.6}
+.ac-help-body ol{margin:0;padding-left:18px}.ac-help-body p{margin:8px 0 0}
+.ac-quiet{display:block;text-align:center;margin:4px 0 12px;opacity:.7;font-size:.9rem;color:inherit}
+.ac-del{display:block;margin:6px auto 0;background:none;border:0;color:#dc2626;font:inherit;font-size:.9rem;padding:10px}
+`;
+  document.head.appendChild(s);
+}
+
+function renderAccount() {
+  if (!state.user) {
+    view.innerHTML = gate("Create a free account to set price alerts and get notified on your phone.");
+    return;
+  }
+  acctCss();
+  const confirmed = !!state.user.email_confirmed_at;
+  const chev = `<span class="ac-chev">${acIco("chev")}</span>`;
+  view.innerHTML = `<section class="page acct"><h1>Account</h1><p class="acct-sub">Manage your profile, notifications and alert settings.</p>
+    <div class="ac-card ac-prof"><div class="ac-av">${acIco("user")}</div><div class="ac-pt"><b>${esc(state.user.email)}</b>${
+      confirmed ? `<span class="ac-ok">${acIco("check")} Email verified</span>` : `<span class="ac-warn">Email not confirmed yet. Alerts need a confirmed email.</span>`
+    }</div></div>
+    <div id="pushCard" data-full="1"></div>
+    <div id="tgCard"></div>
+    <div class="ac-card">
+      <details class="ac-help"><summary class="ac-row">${`<span class="ac-ic">${acIco("help")}</span><div class="ac-rt"><b>Notifications not working?</b><small>Troubleshoot common issues</small></div>`}${chev}</summary><div class="ac-help-body">${PUSH_STEPS}</div></details>
+      ${acRow("shield", "Privacy &amp; security", "How we look after your data", chev, "a", 'href="privacy.html"')}
+      ${acRow("doc", "Terms of service", "The rules for using PriceCheck NG", chev, "a", 'href="terms.html"')}
+      ${acRow("info", "About PriceCheck NG", "Version 1.0.0", "")}
+    </div>
+    <div id="adminSlot"></div>
+    <button class="btn ghost" type="button" id="signOut">Sign out</button>
+    <div id="delSlot"></div></section>${footer()}`;
+  renderPushCard($("#pushCard"));
+  telegramCardHtml().then((h) => {
+    if ($("#tgCard")) $("#tgCard").innerHTML = h;
+  });
+  $("#signOut").onclick = signOut;
+  sb.rpc("is_admin").then(({ data }) => {
+    if (!$("#signOut")) return;
+    if (data) {
+      $("#adminSlot").innerHTML = `<a class="ac-quiet" href="#admin">Admin dashboard</a>`;
+    } else {
+      $("#delSlot").innerHTML = `<button class="ac-del" type="button" id="delAcct">Delete my account</button>`;
+      $("#delAcct").onclick = deleteAccountSheet;
+    }
+  });
+}
+
+function renderAcctPush(el) {
+  const sw = (on) => `<button type="button" class="ac-sw${on ? " on" : ""}" role="switch" aria-checked="${on}" aria-label="Notifications" data-push-sw><i></i></button>`;
+  let sub, tail = "", extra = "";
+  if (!pushSupported()) {
+    sub = isIos() ? "On iPhone, tap Share, then Add to Home Screen, and open PriceCheck NG from there." : "This browser does not support push notifications. Try Chrome.";
+  } else if (Notification.permission === "denied") {
+    sub = "Blocked. Allow notifications for this site in your browser settings.";
+  } else if (state.pushOn) {
+    sub = "Push notifications are enabled on this device.";
+    tail = sw(true);
+    extra = `<button class="ac-btn" type="button" id="pushTest">${acIco("send")} Send test notification</button>`;
+  } else {
+    sub = "Turn on notifications to hear about alerts the moment they happen.";
+    tail = sw(false);
+  }
+  el.innerHTML = `<div class="ac-card">${acRow("bell", "Notifications", sub, tail)}${extra}</div>`;
+  const on = !!state.pushOn;
+  const pill = $("#acPushPill");
+  if (pill) {
+    pill.textContent = on ? "ON" : "OFF";
+    pill.className = "ac-pill" + (on ? "" : " off");
+  }
+  const ps = $("#acPushSub");
+  if (ps) ps.textContent = on ? "Enabled · This device" : "Not enabled on this device";
+  const t = $("#pushTest");
+  if (t) {
+    t.onclick = async () => {
+      t.disabled = true;
+      const { error } = await sb.rpc("send_test_notification");
+      if (error) {
+        toast(/wait/i.test(error.message || "") ? "Please wait a minute before sending another test." : "Could not send the test. Please try again.");
+        setTimeout(() => (t.disabled = false), 5000);
+        return;
+      }
+      toast("Test sent. It should arrive within a minute or two 🔔");
+      setTimeout(() => (t.disabled = false), 60000);
+    };
+  }
+}
+
+async function disablePush() {
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const sub = await reg.pushManager.getSubscription();
+    if (sub) {
+      await sb.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
+      await sub.unsubscribe();
+    }
+  } catch (_) {}
+  try {
+    localStorage.setItem("pc_push_off", "1");
+  } catch (_) {}
+  state.pushOn = false;
+  toast("Notifications turned off on this device");
+}
+
+document.addEventListener("click", async (e) => {
+  const s = e.target.closest("[data-push-sw]");
+  if (!s) return;
+  s.disabled = true;
+  if (state.pushOn) await disablePush();
+  else await enablePush();
+  if (typeof route === "function") route();
+});
+
+async function telegramCardHtml() {
+  const { data } = await sb.from("telegram_links").select("chat_id").maybeSingle();
+  const on = !!state.pushOn;
+  const pushRow = acRow(
+    "bell",
+    "Push notifications",
+    `<span id="acPushSub">${on ? "Enabled · This device" : "Not enabled on this device"}</span>`,
+    `<span id="acPushPill" class="ac-pill${on ? "" : " off"}">${on ? "ON" : "OFF"}</span>`
+  );
+  const tgRow = data
+    ? acRow("tg", "Telegram", "Connected", `<span class="ac-pill soft">CONNECTED</span>`)
+    : acRow("tg", "Telegram", "Get your alerts in Telegram", `<button class="ac-pill" type="button" data-tg-connect>Connect</button>`);
+  const channels = `<div class="ac-card"><h3>Alert channels</h3><p>Choose how you want to receive your alerts.</p>${pushRow}${tgRow}${
+    data ? `<button class="ac-btn" type="button" data-tg-disconnect>${acIco("unlink")} Disconnect Telegram</button>` : ""
+  }</div>`;
+  if (!data) return channels;
+
+  const { data: pref } = await sb.from("notification_prefs").select("channel").maybeSingle();
+  const ch = pref?.channel || "both";
+  const seg = (v, label) => `<button type="button" class="${ch === v ? "on" : ""}" data-alert-channel="${v}"><span class="rd"></span>${label}</button>`;
+  const delivery = `<div class="ac-card"><h3>Alert delivery</h3><p>Choose where your alerts are sent.</p><div class="ac-seg">${seg("both", "Both")}${seg("push", "Push")}${seg("telegram", "Telegram")}</div></div>`;
+  return channels + delivery + (await dailySummaryCardHtml(ch));
+}
+
+async function dailySummaryCardHtml(channel) {
+  const { data: row } = await sb.from("daily_summary").select("enabled,hour,tz").maybeSingle();
+  const on = !!row?.enabled;
+  const hour = row?.hour ?? 8;
+  const tz = browserTz();
+  if (on && row.tz !== tz) {
+    sb.from("daily_summary").update({ tz, updated_at: new Date().toISOString() }).eq("user_id", state.user.id).then(() => {});
+  }
+  const opts = Array.from({ length: 24 }, (_, h) => `<option value="${h}"${h === hour ? " selected" : ""}>${hourLabel(h)}</option>`).join("");
+  const toggle = `<button type="button" class="ac-sw${on ? " on" : ""}" role="switch" aria-checked="${on}" aria-label="Daily summary" data-ds-toggle><i></i></button>`;
+  return `<div class="ac-card">
+    ${acRow("clock", "Daily summary", "A short Telegram message each day with your watchlist prices.", toggle)}
+    ${acRow("clock", "Send at", "", `<select class="ac-sel" id="dsHour" data-ds-hour aria-label="Send at">${opts}</select>`)}
+    <p class="ac-note">Your time zone: ${esc(tz)} (found automatically from your device). Sent around that hour.</p>
+    ${channel === "push" ? `<p class="ac-note">Your alerts are set to Push only, so the summary won't be sent. Choose Both or Telegram above.</p>` : ""}</div>`;
+}
