@@ -2175,7 +2175,7 @@ function acctCss() {
 .ac-seg .on .rd{opacity:1;border:5px solid #fff;background:#0b7d4d}
 .ac-sel{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(127,127,127,.3);background:transparent;color:inherit}
 .ac-note{margin:4px 0 0;font-size:.82rem;opacity:.7;line-height:1.4}
-.ac-help summary{list-style:none;cursor:pointer}
+.ac-help summary{list-style:none;cursor:pointer;border-top:0!important}
 .ac-help summary::-webkit-details-marker{display:none}
 .ac-help-body{padding:0 0 10px 54px;font-size:.9rem;line-height:1.6}
 .ac-help-body ol{margin:0;padding-left:18px}.ac-help-body p{margin:8px 0 0}
