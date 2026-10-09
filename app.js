@@ -919,6 +919,7 @@ async function renderAlerts() {
   const items = [...(pa.data || []).map((a) => ({ kind: "price", a })), ...(po.data || []).map((a) => ({ kind: "portfolio", a })), ...(pp.data || []).map((a) => ({ kind: "percent", a }))].sort(
     (x, y) => new Date(y.a.created_at) - new Date(x.a.created_at)
   );
+  lastAlertItems = items;
   if (!items.length) {
     box.innerHTML = emptyBox("No alerts yet", "Tap + New alert, or open any coin and tap Set price alert.");
     return;
@@ -960,7 +961,9 @@ async function renderAlerts() {
           <div class="acts">${chip}${act}</div>
         </div>`;
       })
-      .join("") + referralCardHtml();
+      .join("") +
+    `<div style="padding:12px 14px"><button class="ac-btn" type="button" data-export="alerts">⬇ Download alerts history (CSV)</button></div>` +
+    referralCardHtml();
   box.onclick = async (e) => {
     const b = e.target.closest("[data-act]");
     if (!b) return;
@@ -1237,6 +1240,52 @@ function paintPortfolio() {
   $("#pfAlertBtn").onclick = () => portfolioAlertSheet();
 }
 
+/* ---------- CSV export ---------- */
+function downloadCsv(name, rows) {
+  const cell = (v) => {
+    const s = v == null ? "" : String(v);
+    return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const text = "\ufeff" + rows.map((r) => r.map(cell).join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob([text], { type: "text/csv;charset=utf-8" }));
+  const l = document.createElement("a");
+  l.href = url;
+  l.download = name;
+  document.body.appendChild(l);
+  l.click();
+  l.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+  toast("File saved to your downloads");
+}
+const csvDay = () => new Date().toISOString().slice(0, 10);
+let lastAlertItems = [];
+let lastHistoryPts = [];
+
+document.addEventListener("click", (e) => {
+  const b = e.target.closest("[data-export]");
+  if (!b) return;
+  const kind = b.dataset.export;
+  if (kind === "portfolio") {
+    const rows = [["Coin", "Symbol", "Amount", "Buy price (USD)", "Current price (USD)", "Value (USD)", "Profit/loss (USD)", "Added"]];
+    pf.rows.filter((r) => r.coins).forEach((r) => {
+      const amt = Number(r.amount), cur = Number(r.coins.price_usd), buy = r.buy_price_usd == null ? null : Number(r.buy_price_usd);
+      rows.push([r.coins.name, (r.coins.symbol || "").toUpperCase(), amt, buy ?? "", cur, amt * cur, buy == null ? "" : amt * (cur - buy), (r.created_at || "").slice(0, 10)]);
+    });
+    downloadCsv(`pricecheck-portfolio-${csvDay()}.csv`, rows);
+  } else if (kind === "history") {
+    downloadCsv(`pricecheck-value-history-${csvDay()}.csv`, [["Date", "Value (USD)"], ...lastHistoryPts.map((p) => [p.day, p.v])]);
+  } else if (kind === "alerts") {
+    const rows = [["Type", "Coin", "Condition", "Target", "Currency", "Status", "Created", "Triggered"]];
+    lastAlertItems.forEach(({ kind: k, a }) => {
+      const sym = (a.coins?.symbol || "").toUpperCase();
+      if (k === "portfolio") rows.push(["Portfolio", "", a.direction === "above" ? "rises to" : "falls to", a.target_value, a.currency, a.status, a.created_at, a.triggered_at || ""]);
+      else if (k === "percent") rows.push(["Move", sym, a.direction === "up" ? "rises" : a.direction === "down" ? "falls" : "moves", a.pct + "%", "from " + a.base_price + " USD", a.status, a.created_at, a.triggered_at || ""]);
+      else rows.push(["Price", sym, a.direction === "above" ? "rises to" : "falls to", a.target_price, a.currency, a.status, a.created_at, a.triggered_at || ""]);
+    });
+    downloadCsv(`pricecheck-alerts-${csvDay()}.csv`, rows);
+  }
+});
+
 async function paintPortfolioHistory(liveTotal) {
   const box = $("#pfHist");
   if (!box) return;
@@ -1244,7 +1293,7 @@ async function paintPortfolioHistory(liveTotal) {
   await loadPlan();
   if (!$("#pfHist")) return;
   if (!state.plusUntil) {
-    box.innerHTML = `<div class="cp-card"><div style="display:flex;align-items:center;gap:10px"><h3 style="margin:0;flex:1">Value history</h3><span class="ac-plusbadge" style="margin:0">★ PLUS</span></div><p class="muted" style="margin:8px 0 0;font-size:.9rem">See how your portfolio value changes day by day. This is part of PriceCheck Plus.</p></div>`;
+    box.innerHTML = `<div class="cp-card"><div style="display:flex;align-items:center;gap:10px"><h3 style="margin:0;flex:1">Value history</h3><span class="ac-plusbadge" style="margin:0">★ PLUS</span></div><p class="muted" style="margin:8px 0 0;font-size:.9rem">See how your portfolio value changes day by day and download your portfolio as a CSV file. This is part of PriceCheck Plus.</p></div>`;
     return;
   }
   const since = new Date(Date.now() - 90 * 864e5).toISOString().slice(0, 10);
@@ -1258,7 +1307,8 @@ async function paintPortfolioHistory(liveTotal) {
   const pts = (data || []).map((r) => ({ day: r.day, v: Number(r.value_usd) })).filter((p) => p.day !== today);
   if (Number.isFinite(liveTotal) && liveTotal > 0) pts.push({ day: today, v: liveTotal });
   if (pts.length < 2) {
-    box.innerHTML = `<div class="cp-card"><h3>Value history</h3><p class="muted" style="margin:6px 0 0;font-size:.9rem">We save your portfolio value once a day. Come back tomorrow to see your first line.</p></div>`;
+    box.innerHTML = `<div class="cp-card"><h3>Value history</h3><p class="muted" style="margin:6px 0 0;font-size:.9rem">We save your portfolio value once a day. Come back tomorrow to see your first line.</p>
+      <div style="margin-top:12px"><button class="ac-btn" type="button" data-export="portfolio">⬇ Portfolio CSV</button></div></div>`;
     return;
   }
   const W = 320, H = 130, P = 8;
@@ -1269,6 +1319,7 @@ async function paintPortfolioHistory(liveTotal) {
   const y = (v) => H - P - ((v - lo) / (hi - lo)) * (H - 2 * P);
   const line = pts.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(p.v).toFixed(1)}`).join(" ");
   const area = `${line} L${x(pts.length - 1).toFixed(1)} ${H - P} L${x(0).toFixed(1)} ${H - P} Z`;
+  lastHistoryPts = pts;
   const first = pts[0], last = pts[pts.length - 1];
   const chgPct = first.v > 0 ? ((last.v - first.v) / first.v) * 100 : 0;
   const d = chg(chgPct);
@@ -1276,7 +1327,8 @@ async function paintPortfolioHistory(liveTotal) {
   box.innerHTML = `<div class="cp-card"><div style="display:flex;align-items:center;gap:10px"><h3 style="margin:0;flex:1">Value history</h3>${d ? `<span class="cp-pill ${d.c}">${d.t}</span>` : ""}</div>
     <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Portfolio value over time" style="display:block;margin-top:10px;color:#0b7d4d"><path d="${area}" fill="currentColor" opacity=".12"/><path d="${line}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${x(pts.length - 1).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="3.5" fill="currentColor"/></svg>
     <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-top:6px" class="muted"><span>${fd(first.day)} · ${esc(fmtUsd(first.v))}</span><span>${fd(last.day)} · ${esc(fmtUsd(last.v))}</span></div>
-    <p class="muted" style="margin:8px 0 0;font-size:.78rem">Saved once a day, shown in USD. Today's point uses live prices.</p></div>`;
+    <p class="muted" style="margin:8px 0 0;font-size:.78rem">Saved once a day, shown in USD. Today's point uses live prices.</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="ac-btn" type="button" data-export="portfolio">⬇ Portfolio CSV</button><button class="ac-btn" type="button" data-export="history">⬇ History CSV</button></div></div>`;
 }
 
 async function onPortfolioClick(e) {
