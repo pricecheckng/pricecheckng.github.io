@@ -938,6 +938,7 @@ async function renderAlerts() {
     view.innerHTML = gate("Sign in to set and manage your alerts.");
     return;
   }
+  acctCss();
   if (!$("#alerts")) {
     view.innerHTML = `<section class="page"><h1>Alerts</h1><div id="pushCard"></div><button class="btn" type="button" id="newAlert">+ New alert</button><div style="height:14px"></div><div id="alerts" class="list">${skeleton(3)}</div></section>${footer()}`;
     renderPushCard($("#pushCard"));
@@ -1144,6 +1145,7 @@ async function loadPortfolio() {
 function paintPortfolio() {
   const box = $("#pf");
   if (!box) return;
+  acctCss();
   const rows = pf.rows.filter((r) => r.coins);
   if (!rows.length) {
     box.innerHTML = emptyBox("No holdings yet", "Add the coins you own to see their value and your profit or loss.") + `<button class="btn" type="button" id="pfAdd">Add holding</button>`;
@@ -1266,9 +1268,7 @@ function paintPortfolio() {
         ${pnlPct ? `<span><span class="cp-pill ${pnlPct.c}">${signedUsd(pnlTotal)} (${pnlPct.t})</span> <span class="muted">profit / loss</span></span>` : ""}
       </div>
     </div>
-    <button class="btn" type="button" id="pfAdd">Add holding</button>
-    <div style="height:10px"></div>
-    <button class="btn ghost" type="button" id="pfAlertBtn">🔔 Alert me about my total</button>
+    <div class="pf-btns"><button class="btn" type="button" id="pfAdd">+ Add holding</button><button class="ac-btn" type="button" id="pfAlertBtn">🔔 Alert on total</button></div>
     ${alertsLine}
     ${allocHtml}
     <div style="margin-top:6px">
@@ -2145,6 +2145,9 @@ function acctCss() {
 .ac-btn[hidden]{display:none}
 .ac-seg.mk-tabs button{padding:12px 4px}
 .more .ac-btn{margin:14px 0 4px;padding:14px}
+.pf-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 4px}
+.pf-btns .btn,.pf-btns .ac-btn{margin:0;height:100%;box-sizing:border-box}
+.pf-row{border:1px solid rgba(127,127,127,.22)!important;border-radius:18px!important;padding:14px!important;margin:0 0 12px!important;background:rgba(127,127,127,.05)}
 .ac-del{display:block;margin:6px auto 0;background:none;border:0;color:#dc2626;font:inherit;font-size:.9rem;padding:10px}
 `;
   document.head.appendChild(s);
