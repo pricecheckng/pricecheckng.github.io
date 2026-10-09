@@ -40,11 +40,14 @@ img { display: block; }
   position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top));
-  background: rgba(255,255,255,.92); backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--line);
+  background: var(--green); color: #fff;
+  border-bottom: 1px solid var(--green-d);
 }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.02em; font-size: 18px; }
-.brand b { color: var(--green); }
+.brand b { color: #9be3bd; }
+.topr { display: flex; align-items: center; gap: 8px; }
+.bellbtn { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; color: #fff; }
+.bellbtn:active { background: rgba(255,255,255,.18); }
 .pill {
   border: 1.5px solid var(--green); color: var(--green); background: #fff;
   border-radius: 999px; padding: 8px 14px; font-weight: 700; font-size: 13px; min-height: 36px;
