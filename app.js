@@ -45,7 +45,7 @@ function loadCur() {
 const state = { tab: "all", watch: new Set(), watchFor: null, user: null, coins: [], coinMap: new Map(), q: "", page: 0, more: false, req: 0, pushOn: false, installEvt: null, cur: loadCur(), fx: {}, fxReady: null };
 
 const styleTag = document.createElement("style");
-styleTag.textContent = `.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}.cp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cp-head h1{margin:0;font-size:1.4rem}.cp-head p{margin:2px 0 0;opacity:.65}.cp-price{background:#effcf3;border-radius:20px;padding:18px;margin-bottom:14px}.cp-price small{display:block;letter-spacing:.04em;opacity:.7;font-size:.78rem;font-weight:600}.cp-price .big{font-size:2rem;font-weight:800;line-height:1.15;margin:4px 0}.cp-price .sub{font-weight:600}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border:1px solid rgba(128,128,128,.25);border-radius:20px;padding:16px;margin-bottom:14px}.cp-card h3{margin:0 0 8px;font-size:1rem}.cp-read{min-height:48px;margin-top:8px}.cp-read b{font-size:1.4rem;display:block}.cp-read span{opacity:.65;font-size:.9rem}.cp-svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.cp-lh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.cp-lh div,.cp-stat{background:#f6f7f9;border-radius:14px;padding:12px}.cp-lh small,.cp-stat small{display:block;opacity:.65;font-size:.8rem}.cp-lh b,.cp-stat b{display:block;font-size:1rem;margin:2px 0}.cp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.cp-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem}.cp-pill.up{background:#dcf5e5;color:#15803d}.cp-pill.down{background:#fdecec;color:#dc2626}.adm-user{border:1px solid rgba(128,128,128,.25);border-radius:16px;padding:14px;margin-bottom:10px}.adm-user b{word-break:break-all}.adm-chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;margin-left:6px;background:#eef2f7;color:#334155}.adm-chip.red{background:#fdecec;color:#dc2626}.adm-chip.amber{background:#fff4dc;color:#b45309}.adm-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.adm-btn{font:inherit;font-weight:600;padding:8px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111}.adm-btn.danger{border-color:#dc2626;color:#dc2626}.adm-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.adm-sum div{background:#f6f7f9;border-radius:14px;padding:10px;text-align:center}.adm-sum b{display:block;font-size:1.2rem}.adm-sum small{opacity:.65}.pf-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid rgba(128,128,128,.2)}.pf-mid{flex:1;min-width:0}.pf-mid a{color:inherit;text-decoration:none}.pf-mid .muted{display:block;font-size:.9rem}.pf-acts{margin-top:6px;display:flex;gap:16px}.pf-val{text-align:right}.pf-val b{display:block}.pf-val span{opacity:.65;font-size:.9rem}.pf-pills{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}.pf-pick{display:flex;align-items:center;gap:12px;margin-bottom:14px}.pf-res{display:flex;align-items:center;gap:10px;width:100%;padding:10px 4px;background:none;border:0;border-bottom:1px solid rgba(128,128,128,.2);font:inherit;text-align:left;color:inherit}.pf-alloc{display:flex;align-items:center;gap:16px}.pf-alloc svg{width:120px;height:120px;flex:none}.pf-leg{flex:1;min-width:0}.pf-leg div{display:flex;align-items:center;gap:8px;font-size:.92rem;padding:4px 0}.pf-leg i{width:10px;height:10px;border-radius:50%;flex:none}.pf-leg span{margin-left:auto;font-weight:600}.pf-lots{margin-top:10px;border-top:1px dashed rgba(128,128,128,.35)}.pf-lot{padding:10px 0;border-bottom:1px solid rgba(128,128,128,.15)}.pf-lot .pf-acts{margin-top:4px}`;
+styleTag.textContent = `.cw{position:relative}.cw+.cw{border-top:1px solid rgba(128,128,128,.2)}.cw .coin{width:100%;padding-left:50px;border:0!important}.cw .star{position:absolute;left:0;top:0;bottom:0;width:48px;display:flex;align-items:center;justify-content:center;background:none;border:0;padding:0;font-size:1.5rem;line-height:1;color:#b6bcc6;cursor:pointer;-webkit-tap-highlight-color:transparent}.cw .star.on{color:#f5a623}.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}.cp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cp-head h1{margin:0;font-size:1.4rem}.cp-head p{margin:2px 0 0;opacity:.65}.cp-price{background:#effcf3;border-radius:20px;padding:18px;margin-bottom:14px}.cp-price small{display:block;letter-spacing:.04em;opacity:.7;font-size:.78rem;font-weight:600}.cp-price .big{font-size:2rem;font-weight:800;line-height:1.15;margin:4px 0}.cp-price .sub{font-weight:600}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border:1px solid rgba(128,128,128,.25);border-radius:20px;padding:16px;margin-bottom:14px}.cp-card h3{margin:0 0 8px;font-size:1rem}.cp-read{min-height:48px;margin-top:8px}.cp-read b{font-size:1.4rem;display:block}.cp-read span{opacity:.65;font-size:.9rem}.cp-svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.cp-lh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.cp-lh div,.cp-stat{background:#f6f7f9;border-radius:14px;padding:12px}.cp-lh small,.cp-stat small{display:block;opacity:.65;font-size:.8rem}.cp-lh b,.cp-stat b{display:block;font-size:1rem;margin:2px 0}.cp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.cp-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem}.cp-pill.up{background:#dcf5e5;color:#15803d}.cp-pill.down{background:#fdecec;color:#dc2626}.adm-user{border:1px solid rgba(128,128,128,.25);border-radius:16px;padding:14px;margin-bottom:10px}.adm-user b{word-break:break-all}.adm-chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;margin-left:6px;background:#eef2f7;color:#334155}.adm-chip.red{background:#fdecec;color:#dc2626}.adm-chip.amber{background:#fff4dc;color:#b45309}.adm-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.adm-btn{font:inherit;font-weight:600;padding:8px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111}.adm-btn.danger{border-color:#dc2626;color:#dc2626}.adm-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.adm-sum div{background:#f6f7f9;border-radius:14px;padding:10px;text-align:center}.adm-sum b{display:block;font-size:1.2rem}.adm-sum small{opacity:.65}.pf-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid rgba(128,128,128,.2)}.pf-mid{flex:1;min-width:0}.pf-mid a{color:inherit;text-decoration:none}.pf-mid .muted{display:block;font-size:.9rem}.pf-acts{margin-top:6px;display:flex;gap:16px}.pf-val{text-align:right}.pf-val b{display:block}.pf-val span{opacity:.65;font-size:.9rem}.pf-pills{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}.pf-pick{display:flex;align-items:center;gap:12px;margin-bottom:14px}.pf-res{display:flex;align-items:center;gap:10px;width:100%;padding:10px 4px;background:none;border:0;border-bottom:1px solid rgba(128,128,128,.2);font:inherit;text-align:left;color:inherit}.pf-alloc{display:flex;align-items:center;gap:16px}.pf-alloc svg{width:120px;height:120px;flex:none}.pf-leg{flex:1;min-width:0}.pf-leg div{display:flex;align-items:center;gap:8px;font-size:.92rem;padding:4px 0}.pf-leg i{width:10px;height:10px;border-radius:50%;flex:none}.pf-leg span{margin-left:auto;font-weight:600}.pf-lots{margin-top:10px;border-top:1px dashed rgba(128,128,128,.35)}.pf-lot{padding:10px 0;border-bottom:1px solid rgba(128,128,128,.15)}.pf-lot .pf-acts{margin-top:4px}`;
 document.head.appendChild(styleTag);
 
 async function loadFx() {
@@ -229,7 +229,24 @@ async function renderMarket() {
       iosBox.remove();
     };
   }
-  $("#list").addEventListener("click", (e) => {
+  $("#list").addEventListener("click", async (e) => {
+    const st = e.target.closest("[data-star]");
+    if (st) {
+      const cid = st.dataset.star;
+      await toggleWatch(cid);
+      const on = state.watch.has(cid);
+      if (state.tab === "watch" && !on) {
+        const row = st.closest(".cw");
+        if (row) row.remove();
+        state.coins = state.coins.filter((x) => x.id !== cid);
+        if (!state.coins.length) $("#list").innerHTML = emptyBox("No coins yet", "Tap the star on any coin to add it here.");
+      } else {
+        st.classList.toggle("on", on);
+        st.textContent = on ? "★" : "☆";
+        st.setAttribute("aria-pressed", String(on));
+      }
+      return;
+    }
     const b = e.target.closest("[data-id]");
     if (b) location.hash = "#coin/" + encodeURIComponent(b.dataset.id);
   });
@@ -239,11 +256,12 @@ async function renderMarket() {
 function coinRow(c) {
   const d = chg(c.change_24h_pct);
   const sym = esc(c.symbol.toUpperCase());
-  return `<button class="coin" type="button" data-id="${esc(c.id)}">
+  const on = state.watch.has(c.id);
+  return `<div class="cw"><button class="star${on ? " on" : ""}" type="button" data-star="${esc(c.id)}" aria-label="${on ? "Remove from watchlist" : "Add to watchlist"}" aria-pressed="${on}">${on ? "★" : "☆"}</button><button class="coin" type="button" data-id="${esc(c.id)}">
     <img class="logo" src="${esc(c.image_url || "")}" alt="" loading="lazy" width="40" height="40">
     <div class="meta"><b>${esc(c.name)}</b><span>${sym} · <span class="chg ${d.c}">${d.t}</span></span></div>
     <div class="px"><b>${fmtUsd(c.price_usd)}</b><span>${fmtLocal(secondPrice(c), state.cur)}</span></div>
-  </button>`;
+  </button></div>`;
 }
 
 async function loadCoins(reset) {
@@ -259,14 +277,14 @@ async function loadCoins(reset) {
   if (state.tab === "watch") {
     $("#moreBtn").hidden = true;
     if (!state.user) {
-      list.innerHTML = emptyBox("Sign in to use your watchlist", "Star coins on their page to keep them here.") + '<div class="more"><button class="btn" type="button" id="wlSignIn">Sign in</button></div>';
+      list.innerHTML = emptyBox("Sign in to use your watchlist", "Tap the star on any coin to keep it here.") + '<div class="more"><button class="btn" type="button" id="wlSignIn">Sign in</button></div>';
       $("#wlSignIn").onclick = () => authSheet("in", "Sign in to use your watchlist.");
       return;
     }
     await loadWatch();
     if (id !== state.req || !$("#list")) return;
     if (!state.watch.size) {
-      list.innerHTML = emptyBox("No coins yet", "Open a coin and tap Add to watchlist.");
+      list.innerHTML = emptyBox("No coins yet", "Tap the star on any coin to add it here.");
       return;
     }
     const { data: wd, error: we } = await sb.from("coins").select(COLS).in("id", [...state.watch]).order("market_cap_rank", { ascending: true, nullsFirst: false });
@@ -294,6 +312,8 @@ async function loadCoins(reset) {
     state.coinMap.set(c.id, c);
     state.coins.push(c);
   }
+  await loadWatch();
+  if (id !== state.req || !$("#list")) return;
   state.more = data.length === PAGE;
   state.page += 1;
   list.innerHTML = state.coins.length
