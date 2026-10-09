@@ -42,7 +42,7 @@ function loadCur() {
   }
 }
 
-const state = { user: null, coins: [], coinMap: new Map(), q: "", page: 0, more: false, req: 0, pushOn: false, installEvt: null, cur: loadCur(), fx: {}, fxReady: null };
+const state = { tab: "all", watch: new Set(), watchFor: null, user: null, coins: [], coinMap: new Map(), q: "", page: 0, more: false, req: 0, pushOn: false, installEvt: null, cur: loadCur(), fx: {}, fxReady: null };
 
 const styleTag = document.createElement("style");
 styleTag.textContent = `.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}.cp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cp-head h1{margin:0;font-size:1.4rem}.cp-head p{margin:2px 0 0;opacity:.65}.cp-price{background:#effcf3;border-radius:20px;padding:18px;margin-bottom:14px}.cp-price small{display:block;letter-spacing:.04em;opacity:.7;font-size:.78rem;font-weight:600}.cp-price .big{font-size:2rem;font-weight:800;line-height:1.15;margin:4px 0}.cp-price .sub{font-weight:600}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border:1px solid rgba(128,128,128,.25);border-radius:20px;padding:16px;margin-bottom:14px}.cp-card h3{margin:0 0 8px;font-size:1rem}.cp-read{min-height:48px;margin-top:8px}.cp-read b{font-size:1.4rem;display:block}.cp-read span{opacity:.65;font-size:.9rem}.cp-svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}.cp-lh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.cp-lh div,.cp-stat{background:#f6f7f9;border-radius:14px;padding:12px}.cp-lh small,.cp-stat small{display:block;opacity:.65;font-size:.8rem}.cp-lh b,.cp-stat b{display:block;font-size:1rem;margin:2px 0}.cp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.cp-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem}.cp-pill.up{background:#dcf5e5;color:#15803d}.cp-pill.down{background:#fdecec;color:#dc2626}.adm-user{border:1px solid rgba(128,128,128,.25);border-radius:16px;padding:14px;margin-bottom:10px}.adm-user b{word-break:break-all}.adm-chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;margin-left:6px;background:#eef2f7;color:#334155}.adm-chip.red{background:#fdecec;color:#dc2626}.adm-chip.amber{background:#fff4dc;color:#b45309}.adm-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.adm-btn{font:inherit;font-weight:600;padding:8px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111}.adm-btn.danger{border-color:#dc2626;color:#dc2626}.adm-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.adm-sum div{background:#f6f7f9;border-radius:14px;padding:10px;text-align:center}.adm-sum b{display:block;font-size:1.2rem}.adm-sum small{opacity:.65}.pf-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid rgba(128,128,128,.2)}.pf-mid{flex:1;min-width:0}.pf-mid a{color:inherit;text-decoration:none}.pf-mid .muted{display:block;font-size:.9rem}.pf-acts{margin-top:6px;display:flex;gap:16px}.pf-val{text-align:right}.pf-val b{display:block}.pf-val span{opacity:.65;font-size:.9rem}.pf-pills{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}.pf-pick{display:flex;align-items:center;gap:12px;margin-bottom:14px}.pf-res{display:flex;align-items:center;gap:10px;width:100%;padding:10px 4px;background:none;border:0;border-bottom:1px solid rgba(128,128,128,.2);font:inherit;text-align:left;color:inherit}.pf-alloc{display:flex;align-items:center;gap:16px}.pf-alloc svg{width:120px;height:120px;flex:none}.pf-leg{flex:1;min-width:0}.pf-leg div{display:flex;align-items:center;gap:8px;font-size:.92rem;padding:4px 0}.pf-leg i{width:10px;height:10px;border-radius:50%;flex:none}.pf-leg span{margin-left:auto;font-weight:600}.pf-lots{margin-top:10px;border-top:1px dashed rgba(128,128,128,.35)}.pf-lot{padding:10px 0;border-bottom:1px solid rgba(128,128,128,.15)}.pf-lot .pf-acts{margin-top:4px}`;
@@ -187,6 +187,10 @@ async function renderMarket() {
           .join("")}
       </select>
     </div>
+    <div class="curbar" id="tabs" style="gap:8px">
+      <button type="button" class="btn${state.tab === "all" ? "" : " ghost"}" data-tab="all" style="flex:1">All coins</button>
+      <button type="button" class="btn${state.tab === "watch" ? "" : " ghost"}" data-tab="watch" style="flex:1">★ Watchlist</button>
+    </div>
     <p class="note">Prices update every minute for most major coins. Other coins update less often.</p>
     <p class="note" id="fxNote">${fxNoteText()}</p>
     <div id="list" class="list" aria-label="Coins"></div>
@@ -209,6 +213,13 @@ async function renderMarket() {
     $("#fxNote").textContent = fxNoteText();
   };
   $("#moreBtn").onclick = () => loadCoins(false);
+  $("#tabs").addEventListener("click", (e) => {
+    const t = e.target.closest("[data-tab]");
+    if (!t || t.dataset.tab === state.tab) return;
+    state.tab = t.dataset.tab;
+    document.querySelectorAll("#tabs [data-tab]").forEach((b) => b.classList.toggle("ghost", b.dataset.tab !== state.tab));
+    loadCoins(true);
+  });
   const iosBox = $("#iosBanner");
   if (iosBox) {
     $("#iosClose").onclick = () => {
@@ -245,6 +256,30 @@ async function loadCoins(reset) {
     list.innerHTML = skeleton();
     $("#moreBtn").hidden = true;
   }
+  if (state.tab === "watch") {
+    $("#moreBtn").hidden = true;
+    if (!state.user) {
+      list.innerHTML = emptyBox("Sign in to use your watchlist", "Star coins on their page to keep them here.") + '<div class="more"><button class="btn" type="button" id="wlSignIn">Sign in</button></div>';
+      $("#wlSignIn").onclick = () => authSheet("in", "Sign in to use your watchlist.");
+      return;
+    }
+    await loadWatch();
+    if (id !== state.req || !$("#list")) return;
+    if (!state.watch.size) {
+      list.innerHTML = emptyBox("No coins yet", "Open a coin and tap Add to watchlist.");
+      return;
+    }
+    const { data: wd, error: we } = await sb.from("coins").select(COLS).in("id", [...state.watch]).order("market_cap_rank", { ascending: true, nullsFirst: false });
+    if (id !== state.req || !$("#list")) return;
+    if (we) {
+      list.innerHTML = emptyBox("Could not load your watchlist", "Check your connection and try again.");
+      return;
+    }
+    for (const c of wd) state.coinMap.set(c.id, c);
+    state.coins = wd;
+    list.innerHTML = wd.map(coinRow).join("");
+    return;
+  }
   const from = state.page * PAGE;
   let q = sb.from("coins").select(COLS).order("market_cap_rank", { ascending: true, nullsFirst: false }).range(from, from + PAGE - 1);
   const term = state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
@@ -265,6 +300,37 @@ async function loadCoins(reset) {
     ? state.coins.map(coinRow).join("")
     : emptyBox("No coins found", term ? `Nothing matches “${term}”. Try another name or symbol.` : "Prices are still loading. Check back in a few minutes.");
   $("#moreBtn").hidden = !state.more;
+}
+
+/* ---------- watchlist ---------- */
+async function loadWatch() {
+  if (!state.user) {
+    state.watch = new Set();
+    state.watchFor = null;
+    return;
+  }
+  if (state.watchFor === state.user.id) return;
+  const { data, error } = await sb.from("watchlist").select("coin_id");
+  if (error) return;
+  state.watch = new Set(data.map((r) => r.coin_id));
+  state.watchFor = state.user.id;
+}
+
+function watchLabel(id) {
+  return state.watch.has(id) ? "★ In your watchlist" : "☆ Add to watchlist";
+}
+
+async function toggleWatch(id) {
+  if (!state.user) return authSheet("in", "Sign in to save coins to your watchlist.");
+  await loadWatch();
+  const has = state.watch.has(id);
+  const { error } = has
+    ? await sb.from("watchlist").delete().eq("user_id", state.user.id).eq("coin_id", id)
+    : await sb.from("watchlist").insert({ user_id: state.user.id, coin_id: id });
+  if (error) return toast("Could not update watchlist. Try again.");
+  if (has) state.watch.delete(id);
+  else state.watch.add(id);
+  toast(has ? "Removed from watchlist" : "Added to watchlist");
 }
 
 /* ---------- coin sheet + alert form ---------- */
@@ -330,9 +396,20 @@ function paintCoin(c) {
     </div>
     <button class="btn" type="button" id="alertBtn">🔔 Set price alert</button>
     <div style="height:10px"></div>
+    <button class="btn ghost" type="button" id="watchBtn">${watchLabel(c.id)}</button>
+    <div style="height:10px"></div>
     <button class="btn ghost" type="button" id="shareBtn">Share this coin</button>
     ${referralCardHtml()}`;
   $("#alertBtn").onclick = () => alertForm(c);
+  loadWatch().then(() => {
+    const wb = $("#watchBtn");
+    if (wb) wb.textContent = watchLabel(c.id);
+  });
+  $("#watchBtn").onclick = async () => {
+    await toggleWatch(c.id);
+    const wb = $("#watchBtn");
+    if (wb) wb.textContent = watchLabel(c.id);
+  };
   $("#shareBtn").onclick = async () => {
     const url = location.href;
     try {
@@ -1664,7 +1741,12 @@ try {
 /* ---------- boot ---------- */
 sb.auth.onAuthStateChange((ev, session) => {
   state.user = session?.user ?? null;
-  if (ev === "SIGNED_OUT") state.pushSyncedFor = null;
+  if (ev === "SIGNED_OUT") {
+    state.pushSyncedFor = null;
+    state.watch = new Set();
+    state.watchFor = null;
+    state.tab = "all";
+  }
   if (state.user && (ev === "SIGNED_IN" || ev === "INITIAL_SESSION")) setTimeout(silentPush, 0);
   if (ev === "PASSWORD_RECOVERY") setTimeout(recoverySheet, 0);
   if (ev === "SIGNED_OUT" || ev === "USER_UPDATED") setTimeout(route, 0);
