@@ -176,6 +176,7 @@ const fxNoteText = () => "Second price is converted from the USD price at market
 
 async function renderMarket() {
   await state.fxReady;
+  acctCss();
   view.innerHTML = `
     <section class="hero">
       <h1>Check the price <span>before you buy.</span></h1>
@@ -187,7 +188,7 @@ async function renderMarket() {
     </section>
     ${iosBannerHtml()}
     ${installBannerHtml()}
-    <div class="curbar">
+    <div class="curbar mk-cur">
       <label for="curSel">Second price in</label>
       <select id="curSel" aria-label="Choose second currency">
         ${Object.entries(CURRENCIES)
@@ -196,15 +197,15 @@ async function renderMarket() {
           .join("")}
       </select>
     </div>
-    <div class="curbar" id="tabs" style="gap:8px">
-      <button type="button" class="btn${state.tab === "all" ? "" : " ghost"}" data-tab="all" style="flex:1">All coins</button>
-      <button type="button" class="btn${state.tab === "watch" ? "" : " ghost"}" data-tab="watch" style="flex:1">★ Watchlist</button>
+    <div class="ac-seg tabs" id="tabs" style="grid-template-columns:repeat(2,1fr);margin:12px 0">
+      <button type="button" class="${state.tab === "all" ? "on" : ""}" data-tab="all">All coins</button>
+      <button type="button" class="${state.tab === "watch" ? "on" : ""}" data-tab="watch">★ Watchlist</button>
     </div>
     <p class="note">Prices update every minute for most major coins. Other coins update less often.</p>
     <p class="note" id="fxNote">${fxNoteText()}</p>
     <p class="note" id="staleNote" hidden style="background:#fff7e6;border-radius:12px;padding:10px 12px"></p>
     <div id="list" class="list" aria-label="Coins"></div>
-    <div class="more"><button id="moreBtn" class="btn ghost" type="button" hidden>Show more coins</button></div>
+    <div class="more"><button id="moreBtn" class="ac-btn" type="button" hidden>Show more coins</button></div>
     ${footer()}`;
   $("#q").addEventListener(
     "input",
@@ -227,7 +228,7 @@ async function renderMarket() {
     const t = e.target.closest("[data-tab]");
     if (!t || t.dataset.tab === state.tab) return;
     state.tab = t.dataset.tab;
-    document.querySelectorAll("#tabs [data-tab]").forEach((b) => b.classList.toggle("ghost", b.dataset.tab !== state.tab));
+    document.querySelectorAll("#tabs [data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === state.tab));
     loadCoins(true);
   });
   const iosBox = $("#iosBanner");
@@ -2141,6 +2142,10 @@ function acctCss() {
 .ac-help-body{padding:0 0 10px 54px;font-size:.9rem;line-height:1.6}
 .ac-help-body ol{margin:0;padding-left:18px}.ac-help-body p{margin:8px 0 0}
 .ac-quiet{display:block;text-align:center;margin:4px 0 12px;opacity:.7;font-size:.9rem;color:inherit}
+.ac-btn[hidden]{display:none}
+.ac-seg.tabs button{padding:12px 4px}
+.mk-cur{background:rgba(11,125,77,.07)!important;border:1px solid rgba(11,125,77,.18)!important;border-radius:14px!important}
+.more .ac-btn{margin:14px 0 4px;padding:14px}
 .ac-del{display:block;margin:6px auto 0;background:none;border:0;color:#dc2626;font:inherit;font-size:.9rem;padding:10px}
 `;
   document.head.appendChild(s);
