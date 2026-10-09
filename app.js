@@ -430,6 +430,7 @@ async function renderCoin(id) {
     return;
   }
   state.coinMap.set(data.id, data);
+  track("coin_view", data.id);
   paintCoin(data);
 }
 
@@ -575,6 +576,7 @@ function paintCoin(c) {
     if (wb) wb.textContent = watchLabel(c.id);
   };
   $("#shareBtn").onclick = async () => {
+    track("share");
     const url = location.href;
     const arrow = Number(c.change_24h_pct) >= 0 ? "📈" : "📉";
     const label = c.name.toUpperCase() === sym ? c.name : `${c.name} (${sym})`;
@@ -1566,14 +1568,45 @@ async function renderAdmin() {
     view.innerHTML = gate("Sign in to continue.");
     return;
   }
-  view.innerHTML = `<section class="page"><h1>Admin</h1><div id="adm">${skeleton(3)}</div></section>`;
+  view.innerHTML = `<section class="page"><h1>Admin</h1><div id="admUsage"></div><div id="adm">${skeleton(3)}</div></section>`;
   const { data: ok } = await sb.rpc("is_admin");
   if (!$("#adm")) return;
   if (!ok) {
     $("#adm").innerHTML = emptyBox("Page not available", "This page does not exist.");
     return;
   }
+  loadAdminUsage();
   await loadAdminUsers();
+}
+
+async function loadAdminUsage() {
+  acctCss();
+  const box = $("#admUsage");
+  if (!box) return;
+  const { data, error } = await sb.rpc("admin_usage", { p_days: 30 });
+  if (!$("#admUsage") || error || !data) return;
+  const rows = data.daily || [];
+  const since = (n) => new Date(Date.now() - (n - 1) * 864e5).toISOString().slice(0, 10);
+  const sum = (k, n) => rows.filter((r) => r.day >= since(n)).reduce((a, r) => a + Number(r[k] || 0), 0);
+  const tiles = [
+    ["Visits today", sum("visits", 1)],
+    ["Visits 7 days", sum("visits", 7)],
+    ["Visits 30 days", sum("visits", 30)],
+    ["New visitors 7d", sum("new_visitors", 7)],
+    ["Coin views 7d", sum("coin_views", 7)],
+    ["Shares 7d", sum("shares", 7)],
+  ];
+  const days14 = Array.from({ length: 14 }, (_, i) => new Date(Date.now() - (13 - i) * 864e5).toISOString().slice(0, 10));
+  const vals = days14.map((d) => Number((rows.find((r) => r.day === d) || {}).visits || 0));
+  const max = Math.max(1, ...vals);
+  const bars = vals.map((v, i) => `<i title="${days14[i]}: ${v}" style="height:${Math.max(3, Math.round((v / max) * 70))}px"></i>`).join("");
+  const top = (data.top_coins || [])
+    .map((t) => `<div class="ac-row" style="padding:8px 0"><div class="ac-rt"><b>${esc(t.name || t.coin_id)} <span class="muted" style="display:inline">${esc((t.symbol || "").toUpperCase())}</span></b></div><span class="ac-pill soft">${Number(t.views)} views</span></div>`)
+    .join("");
+  box.innerHTML = `<div class="ac-card"><h3>Usage</h3><p>Private daily counts. No cookies, no IDs, no personal data.</p>
+    <div class="us-grid">${tiles.map(([l, v]) => `<div><b>${v}</b><small>${l}</small></div>`).join("")}</div>
+    <div class="us-bars">${bars}</div><p class="ac-note">Visits per day, last 14 days. Installs in 30 days: ${sum("installs", 30)}.</p>
+    ${top ? `<h3 style="margin:14px 0 0;font-size:1rem">Most viewed coins (30 days)</h3>${top}` : ""}</div>`;
 }
 
 async function loadAdminUsers() {
@@ -1940,6 +1973,7 @@ $("#installBtn").addEventListener("click", async () => {
   $("#installBtn").hidden = true;
 });
 window.addEventListener("appinstalled", () => {
+  track("install");
   $("#installBtn").hidden = true;
   const b = document.querySelector("#instBanner");
   if (b) b.remove();
@@ -2148,6 +2182,12 @@ function acctCss() {
 .pf-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 4px}
 .pf-btns .btn,.pf-btns .ac-btn{margin:0;height:100%;box-sizing:border-box}
 .pf-row{border:1px solid rgba(127,127,127,.22)!important;border-radius:18px!important;padding:14px!important;margin:0 0 12px!important;background:rgba(127,127,127,.05)}
+.us-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.us-grid div{background:rgba(11,125,77,.08);border-radius:12px;padding:10px 6px;text-align:center}
+.us-grid b{display:block;font-size:1.25rem}
+.us-grid small{opacity:.7;font-size:.72rem}
+.us-bars{display:flex;align-items:flex-end;gap:4px;height:74px;margin-top:6px}
+.us-bars i{flex:1;background:#0b7d4d;border-radius:4px 4px 0 0}
 .ac-del{display:block;margin:6px auto 0;background:none;border:0;color:#dc2626;font:inherit;font-size:.9rem;padding:10px}
 `;
   document.head.appendChild(s);
@@ -2394,3 +2434,25 @@ function percentAlertSheet(c) {
       </div>`);
   };
 }
+
+/* ---------- private usage counts (no cookies, no IDs) ---------- */
+function track(kind, key) {
+  try {
+    sb.rpc("track_event", { p_kind: kind, p_key: key || "" }).then(() => {}, () => {});
+  } catch (_) {}
+}
+(function countVisit() {
+  try {
+    if (sessionStorage.getItem("pc_v")) return;
+    sessionStorage.setItem("pc_v", "1");
+  } catch (_) {
+    return;
+  }
+  track("visit");
+  let seen = false;
+  try {
+    seen = !!localStorage.getItem("pc_seen");
+    localStorage.setItem("pc_seen", "1");
+  } catch (_) {}
+  track(seen ? "return_visitor" : "new_visitor");
+})();
