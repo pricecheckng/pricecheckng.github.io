@@ -805,6 +805,7 @@ function alertForm(c) {
     if (error) {
       btn.disabled = false;
       btn.textContent = "Create alert";
+      if (/limit/i.test(error.message || "")) return showErr(err, `You can have up to ${PRICE_ALERT_LIMIT} active coin price alerts. Cancel one first.`);
       if (error.code === "42501") {
         const { data: fl } = await sb.from("user_flags").select("banned,alerts_blocked").maybeSingle();
         if (fl && (fl.banned || fl.alerts_blocked)) return showErr(err, "Alerts are turned off for your account.");
@@ -971,7 +972,8 @@ async function renderAlerts() {
     return;
   }
   const pfActive = (po.data || []).filter((a) => a.status === "active").length;
-  const countLine = pfActive ? `<p class="muted" style="margin:0 2px 8px;font-size:.9rem">Portfolio alerts: ${pfActive} of ${PORTFOLIO_ALERT_LIMIT} active</p>` : "";
+  const cnt = (arr) => (arr || []).filter((a) => a.status === "active").length;
+  const countLine = `<p class="muted" style="margin:0 2px 8px;font-size:.9rem">Active alerts: coin ${cnt(pa.data)} of ${PRICE_ALERT_LIMIT} · move ${cnt(pp.data)} of ${PCT_ALERT_LIMIT} · portfolio ${pfActive} of ${PORTFOLIO_ALERT_LIMIT}</p>`;
   box.innerHTML =
     countLine +
     items
@@ -1477,6 +1479,8 @@ function holdingSheet(row) {
 }
 
 const PORTFOLIO_ALERT_LIMIT = 5;
+const PRICE_ALERT_LIMIT = 10;
+const PCT_ALERT_LIMIT = 5;
 
 function portfolioAlertSheet() {
   const second = state.cur;
@@ -1601,7 +1605,7 @@ async function loadAdminUsage() {
   const max = Math.max(1, ...vals);
   const bars = vals.map((v, i) => `<i title="${days14[i]}: ${v}" style="height:${Math.max(3, Math.round((v / max) * 70))}px"></i>`).join("");
   const top = (data.top_coins || [])
-    .map((t) => `<div class="ac-row" style="padding:8px 0"><div class="ac-rt"><b>${esc(t.name || t.coin_id)} <span class="muted" style="display:inline">${esc((t.symbol || "").toUpperCase())}</span></b></div><span class="ac-pill soft">${Number(t.views)} views</span></div>`)
+    .map((t) => `<div class="ac-row" style="padding:8px 0"><div class="ac-rt"><b>${esc(t.name || t.coin_id)} <span class="muted" style="display:inline">${esc((t.symbol || "").toUpperCase())}</span></b></div><span class="ac-pill soft">${Number(t.views)} ${Number(t.views) === 1 ? "view" : "views"}</span></div>`)
     .join("");
   box.innerHTML = `<div class="ac-card"><h3>Usage</h3><p>Private daily counts. No cookies, no IDs, no personal data.</p>
     <div class="us-grid">${tiles.map(([l, v]) => `<div><b>${v}</b><small>${l}</small></div>`).join("")}</div>
@@ -2419,7 +2423,7 @@ function percentAlertSheet(c) {
       btn.disabled = false;
       btn.textContent = "Create alert";
       const m = error.message || "";
-      if (/limit/i.test(m)) return showErr(err, "You can have up to 5 active move alerts. Cancel one first.");
+      if (/limit/i.test(m)) return showErr(err, `You can have up to ${PCT_ALERT_LIMIT} active move alerts. Cancel one first.`);
       if (/blocked/i.test(m)) return showErr(err, "Alerts are turned off for your account.");
       if (/email/i.test(m)) return showErr(err, "Confirm your email before setting alerts.");
       return showErr(err, "Could not save the alert. Please try again.");
