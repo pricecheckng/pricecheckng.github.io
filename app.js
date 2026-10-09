@@ -178,6 +178,7 @@ async function renderMarket() {
       </label>
     </section>
     ${iosBannerHtml()}
+    ${installBannerHtml()}
     <div class="curbar">
       <label for="curSel">Second price in</label>
       <select id="curSel" aria-label="Choose second currency">
@@ -1729,11 +1730,50 @@ async function ensurePush() {
 const IOS_MSG = "On iPhone, tap Share, then Add to Home Screen, and open PriceCheck NG from your home screen. Then you can set alerts.";
 const NEED_PUSH_MSG = "Turn on notifications to set alerts. Without them we can't tell you when the price is reached.";
 
+/* ---------- install banner (Android / Chrome) ---------- */
+function installBannerHtml() {
+  if (!state.installEvt || isStandalone()) return "";
+  try {
+    const t = Number(localStorage.getItem("pc_inst_hide") || 0);
+    if (t && Date.now() - t < 7 * 864e5) return "";
+  } catch (_) {}
+  return `<div class="card" id="instBanner" style="margin-top:14px"><b>📲 Install PriceCheck NG</b><p>Add it to your home screen. It opens faster and your alerts arrive like a normal app.</p><div style="display:flex;gap:8px"><button class="btn" type="button" data-install style="flex:1">Install</button><button class="btn ghost" type="button" data-install-close style="flex:1">Not now</button></div></div>`;
+}
+function showInstallBanner() {
+  const slot = document.querySelector("#list");
+  if (!slot || document.querySelector("#instBanner") || document.querySelector("#iosBanner")) return;
+  const html = installBannerHtml();
+  if (!html) return;
+  const bar = document.querySelector(".curbar");
+  if (bar) bar.insertAdjacentHTML("beforebegin", html);
+}
+document.addEventListener("click", async (e) => {
+  if (e.target.closest("[data-install-close]")) {
+    try {
+      localStorage.setItem("pc_inst_hide", String(Date.now()));
+    } catch (_) {}
+    const b = document.querySelector("#instBanner");
+    if (b) b.remove();
+    return;
+  }
+  if (e.target.closest("[data-install]")) {
+    if (!state.installEvt) return;
+    state.installEvt.prompt();
+    await state.installEvt.userChoice;
+    state.installEvt = null;
+    const b = document.querySelector("#instBanner");
+    if (b) b.remove();
+    const ib = $("#installBtn");
+    if (ib) ib.hidden = true;
+  }
+});
+
 /* ---------- install + service worker ---------- */
 window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   state.installEvt = e;
   $("#installBtn").hidden = false;
+  showInstallBanner();
 });
 $("#installBtn").addEventListener("click", async () => {
   if (!state.installEvt) return;
@@ -1742,7 +1782,11 @@ $("#installBtn").addEventListener("click", async () => {
   state.installEvt = null;
   $("#installBtn").hidden = true;
 });
-window.addEventListener("appinstalled", () => ($("#installBtn").hidden = true));
+window.addEventListener("appinstalled", () => {
+  $("#installBtn").hidden = true;
+  const b = document.querySelector("#instBanner");
+  if (b) b.remove();
+});
 
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
