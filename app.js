@@ -942,12 +942,16 @@ async function renderAlerts() {
     renderPushCard($("#pushCard"));
     $("#newAlert").onclick = newAlertSheet;
   }
-  const [pa, po] = await Promise.all([
+  const [pa, po, pp] = await Promise.all([
     sb
       .from("price_alerts")
       .select("id,target_price,currency,direction,status,created_at,triggered_at,coins(name,symbol,image_url)")
       .order("created_at", { ascending: false }),
     sb.from("portfolio_alerts").select("id,target_value,currency,direction,status,created_at,triggered_at").order("created_at", { ascending: false }),
+    sb
+      .from("percent_alerts")
+      .select("id,pct,base_price,direction,status,created_at,triggered_at,coins(name,symbol,image_url)")
+      .order("created_at", { ascending: false }),
   ]);
   const box = $("#alerts");
   if (!box) return;
@@ -955,7 +959,7 @@ async function renderAlerts() {
     box.innerHTML = emptyBox("Could not load alerts", "Check your connection and try again.");
     return;
   }
-  const items = [...(pa.data || []).map((a) => ({ kind: "price", a })), ...(po.data || []).map((a) => ({ kind: "portfolio", a }))].sort(
+  const items = [...(pa.data || []).map((a) => ({ kind: "price", a })), ...(po.data || []).map((a) => ({ kind: "portfolio", a })), ...(pp.data || []).map((a) => ({ kind: "percent", a }))].sort(
     (x, y) => new Date(y.a.created_at) - new Date(x.a.created_at)
   );
   if (!items.length) {
@@ -981,6 +985,16 @@ async function renderAlerts() {
             <div class="acts">${chip}${act}</div>
           </div>`;
         }
+        if (kind === "percent") {
+          const psym = (a.coins?.symbol || "").toUpperCase();
+          const pv = Number(a.pct);
+          const verb = a.direction === "up" ? "rises" : a.direction === "down" ? "falls" : "moves";
+          return `<div class="alert">
+            <img class="logo" src="${esc(a.coins?.image_url || "")}" alt="" loading="lazy" width="40" height="40">
+            <div class="meta"><b>${esc(psym)} ${verb} ${pv}%</b><span>From ${esc(fmtUsd(Number(a.base_price)))} · ${when}</span></div>
+            <div class="acts">${chip}${act}</div>
+          </div>`;
+        }
         const sym = (a.coins?.symbol || "").toUpperCase();
         return `<div class="alert">
           <img class="logo" src="${esc(a.coins?.image_url || "")}" alt="" loading="lazy" width="40" height="40">
@@ -993,9 +1007,11 @@ async function renderAlerts() {
     const b = e.target.closest("[data-act]");
     if (!b) return;
     const aid = b.dataset.aid;
-    const table = b.dataset.kind === "portfolio" ? "portfolio_alerts" : "price_alerts";
+    const kind = b.dataset.kind;
+    const table = kind === "portfolio" ? "portfolio_alerts" : kind === "percent" ? "percent_alerts" : "price_alerts";
     if (b.dataset.act === "cancel") {
-      const { error: er } = await sb.from(table).update({ status: "cancelled" }).eq("id", aid);
+      const { error: er } =
+        kind === "percent" ? await sb.from(table).delete().eq("id", aid) : await sb.from(table).update({ status: "cancelled" }).eq("id", aid);
       if (er) return toast("Could not cancel the alert.");
     } else {
       if (!confirm("Delete this alert?")) return;
@@ -1013,8 +1029,12 @@ function newAlertSheet() {
     <p class="hint" style="margin-top:6px">Get notified when one coin reaches a price.</p>
     <div style="height:10px"></div>
     <button class="btn ghost" type="button" id="naPf">📊 Portfolio alert</button>
-    <p class="hint" style="margin-top:6px">Get notified when your total portfolio value reaches an amount.</p>`);
-  $("#naCoin").onclick = coinPickSheet;
+    <p class="hint" style="margin-top:6px">Get notified when your total portfolio value reaches an amount.</p>
+    <div style="height:10px"></div>
+    <button class="btn ghost" type="button" id="naPct">📈 Percent move alert</button>
+    <p class="hint" style="margin-top:6px">Get notified when a coin moves up or down by a percent, like BTC drops 5%.</p>`);
+  $("#naCoin").onclick = () => coinPickSheet();
+  $("#naPct").onclick = () => coinPickSheet(percentAlertSheet);
   $("#naPf").onclick = async () => {
     const { data, error } = await sb.from("portfolio_holdings").select("amount,coins(price_usd)");
     if (error) return toast("Could not load your portfolio. Please try again.");
@@ -1031,7 +1051,7 @@ function newAlertSheet() {
   };
 }
 
-function coinPickSheet() {
+function coinPickSheet(next) {
   openSheet(`
     <div class="sheet-head"><span></span><div><h2 id="sheetTitle">Pick a coin</h2></div><button class="x" type="button" data-close aria-label="Close">×</button></div>
     <label class="field"><span>Coin</span><input id="cpSearch" type="search" autocomplete="off" placeholder="Search Bitcoin, ETH, Solana…"></label>
@@ -1052,7 +1072,7 @@ function coinPickSheet() {
       const b = e.target.closest("[data-pick]");
       if (!b) return;
       const coin = data.find((c) => c.id === b.dataset.pick);
-      if (coin) alertForm(coin);
+      if (coin) (next || alertForm)(coin);
     };
   };
   $("#cpSearch").addEventListener("input", debounce(go, 250));
@@ -2266,4 +2286,104 @@ async function dailySummaryCardHtml(channel) {
     ${acRow("clock", "Send at", "", `<select class="ac-sel" id="dsHour" data-ds-hour aria-label="Send at">${opts}</select>`)}
     <p class="ac-note">Your time zone: ${esc(tz)} (found automatically from your device). Sent around that hour.</p>
     ${channel === "push" ? `<p class="ac-note">Your alerts are set to Push only, so the summary won't be sent. Choose Both or Telegram above.</p>` : ""}</div>`;
+}
+
+/* ---------- percent move alerts ---------- */
+function percentAlertSheet(c) {
+  const sym = c.symbol.toUpperCase();
+  const p = Number(c.price_usd);
+  let chip = 5;
+  let dir = "either";
+  openSheet(`
+    <div class="sheet-head">
+      <img class="logo lg" src="${esc(c.image_url || "")}" alt="" width="48" height="48">
+      <div><h2 id="sheetTitle">${esc(sym)} move alert</h2><p class="muted">Current price: ${esc(fmtUsd(p))}</p></div>
+      <button class="x" type="button" data-close aria-label="Close">×</button>
+    </div>
+    <p class="hint" style="margin-top:0">Alert me if the price moves by</p>
+    <div class="seg" role="group" aria-label="Percent">
+      ${[3, 5, 10, 20].map((v) => `<button type="button" data-pct="${v}" aria-pressed="${v === 5}">${v}%</button>`).join("")}
+    </div>
+    <label class="field"><span>Or type your own percent</span><input id="pctIn" inputmode="decimal" autocomplete="off" placeholder="e.g. 7.5"></label>
+    <div class="seg" role="group" aria-label="Direction">
+      <button type="button" data-dir="up" aria-pressed="false">📈 Up</button>
+      <button type="button" data-dir="down" aria-pressed="false">📉 Down</button>
+      <button type="button" data-dir="either" aria-pressed="true">↕ Either</button>
+    </div>
+    <p class="hint" id="pctHint"></p>
+    ${state.pushOn ? "" : `<p class="hint">Alerts need notifications. We’ll ask you to turn them on when you save.</p>`}
+    <p class="err" id="err" hidden></p>
+    <button class="btn" type="button" id="savePct">Create alert</button>`);
+
+  const value = () => {
+    const t = parseFloat(($("#pctIn").value || "").replace(/,/g, ""));
+    return $("#pctIn").value.trim() ? t : chip;
+  };
+  const refresh = () => {
+    const x = value();
+    const hint = $("#pctHint");
+    if (!(x >= 0.1 && x <= 99)) {
+      hint.textContent = "Enter a percent between 0.1 and 99.";
+      return;
+    }
+    const up = fmtUsd(p * (1 + x / 100));
+    const down = fmtUsd(p * (1 - x / 100));
+    hint.textContent =
+      dir === "up"
+        ? `We’ll alert you if ${sym} rises ${x}% to ${up}.`
+        : dir === "down"
+        ? `We’ll alert you if ${sym} falls ${x}% to ${down}.`
+        : `We’ll alert you if ${sym} rises ${x}% to ${up} or falls ${x}% to ${down}.`;
+  };
+  refresh();
+  document.querySelectorAll("[data-pct]").forEach((b) => {
+    b.onclick = () => {
+      chip = Number(b.dataset.pct);
+      $("#pctIn").value = "";
+      document.querySelectorAll("[data-pct]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      refresh();
+    };
+  });
+  $("#pctIn").addEventListener("input", () => {
+    document.querySelectorAll("[data-pct]").forEach((x) => x.setAttribute("aria-pressed", String(!$("#pctIn").value.trim() && Number(x.dataset.pct) === chip)));
+    refresh();
+  });
+  document.querySelectorAll("[data-dir]").forEach((b) => {
+    b.onclick = () => {
+      dir = b.dataset.dir;
+      document.querySelectorAll("[data-dir]").forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+      refresh();
+    };
+  });
+  $("#savePct").onclick = async () => {
+    const err = $("#err");
+    err.hidden = true;
+    const x = value();
+    if (!(x >= 0.1 && x <= 99)) return showErr(err, "Enter a percent between 0.1 and 99.");
+    if (!state.user) return authSheet("in", "Sign in to save your alert.");
+    if (!state.user.email_confirmed_at) return showErr(err, "Confirm your email first. Check your inbox for the confirmation link.");
+    if (needsIosInstall()) return showErr(err, IOS_MSG);
+    if (!(await ensurePush())) return showErr(err, NEED_PUSH_MSG);
+    const btn = $("#savePct");
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+    const { error } = await sb.rpc("create_percent_alert", { p_coin: c.id, p_pct: x, p_dir: dir });
+    if (error) {
+      btn.disabled = false;
+      btn.textContent = "Create alert";
+      const m = error.message || "";
+      if (/limit/i.test(m)) return showErr(err, "You can have up to 5 active move alerts. Cancel one first.");
+      if (/blocked/i.test(m)) return showErr(err, "Alerts are turned off for your account.");
+      if (/email/i.test(m)) return showErr(err, "Confirm your email before setting alerts.");
+      return showErr(err, "Could not save the alert. Please try again.");
+    }
+    if ($("#alerts")) renderAlerts();
+    openSheet(`
+      <div class="done">
+        <div class="big">✅</div>
+        <h2 id="sheetTitle">Alert set</h2>
+        <p>We’ll notify you when ${esc(sym)} ${dir === "up" ? `rises ${x}%` : dir === "down" ? `falls ${x}%` : `moves ${x}% up or down`} from ${esc(fmtUsd(p))}.</p>
+        <button class="btn ghost" type="button" data-close>Done</button>
+      </div>`);
+  };
 }
