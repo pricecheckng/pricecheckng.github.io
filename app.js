@@ -2142,9 +2142,6 @@ function renderAccount() {
     <div id="tgCard"></div>
     <div class="ac-card">
       <details class="ac-help"><summary class="ac-row">${`<span class="ac-ic">${acIco("help")}</span><div class="ac-rt"><b>Notifications not working?</b><small>Troubleshoot common issues</small></div>`}${chev}</summary><div class="ac-help-body">${PUSH_STEPS}</div></details>
-      ${acRow("shield", "Privacy &amp; security", "How we look after your data", chev, "a", 'href="privacy.html"')}
-      ${acRow("doc", "Terms of service", "The rules for using PriceCheck NG", chev, "a", 'href="terms.html"')}
-      ${acRow("info", "About PriceCheck NG", "Version 1.0.0", "")}
     </div>
     <div id="adminSlot"></div>
     <button class="btn ghost" type="button" id="signOut">Sign out</button>
