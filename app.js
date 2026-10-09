@@ -53,8 +53,16 @@ async function loadFx() {
     const { data, error } = await sb.from("fx_rates").select("currency,per_usd");
     if (!error && data) {
       for (const r of data) state.fx[r.currency] = Number(r.per_usd);
-    }
-  } catch (_) {}
+      try {
+        localStorage.setItem("pc_fx", JSON.stringify(state.fx));
+      } catch (_) {}
+    } else throw new Error("fx");
+  } catch (_) {
+    try {
+      const saved = JSON.parse(localStorage.getItem("pc_fx") || "{}");
+      for (const k of Object.keys(saved)) if (!state.fx[k]) state.fx[k] = Number(saved[k]);
+    } catch (_) {}
+  }
   // If the saved currency has no rate (and is not NGN, which has its own price), fall back to NGN
   if (state.cur !== "NGN" && !state.fx[state.cur]) state.cur = "NGN";
 }
@@ -194,6 +202,7 @@ async function renderMarket() {
     </div>
     <p class="note">Prices update every minute for most major coins. Other coins update less often.</p>
     <p class="note" id="fxNote">${fxNoteText()}</p>
+    <p class="note" id="staleNote" hidden style="background:#fff7e6;border-radius:12px;padding:10px 12px"></p>
     <div id="list" class="list" aria-label="Coins"></div>
     <div class="more"><button id="moreBtn" class="btn ghost" type="button" hidden>Show more coins</button></div>
     ${footer()}`;
@@ -299,6 +308,19 @@ async function loadCoins(reset) {
     list.innerHTML = wd.map(coinRow).join("");
     return;
   }
+  const plainFirstPage = reset && !state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
+  let shownFromCache = false;
+  if (plainFirstPage) {
+    const cached = readCoinCache();
+    if (cached) {
+      for (const c of cached.rows) state.coinMap.set(c.id, c);
+      state.coins = cached.rows.slice();
+      list.innerHTML = state.coins.map(coinRow).join("");
+      shownFromCache = true;
+      setStaleNote(navigator.onLine === false ? `You're offline. Showing prices saved ${ageText(cached.t)}.` : `Showing saved prices from ${ageText(cached.t)}. Updating…`);
+      state.coins = [];
+    } else setStaleNote("");
+  } else if (reset) setStaleNote("");
   const from = state.page * PAGE;
   let q = sb.from("coins").select(COLS).order("market_cap_rank", { ascending: true, nullsFirst: false }).range(from, from + PAGE - 1);
   const term = state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
@@ -306,8 +328,18 @@ async function loadCoins(reset) {
   const { data, error } = await q;
   if (id !== state.req || !$("#list")) return;
   if (error) {
+    if (shownFromCache) {
+      const cc = readCoinCache();
+      state.coins = cc ? cc.rows.slice() : [];
+      setStaleNote(`Couldn't update. Showing prices saved ${cc ? ageText(cc.t) : "earlier"}.`);
+      return;
+    }
     list.innerHTML = emptyBox("Could not load prices", "Check your connection and try again.");
     return;
+  }
+  if (plainFirstPage) {
+    setStaleNote("");
+    saveCoinCache(data);
   }
   for (const c of data) {
     state.coinMap.set(c.id, c);
@@ -322,6 +354,37 @@ async function loadCoins(reset) {
     : emptyBox("No coins found", term ? `Nothing matches “${term}”. Try another name or symbol.` : "Prices are still loading. Check back in a few minutes.");
   $("#moreBtn").hidden = !state.more;
 }
+
+/* ---------- saved prices (low-data / offline) ---------- */
+const CACHE_KEY = "pc_coins_v1";
+function saveCoinCache(rows) {
+  try {
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ t: Date.now(), rows }));
+  } catch (_) {}
+}
+function readCoinCache() {
+  try {
+    const j = JSON.parse(localStorage.getItem(CACHE_KEY) || "null");
+    if (j && Array.isArray(j.rows) && j.rows.length) return j;
+  } catch (_) {}
+  return null;
+}
+function ageText(t) {
+  const m = Math.max(1, Math.round((Date.now() - t) / 60000));
+  if (m < 60) return m + " min ago";
+  const h = Math.round(m / 60);
+  return h < 48 ? h + " h ago" : Math.round(h / 24) + " days ago";
+}
+function setStaleNote(msg) {
+  const n = document.querySelector("#staleNote");
+  if (!n) return;
+  n.textContent = msg || "";
+  n.hidden = !msg;
+}
+window.addEventListener("offline", () => setStaleNote("You're offline. Showing the last prices saved on this phone."));
+window.addEventListener("online", () => {
+  if (document.querySelector("#list") && state.tab === "all") loadCoins(true);
+});
 
 /* ---------- watchlist ---------- */
 async function loadWatch() {
@@ -513,7 +576,8 @@ function paintCoin(c) {
   $("#shareBtn").onclick = async () => {
     const url = location.href;
     const arrow = Number(c.change_24h_pct) >= 0 ? "📈" : "📉";
-    const text = `${arrow} ${c.name} (${sym})\n${fmtUsd(c.price_usd)} · ${fmtLocal(second, state.cur)}\n24h: ${d.t}\nLive on PriceCheck NG`;
+    const label = c.name.toUpperCase() === sym ? c.name : `${c.name} (${sym})`;
+    const text = `${arrow} ${label}\n${fmtUsd(c.price_usd)} · ${fmtLocal(second, state.cur)}\n24h: ${d.t}\nLive on PriceCheck NG`;
     try {
       let file = null;
       try {
