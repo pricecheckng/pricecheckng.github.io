@@ -2198,6 +2198,10 @@ function acctCss() {
 .pl-r b{color:#0b7d4d}
 .pl-h{border-top:0;font-size:.8rem;opacity:.75;font-weight:700}
 .pl-card{background:rgba(11,125,77,.06);border-color:rgba(11,125,77,.25)}
+.pl-card summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px}
+.pl-card summary::-webkit-details-marker{display:none}
+.pl-chev{transition:transform .2s}
+.pl-card[open] .pl-chev{transform:rotate(90deg)}
 .ac-del{display:block;margin:6px auto 0;background:none;border:0;color:#dc2626;font:inherit;font-size:.9rem;padding:10px}
 `;
   document.head.appendChild(s);
@@ -2242,9 +2246,9 @@ function renderAccount() {
 
 function plusCardHtml() {
   const row = (label, free, plus) => `<div class="pl-r"><span>${label}</span><span>${free}</span><b>${plus}</b></div>`;
-  return `<div class="ac-card pl-card">
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px"><h3 style="margin:0">PriceCheck Plus</h3><span class="ac-pill soft">COMING SOON</span></div>
-    <p style="margin-top:6px">More room for your alerts, for people who track a lot of coins.</p>
+  return `<details class="ac-card pl-card">
+    <summary><h3 style="margin:0;flex:1">PriceCheck Plus</h3><span class="ac-pill soft">COMING SOON</span><span class="ac-chev pl-chev">${acIco("chev")}</span></summary>
+    <p style="margin-top:10px">More room for your alerts, for people who track a lot of coins.</p>
     <div class="pl-t">
       <div class="pl-r pl-h"><span></span><span>Free</span><b>Plus</b></div>
       ${row("Coin price alerts", PRICE_ALERT_LIMIT, 50)}
@@ -2253,7 +2257,7 @@ function plusCardHtml() {
       ${row("Portfolio value history", "–", "✓")}
     </div>
     <p class="ac-note" style="margin-top:12px">Everything you use today stays free. We'll tell you here when Plus is ready.</p>
-  </div>`;
+  </details>`;
 }
 
 function renderAcctPush(el) {
