@@ -152,7 +152,7 @@ const emptyBox = (title, text) => `<div class="empty"><b>${esc(title)}</b>${esc(
 const footer = () =>
   `<p class="foot">Price data by <a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a>. <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Rates By Exchange Rate API</a>. Prices are for information only and are not financial advice.<br><a href="https://t.me/pricecheckNG" target="_blank" rel="noopener" style="display:inline-block;margin:12px 0 4px;padding:9px 16px;border-radius:999px;background:#229ed9;color:#fff;font-weight:700;text-decoration:none">✈ Join our Telegram channel</a><br><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a></p>`;
 const gate = (text) =>
-  `<section class="page"><h1>Sign in</h1><div class="card"><p>${esc(text)}</p><button class="btn" data-auth>Sign in or create account</button></div></section>`;
+  `<section class="page"><h1>Sign in</h1><div class="card"><p>${esc(text)}</p><button class="btn" data-auth>Continue with Google</button></div></section>`;
 
 /* ---------- router ---------- */
 const routes = { market: renderMarket, alerts: renderAlerts, account: renderAccount, portfolio: renderPortfolio, admin: renderAdmin };
@@ -890,9 +890,14 @@ async function renderAlerts() {
   acctCss();
   await loadPlan();
   if (!$("#alerts")) {
-    view.innerHTML = `<section class="page"><h1>Alerts</h1><div id="pushCard"></div><button class="btn" type="button" id="newAlert">+ New alert</button><div style="height:14px"></div><div id="alerts" class="list">${skeleton(3)}</div></section>${footer()}`;
+    view.innerHTML = `<section class="page"><h1>Alerts</h1><div id="pushCard"></div><div id="tgTip"></div><button class="btn" type="button" id="newAlert">+ New alert</button><div style="height:14px"></div><div id="alerts" class="list">${skeleton(3)}</div></section>${footer()}`;
     renderPushCard($("#pushCard"));
     $("#newAlert").onclick = newAlertSheet;
+    sb.from("telegram_links").select("chat_id").maybeSingle().then(({ data }) => {
+      const t = $("#tgTip");
+      if (!t || data) return;
+      t.innerHTML = `<a href="#account" class="ac-tip"><span class="ac-tip-ic">✈</span><span><b>Don't want to miss an alert?</b><br>Connect Telegram and your alerts will arrive there too.</span><span class="ac-chev">${acIco("chev")}</span></a>`;
+    });
   }
   const [pa, po, pp] = await Promise.all([
     sb
@@ -2209,6 +2214,9 @@ function acctCss() {
 .pl-r b{color:#0b7d4d}
 .pl-h{border-top:0;font-size:.8rem;opacity:.75;font-weight:700}
 .ac-plusbadge{display:inline-block;margin-top:4px;font-size:.72rem;font-weight:800;letter-spacing:.04em;padding:3px 9px;border-radius:999px;background:linear-gradient(135deg,#f5c542,#e8a317);color:#4a3200}
+.ac-tip{display:flex;align-items:center;gap:12px;margin:0 0 12px;padding:12px 14px;border-radius:16px;background:rgba(34,158,217,.1);border:1px solid rgba(34,158,217,.3);color:inherit;text-decoration:none;font-size:.92rem;line-height:1.35}
+.ac-tip-ic{flex:none;width:36px;height:36px;border-radius:50%;background:#229ed9;color:#fff;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+.ac-tip span:nth-child(2){flex:1}
 .pl-buy{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
 .pl-b{background:#0b7d4d;color:#fff;border:0;border-radius:12px;padding:10px 4px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
 .pl-b b{font-size:1.1rem;color:#fff}
