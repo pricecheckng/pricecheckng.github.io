@@ -2040,10 +2040,47 @@ async function telegramCardHtml() {
   const ch = pref?.channel || "both";
   const opt = (v, label) =>
     `<button class="btn${ch === v ? "" : " ghost"}" type="button" data-alert-channel="${v}">${label}</button>`;
+  const dsHtml = await dailySummaryCardHtml(ch);
   return (
     `<div class="card"><h3>Telegram alerts</h3><p>Connected. Price alerts will be sent to your Telegram.</p><button class="btn ghost" type="button" data-tg-disconnect>Disconnect Telegram</button></div>` +
-    `<div class="card"><h3>Where to get alerts</h3><p>Choose where your price and portfolio alerts are sent.</p><div style="display:grid;gap:8px">${opt("both", "Both (push + Telegram)")}${opt("push", "Push only")}${opt("telegram", "Telegram only")}</div></div>`
+    `<div class="card"><h3>Where to get alerts</h3><p>Choose where your price and portfolio alerts are sent.</p><div style="display:grid;gap:8px">${opt("both", "Both (push + Telegram)")}${opt("push", "Push only")}${opt("telegram", "Telegram only")}</div></div>` +
+    dsHtml
   );
+}
+
+/* ---------- daily summary (Telegram) ---------- */
+const browserTz = () => {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
+  } catch (_) {
+    return "UTC";
+  }
+};
+const hourLabel = (h) => `${h % 12 || 12}:00 ${h < 12 ? "AM" : "PM"}`;
+
+async function dailySummaryCardHtml(channel) {
+  const { data: row } = await sb.from("daily_summary").select("enabled,hour,tz").maybeSingle();
+  const on = !!row?.enabled;
+  const hour = row?.hour ?? 8;
+  const tz = browserTz();
+  if (on && row.tz !== tz) {
+    sb.from("daily_summary").update({ tz, updated_at: new Date().toISOString() }).eq("user_id", state.user.id).then(() => {});
+  }
+  const opts = Array.from({ length: 24 }, (_, h) => `<option value="${h}"${h === hour ? " selected" : ""}>${hourLabel(h)}</option>`).join("");
+  return `<div class="card"><h3>Daily summary</h3>
+    <p>Get a short Telegram message each day with your watchlist prices. It arrives at your own local time.</p>
+    <div class="curbar" style="margin:8px 0"><label for="dsHour">Send at</label><select id="dsHour" data-ds-hour>${opts}</select></div>
+    <p class="muted" style="font-size:.85rem;margin:0 0 10px">Your time zone: ${esc(tz)} (found automatically from your device). Sent around that hour.</p>
+    ${channel === "push" ? `<p class="muted" style="font-size:.85rem;margin:0 0 10px">Your alerts are set to Push only, so the summary won't be sent. Choose Both or Telegram only above.</p>` : ""}
+    <button class="btn${on ? " ghost" : ""}" type="button" data-ds-toggle>${on ? "Turn off daily summary" : "Turn on daily summary"}</button></div>`;
+}
+
+async function saveSummary(patch) {
+  if (!state.user) return;
+  const { data: row } = await sb.from("daily_summary").select("enabled,hour").maybeSingle();
+  const next = { user_id: state.user.id, enabled: row?.enabled ?? false, hour: row?.hour ?? 8, tz: browserTz(), updated_at: new Date().toISOString(), ...patch };
+  const { error } = await sb.from("daily_summary").upsert(next, { onConflict: "user_id" });
+  return error;
 }
 
 document.addEventListener("click", (e) => {
@@ -2051,4 +2088,18 @@ document.addEventListener("click", (e) => {
   if (e.target.closest("[data-tg-disconnect]")) disconnectTelegram();
   const ch = e.target.closest("[data-alert-channel]");
   if (ch) setAlertChannel(ch.getAttribute("data-alert-channel"));
+  if (e.target.closest("[data-ds-toggle]")) {
+    (async () => {
+      const { data: row } = await sb.from("daily_summary").select("enabled").maybeSingle();
+      const err = await saveSummary({ enabled: !row?.enabled });
+      toast(err ? "Could not save. Try again." : row?.enabled ? "Daily summary off" : "Daily summary on");
+      route();
+    })();
+  }
+});
+document.addEventListener("change", async (e) => {
+  const sel = e.target.closest("[data-ds-hour]");
+  if (!sel) return;
+  const err = await saveSummary({ hour: Number(sel.value) });
+  toast(err ? "Could not save. Try again." : "Saved");
 });
