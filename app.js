@@ -841,10 +841,9 @@ function alertDone(c, t, cur, up) {
 
 /* ---------- auth ---------- */
 function authSheet(mode = "in", msg = "") {
-  const up = mode === "up";
   openSheet(`
     <div class="sheet-head">
-      <span></span><div><h2 id="sheetTitle">${up ? "Create account" : "Sign in"}</h2></div>
+      <span></span><div><h2 id="sheetTitle">Sign in</h2></div>
       <button class="x" type="button" data-close aria-label="Close">×</button>
     </div>
     ${msg ? `<p class="hint" style="margin-top:0">${esc(msg)}</p>` : ""}
@@ -852,64 +851,11 @@ function authSheet(mode = "in", msg = "") {
       <svg viewBox="0 0 48 48" width="20" height="20" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
       Continue with Google
     </button>
-    <div class="or"><span>or use email</span></div>
-    <form id="authForm" novalidate>
-      <label class="field"><span>Email</span><input id="email" type="email" autocomplete="email" inputmode="email" required></label>
-      <label class="field"><span>Password</span><input id="pw" type="password" autocomplete="${up ? "new-password" : "current-password"}" minlength="8" required></label>
-      <p class="err" id="err" hidden></p>
-      <button class="btn" type="submit" id="authBtn">${up ? "Create account" : "Sign in"}</button>
-    </form>
-    <p class="hint" style="text-align:center;margin-top:14px">
-      <button class="link" type="button" id="swap">${up ? "I already have an account" : "Create a new account"}</button>
-      ${up ? "" : ` · <button class="link" type="button" id="forgot">Forgot password?</button>`}
-    </p>`);
+    <p class="err" id="err" hidden></p>
+    <p class="hint" style="text-align:center;margin-top:14px">New here? Continue with Google and your account is created automatically. No password needed.</p>`);
   $("#googleBtn").onclick = async () => {
     const { error } = await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname } });
-    if (error) showErr($("#err"), "Google sign-in is not available right now. Use email instead.");
-  };
-  $("#swap").onclick = () => authSheet(up ? "in" : "up");
-  const f = $("#forgot");
-  if (f) f.onclick = async () => {
-    const email = $("#email").value.trim();
-    const err = $("#err");
-    if (!email) return showErr(err, "Enter your email above first.");
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
-    if (error) return showErr(err, "Could not send the reset email. Try again in a few minutes.");
-    toast("Password reset email sent. Check your inbox.");
-  };
-  $("#authForm").onsubmit = async (e) => {
-    e.preventDefault();
-    const email = $("#email").value.trim();
-    const pw = $("#pw").value;
-    const err = $("#err");
-    err.hidden = true;
-    if (!email || !email.includes("@")) return showErr(err, "Enter a valid email address.");
-    if (pw.length < 8) return showErr(err, "Password must be at least 8 characters.");
-    const btn = $("#authBtn");
-    btn.disabled = true;
-    if (up) {
-      const { data, error } = await sb.auth.signUp({ email, password: pw, options: { emailRedirectTo: location.origin + location.pathname } });
-      btn.disabled = false;
-      if (error) return showErr(err, error.message);
-      if (data.session) {
-        state.user = data.session.user;
-        closeSheet();
-        route();
-        return;
-      }
-      openSheet(`<div class="done"><div class="big">📧</div><h2 id="sheetTitle">Check your email</h2>
-        <p>We sent a confirmation link to ${esc(email)}. If you don't see it in a minute, check your Spam or Junk folder. Tap the link, then come back and sign in.</p>
-        <button class="btn" type="button" data-close>OK</button></div>`);
-      return;
-    }
-    const { data, error } = await sb.auth.signInWithPassword({ email, password: pw });
-    btn.disabled = false;
-    if (error) return showErr(err, /banned/i.test(error.message) ? "Your account has been banned." : /confirm/i.test(error.message) ? "Confirm your email first. Check your inbox for the link." : "Wrong email or password.");
-    state.user = data.user;
-    closeSheet();
-    toast("Signed in");
-    route();
-    checkPush();
+    if (error) showErr($("#err"), "Google sign-in is not available right now. Please try again in a moment.");
   };
 }
 document.addEventListener("click", (e) => {
@@ -2280,7 +2226,7 @@ function acctCss() {
 
 function renderAccount() {
   if (!state.user) {
-    view.innerHTML = gate("Create a free account to set price alerts and get notified on your phone.");
+    view.innerHTML = gate("Sign in with Google to set price alerts and get notified on your phone.");
     return;
   }
   acctCss();
