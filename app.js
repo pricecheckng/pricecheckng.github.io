@@ -369,6 +369,85 @@ async function renderCoin(id) {
   paintCoin(data);
 }
 
+/* ---------- share card (image) ---------- */
+function priceCardBlob(c, sym, second, d, sp) {
+  return new Promise((resolve) => {
+    try {
+      const W = 1080, H = 1080;
+      const cv = document.createElement("canvas");
+      cv.width = W;
+      cv.height = H;
+      const x = cv.getContext("2d");
+      const green = "#0b7a4b";
+      const up = d.c !== "down";
+      x.fillStyle = "#ffffff";
+      x.fillRect(0, 0, W, H);
+      x.fillStyle = green;
+      x.fillRect(0, 0, W, 150);
+      x.fillStyle = "#ffffff";
+      x.font = "700 56px system-ui, -apple-system, Segoe UI, Roboto, sans-serif";
+      x.textBaseline = "middle";
+      x.fillText("PriceCheck NG", 70, 75);
+      x.textAlign = "right";
+      x.font = "500 34px system-ui, sans-serif";
+      x.fillText(new Date().toLocaleString([], { dateStyle: "medium", timeStyle: "short" }), W - 70, 75);
+      x.textAlign = "left";
+      x.beginPath();
+      x.arc(130, 290, 60, 0, Math.PI * 2);
+      x.fillStyle = "#e8f7ee";
+      x.fill();
+      x.fillStyle = green;
+      x.font = "800 40px system-ui, sans-serif";
+      x.textAlign = "center";
+      x.fillText(sym.slice(0, 4), 130, 292);
+      x.textAlign = "left";
+      x.fillStyle = "#111827";
+      x.font = "800 64px system-ui, sans-serif";
+      x.fillText(c.name.length > 18 ? c.name.slice(0, 17) + "…" : c.name, 220, 270);
+      x.fillStyle = "#6b7280";
+      x.font = "500 40px system-ui, sans-serif";
+      x.fillText(sym, 220, 322);
+      x.fillStyle = "#111827";
+      x.font = "800 128px system-ui, sans-serif";
+      x.fillText(fmtUsd(c.price_usd), 70, 480);
+      x.fillStyle = "#374151";
+      x.font = "600 60px system-ui, sans-serif";
+      x.fillText(fmtLocal(second, state.cur), 70, 575);
+      const pill = `${d.t}  24h`;
+      x.font = "700 44px system-ui, sans-serif";
+      const pw = x.measureText(pill).width + 60;
+      x.fillStyle = up ? "#dcf5e5" : "#fdecec";
+      x.beginPath();
+      x.roundRect ? x.roundRect(70, 625, pw, 78, 39) : x.rect(70, 625, pw, 78);
+      x.fill();
+      x.fillStyle = up ? "#15803d" : "#dc2626";
+      x.fillText(pill, 100, 665);
+      if (sp && sp.length > 2) {
+        const lo = Math.min(...sp), hi = Math.max(...sp), rng = hi - lo || 1;
+        const gx = 70, gy = 750, gw = W - 140, gh = 190;
+        x.beginPath();
+        sp.forEach((v, i) => {
+          const px = gx + (i / (sp.length - 1)) * gw;
+          const py = gy + gh - ((v - lo) / rng) * gh;
+          i ? x.lineTo(px, py) : x.moveTo(px, py);
+        });
+        x.strokeStyle = up ? "#15803d" : "#dc2626";
+        x.lineWidth = 6;
+        x.lineJoin = "round";
+        x.stroke();
+      }
+      x.fillStyle = "#f3f4f6";
+      x.fillRect(0, 985, W, 95);
+      x.fillStyle = "#374151";
+      x.font = "600 32px system-ui, sans-serif";
+      x.fillText("Check the price before you buy · pricecheckng.github.io", 70, 1032);
+      cv.toBlob((b) => resolve(b), "image/png");
+    } catch (_) {
+      resolve(null);
+    }
+  });
+}
+
 /* ---------- Referral card (Bybit) ---------- */
 const BYBIT_REF = "https://www.bybit.com/invite?ref=EGZLPPX&medium=referral&utm_campaign=evergreen&share_to=post";
 
@@ -433,11 +512,23 @@ function paintCoin(c) {
   };
   $("#shareBtn").onclick = async () => {
     const url = location.href;
+    const arrow = Number(c.change_24h_pct) >= 0 ? "📈" : "📉";
+    const text = `${arrow} ${c.name} (${sym})\n${fmtUsd(c.price_usd)} · ${fmtLocal(second, state.cur)}\n24h: ${d.t}\nLive on PriceCheck NG`;
     try {
-      if (navigator.share) await navigator.share({ title: `${c.name} price`, text: `${c.name} (${sym}) price on PriceCheck NG`, url });
-      else {
-        await navigator.clipboard.writeText(url);
-        toast("Link copied");
+      let file = null;
+      try {
+        const blob = await priceCardBlob(c, sym, second, d, sp);
+        if (blob) file = new File([blob], `${sym}-price.png`, { type: "image/png" });
+      } catch (_) {}
+      if (navigator.share) {
+        if (file && navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], text: `${text}\n${url}` });
+        } else {
+          await navigator.share({ title: `${c.name} price`, text, url });
+        }
+      } else {
+        await navigator.clipboard.writeText(`${text}\n${url}`);
+        toast("Copied. Paste it in WhatsApp");
       }
     } catch (_) {}
   };
