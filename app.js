@@ -1009,7 +1009,7 @@ async function renderAlerts() {
           <div class="acts">${chip}${act}</div>
         </div>`;
       })
-      .join("");
+      .join("") + referralCardHtml();
   box.onclick = async (e) => {
     const b = e.target.closest("[data-act]");
     if (!b) return;
@@ -1278,7 +1278,8 @@ function paintPortfolio() {
     ${allocHtml}
     <div style="margin-top:6px">
       ${groupHtml}
-    </div>`;
+    </div>
+    ${referralCardHtml()}`;
   $("#pfAdd").onclick = () => holdingSheet();
   $("#pfAlertBtn").onclick = () => portfolioAlertSheet();
 }
@@ -1589,7 +1590,7 @@ async function renderAdmin() {
     view.innerHTML = gate("Sign in to continue.");
     return;
   }
-  view.innerHTML = `<section class="page"><h1>Admin</h1><div id="admUsage"></div><div id="adm">${skeleton(3)}</div></section>`;
+  view.innerHTML = `<section class="page"><h1>Admin</h1><div id="admUsage"></div><div id="admPlus"></div><div id="adm">${skeleton(3)}</div></section>`;
   const { data: ok } = await sb.rpc("is_admin");
   if (!$("#adm")) return;
   if (!ok) {
@@ -1597,8 +1598,52 @@ async function renderAdmin() {
     return;
   }
   loadAdminUsage();
+  loadAdminPlus();
   await loadAdminUsers();
 }
+
+async function loadAdminPlus() {
+  acctCss();
+  const box = $("#admPlus");
+  if (!box) return;
+  const { data, error } = await sb.rpc("admin_plus_overview");
+  if (!$("#admPlus")) return;
+  if (error || !data) return;
+  const dt = (s) => (s ? new Date(s).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "-");
+  const act = (data.active || []).map((r) => `<div class="ac-row" style="padding:8px 0"><div class="ac-rt"><b>${esc(r.email)}</b><small>until ${dt(r.plus_until)}</small></div></div>`).join("");
+  const pay = (data.payments || []).map((r) => `<div class="ac-row" style="padding:8px 0"><div class="ac-rt"><b>${esc(r.email)}</b><small>${esc(r.plan)} · $${Number(r.amount_usd)} · ${dt(r.created_at)}</small></div><span class="ac-pill ${r.status === "paid" ? "" : "soft"}">${esc(r.status.toUpperCase())}</span></div>`).join("");
+  box.innerHTML = `<div class="ac-card"><h3 style="margin:0 0 10px">Plus</h3>
+    <input id="plEmail" type="email" placeholder="User email" autocomplete="off" style="width:100%;box-sizing:border-box;font:inherit;padding:12px;border:1px solid rgba(127,127,127,.35);border-radius:12px;background:transparent;color:inherit">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
+      <button class="ac-btn" type="button" data-pl-grant="30">+30 days</button>
+      <button class="ac-btn" type="button" data-pl-grant="365">+1 year</button>
+      <button class="ac-btn" type="button" data-pl-grant="0">Remove</button>
+    </div>
+    <p class="ac-note" id="plAdmMsg" style="margin-top:8px"></p>
+    <p class="muted" style="margin:10px 0 2px;font-size:.85rem"><b>Active Plus (${(data.active || []).length})</b></p>${act || '<p class="muted" style="margin:4px 0;font-size:.9rem">No one yet.</p>'}
+    <p class="muted" style="margin:10px 0 2px;font-size:.85rem"><b>Recent payments</b></p>${pay || '<p class="muted" style="margin:4px 0;font-size:.9rem">No payments yet.</p>'}
+  </div>`;
+}
+
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-pl-grant]");
+  if (!b) return;
+  const email = ($("#plEmail")?.value || "").trim();
+  const msg = $("#plAdmMsg");
+  if (!email) {
+    if (msg) msg.textContent = "Enter the user's email first.";
+    return;
+  }
+  const days = Number(b.dataset.plGrant);
+  if (days === 0 && !confirm("Remove Plus from " + email + "?")) return;
+  if (msg) msg.textContent = "Working...";
+  const { error } = await sb.rpc("admin_grant_plus", { p_email: email, p_days: days });
+  if (error) {
+    if (msg) msg.textContent = /no such user/i.test(error.message) ? "No user with that email." : "Could not do that. Try again.";
+    return;
+  }
+  loadAdminPlus();
+});
 
 async function loadAdminUsage() {
   acctCss();
@@ -2277,6 +2322,9 @@ function renderAccount() {
   });
 }
 
+// Set to true once Cryptomus is approved and the Supabase secrets are added.
+const PLUS_PAYMENTS_LIVE = false;
+
 const PLUS_PLANS = [
   { id: "month", label: "1 month", price: "$2" },
   { id: "quarter", label: "3 months", price: "$5" },
@@ -2286,11 +2334,13 @@ const PLUS_PLANS = [
 function plusCardHtml() {
   const row = (label, free, plus) => `<div class="pl-r"><span>${label}</span><span>${free}</span><b>${plus}</b></div>`;
   const on = !!state.plusUntil;
-  const pill = on ? `<span class="ac-pill">ACTIVE</span>` : "";
+  const pill = on ? `<span class="ac-pill">ACTIVE</span>` : PLUS_PAYMENTS_LIVE ? "" : `<span class="ac-pill soft">COMING SOON</span>`;
   const until = on ? state.plusUntil.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "";
-  const buy = `<div class="pl-buy">${PLUS_PLANS.map((p) => `<button type="button" class="pl-b" data-plus-plan="${p.id}"><b>${p.price}</b><span>${p.label}</span></button>`).join("")}</div>
+  const buy = PLUS_PAYMENTS_LIVE
+    ? `<div class="pl-buy">${PLUS_PLANS.map((p) => `<button type="button" class="pl-b" data-plus-plan="${p.id}"><b>${p.price}</b><span>${p.label}</span></button>`).join("")}</div>
     <p class="ac-note" id="plusMsg" style="margin-top:8px">Pay with crypto (USDT, BTC and more). Plus turns on automatically within a few minutes after payment. One-time payment, no auto-renewal.</p>
-    <button class="ac-btn" type="button" id="plusCheck" style="margin-top:8px">I have paid - check my status</button>`;
+    <button class="ac-btn" type="button" id="plusCheck" style="margin-top:8px">I have paid - check my status</button>`
+    : "";
   return `<details class="ac-card pl-card"${on ? " open" : ""}>
     <summary><h3 style="margin:0;flex:1">PriceCheck Plus</h3>${pill}<span class="ac-chev pl-chev">${acIco("chev")}</span></summary>
     <p style="margin-top:10px">${on ? `Plus is active until <b>${until}</b>. You can add more time any time.` : "More room for your alerts, for people who track a lot of coins."}</p>
@@ -2302,7 +2352,7 @@ function plusCardHtml() {
       ${row("Portfolio value history", "–", "✓")}
     </div>
     ${buy}
-    <p class="ac-note" style="margin-top:12px">Everything you use today stays free.</p>
+    <p class="ac-note" style="margin-top:12px">Everything you use today stays free.${on || PLUS_PAYMENTS_LIVE ? "" : " We'll tell you here when Plus is ready."}</p>
   </details>`;
 }
 
