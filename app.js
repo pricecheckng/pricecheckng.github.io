@@ -188,7 +188,7 @@ async function renderMarket() {
     </section>
     ${iosBannerHtml()}
     ${installBannerHtml()}
-    <div class="curbar mk-cur">
+    <div class="curbar">
       <label for="curSel">Second price in</label>
       <select id="curSel" aria-label="Choose second currency">
         ${Object.entries(CURRENCIES)
@@ -197,7 +197,7 @@ async function renderMarket() {
           .join("")}
       </select>
     </div>
-    <div class="ac-seg tabs" id="tabs" style="grid-template-columns:repeat(2,1fr);margin:12px 0">
+    <div class="ac-seg mk-tabs" id="tabs" style="grid-template-columns:repeat(2,1fr);margin:12px 0">
       <button type="button" class="${state.tab === "all" ? "on" : ""}" data-tab="all">All coins</button>
       <button type="button" class="${state.tab === "watch" ? "on" : ""}" data-tab="watch">★ Watchlist</button>
     </div>
@@ -2143,8 +2143,7 @@ function acctCss() {
 .ac-help-body ol{margin:0;padding-left:18px}.ac-help-body p{margin:8px 0 0}
 .ac-quiet{display:block;text-align:center;margin:4px 0 12px;opacity:.7;font-size:.9rem;color:inherit}
 .ac-btn[hidden]{display:none}
-.ac-seg.tabs button{padding:12px 4px}
-.mk-cur{background:rgba(11,125,77,.07)!important;border:1px solid rgba(11,125,77,.18)!important;border-radius:14px!important}
+.ac-seg.mk-tabs button{padding:12px 4px}
 .more .ac-btn{margin:14px 0 4px;padding:14px}
 .ac-del{display:block;margin:6px auto 0;background:none;border:0;color:#dc2626;font:inherit;font-size:.9rem;padding:10px}
 `;
