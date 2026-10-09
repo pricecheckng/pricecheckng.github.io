@@ -805,7 +805,7 @@ function alertForm(c) {
     if (error) {
       btn.disabled = false;
       btn.textContent = "Create alert";
-      if (/limit/i.test(error.message || "")) return showErr(err, `You can have up to ${PRICE_ALERT_LIMIT} active coin price alerts. Cancel one first. More room is coming with Plus.`);
+      if (/limit/i.test(error.message || "")) return showErr(err, `You can have up to ${PRICE_ALERT_LIMIT} active coin price alerts. Cancel one first. Plus gives you more room (Account tab).`);
       if (error.code === "42501") {
         const { data: fl } = await sb.from("user_flags").select("banned,alerts_blocked").maybeSingle();
         if (fl && (fl.banned || fl.alerts_blocked)) return showErr(err, "Alerts are turned off for your account.");
@@ -942,6 +942,7 @@ async function renderAlerts() {
     return;
   }
   acctCss();
+  await loadPlan();
   if (!$("#alerts")) {
     view.innerHTML = `<section class="page"><h1>Alerts</h1><div id="pushCard"></div><button class="btn" type="button" id="newAlert">+ New alert</button><div style="height:14px"></div><div id="alerts" class="list">${skeleton(3)}</div></section>${footer()}`;
     renderPushCard($("#pushCard"));
@@ -1478,9 +1479,25 @@ function holdingSheet(row) {
   };
 }
 
-const PORTFOLIO_ALERT_LIMIT = 5;
-const PRICE_ALERT_LIMIT = 10;
-const PCT_ALERT_LIMIT = 5;
+let PORTFOLIO_ALERT_LIMIT = 5;
+let PRICE_ALERT_LIMIT = 10;
+let PCT_ALERT_LIMIT = 5;
+
+// Plus plan: higher limits. plusUntil is a Date, or null for free.
+async function loadPlan() {
+  let until = null;
+  if (state.user) {
+    try {
+      const { data } = await sb.from("user_plans").select("plus_until").eq("user_id", state.user.id).maybeSingle();
+      if (data && new Date(data.plus_until) > new Date()) until = new Date(data.plus_until);
+    } catch {}
+  }
+  state.plusUntil = until;
+  PRICE_ALERT_LIMIT = until ? 50 : 10;
+  PCT_ALERT_LIMIT = until ? 20 : 5;
+  PORTFOLIO_ALERT_LIMIT = until ? 20 : 5;
+  return until;
+}
 
 function portfolioAlertSheet() {
   const second = state.cur;
@@ -1548,7 +1565,7 @@ function portfolioAlertSheet() {
     if (error) {
       btn.disabled = false;
       btn.textContent = "Create alert";
-      if (/limit/i.test(error.message || "")) return showErr(err, `You can have up to ${PORTFOLIO_ALERT_LIMIT} active portfolio alerts. Cancel one first. More room is coming with Plus.`);
+      if (/limit/i.test(error.message || "")) return showErr(err, `You can have up to ${PORTFOLIO_ALERT_LIMIT} active portfolio alerts. Cancel one first. Plus gives you more room (Account tab).`);
       if (error.code === "42501") {
         const { data: fl } = await sb.from("user_flags").select("banned,alerts_blocked").maybeSingle();
         if (fl && (fl.banned || fl.alerts_blocked)) return showErr(err, "Alerts are turned off for your account.");
@@ -2006,7 +2023,10 @@ sb.auth.onAuthStateChange((ev, session) => {
     state.watchFor = null;
     state.tab = "all";
   }
-  if (state.user && (ev === "SIGNED_IN" || ev === "INITIAL_SESSION")) setTimeout(silentPush, 0);
+  if (state.user && (ev === "SIGNED_IN" || ev === "INITIAL_SESSION")) {
+    setTimeout(silentPush, 0);
+    setTimeout(loadPlan, 0);
+  }
   if (ev === "PASSWORD_RECOVERY") setTimeout(recoverySheet, 0);
   if (ev === "SIGNED_OUT" || ev === "USER_UPDATED") setTimeout(route, 0);
 });
@@ -2197,6 +2217,11 @@ function acctCss() {
 .pl-r span:not(:first-child),.pl-r b{text-align:center}
 .pl-r b{color:#0b7d4d}
 .pl-h{border-top:0;font-size:.8rem;opacity:.75;font-weight:700}
+.pl-buy{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.pl-b{background:#0b7d4d;color:#fff;border:0;border-radius:12px;padding:10px 4px;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px}
+.pl-b b{font-size:1.1rem;color:#fff}
+.pl-b span{font-size:.78rem;opacity:.9}
+.pl-b:disabled{opacity:.6}
 .pl-card{background:rgba(11,125,77,.06);border-color:rgba(11,125,77,.25)}
 .pl-card summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px}
 .pl-card summary::-webkit-details-marker{display:none}
@@ -2221,7 +2246,7 @@ function renderAccount() {
     }</div></div>
     <div id="pushCard" data-full="1"></div>
     <div id="tgCard"></div>
-    ${plusCardHtml()}
+    <div id="plusSlot">${plusCardHtml()}</div>
     <div class="ac-card">
       <details class="ac-help"><summary class="ac-row">${`<span class="ac-ic">${acIco("help")}</span><div class="ac-rt"><b>Notifications not working?</b><small>Troubleshoot common issues</small></div>`}${chev}</summary><div class="ac-help-body">${PUSH_STEPS}</div></details>
     </div>
@@ -2229,6 +2254,14 @@ function renderAccount() {
     <button class="btn ghost" type="button" id="signOut">Sign out</button>
     <div id="delSlot"></div></section>${footer()}`;
   renderPushCard($("#pushCard"));
+  loadPlan().then(() => {
+    const el = $("#plusSlot");
+    if (el) {
+      const wasOpen = el.querySelector("details")?.open;
+      el.innerHTML = plusCardHtml();
+      if (wasOpen) el.querySelector("details").open = true;
+    }
+  });
   telegramCardHtml().then((h) => {
     if ($("#tgCard")) $("#tgCard").innerHTML = h;
   });
@@ -2244,21 +2277,65 @@ function renderAccount() {
   });
 }
 
+const PLUS_PLANS = [
+  { id: "month", label: "1 month", price: "$2" },
+  { id: "quarter", label: "3 months", price: "$5" },
+  { id: "year", label: "1 year", price: "$15" },
+];
+
 function plusCardHtml() {
   const row = (label, free, plus) => `<div class="pl-r"><span>${label}</span><span>${free}</span><b>${plus}</b></div>`;
-  return `<details class="ac-card pl-card">
-    <summary><h3 style="margin:0;flex:1">PriceCheck Plus</h3><span class="ac-pill soft">COMING SOON</span><span class="ac-chev pl-chev">${acIco("chev")}</span></summary>
-    <p style="margin-top:10px">More room for your alerts, for people who track a lot of coins.</p>
+  const on = !!state.plusUntil;
+  const pill = on ? `<span class="ac-pill">ACTIVE</span>` : "";
+  const until = on ? state.plusUntil.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "";
+  const buy = `<div class="pl-buy">${PLUS_PLANS.map((p) => `<button type="button" class="pl-b" data-plus-plan="${p.id}"><b>${p.price}</b><span>${p.label}</span></button>`).join("")}</div>
+    <p class="ac-note" id="plusMsg" style="margin-top:8px">Pay with crypto (USDT, BTC and more). Plus turns on automatically within a few minutes after payment. One-time payment, no auto-renewal.</p>
+    <button class="ac-btn" type="button" id="plusCheck" style="margin-top:8px">I have paid - check my status</button>`;
+  return `<details class="ac-card pl-card"${on ? " open" : ""}>
+    <summary><h3 style="margin:0;flex:1">PriceCheck Plus</h3>${pill}<span class="ac-chev pl-chev">${acIco("chev")}</span></summary>
+    <p style="margin-top:10px">${on ? `Plus is active until <b>${until}</b>. You can add more time any time.` : "More room for your alerts, for people who track a lot of coins."}</p>
     <div class="pl-t">
       <div class="pl-r pl-h"><span></span><span>Free</span><b>Plus</b></div>
-      ${row("Coin price alerts", PRICE_ALERT_LIMIT, 50)}
-      ${row("Move alerts", PCT_ALERT_LIMIT, 20)}
-      ${row("Portfolio alerts", PORTFOLIO_ALERT_LIMIT, 20)}
+      ${row("Coin price alerts", 10, 50)}
+      ${row("Move alerts", 5, 20)}
+      ${row("Portfolio alerts", 5, 20)}
       ${row("Portfolio value history", "–", "✓")}
     </div>
-    <p class="ac-note" style="margin-top:12px">Everything you use today stays free. We'll tell you here when Plus is ready.</p>
+    ${buy}
+    <p class="ac-note" style="margin-top:12px">Everything you use today stays free.</p>
   </details>`;
 }
+
+async function startPlusCheckout(plan, btn) {
+  const msg = $("#plusMsg");
+  const all = document.querySelectorAll("[data-plus-plan]");
+  all.forEach((b) => (b.disabled = true));
+  if (msg) msg.textContent = "Opening secure payment page...";
+  try {
+    const { data, error } = await sb.functions.invoke("plus-checkout", { body: { plan } });
+    if (error || !data?.url) throw new Error("fail");
+    location.href = data.url;
+  } catch {
+    all.forEach((b) => (b.disabled = false));
+    if (msg) msg.textContent = "Could not open the payment page right now. Please try again in a moment.";
+  }
+}
+
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-plus-plan]");
+  if (b) return startPlusCheckout(b.dataset.plusPlan, b);
+  if (e.target.closest("#plusCheck")) {
+    const msg = $("#plusMsg");
+    if (msg) msg.textContent = "Checking...";
+    await loadPlan();
+    const el = $("#plusSlot");
+    if (state.plusUntil && el) {
+      el.innerHTML = plusCardHtml();
+    } else if (msg) {
+      msg.textContent = "Not confirmed yet. Payments can take a few minutes on the blockchain. Try again shortly.";
+    }
+  }
+});
 
 function renderAcctPush(el) {
   const sw = (on) => `<button type="button" class="ac-sw${on ? " on" : ""}" role="switch" aria-checked="${on}" aria-label="Notifications" data-push-sw><i></i></button>`;
@@ -2450,7 +2527,7 @@ function percentAlertSheet(c) {
       btn.disabled = false;
       btn.textContent = "Create alert";
       const m = error.message || "";
-      if (/limit/i.test(m)) return showErr(err, `You can have up to ${PCT_ALERT_LIMIT} active move alerts. Cancel one first. More room is coming with Plus.`);
+      if (/limit/i.test(m)) return showErr(err, `You can have up to ${PCT_ALERT_LIMIT} active move alerts. Cancel one first. Plus gives you more room (Account tab).`);
       if (/blocked/i.test(m)) return showErr(err, "Alerts are turned off for your account.");
       if (/email/i.test(m)) return showErr(err, "Confirm your email before setting alerts.");
       return showErr(err, "Could not save the alert. Please try again.");
