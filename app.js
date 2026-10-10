@@ -1638,7 +1638,7 @@ async function renderAdmin() {
     view.innerHTML = gate("Sign in to continue.");
     return;
   }
-  view.innerHTML = `<section class="page"><h1>Admin</h1><div id="admUsage"></div><div id="admPlus"></div><div id="adm">${skeleton(3)}</div></section>`;
+  view.innerHTML = `<section class="page"><h1>Admin</h1><div id="admUsage"></div><div id="admBroadcast"></div><div id="admPlus"></div><div id="adm">${skeleton(3)}</div></section>`;
   const { data: ok } = await sb.rpc("is_admin");
   if (!$("#adm")) return;
   if (!ok) {
@@ -1646,6 +1646,7 @@ async function renderAdmin() {
     return;
   }
   loadAdminUsage();
+  loadAdminBroadcast();
   loadAdminPlus();
   await loadAdminUsers();
 }
@@ -2106,6 +2107,74 @@ addPortfolioTab();
 try {
   if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
 } catch (_) {}
+
+
+/* ---------- bell: red dot + notification list ---------- */
+(function bellInit() {
+  const st = document.createElement("style");
+  st.textContent = `.bellbtn{position:relative}.bellbtn.has-new::after{content:"";position:absolute;top:7px;right:8px;width:11px;height:11px;border-radius:50%;background:#e53935;border:2px solid #0b7a4b}.nt-item{padding:12px 0;border-bottom:1px solid rgba(128,128,128,.2)}.nt-item b{display:block}.nt-item.new b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#e53935;margin-right:8px}.nt-item p{margin:4px 0 0;white-space:pre-line}.nt-item small{display:block;opacity:.6;margin-top:4px}.nt-list{max-height:55vh;overflow:auto;margin-bottom:12px}`;
+  document.head.appendChild(st);
+  const setDot = (n) => document.querySelectorAll(".bellbtn").forEach((b) => b.classList.toggle("has-new", n > 0));
+  async function refreshBell() {
+    if (!state.user) return setDot(0);
+    const { data, error } = await sb.rpc("my_unread");
+    if (!error) setDot(Number(data) || 0);
+  }
+  document.addEventListener(
+    "click",
+    async (e) => {
+      const b = e.target.closest(".bellbtn");
+      if (!b) return;
+      e.preventDefault();
+      if (!state.user) return authSheet("in", "Sign in to see your notifications.");
+      openSheet(`<div class="sheet-head"><span></span><div><h2 id="sheetTitle">Notifications</h2></div><button class="x" type="button" data-close aria-label="Close">×</button></div><div class="nt-list" id="ntList"><p class="muted">Loading…</p></div><a class="btn ghost" href="#alerts" data-close>Go to my alerts</a>`);
+      const { data } = await sb.rpc("my_notifications");
+      const box = $("#ntList");
+      if (!box) return;
+      const rows = Array.isArray(data) ? data : [];
+      box.innerHTML = rows.length
+        ? rows.map((r) => `<div class="nt-item ${r.is_new ? "new" : ""}"><b>${esc(r.title)}</b><p>${esc(r.body)}</p><small>${ago(r.created_at)}</small></div>`).join("")
+        : `<p class="muted">No notifications yet.</p>`;
+      await sb.rpc("mark_notifications_seen");
+      setDot(0);
+    },
+    true
+  );
+  sb.auth.onAuthStateChange(() => setTimeout(refreshBell, 300));
+  document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) refreshBell();
+  });
+  setInterval(() => {
+    if (!document.hidden) refreshBell();
+  }, 60000);
+  setTimeout(refreshBell, 1500);
+})();
+
+/* ---------- admin: send a notification to everyone ---------- */
+function loadAdminBroadcast() {
+  acctCss();
+  const box = $("#admBroadcast");
+  if (!box) return;
+  const f = "width:100%;box-sizing:border-box;font:inherit;padding:12px;border:1px solid rgba(127,127,127,.35);border-radius:12px;background:transparent;color:inherit";
+  box.innerHTML = `<div class="ac-card"><h3 style="margin:0 0 10px">Send notification to everyone</h3>
+    <input id="bcTitle" maxlength="80" placeholder="Title (e.g. 📢 New feature)" autocomplete="off" style="${f}">
+    <textarea id="bcBody" maxlength="300" rows="3" placeholder="Message (up to 300 characters)" style="${f};margin-top:8px;resize:vertical"></textarea>
+    <button class="ac-btn" type="button" id="bcSend" style="margin-top:8px">Send to all users</button>
+    <p class="ac-note" id="bcMsg" style="margin-top:8px"></p></div>`;
+  $("#bcSend").onclick = async () => {
+    const title = $("#bcTitle").value.trim(), body = $("#bcBody").value.trim();
+    const msg = $("#bcMsg");
+    if (!title || !body) { msg.textContent = "Write a title and a message first."; return; }
+    if (!confirm('Send this to ALL users?\n\n' + title + '\n' + body)) return;
+    msg.textContent = "Sending…";
+    $("#bcSend").disabled = true;
+    const { data, error } = await sb.rpc("admin_broadcast", { p_title: title, p_body: body });
+    $("#bcSend").disabled = false;
+    if (error) { msg.textContent = "Could not send: " + error.message; return; }
+    msg.textContent = "Sent to " + data + " users. Push and Telegram go out within a minute.";
+    $("#bcTitle").value = ""; $("#bcBody").value = "";
+  };
+}
 
 /* ---------- boot ---------- */
 sb.auth.onAuthStateChange((ev, session) => {
