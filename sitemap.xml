@@ -7,7 +7,32 @@
   <url><loc>https://pricecheckng.github.io/solana-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://pricecheckng.github.io/ripple-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://pricecheckng.github.io/binancecoin-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/dogecoin-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/cardano-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/tron-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/the-open-network-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/chainlink-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/avalanche-2-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/polkadot-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/litecoin-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/shiba-inu-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/usd-coin-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/bitcoin-cash-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/stellar-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/sui-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/near-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/uniswap-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/pepe-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/aptos-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/internet-computer-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/ethereum-classic-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/monero-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/hedera-hashgraph-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/cosmos-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/arbitrum-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.github.io/aave-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://pricecheckng.github.io/privacy.html</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://pricecheckng.github.io/terms.html</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://pricecheckng.github.io/plus.html</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://pricecheckng.github.io/coins.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
 </urlset>
