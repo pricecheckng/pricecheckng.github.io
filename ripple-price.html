@@ -15,25 +15,32 @@
 <meta property="og:url" content="https://pricecheckng.github.io/ripple-price.html">
 <meta property="og:image" content="https://pricecheckng.github.io/icon-512.png">
 <link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "XRP (XRP) price", "url": "https://pricecheckng.github.io/ripple-price.html", "description": "Live XRP (XRP) price in NGN, USD, GBP, EUR, GHS, ZAR, KES and more, with free price alerts on PriceCheck NG.", "isPartOf": {"@type": "WebSite", "name": "PriceCheck NG", "url": "https://pricecheckng.github.io/"}}</script>
 <style>
 :root{--g:#0b7d4d;--ink:#0f1a14;--mut:#55635a;--line:#e3e9e5;--bg:#fff;--card:#f6f8f7}
 @media (prefers-color-scheme:dark){:root{--ink:#e9f1ec;--mut:#9db0a5;--line:#26332c;--bg:#0e1511;--card:#16201a}}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{background:var(--g);padding:14px 20px}
-header a{color:#fff;font-weight:800;text-decoration:none}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--g);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+header a{color:#fff;text-decoration:none}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:1.05rem}.brand b{font-weight:800;color:#9be3bd}.mark{display:flex}
+.open{background:#fff;color:var(--g)!important;font-weight:800;font-size:.85rem;border-radius:999px;padding:7px 14px}
 main{max-width:720px;margin:0 auto;padding:24px 20px 48px}
 h1{font-size:1.6rem;line-height:1.25;margin:0 0 6px}
 h2{font-size:1.15rem;margin:28px 0 8px}
+.coinrow{display:flex;gap:12px;align-items:flex-start}.badge{flex:none;width:44px;height:44px;border-radius:50%;background:var(--g);color:#fff;font-weight:800;font-size:.72rem;display:flex;align-items:center;justify-content:center;margin-top:2px}
 .sub{color:var(--mut);margin:0 0 18px}
-.box{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px 18px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 20px}
+#tbl{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:4px 16px;border-collapse:separate;border-spacing:0}#tbl td{padding:12px 0}#tbl tr:first-child td{border-top:0}
 .big{font-size:2rem;font-weight:800;margin:0}
 .chg.up{color:#0b7d4d}.chg.down{color:#c62828}
 table{width:100%;border-collapse:collapse;margin-top:6px}
 td,th{text-align:left;padding:10px 4px;border-top:1px solid var(--line);font-size:.95rem}
 td:last-child,th:last-child{text-align:right;font-weight:700}
-.btn{display:block;text-align:center;background:var(--g);color:#fff;font-weight:800;text-decoration:none;border-radius:14px;padding:14px;margin-top:16px}
+.btn{display:block;box-shadow:0 6px 18px rgba(11,125,77,.3);text-align:center;background:var(--g);color:#fff;font-weight:800;text-decoration:none;border-radius:14px;padding:14px;margin-top:16px}
 .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .links a{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--ink);text-decoration:none;font-size:.9rem}
 .note{color:var(--mut);font-size:.85rem;margin-top:14px}
@@ -42,9 +49,9 @@ footer a{color:var(--mut)}
 </style>
 </head>
 <body>
-<header><a href="./">PriceCheck NG</a></header>
+<header><a class="brand" href="./"><span class="mark"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" fill="#fff" fill-opacity=".14" stroke="#fff" stroke-width="1.6"/><rect x="7" y="17" width="4.5" height="8" rx="1.5" fill="#fff"/><rect x="13.75" y="12" width="4.5" height="13" rx="1.5" fill="#fff"/><rect x="20.5" y="7" width="4.5" height="18" rx="1.5" fill="#9be3bd"/></svg></span><span>PriceCheck <b>NG</b></span></a><a class="open" href="./#coin/ripple">Open app</a></header>
 <main>
-<h1>XRP (XRP) price in Naira, USD, GBP, EUR and more</h1>
+<div class="coinrow"><span class="badge">XRP</span><div><h1>XRP (XRP) price in Naira, USD, GBP, EUR and more</h1></div></div>
 <p class="sub">Live XRP price in your currency. Prices update about every minute for major coins.</p>
 <div class="box">
   <p class="big" id="usd">Loading price…</p>
@@ -53,7 +60,7 @@ footer a{color:var(--mut)}
 </div>
 <h2>XRP price in other currencies</h2>
 <table id="tbl"><tbody></tbody></table>
-<a class="btn" href="./#coin/ripple">See the chart and set a free XRP price alert</a>
+<a class="btn" href="./#coin/ripple">Open in the app: chart and free XRP price alert</a>
 <h2>About XRP prices on PriceCheck NG</h2>
 <p>PriceCheck NG shows the live XRP (XRP) price in US dollars and in your choice of Nigerian naira (NGN), British pounds (GBP), euros (EUR), Ghanaian cedis (GHS), South African rand (ZAR), Kenyan shillings (KES), and more. You can set an alert for when XRP reaches a price or moves by a percent, and get notified by push notification or Telegram. It is free to use.</p>
 <h2>Other coins</h2>
