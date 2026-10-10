@@ -36,3 +36,6 @@
   <url><loc>https://pricecheckng.github.io/plus.html</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>https://pricecheckng.github.io/coins.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
 </urlset>
+<url><loc>https://pricecheckng.github.io/converter.html</loc></url>
+<url>...your other pages...</url>
+</urlset>
