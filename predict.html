@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Daily Bitcoin Prediction Contest: Higher or Lower? | PriceCheck NG</title>
+<meta name="description" content="Free daily Bitcoin prediction game. Will BTC be higher or lower tomorrow? Pick, earn points and climb the leaderboard on PriceCheck NG.">
+<link rel="canonical" href="https://pricecheckng.github.io/predict.html">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="theme-color" content="#0b7a4b">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="PriceCheck NG">
+<meta property="og:title" content="Daily Bitcoin prediction contest: higher or lower?">
+<meta property="og:description" content="Pick whether BTC will be higher or lower tomorrow, earn points and climb the leaderboard. Free.">
+<meta property="og:url" content="https://pricecheckng.github.io/predict.html">
+<meta property="og:image" content="https://pricecheckng.github.io/icon-512.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--g:#0b7d4d;--ink:#0f1a14;--mut:#55635a;--line:#e3e9e5;--bg:#fff;--card:#f6f8f7;--up:#0b7d4d;--down:#c62828}
+@media (prefers-color-scheme:dark){:root{--ink:#e9f1ec;--mut:#9db0a5;--line:#26332c;--bg:#0e1511;--card:#16201a;--up:#3ddc97;--down:#ff6b6b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--g);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+header a{color:#fff;text-decoration:none}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:1.05rem}.brand b{font-weight:800;color:#9be3bd}.mark{display:flex}
+.open{background:#fff;color:var(--g)!important;font-weight:800;font-size:.85rem;border-radius:999px;padding:7px 14px}
+main{max-width:720px;margin:0 auto;padding:24px 20px 48px}
+h1{font-size:1.6rem;line-height:1.25;margin:0 0 6px}
+h2{font-size:1.15rem;margin:28px 0 8px}
+.sub{color:var(--mut);margin:0 0 18px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 20px;margin-bottom:14px}
+.q{font-size:1.15rem;font-weight:800;margin:0 0 4px}
+.price{font-size:2rem;font-weight:800;margin:0}
+.mut{color:var(--mut);font-size:.9rem}
+.picks{display:flex;gap:10px;margin-top:14px}
+.picks button{flex:1;font:inherit;font-weight:800;font-size:1.05rem;border:0;border-radius:14px;padding:16px 8px;color:#fff;cursor:pointer}
+.picks .u{background:var(--up);color:#fff}.picks .d{background:var(--down);color:#fff}
+.picks button:disabled{opacity:.5}
+.bar{display:flex;height:10px;border-radius:999px;overflow:hidden;margin-top:12px;background:var(--line)}
+.bar i{display:block;height:100%}.bar .u{background:var(--up)}.bar .d{background:var(--down)}
+.split{display:flex;justify-content:space-between;font-size:.85rem;color:var(--mut);margin-top:4px}
+.tag{display:inline-block;border-radius:999px;padding:4px 12px;font-weight:800;font-size:.9rem}
+.tag.up{background:rgba(11,125,77,.12);color:var(--up)}.tag.down{background:rgba(198,40,40,.12);color:var(--down)}.tag.flat{background:var(--line);color:var(--mut)}
+.btn{display:block;box-shadow:0 6px 18px rgba(11,125,77,.3);text-align:center;background:var(--g);color:#fff;font-weight:800;text-decoration:none;border-radius:14px;padding:14px;margin-top:14px;border:0;width:100%;font:inherit;font-weight:800;cursor:pointer}
+.stats{display:flex;gap:10px;text-align:center}
+.stats div{flex:1;background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:10px 4px}
+.stats b{display:block;font-size:1.3rem}
+.lb{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:4px 14px}
+.lbr{display:flex;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.lbr:first-child{border-top:0}
+.rk{width:26px;font-weight:800;color:var(--mut);text-align:center}
+.lbr .nm{flex:1;font-weight:700}
+.lbr .pt{font-weight:800}
+.wa{display:inline-flex;align-items:center;gap:8px;margin-top:6px;background:#25d366;color:#fff!important;font-weight:800;font-size:.9rem;text-decoration:none;border-radius:999px;padding:9px 16px}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.links a{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--ink);text-decoration:none;font-size:.9rem}
+.note{color:var(--mut);font-size:.85rem;margin-top:14px}
+footer{border-top:1px solid var(--line);padding:18px 20px;text-align:center;color:var(--mut);font-size:.9rem}
+footer a{color:var(--mut)}
+</style>
+</head>
+<body>
+<header><a class="brand" href="./"><span class="mark"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" fill="#fff" fill-opacity=".14" stroke="#fff" stroke-width="1.6"/><rect x="7" y="17" width="4.5" height="8" rx="1.5" fill="#fff"/><rect x="13.75" y="12" width="4.5" height="13" rx="1.5" fill="#fff"/><rect x="20.5" y="7" width="4.5" height="18" rx="1.5" fill="#9be3bd"/></svg></span><span>PriceCheck <b>NG</b></span></a><a class="open" href="./">Open app</a></header>
+<main>
+<h1>Daily Bitcoin prediction contest</h1>
+<p class="sub">Will Bitcoin be higher or lower tomorrow? Pick, earn points and climb the leaderboard. Free to play.</p>
+
+<div class="box" id="round"><p class="mut">Loading…</p></div>
+<div id="lastbox"></div>
+<div id="mebox"></div>
+
+<h2>Leaderboard</h2>
+<div class="lb" id="lb"><p class="mut" style="padding:10px 0;margin:0">Loading…</p></div>
+
+<a class="wa" id="wa" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
+
+<h2>How it works</h2>
+<p>A new round opens every day at 7:00 AM Nigerian time. You see Bitcoin's price at the start, and you pick whether it will be <b>higher</b> or <b>lower</b> when the round ends the next morning. You can pick for the first few hours of each round, and your pick is locked once you make it. A correct pick earns 10 points. If the price barely moves (under 0.05%), the round is a draw and nobody gains or loses points.</p>
+<p>This is a free game for fun. There is no money, no entry fee and no cash prize, and it is not financial advice.</p>
+
+<h2>More tools</h2>
+<div class="links"><a href="converter.html">Crypto converter</a><a href="movers.html">Gainers and losers</a><a href="bitcoin-price.html">Bitcoin price</a><a href="coins.html">More coins</a><a href="./">All coins</a></div>
+</main>
+<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="plus.html">Plus &amp; Contact</a></footer>
+<script type="module">
+import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const usd = (n) => new Intl.NumberFormat("en", { style: "currency", currency: "USD", maximumFractionDigits: 2 }).format(Number(n));
+const when = (iso) => new Date(iso).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" });
+let session = null, state = null, offset = 0;
+
+function countdown(iso) {
+  let s = Math.max(0, Math.floor((Date.parse(iso) - (Date.now() + offset)) / 1000));
+  const h = Math.floor(s / 3600); s -= h * 3600;
+  const m = Math.floor(s / 60); s -= m * 60;
+  return (h ? h + "h " : "") + m + "m " + s + "s";
+}
+
+async function signIn() {
+  await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname } });
+}
+
+async function pick(roundId, p) {
+  document.querySelectorAll(".picks button").forEach((b) => (b.disabled = true));
+  const { error } = await sb.rpc("contest_predict", { p_round: roundId, p_pick: p });
+  if (error) alert(error.message);
+  await refresh();
+}
+
+function render() {
+  if (!state) return;
+  const box = $("round");
+  const cur = state.current;
+  if (!cur) {
+    box.innerHTML = '<p class="q">A new round starts soon</p><p class="mut">Come back at 7:00 AM Nigerian time.</p>';
+  } else {
+    const open = Date.parse(cur.entries_close_at) > Date.now() + offset;
+    const up = Number(state.up || 0), down = Number(state.down || 0), tot = up + down;
+    let html =
+      '<p class="mut" style="margin:0">Bitcoin price at round start</p>' +
+      '<p class="price">' + usd(cur.start_price) + "</p>" +
+      '<p class="mut" style="margin:0 0 10px">Now: ' + (state.price ? usd(state.price) : "…") + "</p>" +
+      '<p class="q">Will BTC be higher or lower at ' + when(cur.closes_at) + "?</p>";
+    if (state.my_pick) {
+      html += '<p style="margin:8px 0 0">You picked <span class="tag ' + state.my_pick + '">' + (state.my_pick === "up" ? "Higher" : "Lower") + '</span> and it is locked in. Result at ' + when(cur.closes_at) + ".</p>";
+    } else if (!open) {
+      html += '<p class="mut">Entries are closed for this round. Come back after ' + when(cur.closes_at) + " for the next one.</p>";
+    } else if (!session) {
+      html += '<p class="mut">Entries close in <b id="cd">' + countdown(cur.entries_close_at) + '</b>. Sign in to play.</p><button class="btn" id="signin" type="button">Continue with Google</button>';
+    } else {
+      html += '<p class="mut">Entries close in <b id="cd">' + countdown(cur.entries_close_at) + '</b></p><div class="picks"><button class="u" data-p="up" type="button">Higher ▲</button><button class="d" data-p="down" type="button">Lower ▼</button></div>';
+    }
+    if (tot > 0) {
+      const pu = Math.round((up / tot) * 100);
+      html += '<div class="bar"><i class="u" style="width:' + pu + '%"></i><i class="d" style="width:' + (100 - pu) + '%"></i></div><div class="split"><span>Higher ' + pu + '%</span><span>' + tot + ' player' + (tot === 1 ? "" : "s") + '</span><span>Lower ' + (100 - pu) + "%</span></div>";
+    }
+    box.innerHTML = html;
+    const s = $("signin"); if (s) s.onclick = signIn;
+    box.querySelectorAll(".picks button").forEach((b) => (b.onclick = () => pick(cur.id, b.dataset.p)));
+    $("wa").href = "https://wa.me/?text=" + encodeURIComponent("Will Bitcoin be higher or lower tomorrow? Play the free daily prediction contest on PriceCheck NG: https://pricecheckng.github.io/predict.html");
+  }
+
+  const l = state.last;
+  if (l) {
+    const label = l.result === "up" ? "Higher" : l.result === "down" ? "Lower" : "Draw";
+    let mine = "";
+    if (l.my_pick) {
+      mine = l.result === "flat" ? "It was a draw, so no points." : l.my_correct ? "You got it right: +10 points 🎉" : "Not this time. Try again today!";
+    }
+    $("lastbox").innerHTML =
+      '<div class="box"><p class="mut" style="margin:0 0 4px">Last round</p><p style="margin:0">' + usd(l.start_price) + " → " + usd(l.end_price) + ' <span class="tag ' + esc(l.result) + '">' + label + "</span></p>" + (mine ? '<p style="margin:8px 0 0"><b>' + mine + "</b></p>" : "") + "</div>";
+  }
+
+  if (session && state.me) {
+    $("mebox").innerHTML =
+      '<div class="box"><p class="mut" style="margin:0 0 8px">Your stats</p><div class="stats"><div><b>' + (state.me.points || 0) + '</b><span class="mut">Points</span></div><div><b>' + (state.me.wins || 0) + '</b><span class="mut">Wins</span></div><div><b>' + (state.me.played || 0) + '</b><span class="mut">Played</span></div></div></div>';
+  } else {
+    $("mebox").innerHTML = "";
+  }
+}
+
+async function refresh() {
+  const { data, error } = await sb.rpc("contest_state");
+  if (error || !data) { $("round").innerHTML = '<p class="mut">The contest is unavailable right now. Please try again soon.</p>'; return; }
+  state = data;
+  offset = Date.parse(data.now) - Date.now();
+  render();
+}
+
+async function board() {
+  const { data, error } = await sb.rpc("contest_leaderboard");
+  const el = $("lb");
+  if (error || !data || !data.length) { el.innerHTML = '<p class="mut" style="padding:10px 0;margin:0">No scores yet. Be the first to win a round!</p>'; return; }
+  el.innerHTML = data.map((r, i) => '<div class="lbr"><span class="rk">' + (i + 1) + '</span><span class="nm">' + esc(r.name) + '</span><span class="mut">' + r.wins + "/" + r.played + '</span><span class="pt">' + r.points + " pts</span></div>").join("");
+}
+
+(async () => {
+  const { data } = await sb.auth.getSession();
+  session = data.session;
+  sb.auth.onAuthStateChange((_e, s) => { session = s; refresh(); });
+  await refresh();
+  board();
+  setInterval(() => { const cd = $("cd"); if (cd && state && state.current) cd.textContent = countdown(state.current.entries_close_at); }, 1000);
+  setInterval(refresh, 60000);
+})();
+</script>
+</body>
+</html>
