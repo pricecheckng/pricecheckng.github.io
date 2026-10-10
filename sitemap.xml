@@ -9,4 +9,5 @@
   <url><loc>https://pricecheckng.github.io/binancecoin-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://pricecheckng.github.io/privacy.html</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://pricecheckng.github.io/terms.html</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
+  <url><loc>https://pricecheckng.github.io/plus.html</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
 </urlset>
