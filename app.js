@@ -432,6 +432,11 @@ async function renderCoin(id) {
   state.coinMap.set(data.id, data);
   track("coin_view", data.id);
   paintCoin(data);
+  // Coming from a coin page on Google: "?alert=1" opens the alert form straight away
+  if (/[?&]alert=1/.test(location.hash)) {
+    history.replaceState(null, "", location.pathname + "#coin/" + encodeURIComponent(data.id));
+    alertForm(data);
+  }
 }
 
 /* ---------- share card (image) ---------- */
