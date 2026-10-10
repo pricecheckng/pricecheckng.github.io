@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://pricecheckng.github.io/</loc><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://pricecheckng.github.io/converter.html</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://pricecheckng.github.io/bitcoin-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://pricecheckng.github.io/ethereum-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
   <url><loc>https://pricecheckng.github.io/tether-price.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
@@ -35,7 +36,4 @@
   <url><loc>https://pricecheckng.github.io/terms.html</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://pricecheckng.github.io/plus.html</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>https://pricecheckng.github.io/coins.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
-</urlset>
-<url><loc>https://pricecheckng.github.io/converter.html</loc></url>
-<url>...your other pages...</url>
 </urlset>
