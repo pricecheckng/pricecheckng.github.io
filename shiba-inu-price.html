@@ -43,6 +43,7 @@ td:last-child,th:last-child{text-align:right;font-weight:700}
 .btn{display:block;box-shadow:0 6px 18px rgba(11,125,77,.3);text-align:center;background:var(--g);color:#fff;font-weight:800;text-decoration:none;border-radius:14px;padding:14px;margin-top:16px}
 .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .links a{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--ink);text-decoration:none;font-size:.9rem}
+.wa{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:#25d366;color:#fff!important;font-weight:800;font-size:.9rem;text-decoration:none;border-radius:999px;padding:9px 16px}
 .note{color:var(--mut);font-size:.85rem;margin-top:14px}
 footer{border-top:1px solid var(--line);padding:18px 20px;text-align:center;color:var(--mut);font-size:.9rem}
 footer a{color:var(--mut)}
@@ -58,6 +59,7 @@ footer a{color:var(--mut)}
   <p class="chg" id="chg" style="margin:4px 0 0"></p>
   <p class="note" id="upd" style="margin:6px 0 0"></p>
 </div>
+<a class="wa" id="wa" href="https://wa.me/?text=Shiba Inu%20(SHIB)%20price%20in%20Naira%2C%20USD%20and%20more%3A%20https://pricecheckng.github.io/shiba-inu-price.html" target="_blank" rel="noopener">Share on WhatsApp</a>
 <h2>Shiba Inu price in other currencies</h2>
 <table id="tbl"><tbody></tbody></table>
 <a class="btn" href="./#coin/shiba-inu">Open in app: chart and alerts</a>
@@ -88,6 +90,8 @@ Promise.all([get("coins?id=eq." + ID + "&select=price_usd,change_24h_pct,last_up
     if (!c || !c.price_usd) throw 0;
     const usd = Number(c.price_usd);
     document.getElementById("usd").textContent = money(usd, "USD");
+    const wa = document.getElementById("wa");
+    if (wa) wa.href = "https://wa.me/?text=" + encodeURIComponent("Shiba Inu (SHIB) price now: " + money(usd, "USD") + ". See it in Naira, USD, GBP, EUR and more: https://pricecheckng.github.io/shiba-inu-price.html");
     const ch = Number(c.change_24h_pct);
     const e = document.getElementById("chg");
     if (Number.isFinite(ch)) {
