@@ -2010,9 +2010,43 @@ async function silentPush() {
         .from("push_subscriptions")
         .upsert({ user_id: state.user.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth }, { onConflict: "endpoint" });
       if (!e2) state.pushSyncedFor = state.user.id;
+      let last = 0;
+      try {
+        last = Number(localStorage.getItem("pc_push_renewed") || 0);
+      } catch (_) {}
+      if (Date.now() - last > 864e5) await renewPush();
     }
   } catch (_) {}
   await checkPush();
+}
+
+// Make a brand-new push address for this phone (old ones can go stale without any sign) and save it.
+async function renewPush() {
+  if (!state.user || !pushSupported() || Notification.permission !== "granted") return false;
+  try {
+    const reg = await navigator.serviceWorker.ready;
+    const old = await reg.pushManager.getSubscription();
+    const { data: key, error } = await sb.rpc("vapid_public_key");
+    if (error || !key) return false;
+    if (old) {
+      try {
+        await old.unsubscribe();
+      } catch (_) {}
+    }
+    const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToU8(key.trim()) });
+    const j = sub.toJSON();
+    const { error: e2 } = await sb
+      .from("push_subscriptions")
+      .upsert({ user_id: state.user.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth }, { onConflict: "endpoint" });
+    if (e2) return false;
+    if (old && old.endpoint !== j.endpoint) await sb.from("push_subscriptions").delete().eq("endpoint", old.endpoint);
+    try {
+      localStorage.setItem("pc_push_renewed", String(Date.now()));
+    } catch (_) {}
+    return true;
+  } catch (_) {
+    return false;
+  }
 }
 
 // Alerts need notifications: make sure this device is subscribed and saved for this account.
@@ -2524,7 +2558,7 @@ function renderAcctPush(el) {
   } else if (state.pushOn) {
     sub = "Push notifications are enabled on this device.";
     tail = sw(true);
-    extra = `<button class="ac-btn" type="button" id="pushTest">${acIco("send")} Send test notification</button>`;
+    extra = `<button class="ac-btn" type="button" id="pushTest">${acIco("send")} Send test notification</button><button class="ac-btn" type="button" id="pushRenew" style="margin-top:8px">↻ Not getting push? Refresh notifications</button>`;
   } else {
     sub = "Turn on notifications to hear about alerts the moment they happen.";
     tail = sw(false);
@@ -2538,6 +2572,15 @@ function renderAcctPush(el) {
   }
   const ps = $("#acPushSub");
   if (ps) ps.textContent = on ? "Enabled · This device" : "Not enabled on this device";
+  const rn = $("#pushRenew");
+  if (rn) {
+    rn.onclick = async () => {
+      rn.disabled = true;
+      const ok = await renewPush();
+      rn.disabled = false;
+      toast(ok ? "Notifications refreshed on this device ✅" : "Could not refresh. Try turning notifications off and on.");
+    };
+  }
   const t = $("#pushTest");
   if (t) {
     t.onclick = async () => {
