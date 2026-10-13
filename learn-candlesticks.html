@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How to Read Candlestick Charts: A Beginner's Guide | PriceCheck NG</title>
+<meta name="description" content="Learn how to read candlestick charts step by step: what the body and wicks mean, common patterns like doji and hammer, plus a free interactive lesson and quiz.">
+<link rel="canonical" href="https://pricecheckng.github.io/learn-candlesticks.html">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="theme-color" content="#0b7a4b">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="PriceCheck NG">
+<meta property="og:title" content="How to read candlestick charts: a beginner's guide">
+<meta property="og:description" content="Interactive lesson with the common candlestick patterns and a quick quiz. Free.">
+<meta property="og:url" content="https://pricecheckng.github.io/learn-candlesticks.html">
+<meta property="og:image" content="https://pricecheckng.github.io/icon-512.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"How to read candlestick charts: a beginner's guide","url":"https://pricecheckng.github.io/learn-candlesticks.html","description":"A beginner's guide to reading candlestick charts, with an interactive lesson and quiz.","isPartOf":{"@type":"WebSite","name":"PriceCheck NG","url":"https://pricecheckng.github.io/"}}</script>
+<style>
+:root{--g:#0b7d4d;--ink:#0f1a14;--mut:#55635a;--line:#e3e9e5;--bg:#fff;--card:#f6f8f7;--up:#0b7d4d;--down:#c62828}
+@media (prefers-color-scheme:dark){:root{--ink:#e9f1ec;--mut:#9db0a5;--line:#26332c;--bg:#0e1511;--card:#16201a;--up:#3ddc97;--down:#ff6b6b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--g);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+header a{color:#fff;text-decoration:none}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:1.05rem}.brand b{font-weight:800;color:#9be3bd}.mark{display:flex}
+.open{background:#fff;color:var(--g)!important;font-weight:800;font-size:.85rem;border-radius:999px;padding:7px 14px}
+main{max-width:720px;margin:0 auto;padding:24px 20px 48px}
+h1{font-size:1.6rem;line-height:1.25;margin:0 0 6px}
+h2{font-size:1.15rem;margin:28px 0 8px}
+.sub{color:var(--mut);margin:0 0 18px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 20px}
+.btn{display:block;box-shadow:0 6px 18px rgba(11,125,77,.3);text-align:center;background:var(--g);color:#fff;font-weight:800;text-decoration:none;border-radius:14px;padding:14px;margin-top:18px}
+.wa{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:#25d366;color:#fff!important;font-weight:800;font-size:.9rem;text-decoration:none;border-radius:999px;padding:9px 16px}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.links a{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--ink);text-decoration:none;font-size:.9rem}
+.note{color:var(--mut);font-size:.85rem;margin-top:14px}
+footer{border-top:1px solid var(--line);padding:18px 20px;text-align:center;color:var(--mut);font-size:.9rem}
+footer a{color:var(--mut)}
+.cd{display:block;margin:0 auto}
+.ctl{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-top:12px}
+.ctl label{font-size:.78rem;font-weight:700;color:var(--mut);display:block}
+.ctl label span{float:right;color:var(--ink)}
+.ctl input[type=range]{width:100%;accent-color:#0b7d4d}
+.say{text-align:center;font-weight:700;margin:10px 0 0}
+.say.up{color:var(--up)}.say.down{color:var(--down)}
+.pg{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.pc{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:12px}
+.pc h3{font-size:.98rem;margin:6px 0 2px}
+.pc p{font-size:.84rem;color:var(--mut);margin:0;line-height:1.45}
+.pc svg{width:100%;height:96px;display:block}
+.q{margin-top:6px}
+.q h3{font-size:1rem;margin:0 0 8px}
+.q .o{display:block;width:100%;text-align:left;font:inherit;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:14px;padding:11px 14px;margin-bottom:8px;cursor:pointer}
+.q .o.ok{border-color:var(--up);background:rgba(11,125,77,.12)}
+.q .o.no{border-color:var(--down);background:rgba(198,40,40,.1)}
+.exp{font-size:.88rem;color:var(--mut);margin:4px 0 10px}
+.nx{font:inherit;font-weight:800;background:var(--g);color:#fff;border:0;border-radius:14px;padding:11px 18px;cursor:pointer}
+</style>
+</head>
+<body>
+<header><a class="brand" href="./"><span class="mark"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" fill="#fff" fill-opacity=".14" stroke="#fff" stroke-width="1.6"/><rect x="7" y="17" width="4.5" height="8" rx="1.5" fill="#fff"/><rect x="13.75" y="12" width="4.5" height="13" rx="1.5" fill="#fff"/><rect x="20.5" y="7" width="4.5" height="18" rx="1.5" fill="#9be3bd"/></svg></span><span>PriceCheck <b>NG</b></span></a><a class="open" href="./">Open app</a></header>
+<main>
+<h1>How to read candlestick charts</h1>
+<p class="sub">A free beginner lesson. Learn what each candle tells you in 5 minutes, then test yourself with the quiz.</p>
+
+<h2>1. What is one candle?</h2>
+<p>A candlestick shows what the price did during one period, such as one hour or one day. It tells you four things: where the price <b>opened</b>, where it <b>closed</b>, and the <b>highest</b> and <b>lowest</b> price in between.</p>
+<div class="box">
+  <svg id="big" class="cd" viewBox="0 0 220 190" width="220" height="190" aria-label="Candlestick"></svg>
+  <p class="say" id="say"></p>
+  <div class="ctl">
+    <label>Open <span id="vo"></span><input id="o" type="range" min="5" max="95" value="40"></label>
+    <label>Close <span id="vc"></span><input id="c" type="range" min="5" max="95" value="65"></label>
+    <label>Highest <span id="vh"></span><input id="h" type="range" min="5" max="95" value="80"></label>
+    <label>Lowest <span id="vl"></span><input id="l" type="range" min="5" max="95" value="25"></label>
+  </div>
+  <p class="note" style="margin-bottom:0">Move the sliders and watch the candle change. The thick part is the <b>body</b> (open to close). The thin lines are the <b>wicks</b> (highest and lowest).</p>
+</div>
+
+<h2>2. Green and red</h2>
+<ul>
+<li><b style="color:var(--up)">Green candle:</b> the price closed higher than it opened, so buyers won that period.</li>
+<li><b style="color:var(--down)">Red candle:</b> the price closed lower than it opened, so sellers won that period.</li>
+<li><b>Big body:</b> strong move. <b>Small body:</b> the market could not decide.</li>
+<li><b>Long wick:</b> the price went there but was pushed back.</li>
+</ul>
+
+<h2>3. Time frames</h2>
+<p>You choose how long each candle lasts. On a <b>1D</b> chart every candle is one day. On <b>1H</b> every candle is one hour. Short time frames show small, fast moves. Long ones (1D, 1W) show the bigger picture and are less noisy. Beginners should start with the daily chart.</p>
+
+<h2>4. Six common patterns</h2>
+<p>Traders look for shapes that sometimes appear before the price changes direction. Remember: a pattern is a clue, not a promise.</p>
+<div class="pg" id="pg"></div>
+
+<h2>5. Support and resistance</h2>
+<p><b>Support</b> is a price level where the price often stops falling and bounces back up. <b>Resistance</b> is a level where the price often stops rising and turns down. When a coin keeps bouncing off the same level, traders watch it closely. If the price breaks through, the level can flip: old resistance may become new support.</p>
+
+<h2>6. Volume</h2>
+<p>Volume is how much was traded. A big move on <b>high volume</b> is more believable than the same move on low volume.</p>
+
+<h2>Quick quiz</h2>
+<div class="box q" id="quiz"></div>
+
+<a class="btn" href="./#coin/bitcoin">Practice on a live chart</a>
+<a class="wa" id="wa" href="#" target="_blank" rel="noopener">Share this lesson on WhatsApp</a>
+
+<div class="box" style="margin-top:18px"><b>Remember:</b> no candle or pattern can tell you for sure what the price will do next. Practice by watching charts first, never trade money you can't afford to lose, and be careful of anyone selling "guaranteed signals". This is for learning only, not financial advice.</div>
+
+<h2>More tools</h2>
+<div class="links"><a href="p2p.html">USDT P2P rates</a><a href="converter.html">Crypto converter</a><a href="movers.html">Gainers and losers</a><a href="profit-calculator.html">Profit calculator</a><a href="./">All coins</a></div>
+</main>
+<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="plus.html">Plus &amp; Contact</a></footer>
+<script>
+var NS="http://www.w3.org/2000/svg";
+function el(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+function draw(svg,cs,W,H,gap,bw){
+  svg.innerHTML="";
+  var y=function(v){return H-8-(v/100)*(H-16)};
+  cs.forEach(function(c,i){
+    var x=gap/2+i*gap+bw/2, up=c.c>=c.o, col=up?css("--up"):css("--down");
+    svg.appendChild(el("line",{x1:x,x2:x,y1:y(c.h),y2:y(c.l),stroke:col,"stroke-width":2,"stroke-linecap":"round"}));
+    var t=y(Math.max(c.o,c.c)),b=y(Math.min(c.o,c.c)),h=Math.max(b-t,2);
+    svg.appendChild(el("rect",{x:x-bw/2,y:t,width:bw,height:h,rx:2,fill:col}));
+  });
+}
+var S={o:$("o"),c:$("c"),h:$("h"),l:$("l")};
+function $(i){return document.getElementById(i)}
+function upd(){
+  var o=+S.o.value,c=+S.c.value,h=Math.max(+S.h.value,o,c),l=Math.min(+S.l.value,o,c);
+  $("vo").textContent=o;$("vc").textContent=c;$("vh").textContent=h;$("vl").textContent=l;
+  draw($("big"),[{o:o,c:c,h:h,l:l}],220,190,220,56);
+  var up=c>=o,d=Math.abs(c-o);
+  var s=d===0?"Opened and closed at the same price: a doji (the market could not decide).":
+    up?"Price rose from "+o+" to "+c+": a green candle.":"Price fell from "+o+" to "+c+": a red candle.";
+  $("say").textContent=s;$("say").className="say "+(d===0?"":up?"up":"down");
+}
+["o","c","h","l"].forEach(function(k){S[k].addEventListener("input",upd)});
+var DOWN=[{o:88,c:80,h:90,l:78},{o:80,c:72,h:82,l:70},{o:72,c:62,h:74,l:60}];
+var UP=[{o:30,c:40,h:42,l:28},{o:40,c:50,h:52,l:38},{o:50,c:60,h:62,l:48}];
+var P=[
+ {n:"Doji",t:"Open and close are almost the same. Buyers and sellers are balanced, so a change may be coming. Wait for the next candle.",c:DOWN.concat([{o:50,c:51,h:68,l:34}])},
+ {n:"Hammer",t:"Small body on top and a long lower wick after a fall. Sellers pushed the price down but buyers pushed it back. Can signal a bounce.",c:DOWN.concat([{o:52,c:56,h:58,l:20}])},
+ {n:"Shooting star",t:"Small body at the bottom and a long upper wick after a rise. Buyers tried to go higher but sellers took over. Can signal a drop.",c:UP.concat([{o:64,c:62,h:94,l:60}])},
+ {n:"Bullish engulfing",t:"A big green candle fully covers the red one before it, after a fall. Buyers took control.",c:DOWN.concat([{o:60,c:54,h:62,l:52},{o:51,c:70,h:72,l:49}])},
+ {n:"Bearish engulfing",t:"A big red candle fully covers the green one before it, after a rise. Sellers took control.",c:UP.concat([{o:60,c:66,h:68,l:58},{o:69,c:50,h:71,l:48}])},
+ {n:"Marubozu",t:"A big body with almost no wicks. One side controlled the whole period. Shows strong momentum.",c:UP.concat([{o:62,c:90,h:90,l:62}])}
+];
+var pg=$("pg");
+P.forEach(function(p){
+  var d=document.createElement("div");d.className="pc";
+  var s=document.createElementNS(NS,"svg");s.setAttribute("viewBox","0 0 "+(p.c.length*30+10)+" 110");
+  d.appendChild(s);var h=document.createElement("h3");h.textContent=p.n;d.appendChild(h);
+  var q=document.createElement("p");q.textContent=p.t;d.appendChild(q);pg.appendChild(d);
+  p._s=s;
+});
+function drawAll(){
+  upd();
+  P.forEach(function(p){draw(p._s,p.c,p.c.length*30+10,110,30,16)});
+}
+var Q=[
+ {q:"What does a green candle mean?",a:["The price closed lower than it opened","The price closed higher than it opened","The trading volume was high"],r:1,e:"Green means the close was above the open, so buyers won that period."},
+ {q:"On a daily (1D) chart, one candle shows...",a:["One day of price action","One hour","One week"],r:0,e:"Each candle covers the time frame you chose. 1D = one day."},
+ {q:"A candle with a long lower wick suggests...",a:["The price never moved","Sellers pushed the price down, but buyers pushed it back up","Nobody traded"],r:1,e:"The wick shows where the price went before being pushed back."},
+ {q:"A doji (open and close almost equal) usually means...",a:["Indecision in the market","A guaranteed price jump","The coin is dead"],r:0,e:"Buyers and sellers were balanced, so wait for the next candle."},
+ {q:"Does a candlestick pattern guarantee what happens next?",a:["Yes, always","Only on the daily chart","No, it is only a clue"],r:2,e:"Patterns raise the odds a little at best. Always manage your risk."}
+];
+var qi=0,score=0,box=$("quiz");
+function showQ(){
+  box.innerHTML="";
+  if(qi>=Q.length){
+    var h=document.createElement("h3");h.textContent="You got "+score+" out of "+Q.length+(score===Q.length?" 🎉 Well done!":score>=3?" 👍 Good job.":". Read the lesson again and retry.");box.appendChild(h);
+    var b=document.createElement("button");b.className="nx";b.textContent="Try again";b.onclick=function(){qi=0;score=0;showQ()};box.appendChild(b);return;
+  }
+  var q=Q[qi],h=document.createElement("h3");h.textContent=(qi+1)+"/"+Q.length+"  "+q.q;box.appendChild(h);
+  var done=false,ex=document.createElement("p");ex.className="exp";
+  q.a.forEach(function(t,i){
+    var b=document.createElement("button");b.className="o";b.type="button";b.textContent=t;
+    b.onclick=function(){
+      if(done)return;done=true;
+      if(i===q.r){score++;b.classList.add("ok")}else{b.classList.add("no");box.querySelectorAll(".o")[q.r].classList.add("ok")}
+      ex.textContent=q.e;box.appendChild(ex);
+      var n=document.createElement("button");n.className="nx";n.type="button";n.textContent=qi<Q.length-1?"Next":"See my score";n.onclick=function(){qi++;showQ()};box.appendChild(n);
+    };
+    box.appendChild(b);
+  });
+}
+$("wa").href="https://wa.me/?text="+encodeURIComponent("Free beginner lesson: how to read candlestick charts (with a quiz): https://pricecheckng.github.io/learn-candlesticks.html");
+drawAll();showQ();
+window.matchMedia("(prefers-color-scheme:dark)").addEventListener&&window.matchMedia("(prefers-color-scheme:dark)").addEventListener("change",drawAll);
+</script>
+</body>
+                                         </html>
