@@ -41,3 +41,4 @@ d<?xml version="1.0" encoding="UTF-8"?>
   <url><loc>https://pricecheckng.github.io/coins.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
 </urlset>
   <url><loc>https://pricecheckng.github.io/learn-candlesticks.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+<url><loc>https://pricecheckng.github.io/fear-greed.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
