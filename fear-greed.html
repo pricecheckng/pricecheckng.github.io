@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crypto Fear &amp; Greed Index Today | PriceCheck NG</title>
+<meta name="description" content="Live Crypto Fear & Greed Index today. See if the crypto market is scared or greedy, what the number means and how to use it. Free on PriceCheck NG.">
+<link rel="canonical" href="https://pricecheckng.github.io/fear-greed.html">
+<meta property="og:title" content="Crypto Fear & Greed Index Today">
+<meta property="og:description" content="Is the crypto market scared or greedy right now? Check the live index.">
+<meta property="og:url" content="https://pricecheckng.github.io/fear-greed.html">
+<meta name="theme-color" content="#12a150">
+<style>
+:root{--bg:#f5f8f6;--card:#fff;--tx:#10201a;--mu:#5b6b64;--bd:#e1e9e4;--g:#12a150}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1512;--card:#14201b;--tx:#e8f1ec;--mu:#98a9a0;--bd:#24332c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.w{max-width:640px;margin:0 auto;padding:16px}
+a{color:var(--g)}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.top a{text-decoration:none;font-weight:700}
+h1{font-size:22px;line-height:1.25;margin:4px 0 12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:14px}
+.gauge{text-align:center}
+.gauge svg{width:100%;max-width:340px;height:auto}
+.num{font-size:54px;font-weight:800;line-height:1;margin-top:-6px}
+.lab{font-size:20px;font-weight:700;margin-top:4px}
+.sub{color:var(--mu);font-size:13px;margin-top:6px}
+.cmp{display:flex;justify-content:center;gap:18px;margin-top:10px;color:var(--mu);font-size:14px}
+.cmp b{color:var(--tx)}
+.bands{display:grid;gap:8px}
+.band{display:flex;align-items:center;gap:10px;font-size:14px}
+.dot{width:12px;height:12px;border-radius:50%;flex:0 0 12px}
+h2{font-size:17px;margin:0 0 8px}
+p{margin:0 0 10px}
+.btn{display:inline-block;background:var(--g);color:#fff;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:12px;margin:4px 8px 4px 0}
+.btn.alt{background:transparent;color:var(--g);border:1px solid var(--g)}
+.warn{font-size:13px;color:var(--mu)}
+</style>
+</head>
+<body>
+<div class="w">
+  <div class="top"><a href="./">← PriceCheck NG</a></div>
+  <h1>Crypto Fear &amp; Greed Index</h1>
+
+  <div class="card gauge" id="g">
+    <svg viewBox="0 0 200 118" aria-hidden="true">
+      <g id="arcs"></g>
+      <g id="needle" style="transform-origin:100px 100px;transition:transform .8s ease"><line x1="100" y1="100" x2="100" y2="32" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><circle cx="100" cy="100" r="6" fill="currentColor"/></g>
+    </svg>
+    <div class="num" id="v">--</div>
+    <div class="lab" id="l">Loading…</div>
+    <div class="cmp"><span>Yesterday <b id="y">--</b></span></div>
+    <div class="sub" id="u"></div>
+  </div>
+
+  <div class="card">
+    <h2>What the number means</h2>
+    <div class="bands">
+      <div class="band"><span class="dot" style="background:#e5484d"></span><span><b>0–24 Extreme Fear:</b> people are very scared and selling.</span></div>
+      <div class="band"><span class="dot" style="background:#f08a24"></span><span><b>25–44 Fear:</b> the market is nervous.</span></div>
+      <div class="band"><span class="dot" style="background:#c9a400"></span><span><b>45–55 Neutral:</b> no strong mood either way.</span></div>
+      <div class="band"><span class="dot" style="background:#6cc24a"></span><span><b>56–74 Greed:</b> people are buying with confidence.</span></div>
+      <div class="band"><span class="dot" style="background:#12a150"></span><span><b>75–100 Extreme Greed:</b> everyone is excited, and prices can be stretched.</span></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>How to use it</h2>
+    <p>The index measures the mood of the crypto market. It looks at things like price swings, trading volume, social media activity and how dominant Bitcoin is.</p>
+    <p>Some traders get careful when everyone is extremely greedy, and look for chances when everyone is extremely fearful. It is a mood gauge, not a signal to buy or sell on its own. Always check the price chart too.</p>
+    <a class="btn" href="./#coin/bitcoin">See Bitcoin price</a>
+    <a class="btn alt" href="p2p.html">USDT in naira</a>
+    <a class="btn alt" id="wa" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
+  </div>
+
+  <p class="warn">Source: alternative.me Fear &amp; Greed Index, updated daily. This is for information only and is not financial advice. Crypto is risky and you can lose money.</p>
+</div>
+
+<script type="module">
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+const $ = id => document.getElementById(id);
+const SEG = [[0,25,'#e5484d'],[25,45,'#f08a24'],[45,55,'#c9a400'],[55,75,'#6cc24a'],[75,100,'#12a150']];
+function pt(r, v){ const a = Math.PI * (1 - v/100); return [100 + r*Math.cos(a), 100 - r*Math.sin(a)]; }
+$('arcs').innerHTML = SEG.map(([a,b,c]) => {
+  const [x1,y1] = pt(78, a+0.6), [x2,y2] = pt(78, b-0.6);
+  return `<path d="M${x1.toFixed(2)} ${y1.toFixed(2)} A78 78 0 0 1 ${x2.toFixed(2)} ${y2.toFixed(2)}" fill="none" stroke="${c}" stroke-width="16"/>`;
+}).join('');
+function colorFor(v){ for (const [a,b,c] of SEG) if (v <= b) return c; return SEG[4][2]; }
+function ago(t){ const m = Math.round((Date.now() - new Date(t)) / 60000); return m < 2 ? 'just now' : m < 60 ? m + ' min ago' : Math.round(m/60) + ' hr ago'; }
+(async () => {
+  try {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/market_global?select=fng_value,fng_label,fng_prev,fng_at&id=eq.1`, { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } });
+    const d = (await r.json())[0];
+    if (!d || d.fng_value == null) throw 0;
+    const v = +d.fng_value;
+    $('v').textContent = v; $('v').style.color = colorFor(v);
+    $('l').textContent = d.fng_label || '';
+    $('y').textContent = d.fng_prev != null ? d.fng_prev : '--';
+    $('needle').style.transform = `rotate(${(v/100)*180 - 90}deg)`;
+    if (d.fng_at) $('u').textContent = 'Updated ' + ago(d.fng_at);
+    $('wa').href = 'https://wa.me/?text=' + encodeURIComponent(`Crypto Fear & Greed today: ${v} (${d.fng_label}). Check it free on PriceCheck NG: https://pricecheckng.github.io/fear-greed.html`);
+  } catch (e) { $('l').textContent = 'Not available right now. Try again soon.'; }
+})();
+</script>
+</body>
+  </html>
