@@ -41,6 +41,7 @@
     if (d.fng_value != null) {
       h += '<a class="mkt-c mkt-fg" href="fear-greed.html"><small>Fear &amp; Greed</small><b>' + d.fng_value + ' \u00B7 ' + (d.fng_label || '') + '</b></a>';
     }
+        h += '<a class="mkt-c mkt-fg" href="heatmap.html"><small>Market</small><b>Heatmap \u203A</b></a>';
     h += '</div>';
     if (openKey && TIPS[openKey]) h += '<div class="mkt-tip"><b>' + TIPS[openKey][0] + '</b>' + TIPS[openKey][1] + '</div>';
     return h;
