@@ -39,7 +39,10 @@
     '#mnu .m-r span{display:block;font-weight:600;font-size:15px}' +
     '#mnu .m-r small{display:block;font-size:12px;opacity:.65;margin-top:1px}' +
     '#mnu .m-r svg{flex:0 0 auto;opacity:.5}' +
-    '@media(prefers-color-scheme:dark){#mnu .m-sh{background:#14201b;color:#e8f1ec}}' +
+    'html[data-theme="dark"] #mnu .m-sh{background:#111c17;color:#e8f1ec}' +
+    '#mnu .m-ap{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:12px;background:rgba(127,127,127,.12)}' +
+    '#mnu .m-ap button{border:0;background:transparent;color:inherit;font:inherit;font-size:14px;font-weight:700;min-height:40px;border-radius:9px;opacity:.7;cursor:pointer}' +
+    '#mnu .m-ap button.on{background:#17a363;color:#fff;opacity:1}' +
     '@media(min-width:640px){#mnu .m-sh{bottom:auto;top:50%;border-radius:20px;transform:translateY(-40%);opacity:0;transition:transform .25s,opacity .25s}#mnu.on .m-sh{transform:translateY(-50%);opacity:1}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -47,6 +50,8 @@
   var chev = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
   var html = '<div class="m-sc" data-x></div><div class="m-sh" role="dialog" aria-modal="true" aria-label="Menu"><div class="m-gr"></div>' +
     '<div class="m-h"><b>Menu</b><button class="m-x" type="button" aria-label="Close" data-x>\u00D7</button></div>';
+  html += '<div class="m-t">Appearance</div><div class="m-ap" id="mAp">' +
+    '<button type="button" data-m="auto">Auto</button><button type="button" data-m="light">Light</button><button type="button" data-m="dark">Dark</button></div>';
   GROUPS.forEach(function (g) {
     html += '<div class="m-t">' + esc(g.t) + '</div>';
     g.rows.forEach(function (r) {
@@ -56,7 +61,16 @@
   html += '</div>';
 
   var box = document.createElement('div'); box.id = 'mnu'; box.innerHTML = html; document.body.appendChild(box);
-  function open() { box.classList.add('on'); document.body.style.overflow = 'hidden'; }
+  function markTheme() {
+    var cur = window.PCTheme ? window.PCTheme.get() : 'auto';
+    var bs = box.querySelectorAll('#mAp button');
+    for (var i = 0; i < bs.length; i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-m') === cur);
+  }
+  box.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('#mAp button') : null; if (!b || !window.PCTheme) return;
+    window.PCTheme.set(b.getAttribute('data-m')); markTheme();
+  });
+  function open() { markTheme(); box.classList.add('on'); document.body.style.overflow = 'hidden'; }
   function close() { box.classList.remove('on'); document.body.style.overflow = ''; }
   box.addEventListener('click', function (e) {
     if (e.target.closest && (e.target.closest('[data-x]') || e.target.closest('a.m-r'))) close();
