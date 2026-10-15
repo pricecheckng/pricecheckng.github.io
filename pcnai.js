@@ -44,7 +44,7 @@
           </div>
         </div>
         <form class="pcn-chat-form" id="pcnForm">
-          <input type="text" id="pcnInput" placeholder="Ask PCN AI..." required autocomplete="off" />
+          <input type="text" id="pcnInput" placeholder="Ask about the market or your watchlist..." required autocomplete="off" />
           <button type="submit">Send</button>
         </form>
       </div>
@@ -112,6 +112,38 @@
       return '<b>Biggest 24-hour gainers in the top 100:</b><div style="margin-top:6px">' + li + '</div>' + note('A big rise does not mean it will keep rising. Not financial advice. <a href="movers.html" style="' + HL + '">All movers</a>');
     }
 
+    function getToken() {
+      try {
+        for (var i = 0; i < localStorage.length; i++) {
+          var k = localStorage.key(i);
+          if (/^sb-.*-auth-token$/.test(k)) {
+            var v = JSON.parse(localStorage.getItem(k));
+            var ses = v && (v.access_token ? v : v.currentSession);
+            if (ses && ses.access_token) return ses.access_token;
+          }
+        }
+      } catch (e) {}
+      return null;
+    }
+    async function askAI(cfg, text) {
+      var tok = getToken();
+      var signin = '<a href="#account" style="' + HL + '">Sign in with Google</a>';
+      if (!tok) return 'To ask your own questions, ' + signin + ' first. It is free: 10 questions a day. You can also tap one of the questions below.';
+      var r = await fetch(cfg.SUPABASE_URL + '/functions/v1/pcn-chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + tok },
+        body: JSON.stringify({ question: text })
+      });
+      var j = {}; try { j = await r.json(); } catch (e) {}
+      if (r.status === 401) return 'Your sign-in has expired. Please ' + signin + ' again.';
+      if (r.status === 429) return 'You have used your ' + (j.limit || 10) + ' questions for today. They reset at midnight UTC (1:00 AM Nigeria time). The question buttons below still work.';
+      if (r.status === 503) return 'PCN AI is very busy today. Please try again tomorrow. The question buttons below still work.';
+      if (!r.ok || !j.answer) return 'PCN AI could not answer right now. Please try again in a moment.';
+      var body = escapeHtml(j.answer).replace(/\n/g, '<br>');
+      var left = (j.left != null) ? j.left + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '';
+      return body + note(left + 'AI answers can be wrong. Not financial advice.');
+    }
+
     var ROUTES = {
       "Why is the market moving today?": answerSummary,
       "Are altcoins outperforming Bitcoin?": answerAlts,
@@ -119,7 +151,15 @@
       "Summarize today's Fear & Greed index": answerFng
     };
 
+    var busy = false;
+    document.getElementById('pcnMsgs').addEventListener('click', function (e) {
+      var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
+      if (a) modal.classList.remove('open');
+    });
+
     async function sendQuery(text) {
+      if (busy) return;
+      busy = true;
       var msgs = document.getElementById('pcnMsgs');
       var prompts = document.getElementById('pcnPrompts');
       var promptTitle = document.getElementById('pcnPromptTitle');
@@ -135,7 +175,7 @@
       try {
         var cfg = await import('./config.js');
         var fn = ROUTES[text];
-        html = fn ? await fn(cfg) : 'I can only answer the questions below for now. Typed questions are coming soon.';
+        html = fn ? await fn(cfg) : await askAI(cfg, text);
       } catch (err) {
         html = 'Could not load live data right now. Try again in a moment. <a href="pulse.html" style="' + HL + '">Daily summary</a>';
       }
@@ -145,6 +185,7 @@
       if (prompts) { prompts.style.display = ''; msgs.appendChild(prompts); }
       if (promptTitle) { promptTitle.style.display = ''; msgs.insertBefore(promptTitle, prompts); }
       msgs.scrollTop = msgs.scrollHeight;
+      busy = false;
     }
 
     // Handle Chip Clicks
