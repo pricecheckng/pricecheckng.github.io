@@ -1,0 +1,33 @@
+/* PriceCheck NG - dark theme. Light stays exactly as it is in styles.css. */
+
+/* variables used by the standalone pages (P2P, Heatmap, Fear & Greed ...) so they obey the switch */
+:root[data-theme="dark"]  { --bg:#0d1512; --card:#14201b; --tx:#e8f1ec; --mu:#98a9a0; --bd:#24332c; }
+:root[data-theme="light"] { --bg:#f5f8f6; --card:#fff;    --tx:#10201a; --mu:#5b6b64; --bd:#e1e9e4; }
+
+/* main app */
+:root[data-theme="dark"] {
+  --green:#17a363; --green-d:#8fe3b8; --mint:#12301f;
+  --ink:#e8f1ec; --muted:#9aaba2; --line:#24332c; --surface:#16231d;
+  --up:#2ecc8b; --down:#ff6b6b;
+}
+html[data-theme="dark"] { background:#0d1512; }
+html[data-theme="dark"] .top { background:#0a5a38; border-bottom-color:#08462c; }
+html[data-theme="dark"] .pill { background:var(--surface); }
+html[data-theme="dark"] .search:focus-within { background:var(--surface); }
+html[data-theme="dark"] .list,
+html[data-theme="dark"] .coin { background:#111c17; }
+html[data-theme="dark"] .coin:active { background:var(--surface); }
+html[data-theme="dark"] .btn:active { background:#12905a; }
+html[data-theme="dark"] .btn.ghost { background:transparent; }
+html[data-theme="dark"] .field input { background:#111c17; }
+html[data-theme="dark"] .seg button[aria-pressed="true"] { background:#24332c; color:#7fe0ae; box-shadow:none; }
+html[data-theme="dark"] .tabs { background:rgba(13,21,18,.94); }
+html[data-theme="dark"] .sheet { background:#111c17; }
+html[data-theme="dark"] .btn.google { background:var(--surface); color:var(--ink); }
+html[data-theme="dark"] .btn.google:active { background:#1d2c25; }
+html[data-theme="dark"] .sk i { background:linear-gradient(90deg,#16231d 25%,#1d2c25 50%,#16231d 75%); background-size:200% 100%; }
+html[data-theme="dark"] .chip.triggered { background:#3a2e0f; color:#f2c75c; }
+html[data-theme="dark"] .card.ok { border-color:#1f4a33; }
+html[data-theme="dark"] #toast { background:#24332c; color:#e8f1ec; }
+html[data-theme="dark"] .doc p,
+html[data-theme="dark"] .doc li { color:#c9d6cf; }
