@@ -54,45 +54,96 @@
     var modal = document.getElementById('pcn-chat-modal');
     document.getElementById('pcnClose').onclick = function () { modal.classList.remove('open'); };
 
-    // Function to submit a user query
+    // ---- live-data answers (no AI cost): every chip gets its own answer ----
+    var JUNK = /^(usdt|usdc|dai|usde|fdusd|tusd|usdd|pyusd|usds|usd1|usdg|usdy|usyc|buidl|rlusd|figr_heloc|wbtc|weth|steth|wsteth|weeth|cbbtc|xaut|paxg)$/i;
+    var WRAPPED = /wrapped|staked|bridged|tokenized|treasury|money market/i;
+    var HL = 'color:#12a150;font-weight:700';
+    function pct(v) { v = +v; return (v >= 0 ? '+' : '') + v.toFixed(Math.abs(v) < 10 ? 2 : 1) + '%'; }
+    function note(t) { return '<p style="margin:8px 0 0;font-size:12px;color:#5b6b64">' + t + '</p>'; }
+    async function api(cfg, q) {
+      var r = await fetch(cfg.SUPABASE_URL + '/rest/v1/' + q, { headers: { apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_KEY } });
+      var j = await r.json(); if (!Array.isArray(j)) throw 0; return j;
+    }
+    async function topCoins(cfg) {
+      var rows = await api(cfg, 'coins?select=id,symbol,name,price_usd,change_24h_pct,market_cap_rank&market_cap_rank=not.is.null&order=market_cap_rank.asc&limit=120');
+      return rows.filter(function (c) {
+        var p = +c.price_usd, ch = +c.change_24h_pct;
+        if (c.change_24h_pct == null || JUNK.test(c.symbol || '') || WRAPPED.test(c.name || '')) return false;
+        if (p > 0.9 && p < 1.2 && Math.abs(ch) < 0.6) return false;
+        return true;
+      }).slice(0, 100);
+    }
+    async function answerSummary(cfg) {
+      var rows = await api(cfg, 'market_summary?select=day,headline,body,created_at&order=day.desc&limit=1');
+      if (!rows.length) return 'No summary yet. The first one arrives at 6:00 AM Nigeria time. <a href="pulse.html" style="' + HL + '">Daily summary</a>';
+      var r = rows[0], when = '';
+      try { when = new Date(r.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch (e) {}
+      var paras = String(r.body || '').trim().split(/\n\s*\n/).map(function (p) { return '<p style="margin:6px 0">' + escapeHtml(p.trim()) + '</p>'; }).join('');
+      return '<b>' + escapeHtml(r.headline) + '</b>' + paras + note('Written by AI' + (when ? ' on ' + when : '') + ' from market data at that time, so live prices may differ. <a href="pulse.html" style="' + HL + '">Open full summary</a>');
+    }
+    async function answerFng(cfg) {
+      var g = (await api(cfg, 'market_global?select=fng_value,fng_label,fng_prev&id=eq.1'))[0];
+      if (!g) throw 0;
+      var v = +g.fng_value, p = +g.fng_prev, d = v - p;
+      var mean = v <= 24 ? 'Extreme fear: most people are very scared and selling. Some traders see this as a possible buying chance, but prices can keep falling.'
+        : v <= 44 ? 'Fear: people are nervous and cautious.'
+        : v <= 55 ? 'Neutral: the market is balanced, with no strong fear or greed.'
+        : v <= 74 ? 'Greed: people are confident and buying more.'
+        : 'Extreme greed: people are very excited. Prices can fall fast when the mood turns.';
+      return 'The Fear &amp; Greed index is <b>' + v + ' (' + escapeHtml(g.fng_label) + ')</b>. Yesterday it was ' + p + ', so it ' + (d === 0 ? 'did not change' : (d > 0 ? 'rose ' : 'fell ') + Math.abs(d) + ' points') + '.<p style="margin:6px 0">' + mean + '</p>' + note('<a href="fear-greed.html" style="' + HL + '">Open the Fear &amp; Greed page</a>');
+    }
+    async function answerAlts(cfg) {
+      var coins = await topCoins(cfg);
+      var btc = coins.filter(function (c) { return c.id === 'bitcoin'; })[0];
+      var alts = coins.filter(function (c) { return c.id !== 'bitcoin'; });
+      if (!btc || alts.length < 10) throw 0;
+      var better = alts.filter(function (c) { return +c.change_24h_pct > +btc.change_24h_pct; }).length;
+      var share = better / alts.length * 100;
+      var sorted = alts.map(function (c) { return +c.change_24h_pct; }).sort(function (a, b) { return a - b; });
+      var med = sorted[Math.floor(sorted.length / 2)];
+      var verdict = share > 55 ? 'Altcoins are ahead of Bitcoin over the last 24 hours.' : share < 45 ? 'Bitcoin is ahead of most altcoins over the last 24 hours.' : 'Altcoins and Bitcoin are about even over the last 24 hours.';
+      return '<b>' + verdict + '</b><p style="margin:6px 0">Bitcoin is ' + pct(btc.change_24h_pct) + '. ' + better + ' of the top ' + alts.length + ' other coins did better than Bitcoin. The middle coin moved ' + pct(med) + '.</p>' + note('Based on 24-hour price changes only. <a href="heatmap.html" style="' + HL + '">See the heatmap</a>');
+    }
+    async function answerBullish(cfg) {
+      var coins = await topCoins(cfg);
+      var top = coins.slice().sort(function (a, b) { return +b.change_24h_pct - +a.change_24h_pct; }).slice(0, 5);
+      if (!top.length) throw 0;
+      var li = top.map(function (c) { return '<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0"><a href="./#coin/' + encodeURIComponent(c.id) + '" style="color:#10201a;text-decoration:none"><b>' + escapeHtml((c.symbol || '').toUpperCase()) + '</b> ' + escapeHtml(c.name || '') + '</a><span style="color:#12a150;font-weight:700">' + pct(c.change_24h_pct) + '</span></div>'; }).join('');
+      return '<b>Biggest 24-hour gainers in the top 100:</b><div style="margin-top:6px">' + li + '</div>' + note('A big rise does not mean it will keep rising. Not financial advice. <a href="movers.html" style="' + HL + '">All movers</a>');
+    }
+
+    var ROUTES = {
+      "Why is the market moving today?": answerSummary,
+      "Are altcoins outperforming Bitcoin?": answerAlts,
+      "What cryptos are showing bullish momentum?": answerBullish,
+      "Summarize today's Fear & Greed index": answerFng
+    };
+
     async function sendQuery(text) {
       var msgs = document.getElementById('pcnMsgs');
       var prompts = document.getElementById('pcnPrompts');
       var promptTitle = document.getElementById('pcnPromptTitle');
-
-      // Hide suggested chips after user starts chatting
       if (prompts) prompts.style.display = 'none';
       if (promptTitle) promptTitle.style.display = 'none';
 
-      // Add user prompt
-      msgs.innerHTML += `<div class="pcn-msg user">${escapeHtml(text)}</div>`;
-      msgs.scrollTop = msgs.scrollHeight;
-
-      // Show temporary loading state
+      msgs.insertAdjacentHTML('beforeend', '<div class="pcn-msg user">' + escapeHtml(text) + '</div>');
       var loadingId = 'loading-' + Date.now();
-      msgs.innerHTML += `<div class="pcn-msg ai" id="${loadingId}"><i>Thinking...</i></div>`;
+      msgs.insertAdjacentHTML('beforeend', '<div class="pcn-msg ai" id="' + loadingId + '"><i>Thinking...</i></div>');
       msgs.scrollTop = msgs.scrollHeight;
 
-            // Chat is not live yet: answer with today's PCN AI market summary and link to the full page
+      var html;
       try {
         var cfg = await import('./config.js');
-        var r = await fetch(cfg.SUPABASE_URL + '/rest/v1/market_summary?select=day,headline,body&order=day.desc&limit=1', {
-          headers: { apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_KEY }
-        });
-        var rows = await r.json();
-        var el = document.getElementById(loadingId);
-        if (!el) return;
-        if (rows && rows.length) {
-          var paras = String(rows[0].body || '').trim().split(/\n\s*\n/).map(function (p) { return '<p style="margin:6px 0">' + escapeHtml(p.trim()) + '</p>'; }).join('');
-          el.innerHTML = '<b>' + escapeHtml(rows[0].headline) + '</b>' + paras +
-            '<p style="margin:8px 0 0;font-size:12px;color:#5b6b64">Live chat is coming soon. This is today\'s PCN AI summary. <a href="pulse.html" style="color:#12a150;font-weight:700">Open full summary</a></p>';
-        } else {
-          el.innerHTML = 'Live chat is coming soon. <a href="pulse.html" style="color:#12a150;font-weight:700">See the daily summary</a>';
-        }
+        var fn = ROUTES[text];
+        html = fn ? await fn(cfg) : 'I can only answer the questions below for now. Typed questions are coming soon.';
       } catch (err) {
-        var el2 = document.getElementById(loadingId);
-        if (el2) el2.innerHTML = 'Could not load right now. <a href="pulse.html" style="color:#12a150;font-weight:700">Open the daily summary</a>';
+        html = 'Could not load live data right now. Try again in a moment. <a href="pulse.html" style="' + HL + '">Daily summary</a>';
       }
+      var el = document.getElementById(loadingId);
+      if (el) el.innerHTML = html;
+      // show the questions again so people can keep going
+      if (prompts) { prompts.style.display = ''; msgs.appendChild(prompts); }
+      if (promptTitle) { promptTitle.style.display = ''; msgs.insertBefore(promptTitle, prompts); }
       msgs.scrollTop = msgs.scrollHeight;
     }
 
@@ -158,4 +209,3 @@
   if (!setupTabs()) document.addEventListener('DOMContentLoaded', setupTabs);
   var n = 0, iv = setInterval(function () { if (setupTabs() || ++n > 20) clearInterval(iv); }, 500);
 })();
-        
