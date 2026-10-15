@@ -73,18 +73,27 @@
       msgs.innerHTML += `<div class="pcn-msg ai" id="${loadingId}"><i>Thinking...</i></div>`;
       msgs.scrollTop = msgs.scrollHeight;
 
-      // Fetch AI response
+            // Chat is not live yet: answer with today's PCN AI market summary and link to the full page
       try {
-        /* Replace with your Supabase Edge function URL when ready */
-        setTimeout(function () {
-          var el = document.getElementById(loadingId);
-          if (el) el.innerText = "PCN AI is connected! Connect your API/Edge function to deliver live market answers.";
-          msgs.scrollTop = msgs.scrollHeight;
-        }, 800);
-      } catch (err) {
+        var cfg = await import('./config.js');
+        var r = await fetch(cfg.SUPABASE_URL + '/rest/v1/market_summary?select=day,headline,body&order=day.desc&limit=1', {
+          headers: { apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_KEY }
+        });
+        var rows = await r.json();
         var el = document.getElementById(loadingId);
-        if (el) el.innerText = "Unable to connect to PCN AI servers.";
+        if (!el) return;
+        if (rows && rows.length) {
+          var paras = String(rows[0].body || '').trim().split(/\n\s*\n/).map(function (p) { return '<p style="margin:6px 0">' + escapeHtml(p.trim()) + '</p>'; }).join('');
+          el.innerHTML = '<b>' + escapeHtml(rows[0].headline) + '</b>' + paras +
+            '<p style="margin:8px 0 0;font-size:12px;color:#5b6b64">Live chat is coming soon. This is today\'s PCN AI summary. <a href="pulse.html" style="color:#12a150;font-weight:700">Open full summary</a></p>';
+        } else {
+          el.innerHTML = 'Live chat is coming soon. <a href="pulse.html" style="color:#12a150;font-weight:700">See the daily summary</a>';
+        }
+      } catch (err) {
+        var el2 = document.getElementById(loadingId);
+        if (el2) el2.innerHTML = 'Could not load right now. <a href="pulse.html" style="color:#12a150;font-weight:700">Open the daily summary</a>';
       }
+      msgs.scrollTop = msgs.scrollHeight;
     }
 
     // Handle Chip Clicks
