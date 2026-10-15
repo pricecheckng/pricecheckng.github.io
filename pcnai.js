@@ -1,4 +1,4 @@
-/* PriceCheck NG - PCN AI Navigation & Interactive Chat */
+/* PriceCheck NG - PCN AI Navigation & Interactive Chat with Prompt Chips */
 (function () {
   // 1. Inject Chat Modal Markup & Styles
   function injectChatUI() {
@@ -9,16 +9,23 @@
       <style>
         #pcn-chat-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: flex-end; justify-content: center; }
         #pcn-chat-modal.open { display: flex; }
-        .pcn-chat-box { background: #fff; width: 100%; max-width: 480px; height: 75vh; border-top-left-radius: 16px; border-top-right-radius: 16px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
-        .pcn-chat-header { background: #12a150; color: #fff; padding: 12px 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .pcn-chat-box { background: #fff; width: 100%; max-width: 480px; height: 80vh; border-top-left-radius: 18px; border-top-right-radius: 18px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
+        .pcn-chat-header { background: #12a150; color: #fff; padding: 14px 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .pcn-chat-body { flex: 1; padding: 14px; overflow-y: auto; background: #f5f8f6; display: flex; flex-direction: column; gap: 10px; }
-        .pcn-msg { max-width: 85%; padding: 8px 12px; border-radius: 12px; font-size: 14px; line-height: 1.4; }
-        .pcn-msg.ai { background: #fff; border: 1px solid #e1e9e4; color: #10201a; align-self: flex-start; }
-        .pcn-msg.user { background: #12a150; color: #fff; align-self: flex-end; }
-        .pcn-chat-form { display: flex; padding: 10px; border-top: 1px solid #e1e9e4; background: #fff; }
-        .pcn-chat-form input { flex: 1; border: 1px solid #e1e9e4; border-radius: 8px; padding: 8px 12px; font-size: 14px; outline: none; }
-        .pcn-chat-form button { background: #12a150; color: #fff; border: none; border-radius: 8px; padding: 8px 14px; margin-left: 6px; font-weight: bold; cursor: pointer; }
-        .pcn-close { cursor: pointer; font-size: 20px; font-weight: bold; }
+        .pcn-msg { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.4; }
+        .pcn-msg.ai { background: #fff; border: 1px solid #e1e9e4; color: #10201a; align-self: flex-start; border-bottom-left-radius: 4px; }
+        .pcn-msg.user { background: #12a150; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+        
+        /* Suggested Prompt Chips */
+        .pcn-prompts-title { font-size: 12px; font-weight: 700; color: #5b6b64; margin-top: 6px; }
+        .pcn-prompts { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
+        .pcn-chip { background: #fff; border: 1px solid #e1e9e4; border-radius: 10px; padding: 8px 12px; font-size: 13px; color: #10201a; cursor: pointer; text-align: left; transition: background 0.2s, border-color 0.2s; font-weight: 500; }
+        .pcn-chip:hover, .pcn-chip:active { background: #eef7f2; border-color: #12a150; color: #12a150; }
+
+        .pcn-chat-form { display: flex; padding: 10px; border-top: 1px solid #e1e9e4; background: #fff; gap: 6px; }
+        .pcn-chat-form input { flex: 1; border: 1px solid #e1e9e4; border-radius: 10px; padding: 10px 12px; font-size: 14px; outline: none; }
+        .pcn-chat-form button { background: #12a150; color: #fff; border: none; border-radius: 10px; padding: 10px 16px; font-weight: bold; cursor: pointer; }
+        .pcn-close { cursor: pointer; font-size: 22px; font-weight: bold; }
       </style>
       <div class="pcn-chat-box">
         <div class="pcn-chat-header">
@@ -26,7 +33,15 @@
           <span class="pcn-close" id="pcnClose">&times;</span>
         </div>
         <div class="pcn-chat-body" id="pcnMsgs">
-          <div class="pcn-msg ai">Hello! I am PCN AI. Ask me about live market trends, token stats, or technical analysis.</div>
+          <div class="pcn-msg ai">Hello! I am PCN AI. Ask me anything about live market trends, token stats, or technical analysis.</div>
+          
+          <div class="pcn-prompts-title" id="pcnPromptTitle">Ask PCN AI:</div>
+          <div class="pcn-prompts" id="pcnPrompts">
+            <button class="pcn-chip" data-query="Why is the market moving today?">🔥 Why is the market moving today?</button>
+            <button class="pcn-chip" data-query="Are altcoins outperforming Bitcoin?">📈 Are altcoins outperforming Bitcoin?</button>
+            <button class="pcn-chip" data-query="What cryptos are showing bullish momentum?">🚀 What cryptos are showing bullish momentum?</button>
+            <button class="pcn-chip" data-query="Summarize today's Fear & Greed index">📊 Summarize Fear & Greed index</button>
+          </div>
         </div>
         <form class="pcn-chat-form" id="pcnForm">
           <input type="text" id="pcnInput" placeholder="Ask PCN AI..." required autocomplete="off" />
@@ -39,53 +54,67 @@
     var modal = document.getElementById('pcn-chat-modal');
     document.getElementById('pcnClose').onclick = function () { modal.classList.remove('open'); };
 
-    // Chat Form Handler
-    document.getElementById('pcnForm').onsubmit = async function (e) {
-      e.preventDefault();
-      var input = document.getElementById('pcnInput');
+    // Function to submit a user query
+    async function sendQuery(text) {
       var msgs = document.getElementById('pcnMsgs');
-      var text = input.value.trim();
-      if (!text) return;
+      var prompts = document.getElementById('pcnPrompts');
+      var promptTitle = document.getElementById('pcnPromptTitle');
+
+      // Hide suggested chips after user starts chatting
+      if (prompts) prompts.style.display = 'none';
+      if (promptTitle) promptTitle.style.display = 'none';
 
       // Add user prompt
-      msgs.innerHTML += `<div class="pcn-msg user">${text}</div>`;
-      input.value = '';
+      msgs.innerHTML += `<div class="pcn-msg user">${escapeHtml(text)}</div>`;
       msgs.scrollTop = msgs.scrollHeight;
 
-      // Temporary bot response placeholder
+      // Show temporary loading state
       var loadingId = 'loading-' + Date.now();
       msgs.innerHTML += `<div class="pcn-msg ai" id="${loadingId}"><i>Thinking...</i></div>`;
       msgs.scrollTop = msgs.scrollHeight;
 
-      // Connect to your AI edge function or proxy
+      // Fetch AI response
       try {
-        /*
-        const res = await fetch('YOUR_SUPABASE_FUNCTION_URL', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ prompt: text })
-        });
-        const data = await res.json();
-        document.getElementById(loadingId).innerText = data.reply;
-        */
-        
-        // Mock fallback response until your Edge Function is linked:
-        setTimeout(() => {
-          document.getElementById(loadingId).innerText = "PCN AI is configured! Connect your backend API/Edge Function to start serving real-time answers.";
+        /* Replace with your Supabase Edge function URL when ready */
+        setTimeout(function () {
+          var el = document.getElementById(loadingId);
+          if (el) el.innerText = "PCN AI is connected! Connect your API/Edge function to deliver live market answers.";
           msgs.scrollTop = msgs.scrollHeight;
         }, 800);
       } catch (err) {
-        document.getElementById(loadingId).innerText = "Unable to connect to PCN AI.";
+        var el = document.getElementById(loadingId);
+        if (el) el.innerText = "Unable to connect to PCN AI servers.";
       }
+    }
+
+    // Handle Chip Clicks
+    document.querySelectorAll('.pcn-chip').forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        var query = this.getAttribute('data-query');
+        if (query) sendQuery(query);
+      });
+    });
+
+    // Handle Form Submit
+    document.getElementById('pcnForm').onsubmit = function (e) {
+      e.preventDefault();
+      var input = document.getElementById('pcnInput');
+      var text = input.value.trim();
+      if (!text) return;
+      input.value = '';
+      sendQuery(text);
     };
   }
 
-  // 2. Add Tabs to Navigation Bar
+  function escapeHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // 2. Add PCN AI Tab to Navigation Bar
   function setupTabs() {
     var bar = document.querySelector('.tabs');
     if (!bar) return false;
 
-    // Check if PCN AI tab exists
     if (!bar.querySelector('a[data-tab="pcnai"]')) {
       var acct = bar.querySelector('a[data-tab="account"]');
       var src = acct || bar.querySelector('a');
@@ -120,3 +149,4 @@
   if (!setupTabs()) document.addEventListener('DOMContentLoaded', setupTabs);
   var n = 0, iv = setInterval(function () { if (setupTabs() || ++n > 20) clearInterval(iv); }, 500);
 })();
+        
