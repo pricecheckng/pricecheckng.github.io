@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PCN AI: Daily Crypto Market Summary | PriceCheck NG</title>
-<meta name="description" content="PCN AI writes a short daily crypto market summary from live PriceCheck NG data: market cap, Bitcoin, Ethereum, Fear &amp; Greed, top gainers and losers.">
+<title>Crypto Market Today: Daily AI Summary | PriceCheck NG</title>
+<meta name="description" content="Crypto market today in 30 seconds. A daily AI summary of Bitcoin, Ethereum, total market cap, Fear &amp; Greed and the top gainers and losers, from live PriceCheck NG data.">
 <link rel="canonical" href="https://pricecheckng.github.io/pulse.html">
-<meta property="og:title" content="PCN AI: Daily Crypto Market Summary">
+<meta property="og:title" content="Crypto Market Today: Daily AI Summary">
 <meta property="og:description" content="Today's crypto market in 30 seconds. Written by AI from live data.">
 <meta property="og:url" content="https://pricecheckng.github.io/pulse.html">
 <meta name="theme-color" content="#12a150">
@@ -43,8 +43,8 @@ h3{font-size:16px;margin:22px 0 0}
 <body>
 <div class="w">
   <a class="back" href="./">← PriceCheck NG</a>
-  <h1>PCN AI: Daily Market Summary</h1>
-  <p class="sub">The crypto market in 30 seconds. Written every morning by AI from live PriceCheck NG data.</p>
+  <h1>Crypto Market Today</h1>
+  <p class="sub">A daily summary of the crypto market, written every morning by PCN AI from live PriceCheck NG data.</p>
   <div class="chips" id="chips"></div>
   <div id="today"><div class="err">Loading today's summary…</div></div>
   <h3 id="olderH" hidden>Earlier summaries</h3>
@@ -64,11 +64,11 @@ const nice = d => { try { return new Date(d + 'T12:00:00Z').toLocaleDateString('
 async function get(q){ const r = await fetch(`${SUPABASE_URL}/rest/v1/${q}`, { headers: H }); const j = await r.json(); if (!Array.isArray(j)) throw 0; return j; }
 async function load(){
   try {
-    const rows = await get('market_summary?select=day,headline,body&order=day.desc&limit=15');
+    const rows = await get('market_summary?select=day,headline,body,created_at&order=day.desc&limit=15');
     if (!rows.length) throw 0;
     const t = rows[0];
-    $('today').innerHTML = `<div class="card"><span class="tag">✦ PCN AI</span><div class="date">${esc(nice(t.day))}</div><h2>${esc(t.headline)}</h2>${paras(t.body)}<div class="ai">Written by AI from live PriceCheck NG data.</div></div>`;
-    document.title = t.headline + ' | PCN AI by PriceCheck NG';
+    $('today').innerHTML = `<div class="card"><span class="tag">✦ PCN AI</span><div class="date">${esc(nice(t.day))}</div><h2>${esc(t.headline)}</h2>${paras(t.body)}<div class="ai">Written by AI from PriceCheck NG market data on ${esc(new Date(t.created_at).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}))}.</div></div>`;
+    document.title = t.headline + ' | PriceCheck NG';
     const old = rows.slice(1);
     if (old.length) {
       $('olderH').hidden = false;
