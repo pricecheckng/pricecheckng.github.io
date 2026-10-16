@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Crypto Heatmap Today: Top 100 Coins by Market Cap | PriceCheck NG</title>
 <meta name="description" content="Live crypto heatmap of the top 100 coins by market cap. See at a glance which coins are up or down in the last 24 hours and 7 days. Free on PriceCheck NG.">
-<link rel="canonical" href="https://pricecheckng.github.io/heatmap.html">
+<link rel="canonical" href="https://pricecheckng.com.ng/heatmap.html">
 <meta property="og:title" content="Crypto Heatmap Today: Top 100 Coins">
 <meta property="og:description" content="Which crypto coins are green or red right now? See the whole market in one picture.">
-<meta property="og:url" content="https://pricecheckng.github.io/heatmap.html">
+<meta property="og:url" content="https://pricecheckng.com.ng/heatmap.html">
 <meta name="theme-color" content="#12a150">
 <style>
 :root{--bg:#f5f8f6;--card:#fff;--tx:#10201a;--mu:#5b6b64;--bd:#e1e9e4;--g:#12a150;--r:#e5484d}
@@ -163,7 +163,7 @@ function render(){
   const lim = T === '24' ? 8 : 20; $('l1').textContent = '-' + lim + '%'; $('l2').textContent = '+' + lim + '%';
   $('hintTx').textContent = 'Scroll down for more coins (' + tot + ' shown)';
   const t = T === '24' ? '24 hours' : '7 days';
-  $('wa').href = 'https://wa.me/?text=' + encodeURIComponent(`Crypto heatmap (${t}): ${up} of the top ${tot} coins are up, ${dn} are down. See it live on PriceCheck NG: https://pricecheckng.github.io/heatmap.html`);
+  $('wa').href = 'https://wa.me/?text=' + encodeURIComponent(`Crypto heatmap (${t}): ${up} of the top ${tot} coins are up, ${dn} are down. See it live on PriceCheck NG: https://pricecheckng.com.ng/heatmap.html`);
   checkHint();
 }
 function checkHint(){ const h = $('hint'); const far = document.documentElement.scrollHeight - innerHeight - scrollY; h.classList.toggle('off', scrollY > 60 || far < 120); }

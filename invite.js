@@ -1,7 +1,7 @@
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
 
 const REF_KEY = "pc_ref";
-const SITE = "https://pricecheckng.github.io/";
+const SITE = "https://pricecheckng.com.ng/";
 
 const css = document.createElement("style");
 css.textContent = `

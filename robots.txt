@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://pricecheckng.github.io/sitemap.xml
+Sitemap: https://pricecheckng.com.ng/sitemap.xml

@@ -510,7 +510,7 @@ function priceCardBlob(c, sym, second, d, sp) {
       x.fillRect(0, 985, W, 95);
       x.fillStyle = "#374151";
       x.font = "600 32px system-ui, sans-serif";
-      x.fillText("Check the price before you buy · pricecheckng.github.io", 70, 1032);
+      x.fillText("Check the price before you buy · pricecheckng.com.ng", 70, 1032);
       cv.toBlob((b) => resolve(b), "image/png");
     } catch (_) {
       resolve(null);
