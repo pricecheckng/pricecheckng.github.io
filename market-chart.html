@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crypto Market Cap Chart: Total Market Cap, BTC Dominance | PriceCheck NG</title>
+<meta name="description" content="Live crypto market cap chart. Track the total crypto market cap, Bitcoin dominance and the Fear &amp; Greed index over 24 hours, 7 days and 30 days. Free on PriceCheck NG.">
+<link rel="canonical" href="https://pricecheckng.github.io/market-chart.html">
+<meta property="og:title" content="Crypto Market Cap Chart">
+<meta property="og:description" content="Total crypto market cap, Bitcoin dominance and Fear &amp; Greed over time.">
+<meta property="og:url" content="https://pricecheckng.github.io/market-chart.html">
+<meta name="theme-color" content="#12a150">
+<style>
+:root{--bg:#f5f8f6;--card:#fff;--tx:#10201a;--mu:#5b6b64;--bd:#e1e9e4;--g:#12a150;--r:#e5484d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.w{max-width:720px;margin:0 auto;padding:16px 14px 40px}
+a{color:var(--g)}
+.top a{text-decoration:none;font-weight:700}
+h1{font-size:22px;line-height:1.25;margin:10px 0 4px}
+.sub{color:var(--mu);font-size:13px;margin:0 0 12px}
+.rng{display:flex;gap:8px;margin:0 0 12px}
+.rng button{flex:1;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:9px 0;font:inherit;font-size:14px;font-weight:700;color:var(--mu);cursor:pointer}
+.rng button.on{background:var(--g);border-color:var(--g);color:#fff}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px 14px 10px;margin-bottom:12px}
+.hd{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.hd h2{font-size:15px;margin:0;color:var(--mu);font-weight:700}
+.big{font-size:26px;font-weight:800;line-height:1.1;margin-top:2px}
+.chg{font-size:14px;font-weight:700;white-space:nowrap;padding-top:2px}
+.up{color:var(--g)}.dn{color:var(--r)}
+.ch{position:relative;margin-top:8px;touch-action:pan-y}
+.ch svg{display:block;width:100%;height:auto}
+.tip{position:absolute;top:0;pointer-events:none;background:#10201a;color:#fff;font-size:12px;padding:5px 8px;border-radius:8px;white-space:nowrap;transform:translateX(-50%);display:none}
+.note{color:var(--mu);font-size:13px;padding:22px 6px;text-align:center}
+h3{font-size:17px;margin:20px 0 6px}
+p{margin:0 0 10px}
+.btn{display:inline-block;background:var(--g);color:#fff;text-decoration:none;font-weight:700;padding:11px 16px;border-radius:12px;margin:4px 8px 4px 0}
+.btn.alt{background:transparent;color:var(--g);border:1px solid var(--g)}
+.warn{font-size:13px;color:var(--mu);margin-top:14px}
+</style>
+</head>
+<body>
+<div class="w">
+  <div class="top"><a href="./">← PriceCheck NG</a></div>
+  <h1>Crypto Market Cap Chart</h1>
+  <p class="sub" id="upd">Total crypto market cap, Bitcoin dominance and Fear &amp; Greed over time. Updated every hour.</p>
+  <div class="rng" id="rng">
+    <button data-h="24">24H</button>
+    <button data-h="168" class="on">7D</button>
+    <button data-h="720">30D</button>
+  </div>
+  <div id="cards"></div>
+
+  <h3>What these charts show</h3>
+  <p><b>Total market cap</b> is the combined value of all cryptocurrencies. When it rises, money is flowing into crypto. When it falls, money is flowing out.</p>
+  <p><b>Bitcoin dominance</b> is Bitcoin's share of that total. When dominance rises, Bitcoin is doing better than other coins. When it falls, other coins (altcoins) are catching up.</p>
+  <p><b>Fear &amp; Greed</b> is a mood score from 0 (extreme fear) to 100 (extreme greed).</p>
+  <a class="btn" href="pulse.html">Today's market summary</a>
+  <a class="btn alt" href="heatmap.html">Heatmap</a>
+  <a class="btn alt" href="fear-greed.html">Fear &amp; Greed</a>
+  <p class="warn">Data is collected every hour from our own market data. For information only, not financial advice. Crypto is risky.</p>
+</div>
+<script type="module">
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+const $ = id => document.getElementById(id);
+const H = { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY };
+const METRICS = [
+  { key:'market_cap', title:'Total market cap', fmt:v=>'$'+(v/1e12).toFixed(2)+'T', axis:v=>'$'+(v/1e12).toFixed(2)+'T', pct:true },
+  { key:'btc_dom', title:'Bitcoin dominance', fmt:v=>v.toFixed(1)+'%', axis:v=>v.toFixed(1)+'%', pct:false },
+  { key:'fng_value', title:'Fear & Greed', fmt:v=>String(Math.round(v)), axis:v=>String(Math.round(v)), pct:false }
+];
+let hours = 168, rows = [];
+async function load(){
+  $('cards').innerHTML = '<div class="card"><div class="note">Loading charts…</div></div>';
+  try {
+    const since = new Date(Date.now() - hours*3600e3).toISOString();
+    const q = `market_history?select=at,market_cap,btc_dom,fng_value&at=gte.${encodeURIComponent(since)}&order=at.asc&limit=1000`;
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${q}`, { headers: H });
+    const j = await r.json(); if (!Array.isArray(j)) throw 0;
+    rows = j.map(x => ({ t: new Date(x.at).getTime(), market_cap:+x.market_cap, btc_dom:+x.btc_dom, fng_value:+x.fng_value }));
+    draw();
+  } catch (e) { $('cards').innerHTML = '<div class="card"><div class="note">Could not load the charts. Please try again in a moment.</div></div>'; }
+}
+function fmtTime(t){
+  const d = new Date(t);
+  return hours <= 24 ? d.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'}) : d.toLocaleDateString('en-GB',{day:'numeric',month:'short'});
+}
+function draw(){
+  const box = $('cards'); box.innerHTML = '';
+  METRICS.forEach((m, i) => {
+    const pts = rows.filter(r => isFinite(r[m.key]) && r[m.key] > 0);
+    const card = document.createElement('div'); card.className = 'card';
+    if (pts.length < 2) { card.innerHTML = `<div class="hd"><h2>${m.title}</h2></div><div class="note">Not enough data yet for this range. The chart fills in every hour.</div>`; box.appendChild(card); return; }
+    const first = pts[0][m.key], last = pts[pts.length-1][m.key];
+    let chg = '';
+    if (m.pct) { const c = (last/first-1)*100; chg = `<span class="chg ${c>=0?'up':'dn'}">${c>=0?'+':''}${c.toFixed(2)}%</span>`; }
+    else { const c = last-first; chg = `<span class="chg ${c>=0?'up':'dn'}">${c>=0?'+':''}${c.toFixed(m.key==='btc_dom'?1:0)}${m.key==='btc_dom'?' pts':''}</span>`; }
+    card.innerHTML = `<div class="hd"><div><h2>${m.title}</h2><div class="big">${m.fmt(last)}</div></div>${chg}</div><div class="ch"><div class="tip"></div></div>`;
+    box.appendChild(card);
+    plot(card.querySelector('.ch'), pts, m);
+  });
+  const lastT = rows.length ? rows[rows.length-1].t : 0;
+  if (lastT) $('upd').textContent = 'Total crypto market cap, Bitcoin dominance and Fear & Greed over time. Last update ' + new Date(lastT).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) + '.';
+}
+function plot(el, pts, m){
+  const W = Math.max(240, el.clientWidth || 340), Ht = 170, L = 8, R = 52, T = 10, B = 22;
+  const t0 = pts[0].t, t1 = pts[pts.length-1].t, span = Math.max(1, t1 - t0);
+  let lo = Math.min(...pts.map(p=>p[m.key])), hi = Math.max(...pts.map(p=>p[m.key]));
+  if (m.key === 'fng_value') { lo = Math.max(0, Math.min(lo, 20)); hi = Math.min(100, Math.max(hi, 80)); }
+  const pad = (hi - lo) * 0.12 || hi * 0.01 || 1; lo -= pad; hi += pad;
+  const X = t => L + (t - t0) / span * (W - L - R);
+  const Y = v => T + (1 - (v - lo) / (hi - lo)) * (Ht - T - B);
+  const up = pts[pts.length-1][m.key] >= pts[0][m.key];
+  const col = up ? '#12a150' : '#e5484d';
+  const d = pts.map((p,i) => (i?'L':'M') + X(p.t).toFixed(1) + ' ' + Y(p[m.key]).toFixed(1)).join(' ');
+  const area = d + ` L${X(t1).toFixed(1)} ${Ht-B} L${X(t0).toFixed(1)} ${Ht-B} Z`;
+  let grid = '';
+  for (let k = 0; k < 3; k++) { const v = lo + (hi-lo) * (0.1 + 0.4*k), y = Y(v); grid += `<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#e1e9e4" stroke-width="1"/><text x="${W-R+6}" y="${y+4}" font-size="11" fill="#5b6b64">${m.axis(v)}</text>`; }
+  const xl = `<text x="${L}" y="${Ht-6}" font-size="11" fill="#5b6b64">${fmtTime(t0)}</text><text x="${W-R}" y="${Ht-6}" font-size="11" fill="#5b6b64" text-anchor="end">${fmtTime(t1)}</text>`;
+  const gid = 'g' + m.key;
+  el.insertAdjacentHTML('afterbegin', `<svg viewBox="0 0 ${W} ${Ht}" role="img" aria-label="${m.title} chart"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".18"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${grid}<path d="${area}" fill="url(#${gid})"/><path d="${d}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round"/><circle class="dot" r="4" fill="${col}" stroke="#fff" stroke-width="2" style="display:none"/>${xl}</svg>`);
+  const svg = el.querySelector('svg'), dot = svg.querySelector('.dot'), tip = el.querySelector('.tip');
+  function move(ev){
+    const rc = svg.getBoundingClientRect();
+    const cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - rc.left;
+    const t = t0 + Math.min(Math.max((cx / rc.width * W - L) / (W - L - R), 0), 1) * span;
+    let best = pts[0]; for (const p of pts) if (Math.abs(p.t - t) < Math.abs(best.t - t)) best = p;
+    dot.style.display = ''; dot.setAttribute('cx', X(best.t)); dot.setAttribute('cy', Y(best[m.key]));
+    tip.style.display = 'block'; tip.style.left = Math.min(Math.max(X(best.t)/W*rc.width, 50), rc.width-50) + 'px';
+    tip.textContent = m.fmt(best[m.key]) + ' · ' + new Date(best.t).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+  }
+  const end = () => { dot.style.display = 'none'; tip.style.display = 'none'; };
+  el.addEventListener('mousemove', move); el.addEventListener('mouseleave', end);
+  el.addEventListener('touchstart', move, {passive:true}); el.addEventListener('touchmove', move, {passive:true}); el.addEventListener('touchend', end);
+}
+let rw = 0; addEventListener('resize', () => { const w = innerWidth; if (Math.abs(w - rw) > 40 && rows.length) { rw = w; draw(); } });
+$('rng').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  hours = +b.dataset.h;
+  document.querySelectorAll('#rng button').forEach(x => x.classList.toggle('on', x === b));
+  load();
+});
+load();
+</script>
+</body>
+</html>
