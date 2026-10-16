@@ -1,0 +1,24 @@
+name: Change domain
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  change:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace old address with new address
+        run: |
+          grep -rlI "pricecheckng.github.io" . \
+            --include=*.html --include=*.js --include=*.xml --include=*.txt \
+            --include=*.webmanifest --include=*.json \
+            --exclude-dir=.git --exclude-dir=.github \
+            | tee changed.txt | xargs -r sed -i 's#pricecheckng\.github\.io#pricecheckng.com.ng#g'
+          echo "Files changed:"; cat changed.txt; rm changed.txt
+      - name: Commit
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add -A
+          git diff --cached --quiet || git commit -m "Change site address to pricecheckng.com.ng"
+          git push
