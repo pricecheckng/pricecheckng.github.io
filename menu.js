@@ -6,7 +6,8 @@
     ]},
     { t: 'Tools', rows: [
       ['USDT P2P rates', 'Naira prices on Bybit, OKX and Bitget', 'p2p.html'],
-      ['Heatmap', 'The whole market in one picture', 'heatmap.html'],
+           ['Market summary', 'Today in 30 seconds, written by PCN AI', 'pulse.html'],
+      ['Market chart', 'Total market cap and Bitcoin dominance', 'market-chart.html'], ['Heatmap', 'The whole market in one picture', 'heatmap.html'],
       ['Fear & Greed', 'Is the market scared or greedy?', 'fear-greed.html'],
       ['Converter', 'Naira to crypto and back', 'converter.html'],
       ['Top movers', 'Biggest gainers and losers', 'movers.html'],
