@@ -186,9 +186,9 @@ async function loadPopular() {
     const list = POPULAR.map((s) => bySym.get(s)).filter(Boolean);
     if (!list.length || !document.getElementById("popBox")) return;
     document.getElementById("popBox").innerHTML =
-      '<h2 style="font-size:1.05rem;margin:14px 0 8px">Popular coins</h2><div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px">' +
+      '<div style="font-size:.85rem;font-weight:700;opacity:.65;margin:12px 0 6px">Popular coins</div><div style="display:flex;gap:8px;overflow-x:auto;white-space:nowrap;margin:0 -16px 12px;padding:0 16px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch">' +
       list
-        .map((c) => `<a href="${esc(c.id)}-price.html" style="padding:7px 13px;border-radius:999px;border:1px solid rgba(127,127,127,.3);background:rgba(127,127,127,.06);color:inherit;text-decoration:none;font-size:.9rem;font-weight:600">${esc(c.name)} price</a>`)
+        .map((c) => `<a href="${esc(c.id)}-price.html" style="flex:none;padding:7px 14px;border-radius:999px;border:1px solid rgba(127,127,127,.3);background:rgba(127,127,127,.06);color:inherit;text-decoration:none;font-size:.88rem;font-weight:600">${esc(c.name)}</a>`)
         .join("") +
       "</div>";
   } catch (_) {}
