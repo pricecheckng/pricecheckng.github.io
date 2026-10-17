@@ -2623,7 +2623,7 @@ function plusCardHtml() {
       ${row("Value history (1 year)", "–", "✓")}
     </div>
     ${buy}
-    <p class="ac-note" style="margin-top:12px"><b>Need help with payment or Plus?</b><br>Email <a href="mailto:support@pricecheckng.com.ng">support@pricecheckng.com.ng</a> or message us on Telegram: <a href="https://t.me/pricecheckNG" target="_blank" rel="noopener">@pricecheckNG</a>. We reply within 24 hours.</p>
+    <p class="ac-note" style="margin-top:12px"><b>Need help with payment or Plus?</b><br>Email <a href="mailto:support@pricecheckng.com.ng">support@pricecheckng.com.ng</a>. We reply within 24 hours.</p>
     <p class="ac-note" style="margin-top:12px">Everything you use today stays free.${on || PLUS_PAYMENTS_LIVE ? "" : " We'll tell you here when Plus is ready."}</p>
   </details>`;
 }
