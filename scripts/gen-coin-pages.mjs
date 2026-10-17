@@ -28,7 +28,7 @@ const get = async (p) => {
 const sample = (await get("coins?select=*&limit=1"))[0] || {};
 const rankCol = ["market_cap_rank", "rank", "cmc_rank"].find((c) => c in sample);
 const order = rankCol ? rankCol + ".asc.nullslast" : "market_cap.desc.nullslast";
-const rows = await get("coins?select=id,symbol,name,price_usd&price_usd=not.is.null" + (rankCol ? "&" + rankCol + "=not.is.null" : "") + "&order=" + order + "&limit=300");
+const rows = await get("coins?select=id,symbol,name,price_usd" + (rankCol ? "," + rankCol : "") + "&price_usd=not.is.null" + (rankCol ? "&" + rankCol + "=not.is.null" : "") + "&order=" + order + "&limit=300");
 
 // Leave out tokenized funds, bridged copies and other noise.
 const JUNK = /(heloc|tokenized|treasury|t-bill|money market|\bfund\b|\bnav\b|real estate|bridged|restaked|liquid staking|staked|\bshares?\b)/i;
@@ -60,6 +60,7 @@ td:last-child,th:last-child{text-align:right;font-weight:700}
 .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .links a{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--ink);text-decoration:none;font-size:.9rem}
 .wa{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:#25d366;color:#fff!important;font-weight:800;font-size:.9rem;text-decoration:none;border-radius:999px;padding:9px 16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.stats[hidden]{display:none}.stats div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}.stats small{display:block;color:var(--mut);font-size:.72rem}.stats b{font-size:.95rem}
 .note{color:var(--mut);font-size:.85rem;margin-top:14px}
 footer{border-top:1px solid var(--line);padding:18px 20px;text-align:center;color:var(--mut);font-size:.9rem}
 footer a{color:var(--mut)}`;
@@ -72,6 +73,7 @@ function page(c, i) {
   const url = SITE + "/" + c.id + "-price.html";
   const title = `${name} (${sym}) Price in Naira, USD, GBP, EUR and More | PriceCheck NG`;
   const desc = `Live ${name} (${sym}) price in NGN, USD, GBP, EUR, GHS, ZAR, KES and more, with free price alerts on PriceCheck NG.`;
+  const rk = rankCol && Number.isFinite(Number(c[rankCol])) ? Math.round(Number(c[rankCol])) : 0;
   const waShare = `${name} (${sym}) price in Naira, USD and more: ${url}`;
   const others = top.filter((o) => o.id !== c.id).slice(0, 12).map((o) => `<a href="${o.id}-price.html">${esc(o.name)} price</a>`).join("");
   const ld = JSON.stringify({ "@context": "https://schema.org", "@type": "WebPage", name: `${name} (${sym}) price`, url, description: desc, isPartOf: { "@type": "WebSite", name: "PriceCheck NG", url: SITE + "/" } });
@@ -104,11 +106,16 @@ ${css}
 <header><a class="brand" href="./"><span class="mark">${logo}</span><span>PriceCheck <b>NG</b></span></a><a class="open" href="./#coin/${c.id}">Open app</a></header>
 <main>
 <div class="coinrow"><span class="badge${sym.length > 4 ? " s" : ""}">${esc(sym)}</span><div><h1>${esc(name)} (${esc(sym)}) price</h1></div></div>
-<p class="sub">Live ${esc(name)} price in Naira, USD, GBP, EUR and more. Prices update regularly through the day.</p>
+<p class="sub">Live ${esc(name)} price in Naira, USD, GBP, EUR and more.${rk ? ` ${esc(name)} is ranked #${rk} by market cap.` : ""} Prices update regularly through the day.</p>
 <div class="box">
   <p class="big" id="usd">Loading price…</p>
   <p class="chg" id="chg" style="margin:4px 0 0"></p>
   <p class="note" id="upd" style="margin:6px 0 0"></p>
+</div>
+<div class="stats" id="stats" hidden>
+  <div><small>Market cap rank</small><b id="s-rank">-</b></div>
+  <div><small>Market cap</small><b id="s-cap">-</b></div>
+  <div><small>24h volume</small><b id="s-vol">-</b></div>
 </div>
 <a class="wa" id="wa" href="https://wa.me/?text=${encodeURIComponent(waShare)}" target="_blank" rel="noopener">Share on WhatsApp</a>
 <h2>${esc(name)} price in other currencies</h2>
@@ -138,7 +145,7 @@ const money = (n, c) => {
     return c + " " + n.toFixed(2);
   }
 };
-Promise.all([get("coins?id=eq." + ID + "&select=price_usd,change_24h_pct,last_updated"), get("fx_rates?select=currency,per_usd")])
+Promise.all([get("coins?id=eq." + ID + "&select=price_usd,change_24h_pct,last_updated,market_cap_usd,volume_24h_usd,market_cap_rank"), get("fx_rates?select=currency,per_usd")])
   .then(([coins, fx]) => {
     const c = coins && coins[0];
     if (!c || !c.price_usd) throw 0;
@@ -153,6 +160,12 @@ Promise.all([get("coins?id=eq." + ID + "&select=price_usd,change_24h_pct,last_up
       e.className = "chg " + (ch >= 0 ? "up" : "down");
     }
     if (c.last_updated) document.getElementById("upd").textContent = "Updated " + new Date(c.last_updated).toLocaleString();
+    const compact = (n) => (Number.isFinite(n) && n > 0 ? new Intl.NumberFormat("en", { style: "currency", currency: "USD", notation: "compact", maximumFractionDigits: 2 }).format(n) : "-");
+    const rk = Number(c.market_cap_rank);
+    document.getElementById("s-rank").textContent = Number.isFinite(rk) && rk > 0 ? "#" + rk : "-";
+    document.getElementById("s-cap").textContent = compact(Number(c.market_cap_usd));
+    document.getElementById("s-vol").textContent = compact(Number(c.volume_24h_usd));
+    document.getElementById("stats").hidden = false;
     const rate = {};
     (fx || []).forEach((r) => (rate[String(r.currency).toUpperCase()] = Number(r.per_usd)));
     const tb = document.querySelector("#tbl tbody");
