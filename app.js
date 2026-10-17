@@ -150,7 +150,7 @@ const skeleton = (n = 6) =>
   Array.from({ length: n }, () => `<div class="sk"><i></i><div><i style="width:60%"></i><i style="width:35%;margin-top:8px"></i></div><i></i></div>`).join("");
 const emptyBox = (title, text) => `<div class="empty"><b>${esc(title)}</b>${esc(text)}</div>`;
 const footer = () =>
-  `<p class="foot">Price data by <a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a>. <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Rates By Exchange Rate API</a>. Prices are for information only and are not financial advice.<br><a href="https://t.me/pricecheckNG" target="_blank" rel="noopener" style="display:inline-block;margin:12px 0 4px;padding:9px 16px;border-radius:999px;background:#229ed9;color:#fff;font-weight:700;text-decoration:none">✈ Join our Telegram channel</a><br><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="plus.html">Plus &amp; Contact</a></p>`;
+  `<p class="foot">Price data by <a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a>. <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Rates By Exchange Rate API</a>. Prices are for information only and are not financial advice.<br><a href="https://t.me/pricecheckNG" target="_blank" rel="noopener" style="display:inline-block;margin:12px 0 4px;padding:9px 16px;border-radius:999px;background:#229ed9;color:#fff;font-weight:700;text-decoration:none">✈ Join our Telegram channel</a><br><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="plus.html">Plus &amp; Contact</a><br>Support: <a href="mailto:support@pricecheckng.com.ng">support@pricecheckng.com.ng</a></p>`;
 const gate = (text) =>
   `<section class="page"><h1>Sign in</h1><div class="card"><p>${esc(text)}</p><button class="btn" data-auth>Continue with Google</button></div></section>`;
 
@@ -2623,6 +2623,7 @@ function plusCardHtml() {
       ${row("Value history (1 year)", "–", "✓")}
     </div>
     ${buy}
+    <p class="ac-note" style="margin-top:12px"><b>Need help with payment or Plus?</b><br>Email <a href="mailto:support@pricecheckng.com.ng">support@pricecheckng.com.ng</a> or message us on Telegram: <a href="https://t.me/pricecheckNG" target="_blank" rel="noopener">@pricecheckNG</a>. We reply within 24 hours.</p>
     <p class="ac-note" style="margin-top:12px">Everything you use today stays free.${on || PLUS_PAYMENTS_LIVE ? "" : " We'll tell you here when Plus is ready."}</p>
   </details>`;
 }
