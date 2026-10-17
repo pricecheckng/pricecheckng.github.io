@@ -175,6 +175,9 @@ Promise.all([get("coins?id=eq." + ID + "&select=price_usd,change_24h_pct,last_up
 // Write the pages.
 top.forEach((c, i) => fs.writeFileSync(c.id + "-price.html", page(c, i)));
 
+// List of the coins that have a page (used by the homepage "Popular coins" section).
+fs.writeFileSync("coin-pages.json", JSON.stringify(top.map((c) => ({ id: c.id, symbol: c.symbol, name: c.name }))));
+
 // Rebuild the sitemap: keep every non-coin entry, add the coin pages.
 let sm = "";
 try { sm = read("sitemap.xml"); } catch (e) {}
@@ -184,4 +187,3 @@ const coinBlocks = top.map((c) => `  <url>\n    <loc>${SITE}/${c.id}-price.html<
 const out = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...keep, ...coinBlocks].join("\n")}\n</urlset>\n`;
 fs.writeFileSync("sitemap.xml", out);
 console.log(`Wrote ${top.length} coin pages (rank column: ${rankCol || "market_cap"}) and a sitemap with ${keep.length + coinBlocks.length} URLs for ${SITE}`);
-  
