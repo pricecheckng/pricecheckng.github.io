@@ -174,6 +174,8 @@ window.addEventListener("hashchange", route);
 /* ---------- market ---------- */
 const fxNoteText = () => "Second price is converted from the USD price at market exchange rates, which are updated regularly.";
 
+const HIDE_NAMES = ["tokenized", "treasury", "money market", "fund", "institutional", "heloc", "t-bill", "real estate", "dollar yield"];
+const HIDE_SYMBOLS = ["usyc", "usdy", "buidl", "ustb", "ousg", "benji"];
 const POPULAR = ["BTC", "ETH", "SOL", "BNB", "XRP", "DOGE", "TRX", "ADA", "TON", "LINK", "AVAX", "LTC", "SHIB", "DOT"];
 async function loadPopular() {
   const box = document.getElementById("popBox");
@@ -347,6 +349,11 @@ async function loadCoins(reset) {
   let q = sb.from("coins").select(COLS).order("market_cap_rank", { ascending: true, nullsFirst: false }).range(from, from + PAGE - 1);
   const term = state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
   if (term) q = q.or(`name.ilike.%${term}%,symbol.ilike.%${term}%`);
+  else {
+    // Hide tokenized funds and similar products from the main list (they still show when searched).
+    for (const w of HIDE_NAMES) q = q.not("name", "ilike", `%${w}%`);
+    for (const sy of HIDE_SYMBOLS) q = q.not("symbol", "ilike", sy);
+  }
   const { data, error } = await q;
   if (id !== state.req || !$("#list")) return;
   if (error) {
