@@ -150,7 +150,7 @@ const skeleton = (n = 6) =>
   Array.from({ length: n }, () => `<div class="sk"><i></i><div><i style="width:60%"></i><i style="width:35%;margin-top:8px"></i></div><i></i></div>`).join("");
 const emptyBox = (title, text) => `<div class="empty"><b>${esc(title)}</b>${esc(text)}</div>`;
 const footer = () =>
-  `<p class="foot">Price data by <a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a>. <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Rates By Exchange Rate API</a>. Prices are for information only and are not financial advice.<br><a href="https://t.me/pricecheckNG" target="_blank" rel="noopener" style="display:inline-block;margin:12px 0 4px;padding:9px 16px;border-radius:999px;background:#229ed9;color:#fff;font-weight:700;text-decoration:none">✈ Join our Telegram channel</a><br><b>Learn:</b> <a href="learn-candlesticks.html">Candlesticks</a> · <a href="learn-scams.html">Avoid scams</a> · <a href="learn-market-cap.html">Market cap</a> · <a href="learn-stablecoins.html">Stablecoins</a> · <a href="learn-fear-greed.html">Fear &amp; Greed</a><br><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="plus.html">Plus &amp; Contact</a><br>Support: <a href="mailto:support@pricecheckng.com.ng">support@pricecheckng.com.ng</a></p>`;
+  `<p class="foot">Price data by <a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a>. <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Rates By Exchange Rate API</a>. Prices are for information only and are not financial advice.<br><a href="https://t.me/pricecheckNG" target="_blank" rel="noopener" style="display:inline-block;margin:12px 0 4px;padding:9px 16px;border-radius:999px;background:#229ed9;color:#fff;font-weight:700;text-decoration:none">✈ Join our Telegram channel</a><br><b>Learn:</b> <a href="learn-candlesticks.html">Candlesticks</a> · <a href="learn-scams.html">Avoid scams</a> · <a href="learn-market-cap.html">Market cap</a> · <a href="learn-stablecoins.html">Stablecoins</a> · <a href="learn-fear-greed.html">Fear &amp; Greed</a><br><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="plus.html">Contact</a><br>Support: <a href="mailto:support@pricecheckng.com.ng">support@pricecheckng.com.ng</a></p>`;
 const gate = (text) =>
   `<section class="page"><h1>Sign in</h1><div class="card"><p>${esc(text)}</p><button class="btn" data-auth>Continue with Google</button></div></section>`;
 
@@ -838,7 +838,7 @@ function alertForm(c) {
     if (error) {
       btn.disabled = false;
       btn.textContent = "Create alert";
-      if (/limit/i.test(error.message || "")) return showErr(err, `You can have up to ${PRICE_ALERT_LIMIT} active coin price alerts. Cancel one first. Plus gives you more room (Account tab).`);
+      if (/limit/i.test(error.message || "")) return showErr(err, `You can have up to ${PRICE_ALERT_LIMIT} active coin price alerts. Cancel one first.`);
       if (error.code === "42501") {
         const { data: fl } = await sb.from("user_flags").select("banned,alerts_blocked").maybeSingle();
         if (fl && (fl.banned || fl.alerts_blocked)) return showErr(err, "Alerts are turned off for your account.");
@@ -1371,10 +1371,6 @@ async function paintPortfolioHistory(liveTotal) {
   acctCss();
   await loadPlan();
   if (!$("#pfHist")) return;
-  if (!state.plusUntil) {
-    box.innerHTML = `<div class="cp-card"><div style="display:flex;align-items:center;gap:10px"><h3 style="margin:0;flex:1">Value history</h3><span class="ac-plusbadge" style="margin:0">★ PLUS</span></div><p class="muted" style="margin:8px 0 0;font-size:.9rem">See how your portfolio value changes day by day for up to 1 year, and download your portfolio as a CSV file. This is part of PriceCheck Plus.</p></div>`;
-    return;
-  }
   const since = new Date(Date.now() - 365 * 864e5).toISOString().slice(0, 10);
   const { data, error } = await sb.from("portfolio_snapshots").select("day,value_usd").gte("day", since).order("day");
   if (!$("#pfHist")) return;
@@ -1645,24 +1641,14 @@ function holdingSheet(row) {
   };
 }
 
-let PORTFOLIO_ALERT_LIMIT = 5;
-let PRICE_ALERT_LIMIT = 10;
-let PCT_ALERT_LIMIT = 5;
+let PORTFOLIO_ALERT_LIMIT = 10;
+let PRICE_ALERT_LIMIT = 20;
+let PCT_ALERT_LIMIT = 10;
 
-// Plus plan: higher limits. plusUntil is a Date, or null for free.
+// One set of limits for everyone. Keep these in step with the database limits.
 async function loadPlan() {
-  let until = null;
-  if (state.user) {
-    try {
-      const { data } = await sb.from("user_plans").select("plus_until").eq("user_id", state.user.id).maybeSingle();
-      if (data && new Date(data.plus_until) > new Date()) until = new Date(data.plus_until);
-    } catch {}
-  }
-  state.plusUntil = until;
-  PRICE_ALERT_LIMIT = until ? 50 : 10;
-  PCT_ALERT_LIMIT = until ? 20 : 5;
-  PORTFOLIO_ALERT_LIMIT = until ? 20 : 5;
-  return until;
+  state.plusUntil = null;
+  return null;
 }
 
 function portfolioAlertSheet() {
@@ -1731,7 +1717,7 @@ function portfolioAlertSheet() {
     if (error) {
       btn.disabled = false;
       btn.textContent = "Create alert";
-      if (/limit/i.test(error.message || "")) return showErr(err, `You can have up to ${PORTFOLIO_ALERT_LIMIT} active portfolio alerts. Cancel one first. Plus gives you more room (Account tab).`);
+      if (/limit/i.test(error.message || "")) return showErr(err, `You can have up to ${PORTFOLIO_ALERT_LIMIT} active portfolio alerts. Cancel one first.`);
       if (error.code === "42501") {
         const { data: fl } = await sb.from("user_flags").select("banned,alerts_blocked").maybeSingle();
         if (fl && (fl.banned || fl.alerts_blocked)) return showErr(err, "Alerts are turned off for your account.");
@@ -1755,7 +1741,7 @@ async function renderAdmin() {
     view.innerHTML = gate("Sign in to continue.");
     return;
   }
-  view.innerHTML = `<section class="page"><h1>Admin</h1><div id="admUsage"></div><div id="admBroadcast"></div><div id="admPlus"></div><div id="adm">${skeleton(3)}</div></section>`;
+  view.innerHTML = `<section class="page"><h1>Admin</h1><div id="admUsage"></div><div id="admBroadcast"></div><div id="adm">${skeleton(3)}</div></section>`;
   const { data: ok } = await sb.rpc("is_admin");
   if (!$("#adm")) return;
   if (!ok) {
@@ -1764,52 +1750,8 @@ async function renderAdmin() {
   }
   loadAdminUsage();
   loadAdminBroadcast();
-  loadAdminPlus();
   await loadAdminUsers();
 }
-
-async function loadAdminPlus() {
-  acctCss();
-  const box = $("#admPlus");
-  if (!box) return;
-  const { data, error } = await sb.rpc("admin_plus_overview");
-  if (!$("#admPlus")) return;
-  if (error || !data) return;
-  const dt = (s) => (s ? new Date(s).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "-");
-  const act = (data.active || []).map((r) => `<div class="ac-row" style="padding:8px 0"><div class="ac-rt"><b>${esc(r.email)}</b><small>until ${dt(r.plus_until)}</small></div></div>`).join("");
-  const pay = (data.payments || []).map((r) => `<div class="ac-row" style="padding:8px 0"><div class="ac-rt"><b>${esc(r.email)}</b><small>${esc(r.plan)} · $${Number(r.amount_usd)} · ${dt(r.created_at)}</small></div><span class="ac-pill ${r.status === "paid" ? "" : "soft"}">${esc(r.status.toUpperCase())}</span></div>`).join("");
-  box.innerHTML = `<div class="ac-card"><h3 style="margin:0 0 10px">Plus</h3>
-    <input id="plEmail" type="email" placeholder="User email" autocomplete="off" style="width:100%;box-sizing:border-box;font:inherit;padding:12px;border:1px solid rgba(127,127,127,.35);border-radius:12px;background:transparent;color:inherit">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
-      <button class="ac-btn" type="button" data-pl-grant="30">+30 days</button>
-      <button class="ac-btn" type="button" data-pl-grant="365">+1 year</button>
-      <button class="ac-btn" type="button" data-pl-grant="0">Remove</button>
-    </div>
-    <p class="ac-note" id="plAdmMsg" style="margin-top:8px"></p>
-    <p class="muted" style="margin:10px 0 2px;font-size:.85rem"><b>Active Plus (${(data.active || []).length})</b></p>${act || '<p class="muted" style="margin:4px 0;font-size:.9rem">No one yet.</p>'}
-    <p class="muted" style="margin:10px 0 2px;font-size:.85rem"><b>Recent payments</b></p>${pay || '<p class="muted" style="margin:4px 0;font-size:.9rem">No payments yet.</p>'}
-  </div>`;
-}
-
-document.addEventListener("click", async (e) => {
-  const b = e.target.closest("[data-pl-grant]");
-  if (!b) return;
-  const email = ($("#plEmail")?.value || "").trim();
-  const msg = $("#plAdmMsg");
-  if (!email) {
-    if (msg) msg.textContent = "Enter the user's email first.";
-    return;
-  }
-  const days = Number(b.dataset.plGrant);
-  if (days === 0 && !confirm("Remove Plus from " + email + "?")) return;
-  if (msg) msg.textContent = "Working...";
-  const { error } = await sb.rpc("admin_grant_plus", { p_email: email, p_days: days });
-  if (error) {
-    if (msg) msg.textContent = /no such user/i.test(error.message) ? "No user with that email." : "Could not do that. Try again.";
-    return;
-  }
-  loadAdminPlus();
-});
 
 async function loadAdminUsage() {
   acctCss();
@@ -2558,12 +2500,11 @@ function renderAccount() {
   const confirmed = !!state.user.email_confirmed_at;
   const chev = `<span class="ac-chev">${acIco("chev")}</span>`;
   view.innerHTML = `<section class="page acct"><h1>Account</h1><p class="acct-sub">Manage your profile, notifications and alert settings.</p>
-    <div class="ac-card ac-prof"><div class="ac-av">${acIco("user")}</div><div class="ac-pt"><b>${esc(state.user.email)}</b><span id="plusBadge">${state.plusUntil ? plusBadgeHtml() : ""}</span>${
+    <div class="ac-card ac-prof"><div class="ac-av">${acIco("user")}</div><div class="ac-pt"><b>${esc(state.user.email)}</b>${
       confirmed ? `<span class="ac-ok">${acIco("check")} Email verified</span>` : `<span class="ac-warn">Email not confirmed yet. Alerts need a confirmed email.</span>`
     }</div></div>
     <div id="pushCard" data-full="1"></div>
     <div id="tgCard"></div>
-    <div id="plusSlot">${plusCardHtml()}</div>
     <div class="ac-card">
       <details class="ac-help"><summary class="ac-row">${`<span class="ac-ic">${acIco("help")}</span><div class="ac-rt"><b>Notifications not working?</b><small>Troubleshoot common issues</small></div>`}${chev}</summary><div class="ac-help-body">${PUSH_STEPS}</div></details>
     </div>
@@ -2571,16 +2512,6 @@ function renderAccount() {
     <button class="btn ghost" type="button" id="signOut">Sign out</button>
     <div id="delSlot"></div></section>${footer()}`;
   renderPushCard($("#pushCard"));
-  loadPlan().then(() => {
-    const pb = $("#plusBadge");
-    if (pb) pb.innerHTML = state.plusUntil ? plusBadgeHtml() : "";
-    const el = $("#plusSlot");
-    if (el) {
-      const wasOpen = el.querySelector("details")?.open;
-      el.innerHTML = plusCardHtml();
-      if (wasOpen) el.querySelector("details").open = true;
-    }
-  });
   telegramCardHtml().then((h) => {
     if ($("#tgCard")) $("#tgCard").innerHTML = h;
   });
@@ -2595,76 +2526,6 @@ function renderAccount() {
     }
   });
 }
-
-// Set to true once Cryptomus is approved and the Supabase secrets are added.
-const PLUS_PAYMENTS_LIVE = false;
-
-const PLUS_PLANS = [
-  { id: "month", label: "1 month", price: "$2" },
-  { id: "quarter", label: "3 months", price: "$5" },
-  { id: "year", label: "1 year", price: "$15" },
-];
-
-function plusBadgeHtml() {
-  return `<span class="ac-plusbadge">★ PLUS</span>`;
-}
-
-function plusCardHtml() {
-  const row = (label, free, plus) => `<div class="pl-r"><span>${label}</span><span>${free}</span><b>${plus}</b></div>`;
-  const on = !!state.plusUntil;
-  const pill = on ? `<span class="ac-pill">ACTIVE</span>` : PLUS_PAYMENTS_LIVE ? "" : `<span class="ac-pill soft">COMING SOON</span>`;
-  const until = on ? state.plusUntil.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "";
-  const buy = PLUS_PAYMENTS_LIVE
-    ? `<div class="pl-buy">${PLUS_PLANS.map((p) => `<button type="button" class="pl-b" data-plus-plan="${p.id}"><b>${p.price}</b><span>${p.label}</span></button>`).join("")}</div>
-    <p class="ac-note" id="plusMsg" style="margin-top:8px">Pay with crypto (USDT, BTC and more). Plus turns on automatically within a few minutes after payment. One-time payment, no auto-renewal.</p>
-    <button class="ac-btn" type="button" id="plusCheck" style="margin-top:8px">I have paid - check my status</button>`
-    : "";
-  return `<details class="ac-card pl-card"${on ? " open" : ""}>
-    <summary><h3 style="margin:0;flex:1">PriceCheck Plus</h3>${pill}<span class="ac-chev pl-chev">${acIco("chev")}</span></summary>
-    <p style="margin-top:10px">${on ? `Plus is active until <b>${until}</b>. You can add more time any time.` : "More room for your alerts, for people who track a lot of coins."}</p>
-    <div class="pl-t">
-      <div class="pl-r pl-h"><span></span><span>Free</span><b>Plus</b></div>
-      ${row("Coin price alerts", 10, 50)}
-      ${row("Move alerts", 5, 20)}
-      ${row("Portfolio alerts", 5, 20)}
-      ${row("Value history (1 year)", "–", "✓")}
-    </div>
-    ${buy}
-    <p class="ac-note" style="margin-top:12px"><b>Need help with payment or Plus?</b><br>Email <a href="mailto:support@pricecheckng.com.ng">support@pricecheckng.com.ng</a>. We reply within 24 hours.</p>
-    <p class="ac-note" style="margin-top:12px">Everything you use today stays free.${on || PLUS_PAYMENTS_LIVE ? "" : " We'll tell you here when Plus is ready."}</p>
-  </details>`;
-}
-
-async function startPlusCheckout(plan, btn) {
-  const msg = $("#plusMsg");
-  const all = document.querySelectorAll("[data-plus-plan]");
-  all.forEach((b) => (b.disabled = true));
-  if (msg) msg.textContent = "Opening secure payment page...";
-  try {
-    const { data, error } = await sb.functions.invoke("plus-checkout", { body: { plan } });
-    if (error || !data?.url) throw new Error("fail");
-    location.href = data.url;
-  } catch {
-    all.forEach((b) => (b.disabled = false));
-    if (msg) msg.textContent = "Could not open the payment page right now. Please try again in a moment.";
-  }
-}
-
-document.addEventListener("click", async (e) => {
-  const b = e.target.closest("[data-plus-plan]");
-  if (b) return startPlusCheckout(b.dataset.plusPlan, b);
-  if (e.target.closest("#plusCheck")) {
-    const msg = $("#plusMsg");
-    if (msg) msg.textContent = "Checking...";
-    await loadPlan();
-    const el = $("#plusSlot");
-    if (state.plusUntil && el) {
-      el.innerHTML = plusCardHtml();
-    } else if (msg) {
-      msg.textContent = "Not confirmed yet. Payments can take a few minutes on the blockchain. Try again shortly.";
-    }
-  }
-});
 
 function renderAcctPush(el) {
   const sw = (on) => `<button type="button" class="ac-sw${on ? " on" : ""}" role="switch" aria-checked="${on}" aria-label="Notifications" data-push-sw><i></i></button>`;
@@ -2865,7 +2726,7 @@ function percentAlertSheet(c) {
       btn.disabled = false;
       btn.textContent = "Create alert";
       const m = error.message || "";
-      if (/limit/i.test(m)) return showErr(err, `You can have up to ${PCT_ALERT_LIMIT} active move alerts. Cancel one first. Plus gives you more room (Account tab).`);
+      if (/limit/i.test(m)) return showErr(err, `You can have up to ${PCT_ALERT_LIMIT} active move alerts. Cancel one first.`);
       if (/blocked/i.test(m)) return showErr(err, "Alerts are turned off for your account.");
       if (/email/i.test(m)) return showErr(err, "Confirm your email before setting alerts.");
       return showErr(err, "Could not save the alert. Please try again.");
