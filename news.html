@@ -81,7 +81,12 @@ function chips(){
   $('chips').innerHTML = names.map(n => `<button type="button" class="chip${n === SRC ? ' on' : ''}" data-s="${esc(n)}">${esc(n)}</button>`).join('');
 }
 function render(){
-  const rows = ALL.filter(x => SRC === 'All' || x.source === SRC);
+  const per = {};
+  const rows = ALL.filter(x => {
+    if (SRC !== 'All') return x.source === SRC;
+    per[x.source] = (per[x.source] || 0) + 1;
+    return per[x.source] <= 8;
+  });
   if (!rows.length){ $('list').innerHTML = '<div class="msg">No news to show right now. Try again soon.</div>'; return; }
   $('list').innerHTML = rows.map(x => `<a class="item" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener nofollow">` +
     (x.image_url ? `<img src="${esc(x.image_url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : '') +
