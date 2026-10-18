@@ -10,6 +10,7 @@
       ['Crypto network checker', 'Avoid sending on the wrong network', 'network-check.html'],
       ['Coin risk check', 'Warning signs before you buy', 'coin-risk.html'],
            ['Market summary', 'Today in 30 seconds, written by PCN AI', 'pulse.html'],
+      ['Crypto news', 'Latest headlines from top outlets', 'news.html'],
       ['Market chart', 'Total market cap and Bitcoin dominance', 'market-chart.html'], ['Heatmap', 'The whole market in one picture', 'heatmap.html'],
       ['Fear & Greed', 'Is the market scared or greedy?', 'fear-greed.html'],
       ['Converter', 'Naira to crypto and back', 'converter.html'],

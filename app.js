@@ -2216,10 +2216,49 @@ try {
   st.textContent = `.bellbtn{position:relative}.bellbtn.has-new::after{content:"";position:absolute;top:7px;right:8px;width:11px;height:11px;border-radius:50%;background:#e53935;border:2px solid #0b7a4b}.nt-item{padding:12px 0;border-bottom:1px solid rgba(128,128,128,.2)}.nt-item b{display:block}.nt-item.new b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#e53935;margin-right:8px}.nt-item p{margin:4px 0 0;white-space:pre-line}.nt-item small{display:block;opacity:.6;margin-top:4px}.nt-list{max-height:55vh;overflow:auto;margin-bottom:12px}`;
   document.head.appendChild(st);
   const setDot = (n) => document.querySelectorAll(".bellbtn").forEach((b) => b.classList.toggle("has-new", n > 0));
+  // News: the dot also shows when there is a headline newer than the last one this person opened.
+  const NEWS_KEY = "pc_news_seen";
+  const seenGet = () => {
+    try {
+      return localStorage.getItem(NEWS_KEY);
+    } catch {
+      return null;
+    }
+  };
+  const seenSet = (v) => {
+    try {
+      localStorage.setItem(NEWS_KEY, v);
+    } catch {}
+  };
+  let unreadN = 0,
+    newsNew = false,
+    newsChecked = 0;
+  const paint = () => setDot(unreadN + (newsNew ? 1 : 0));
+  async function latestNewsTime() {
+    try {
+      const { data } = await sb.from("news").select("published_at").order("published_at", { ascending: false }).limit(1);
+      return data && data[0] ? data[0].published_at : null;
+    } catch {
+      return null;
+    }
+  }
   async function refreshBell() {
-    if (!state.user) return setDot(0);
-    const { data, error } = await sb.rpc("my_unread");
-    if (!error) setDot(Number(data) || 0);
+    if (state.user) {
+      const { data, error } = await sb.rpc("my_unread");
+      if (!error) unreadN = Number(data) || 0;
+    } else unreadN = 0;
+    if (Date.now() - newsChecked > 240000) {
+      newsChecked = Date.now();
+      const t = await latestNewsTime();
+      if (t) {
+        const seen = seenGet();
+        if (!seen) {
+          seenSet(t);
+          newsNew = false;
+        } else newsNew = new Date(t) > new Date(seen);
+      }
+    }
+    paint();
   }
   document.addEventListener(
     "click",
@@ -2227,17 +2266,48 @@ try {
       const b = e.target.closest(".bellbtn");
       if (!b) return;
       e.preventDefault();
-      if (!state.user) return authSheet("in", "Sign in to see your notifications.");
-      openSheet(`<div class="sheet-head"><span></span><div><h2 id="sheetTitle">Notifications</h2></div><button class="x" type="button" data-close aria-label="Close">×</button></div><div class="nt-list" id="ntList"><p class="muted">Loading…</p></div><a class="btn ghost" href="#alerts" data-close>Go to my alerts</a>`);
-      const { data } = await sb.rpc("my_notifications");
+      const signed = !!state.user;
+      openSheet(
+        `<div class="sheet-head"><span></span><div><h2 id="sheetTitle">Notifications</h2></div><button class="x" type="button" data-close aria-label="Close">×</button></div>` +
+          (signed
+            ? `<div class="nt-list" id="ntList"><p class="muted">Loading…</p></div>`
+            : `<p class="muted" style="margin:6px 0 10px">Sign in to see your price alert notifications.</p><button class="btn ghost" type="button" id="ntSignin">Sign in</button>`) +
+          `<h3 style="margin:16px 0 4px;font-size:1rem">Latest crypto news</h3><div class="nt-list" id="ntNews"><p class="muted">Loading…</p></div>` +
+          `<a class="btn ghost" href="news.html">See all news</a>` +
+          (signed ? `<a class="btn ghost" href="#alerts" data-close>Go to my alerts</a>` : "")
+      );
+      const si = $("#ntSignin");
+      if (si) si.onclick = () => authSheet("in", "Sign in to see your notifications.");
+      const [notif, news] = await Promise.all([
+        signed ? sb.rpc("my_notifications") : Promise.resolve({ data: [] }),
+        sb.from("news").select("source,title,url,published_at").order("published_at", { ascending: false }).limit(6),
+      ]);
       const box = $("#ntList");
-      if (!box) return;
-      const rows = Array.isArray(data) ? data : [];
-      box.innerHTML = rows.length
-        ? rows.map((r) => `<div class="nt-item ${r.is_new ? "new" : ""}"><b>${esc(r.title)}</b><p>${esc(r.body)}</p><small>${ago(r.created_at)}</small></div>`).join("")
-        : `<p class="muted">No notifications yet.</p>`;
-      await sb.rpc("mark_notifications_seen");
-      setDot(0);
+      if (box) {
+        const rows = Array.isArray(notif.data) ? notif.data : [];
+        box.innerHTML = rows.length
+          ? rows.map((r) => `<div class="nt-item ${r.is_new ? "new" : ""}"><b>${esc(r.title)}</b><p>${esc(r.body)}</p><small>${ago(r.created_at)}</small></div>`).join("")
+          : `<p class="muted">No notifications yet.</p>`;
+      }
+      const nb = $("#ntNews");
+      if (nb) {
+        const items = Array.isArray(news.data) ? news.data : [];
+        nb.innerHTML = items.length
+          ? items
+              .map(
+                (r) =>
+                  `<a class="nt-item" style="display:block;color:inherit;text-decoration:none" href="${/^https?:\/\//i.test(r.url || "") ? esc(r.url) : "#"}" target="_blank" rel="noopener nofollow"><b>${esc(r.title)}</b><small>${esc(r.source)} · ${ago(r.published_at)}</small></a>`
+              )
+              .join("")
+          : `<p class="muted">No news yet.</p>`;
+        if (items[0]) seenSet(items[0].published_at);
+        newsNew = false;
+      }
+      if (signed) {
+        await sb.rpc("mark_notifications_seen");
+        unreadN = 0;
+      }
+      paint();
     },
     true
   );

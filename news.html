@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crypto News Today: Latest Headlines | PriceCheck NG</title>
+<meta name="description" content="Latest crypto news headlines from top global outlets in one place. Bitcoin, Ethereum and market news, updated every 30 minutes. Free on PriceCheck NG.">
+<link rel="canonical" href="https://pricecheckng.com.ng/news.html">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="PriceCheck NG">
+<meta property="og:title" content="Crypto News Today: Latest Headlines">
+<meta property="og:description" content="Headlines from the top crypto news sites in one place, updated every 30 minutes.">
+<meta property="og:url" content="https://pricecheckng.com.ng/news.html">
+<meta property="og:image" content="https://pricecheckng.com.ng/icon-512.png">
+<meta name="theme-color" content="#12a150">
+<link rel="icon" type="image/png" href="icon-192.png">
+<style>
+:root{--bg:#f5f8f6;--card:#fff;--tx:#10201a;--mu:#5b6b64;--bd:#e1e9e4;--g:#12a150}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1512;--card:#14201b;--tx:#e8f1ec;--mu:#98a9a0;--bd:#24332c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.w{max-width:760px;margin:0 auto;padding:14px 12px 60px}
+a{color:var(--g)}
+a.back{text-decoration:none;font-weight:700}
+h1{font-size:22px;line-height:1.25;margin:8px 0 4px}
+.sub{color:var(--mu);font-size:13px;margin:0 0 12px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;font:inherit;font-size:13px;font-weight:600;background:var(--card);color:var(--mu);border:1px solid var(--bd);border-radius:999px;padding:6px 13px;cursor:pointer}
+.chip.on{background:var(--g);border-color:var(--g);color:#fff}
+.item{display:flex;gap:12px;background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:12px;margin-bottom:10px;text-decoration:none;color:inherit}
+.item:active{filter:brightness(.97)}
+.item img{width:84px;height:84px;object-fit:cover;border-radius:10px;flex:0 0 84px;background:var(--bd)}
+.item .b{min-width:0;flex:1}
+.item h2{font-size:15.5px;line-height:1.3;margin:0 0 4px;font-weight:700}
+.item p{margin:0 0 6px;color:var(--mu);font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.item .m{font-size:12px;color:var(--mu)}
+.item .m b{color:var(--g);font-weight:700}
+.msg{padding:36px 10px;text-align:center;color:var(--mu)}
+.note{font-size:12px;color:var(--mu);margin:14px 2px}
+.btns{margin-top:12px}
+.btn{display:inline-block;background:var(--g);color:#fff;text-decoration:none;font-weight:700;padding:10px 14px;border-radius:12px;margin:0 8px 8px 0;font-size:14px}
+.btn.alt{background:transparent;color:var(--g);border:1px solid var(--g)}
+footer{border-top:1px solid var(--bd);padding:18px 12px;text-align:center;color:var(--mu);font-size:.9rem}
+footer a{color:var(--mu)}
+</style>
+</head>
+<body>
+<div class="w">
+  <a class="back" href="./">← PriceCheck NG</a>
+  <h1>Crypto News</h1>
+  <p class="sub" id="sub">Latest headlines from top crypto news sites. Tap a story to read it on the publisher's site.</p>
+  <div class="chips" id="chips"></div>
+  <div id="list"><div class="msg">Loading news…</div></div>
+  <p class="note">Headlines and short summaries come from each publisher's public feed, and every story opens on the publisher's own website. PriceCheck NG does not write these stories. News is for information only, not financial advice.</p>
+  <div class="btns">
+    <a class="btn" href="./">Open coin prices</a>
+    <a class="btn alt" href="pulse.html">Market summary</a>
+    <a class="btn alt" href="fear-greed.html">Fear &amp; Greed</a>
+  </div>
+</div>
+<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="contact.html">Contact</a><br>Support: <a href="mailto:support@pricecheckng.com.ng">support@pricecheckng.com.ng</a></footer>
+<script type="module">
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let ALL = [], SRC = 'All';
+function ago(t){
+  const m = Math.max(0, Math.round((Date.now() - new Date(t)) / 60000));
+  if (m < 2) return 'just now';
+  if (m < 60) return m + ' min ago';
+  const h = Math.round(m / 60);
+  if (h < 24) return h + ' hr ago';
+  const d = Math.round(h / 24);
+  return d + (d === 1 ? ' day ago' : ' days ago');
+}
+function safeUrl(u){ return /^https?:\/\//i.test(u || '') ? u : '#'; }
+function chips(){
+  const names = ['All', ...Array.from(new Set(ALL.map(x => x.source))).sort()];
+  $('chips').innerHTML = names.map(n => `<button type="button" class="chip${n === SRC ? ' on' : ''}" data-s="${esc(n)}">${esc(n)}</button>`).join('');
+}
+function render(){
+  const rows = ALL.filter(x => SRC === 'All' || x.source === SRC);
+  if (!rows.length){ $('list').innerHTML = '<div class="msg">No news to show right now. Try again soon.</div>'; return; }
+  $('list').innerHTML = rows.map(x => `<a class="item" href="${esc(safeUrl(x.url))}" target="_blank" rel="noopener nofollow">` +
+    (x.image_url ? `<img src="${esc(x.image_url)}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : '') +
+    `<div class="b"><h2>${esc(x.title)}</h2>` + (x.summary ? `<p>${esc(x.summary)}</p>` : '') +
+    `<div class="m"><b>${esc(x.source)}</b> · ${esc(ago(x.published_at))}</div></div></a>`).join('');
+}
+$('chips').onclick = e => { const b = e.target.closest('button'); if (!b) return; SRC = b.dataset.s; chips(); render(); };
+async function load(){
+  try {
+    const q = 'news?select=source,title,url,summary,image_url,published_at&order=published_at.desc&limit=80';
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${q}`, { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } });
+    const rows = await r.json();
+    if (!Array.isArray(rows)) throw 0;
+    ALL = rows;
+    if (SRC !== 'All' && !ALL.some(x => x.source === SRC)) SRC = 'All';
+    chips(); render();
+  } catch (e) {
+    if (!ALL.length) $('list').innerHTML = '<div class="msg">News is not available right now. Try again soon.</div>';
+  }
+}
+load(); setInterval(load, 300000);
+</script>
+</body>
+</html>
