@@ -6,6 +6,7 @@
     ]},
     { t: 'Tools', rows: [
       ['USDT P2P rates', 'Naira prices on Bybit, OKX and Bitget', 'p2p.html'],
+      ['Is my P2P rate fair?', 'Check an agent\'s USDT rate', 'p2p-check.html'],
            ['Market summary', 'Today in 30 seconds, written by PCN AI', 'pulse.html'],
       ['Market chart', 'Total market cap and Bitcoin dominance', 'market-chart.html'], ['Heatmap', 'The whole market in one picture', 'heatmap.html'],
       ['Fear & Greed', 'Is the market scared or greedy?', 'fear-greed.html'],
@@ -15,7 +16,11 @@
       ['Daily contest', 'Predict the price and win', 'predict.html']
     ]},
     { t: 'Learn', rows: [
-      ['How to read candlesticks', 'A simple lesson for beginners', 'learn-candlesticks.html']
+      ['How to read candlesticks', 'A simple lesson for beginners', 'learn-candlesticks.html'],
+      ['How to avoid crypto scams', 'Stay safe on P2P and online', 'learn-scams.html'],
+      ['What is market cap?', 'Why price alone can fool you', 'learn-market-cap.html'],
+      ['What is a stablecoin?', 'USDT and USDC explained', 'learn-stablecoins.html'],
+      ['Fear & Greed Index', 'How to read the market mood', 'learn-fear-greed.html']
     ]},
     { t: 'More', rows: [
       ['Telegram channel', 'News and updates', 'https://t.me/pricecheckNG', true],
