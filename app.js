@@ -1648,6 +1648,14 @@ let PCT_ALERT_LIMIT = 10;
 // One set of limits for everyone. Keep these in step with the database limits.
 async function loadPlan() {
   state.plusUntil = null;
+  let bonus = 0;
+  if (state.user) {
+    try {
+      const { data } = await sb.rpc("my_alert_bonus");
+      if (typeof data === "number" && data > 0) bonus = data;
+    } catch {}
+  }
+  PRICE_ALERT_LIMIT = 20 + bonus;
   return null;
 }
 

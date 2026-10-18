@@ -1,3 +1,6 @@
+// PriceCheck NG - "Invite friends, get extra price alerts".
+// Captures ?ref=CODE links, redeems the code after the new person signs in,
+// and adds an "Invite friends" card on the Account page (under the Telegram card).
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
 
 const REF_KEY = "pc_ref";
@@ -45,6 +48,7 @@ function read(k) {
   }
 }
 
+/* ---- 1. remember the invite code from the link ---- */
 (function captureRef() {
   try {
     const u = new URL(location.href);
@@ -57,6 +61,7 @@ function read(k) {
   } catch (_) {}
 })();
 
+/* ---- helpers: read the signed-in token the app already saved ---- */
 function accessToken() {
   try {
     for (let i = 0; i < localStorage.length; i++) {
@@ -97,6 +102,7 @@ function banner(text, ms) {
   if (ms) setTimeout(() => b.remove(), ms);
 }
 
+/* ---- 2. redeem the code once the new person is signed in ---- */
 (function redeemWhenSignedIn() {
   const code = read(REF_KEY);
   if (!code) return;
@@ -104,28 +110,29 @@ function banner(text, ms) {
   const timer = setInterval(async () => {
     tries++;
     if (!accessToken()) {
-      if (tries === 2) banner("🎁 You were invited! Sign in with Google to get 1 month of Plus free.", 12000);
+      if (tries === 2) banner("🎁 You were invited! Sign in with Google to get 5 extra price alerts free.", 12000);
       if (tries > 40) clearInterval(timer);
       return;
     }
     clearInterval(timer);
     const { data, error } = await rpc("redeem_invite", { p_code: code });
-    if (error) return;
+    if (error) return; // try again on the next visit
     store(REF_KEY, null);
     if (data === "ok") {
-      banner("🎉 You and your friend each got 1 month of PriceCheck Plus free!", 3000);
+      banner("🎉 You and your friend each got 5 extra price alerts!", 3000);
       setTimeout(() => location.reload(), 2600);
     } else if (data === "too_old") {
-      banner("Invite links give a free month to new accounts only.", 6000);
+      banner("Invite links give extra alerts to new accounts only.", 6000);
     }
   }, 1500);
 })();
 
+/* ---- 3. "Invite friends" card on the Account page ---- */
 function cardHtml(info) {
-  const stat = info.joined ? info.joined + " joined · " + info.rewarded + " free month" + (info.rewarded === 1 ? "" : "s") : "";
+  const stat = info.joined ? info.joined + " joined · +" + info.rewarded * 5 + " alerts" : "";
   return `<details class="ac-card iv-card" id="inviteCard">
-    <summary><h3>Invite friends, get free Plus</h3><span class="iv-chev">›</span></summary>
-    <p>Friends who join with your link get <b>${info.days / 30} month of Plus free</b>, and so do you (up to ${info.cap} friends).</p>
+    <summary><h3>Invite friends, get +5 price alerts</h3><span class="iv-chev">›</span></summary>
+    <p>Friends who join with your link get <b>+5 coin price alerts</b>, and so do you for each friend who joins (up to ${info.cap} friends).</p>
     <div class="iv-top"><span class="iv-code">Your code: <b>${esc(info.code)}</b></span><span class="iv-stat">${esc(stat)}</span></div>
     <div class="iv-btns">
       <button class="ac-btn" type="button" id="ivCopy">Copy link</button>
@@ -142,7 +149,7 @@ function cardHtml(info) {
 
 function wire(info) {
   const link = SITE + "?ref=" + info.code;
-  const text = "I use PriceCheck NG for live crypto prices in naira with free price alerts. Join with my link and get 1 month of Plus free: " + link + " (or use my code " + info.code + " in the app)";
+  const text = "I use PriceCheck NG for live crypto prices in naira with free price alerts. Join with my link and get 5 extra price alerts: " + link;
   const wa = document.getElementById("ivWa");
   if (wa) wa.href = "https://wa.me/?text=" + encodeURIComponent(text);
   const copy = document.getElementById("ivCopy");
@@ -180,7 +187,7 @@ function wire(info) {
       const { data, error } = await rpc("redeem_invite", { p_code: val });
       apply.disabled = false;
       const say = {
-        ok: "🎉 Done! You and your friend each got 1 month of Plus free.",
+        ok: "🎉 Done! You and your friend each got +5 price alerts.",
         invalid: "That code wasn't found. Check it and try again.",
         self: "That's your own code. Send it to a friend instead.",
         already: "You've already used an invite code.",
@@ -203,13 +210,13 @@ function wire(info) {
 
 let busy = false;
 async function inject() {
-  const slot = document.getElementById("plusSlot");
+  const slot = document.getElementById("tgCard");
   if (!slot || document.getElementById("inviteCard") || busy) return;
   busy = true;
   const { data } = await rpc("my_invite");
   busy = false;
   if (!data || !data.code) return;
-  const again = document.getElementById("plusSlot");
+  const again = document.getElementById("tgCard");
   if (!again || document.getElementById("inviteCard")) return;
   again.insertAdjacentHTML("afterend", cardHtml(data));
   wire(data);
