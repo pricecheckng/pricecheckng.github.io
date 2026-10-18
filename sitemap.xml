@@ -14,6 +14,14 @@
   <url><loc>https://pricecheckng.com.ng/terms.html</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
   <url><loc>https://pricecheckng.com.ng/plus.html</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
   <url><loc>https://pricecheckng.com.ng/coins.html</loc><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://pricecheckng.com.ng/market-chart.html</loc><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.com.ng/p2p-check.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.com.ng/network-check.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.com.ng/coin-risk.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://pricecheckng.com.ng/learn-scams.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://pricecheckng.com.ng/learn-market-cap.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://pricecheckng.com.ng/learn-stablecoins.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://pricecheckng.com.ng/learn-fear-greed.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url>
     <loc>https://pricecheckng.com.ng/bitcoin-price.html</loc>
     <changefreq>daily</changefreq>
@@ -515,7 +523,3 @@
     <priority>0.8</priority>
   </url>
 </urlset>
-  <url><loc>https://pricecheckng.com.ng/learn-scams.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://pricecheckng.com.ng/learn-market-cap.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://pricecheckng.com.ng/learn-stablecoins.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
-  <url><loc>https://pricecheckng.com.ng/learn-fear-greed.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
