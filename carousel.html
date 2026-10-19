@@ -94,8 +94,11 @@ function coinRows(x, y0, rows, valFn) {
     x.fillStyle = 'rgba(255,255,255,.06)'; rr(x, 64, y, W - 128, rh, 28); x.fill();
     const ch = Number(c.change_24h_pct), up = ch >= 0;
     x.fillStyle = 'rgba(18,161,80,.22)'; x.beginPath(); x.arc(64 + 75, y + rh / 2, 44, 0, 7); x.fill();
-    x.fillStyle = UP; x.font = `800 ${String(c.symbol).length > 4 ? 22 : 28}px ${FONT}`; x.textAlign = 'center'; x.fillText(String(c.symbol).toUpperCase().slice(0, 5), 64 + 75, y + rh / 2 + 2);
-    x.textAlign = 'left'; x.fillStyle = INK; x.font = `800 44px ${FONT}`; x.fillText(String(c.name).length > 16 ? String(c.name).slice(0, 15) + '…' : c.name, 64 + 150, y + 54);
+    const sym = String(c.symbol).toUpperCase().slice(0, 6); let sf = 28; x.font = `800 ${sf}px ${FONT}`; while (x.measureText(sym).width > 78 && sf > 14) { sf -= 1; x.font = `800 ${sf}px ${FONT}`; }
+    x.fillStyle = UP; x.textAlign = 'center'; x.fillText(sym, 64 + 75, y + rh / 2 + 2);
+    x.textAlign = 'left'; x.fillStyle = INK; let nf = 44; x.font = `800 ${nf}px ${FONT}`; const nmax = W - 128 - 150 - 270; while (x.measureText(c.name).width > nmax && nf > 26) { nf -= 2; x.font = `800 ${nf}px ${FONT}`; }
+    let nm = String(c.name); while (x.measureText(nm).width > nmax && nm.length > 3) nm = nm.slice(0, -2); if (nm !== String(c.name)) nm = nm.trim() + '…';
+    x.fillText(nm, 64 + 150, y + 54);
     x.fillStyle = MU; x.font = `500 32px ${FONT}`; x.fillText(valFn(c), 64 + 150, y + 102);
     x.textAlign = 'right'; x.fillStyle = up ? UP : DN; x.font = `800 52px ${FONT}`; x.fillText(pct(ch), W - 64 - 36, y + rh / 2);
     x.textAlign = 'left';
@@ -128,6 +131,7 @@ async function build() {
     wrap(x, `The market is ${up ? 'UP' : 'DOWN'} ${Math.abs(ch).toFixed(1)}% today`, W - 128, 4).forEach(l => { x.fillText(l, 64, y); y += 128; });
     x.fillStyle = MU; x.font = `500 44px ${FONT}`; y += 20;
     wrap(x, `Fear & Greed: ${g.fng_value} (${g.fng_label}). Here is what moved, in 6 swipes.`, W - 128, 3).forEach(l => { x.fillText(l, 64, y); y += 58; });
+    if (gain[0]) { y += 30; x.fillStyle = UP; x.font = `800 46px ${FONT}`; x.fillText(`Biggest gainer: ${gain[0].name} ${pct(Number(gain[0].change_24h_pct))}`, 64, y); }
     x.fillStyle = G; rr(x, 64, H - 260, 460, 96, 48); x.fill();
     x.fillStyle = '#fff'; x.font = `800 40px ${FONT}`; x.textBaseline = 'middle'; x.fillText('Swipe  →', 64 + 120, H - 212);
     S.push(c); }
@@ -161,11 +165,11 @@ async function build() {
   // 6 news
   { const [c, x] = base(5, total); let y = title(x, 'In the news', 'Headlines from top crypto outlets');
     heads.forEach(n => {
-      x.fillStyle = 'rgba(255,255,255,.06)'; rr(x, 64, y, W - 128, 244, 28); x.fill();
+      x.fillStyle = 'rgba(255,255,255,.06)'; rr(x, 64, y, W - 128, 262, 28); x.fill();
       x.fillStyle = INK; x.font = `800 42px ${FONT}`; x.textBaseline = 'alphabetic'; let yy = y + 62;
       wrap(x, n.title, W - 128 - 72, 3).forEach(l => { x.fillText(l, 100, yy); yy += 54; });
-      x.fillStyle = UP; x.font = `700 32px ${FONT}`; x.fillText(n.source, 100, y + 222); x.textBaseline = 'middle';
-      y += 244 + 14; });
+      x.fillStyle = UP; x.font = `700 32px ${FONT}`; x.fillText(n.source, 100, y + 240); x.textBaseline = 'middle';
+      y += 262 + 14; });
     S.push(c); }
 
   // 7 CTA
