@@ -38,9 +38,9 @@ footer{margin-top:40px;font-size:13px;color:var(--mu)}
 
 <h2>Quick start</h2>
 <p>Send your key in the <code>x-api-key</code> header. All requests are <code>GET</code> and return JSON.</p>
-<pre>curl "API_BASE/prices?symbols=btc,eth&amp;currency=ngn" \
+<pre>curl "https://inufnxvilubbsrcusakt.supabase.co/functions/v1/api/prices?symbols=btc,eth&amp;currency=ngn" \
   -H "x-api-key: pcn_live_YOUR_KEY"</pre>
-<pre>const r = await fetch("API_BASE/prices?symbols=btc&amp;currency=ngn", {
+<pre>const r = await fetch("https://inufnxvilubbsrcusakt.supabase.co/functions/v1/api/prices?symbols=btc&amp;currency=ngn", {
   headers: { "x-api-key": "pcn_live_YOUR_KEY" }
 });
 const { data } = await r.json();
