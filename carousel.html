@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TikTok slides | PriceCheck NG</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0b7a4b">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f5f8f6;--card:#fff;--tx:#10201a;--mu:#5b6b64;--bd:#e1e9e4;--g:#12a150}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1512;--card:#14201b;--tx:#e8f1ec;--mu:#98a9a0;--bd:#24332c}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:16px/1.5 "Plus Jakarta Sans",system-ui,sans-serif}
+.w{max-width:560px;margin:0 auto;padding:16px}
+h1{font-size:22px;margin:6px 0}
+.sub{color:var(--mu);font-size:14px;margin:0 0 14px}
+.btn{display:block;width:100%;text-align:center;font:inherit;font-weight:700;background:var(--g);color:#fff;border:0;border-radius:14px;padding:13px;margin:8px 0;cursor:pointer;text-decoration:none}
+.btn.alt{background:none;color:var(--g);border:1.5px solid var(--g)}
+.slide{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:10px;margin:14px 0}
+.slide canvas{width:100%;height:auto;border-radius:10px;display:block}
+.slide .row{display:flex;gap:8px;margin-top:8px}.slide .row .btn{margin:0;padding:10px;font-size:14px}
+textarea{width:100%;min-height:210px;font:inherit;font-size:14px;background:var(--card);color:var(--tx);border:1px solid var(--bd);border-radius:12px;padding:12px}
+.msg{color:var(--mu);font-size:14px}
+</style>
+</head>
+<body>
+<div class="w">
+  <a href="./" style="color:var(--g);font-weight:700;text-decoration:none">← PriceCheck NG</a>
+  <h1>TikTok slides: Today in crypto</h1>
+  <p class="sub">Made from your live data. Save the slides, post them as a photo carousel, and paste the caption.</p>
+  <button class="btn" id="shareAll" type="button" hidden>Share / save all slides</button>
+  <div id="status" class="msg">Loading live data…</div>
+  <div id="slides"></div>
+  <h2 style="font-size:17px;margin:18px 0 6px">Caption</h2>
+  <textarea id="cap" readonly></textarea>
+  <button class="btn alt" id="copyCap" type="button">Copy caption</button>
+  <p class="msg">Tip: add a trending sound, post between 6 and 9 pm Nigeria time, and reply to every comment in the first hour.</p>
+</div>
+<script type="module">
+import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
+const W = 1080, H = 1350, G = '#12a150', BG1 = '#0b1511', BG2 = '#10261c', INK = '#f2f7f4', MU = '#9db1a7', UP = '#2ecc71', DN = '#ff5a5f';
+const FONT = '"Plus Jakarta Sans", system-ui, sans-serif';
+const $ = id => document.getElementById(id);
+const get = p => fetch(`${SUPABASE_URL}/rest/v1/${p}`, { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }).then(r => r.ok ? r.json() : Promise.reject(r.status));
+const JUNK = /(tokenized|treasury|t-bill|money market|\bfund\b|\bnav\b|real estate|bridged|wrapped|staked|usd|stable|tether|dollar|gold)/i;
+const pct = n => (n >= 0 ? '+' : '') + n.toFixed(Math.abs(n) < 10 ? 2 : 1) + '%';
+const compact = n => new Intl.NumberFormat('en', { style: 'currency', currency: 'USD', notation: 'compact', maximumFractionDigits: 2 }).format(n);
+const usd = n => '$' + (n >= 1 ? n.toLocaleString('en-US', { maximumFractionDigits: n >= 100 ? 0 : 2 }) : n.toPrecision(3));
+const ngn = n => '₦' + Math.round(n).toLocaleString('en-US');
+const dateStr = new Date().toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+
+function wrap(x, text, maxW, maxLines) {
+  const words = String(text).split(/\s+/), lines = []; let cur = '';
+  for (const w of words) {
+    const t = cur ? cur + ' ' + w : w;
+    if (x.measureText(t).width > maxW && cur) { lines.push(cur); cur = w; } else cur = t;
+  }
+  if (cur) lines.push(cur);
+  if (lines.length > maxLines) { lines.length = maxLines; lines[maxLines - 1] = lines[maxLines - 1].replace(/\s*\S*$/, '') + '…'; }
+  return lines;
+}
+function rr(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.arcTo(a + w, b, a + w, b + h, r); x.arcTo(a + w, b + h, a, b + h, r); x.arcTo(a, b + h, a, b, r); x.arcTo(a, b, a + w, b, r); x.closePath(); }
+function base(i, n) {
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, W, H); g.addColorStop(0, BG1); g.addColorStop(1, BG2);
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  x.fillStyle = 'rgba(18,161,80,.10)'; x.beginPath(); x.arc(W - 60, 120, 380, 0, 7); x.fill();
+  // top bar
+  x.fillStyle = G; rr(x, 64, 58, 64, 64, 18); x.fill();
+  x.fillStyle = '#fff'; [[80, 90, 10, 20], [96, 78, 10, 32], [112, 66, 10, 44]].forEach(b => { rr(x, b[0], b[1] + 0, b[2], b[3], 3); x.fill(); });
+  x.textBaseline = 'middle'; x.textAlign = 'left'; x.fillStyle = INK; x.font = `800 38px ${FONT}`; x.fillText('PriceCheck', 144, 90);
+  const pw = x.measureText('PriceCheck ').width; x.fillStyle = UP; x.fillText('NG', 144 + pw, 90);
+  x.textAlign = 'right'; x.fillStyle = MU; x.font = `500 30px ${FONT}`; x.fillText(dateStr, W - 64, 90);
+  // footer
+  x.textAlign = 'left'; x.fillStyle = MU; x.font = `700 32px ${FONT}`; x.fillText('pricecheckng.com.ng', 64, H - 70);
+  x.textAlign = 'right'; x.fillText(`${i + 1} / ${n}`, W - 64, H - 70);
+  x.textAlign = 'left';
+  return [c, x];
+}
+function title(x, t, sub) {
+  x.fillStyle = INK; x.font = `800 74px ${FONT}`; x.textBaseline = 'alphabetic';
+  let y = 250; wrap(x, t, W - 128, 2).forEach(l => { x.fillText(l, 64, y); y += 88; });
+  if (sub) { x.fillStyle = MU; x.font = `500 36px ${FONT}`; wrap(x, sub, W - 128, 2).forEach(l => { x.fillText(l, 64, y); y += 48; }); y += 6; }
+  x.textBaseline = 'middle';
+  return y + 24;
+}
+function coinRows(x, y0, rows, valFn) {
+  const rh = 150;
+  rows.forEach((c, k) => {
+    const y = y0 + k * (rh + 14);
+    x.fillStyle = 'rgba(255,255,255,.06)'; rr(x, 64, y, W - 128, rh, 28); x.fill();
+    const ch = Number(c.change_24h_pct), up = ch >= 0;
+    x.fillStyle = 'rgba(18,161,80,.22)'; x.beginPath(); x.arc(64 + 75, y + rh / 2, 44, 0, 7); x.fill();
+    x.fillStyle = UP; x.font = `800 ${String(c.symbol).length > 4 ? 22 : 28}px ${FONT}`; x.textAlign = 'center'; x.fillText(String(c.symbol).toUpperCase().slice(0, 5), 64 + 75, y + rh / 2 + 2);
+    x.textAlign = 'left'; x.fillStyle = INK; x.font = `800 44px ${FONT}`; x.fillText(String(c.name).length > 16 ? String(c.name).slice(0, 15) + '…' : c.name, 64 + 150, y + 54);
+    x.fillStyle = MU; x.font = `500 32px ${FONT}`; x.fillText(valFn(c), 64 + 150, y + 102);
+    x.textAlign = 'right'; x.fillStyle = up ? UP : DN; x.font = `800 52px ${FONT}`; x.fillText(pct(ch), W - 64 - 36, y + rh / 2);
+    x.textAlign = 'left';
+  });
+}
+
+async function build() {
+  const [g, coins, fx, fixed, news] = await Promise.all([
+    get('market_global?select=market_cap,cap_change_24h,btc_dom,fng_value,fng_label&id=eq.1').then(r => r[0]),
+    get('coins?select=id,symbol,name,price_usd,change_24h_pct,volume_24h_usd&market_cap_rank=lte.100&change_24h_pct=not.is.null&order=market_cap_rank.asc&limit=100'),
+    get('fx_rates?select=currency,per_usd&currency=eq.NGN'),
+    get('coins?select=id,symbol,name,price_usd,change_24h_pct&id=in.(bitcoin,ethereum,tether,ripple,solana,binancecoin)'),
+    get('news?select=source,title,published_at,topics&order=published_at.desc&limit=60')
+  ]);
+  const real = coins.filter(c => !JUNK.test(c.name + ' ' + c.id) && Number(c.volume_24h_usd) > 5e6 && isFinite(Number(c.change_24h_pct)));
+  const srt = [...real].sort((a, b) => b.change_24h_pct - a.change_24h_pct);
+  const gain = srt.slice(0, 5), lose = srt.slice(-5).reverse();
+  const rate = fx[0] ? Number(fx[0].per_usd) : 0;
+  const ch = Number(g.cap_change_24h), up = ch >= 0;
+  const order = ['bitcoin', 'ethereum', 'tether', 'ripple', 'solana', 'binancecoin'];
+  const fixedSorted = order.map(id => fixed.find(c => c.id === id)).filter(Boolean);
+  const seen = new Set(), heads = [];
+  news.forEach(n => { const k = n.title.toLowerCase().replace(/[^a-z0-9]+/g, ' ').slice(0, 40); if (!seen.has(k) && heads.length < 3) { seen.add(k); heads.push(n); } });
+  const total = 7, S = [];
+
+  // 1 hook
+  { const [c, x] = base(0, total);
+    x.textBaseline = 'alphabetic'; x.fillStyle = UP; x.font = `800 40px ${FONT}`; x.fillText('TODAY IN CRYPTO', 64, 360);
+    x.fillStyle = INK; x.font = `800 112px ${FONT}`; let y = 490;
+    wrap(x, `The market is ${up ? 'UP' : 'DOWN'} ${Math.abs(ch).toFixed(1)}% today`, W - 128, 4).forEach(l => { x.fillText(l, 64, y); y += 128; });
+    x.fillStyle = MU; x.font = `500 44px ${FONT}`; y += 20;
+    wrap(x, `Fear & Greed: ${g.fng_value} (${g.fng_label}). Here is what moved, in 6 swipes.`, W - 128, 3).forEach(l => { x.fillText(l, 64, y); y += 58; });
+    x.fillStyle = G; rr(x, 64, H - 260, 460, 96, 48); x.fill();
+    x.fillStyle = '#fff'; x.font = `800 40px ${FONT}`; x.textBaseline = 'middle'; x.fillText('Swipe  →', 64 + 120, H - 212);
+    S.push(c); }
+
+  // 2 market
+  { const [c, x] = base(1, total); let y = title(x, 'The market right now', 'Live numbers, updated every few minutes');
+    const tile = (yy, lab, val, extra, col) => { x.fillStyle = 'rgba(255,255,255,.06)'; rr(x, 64, yy, W - 128, 190, 28); x.fill();
+      x.fillStyle = MU; x.font = `500 34px ${FONT}`; x.fillText(lab, 100, yy + 52); x.fillStyle = INK; x.font = `800 80px ${FONT}`; x.fillText(val, 100, yy + 130);
+      if (extra) { x.textAlign = 'right'; x.fillStyle = col; x.font = `800 56px ${FONT}`; x.fillText(extra, W - 100, yy + 120); x.textAlign = 'left'; } };
+    tile(y, 'Total market cap', compact(Number(g.market_cap)), pct(ch), up ? UP : DN); y += 214;
+    tile(y, 'Bitcoin dominance', Number(g.btc_dom).toFixed(1) + '%', '', ''); y += 214;
+    x.fillStyle = 'rgba(255,255,255,.06)'; rr(x, 64, y, W - 128, 250, 28); x.fill();
+    x.fillStyle = MU; x.font = `500 34px ${FONT}`; x.fillText('Fear & Greed', 100, y + 52);
+    x.fillStyle = INK; x.font = `800 80px ${FONT}`; x.fillText(String(g.fng_value), 100, y + 130);
+    x.textAlign = 'right'; x.fillStyle = Number(g.fng_value) >= 55 ? UP : Number(g.fng_value) <= 45 ? DN : '#f5b942'; x.font = `800 52px ${FONT}`; x.fillText(String(g.fng_label), W - 100, y + 120); x.textAlign = 'left';
+    const bx = 100, bw = W - 200, by = y + 190; const gr = x.createLinearGradient(bx, 0, bx + bw, 0); gr.addColorStop(0, DN); gr.addColorStop(.5, '#f5b942'); gr.addColorStop(1, UP);
+    x.fillStyle = gr; rr(x, bx, by, bw, 20, 10); x.fill(); x.fillStyle = '#fff'; x.beginPath(); x.arc(bx + bw * Number(g.fng_value) / 100, by + 10, 18, 0, 7); x.fill();
+    S.push(c); }
+
+  // 3 gainers
+  { const [c, x] = base(2, total); const y = title(x, 'Top 5 gainers', 'Biggest 24-hour moves in the top 100 coins');
+    coinRows(x, y, gain, c => usd(Number(c.price_usd))); S.push(c); }
+  // 4 losers
+  { const [c, x] = base(3, total); const y = title(x, 'Top 5 losers', 'Biggest 24-hour drops in the top 100 coins');
+    coinRows(x, y, lose, c => usd(Number(c.price_usd))); S.push(c); }
+
+  // 5 naira
+  { const [c, x] = base(4, total); const y = title(x, 'Prices in naira', rate ? 'Converted at today\'s exchange rate' : 'Live prices');
+    coinRows(x, y, fixedSorted.slice(0, 5), c => rate ? ngn(Number(c.price_usd) * rate) + '  ·  ' + usd(Number(c.price_usd)) : usd(Number(c.price_usd))); S.push(c); }
+
+  // 6 news
+  { const [c, x] = base(5, total); let y = title(x, 'In the news', 'Headlines from top crypto outlets');
+    heads.forEach(n => {
+      x.fillStyle = 'rgba(255,255,255,.06)'; rr(x, 64, y, W - 128, 244, 28); x.fill();
+      x.fillStyle = INK; x.font = `800 42px ${FONT}`; x.textBaseline = 'alphabetic'; let yy = y + 62;
+      wrap(x, n.title, W - 128 - 72, 3).forEach(l => { x.fillText(l, 100, yy); yy += 54; });
+      x.fillStyle = UP; x.font = `700 32px ${FONT}`; x.fillText(n.source, 100, y + 222); x.textBaseline = 'middle';
+      y += 244 + 14; });
+    S.push(c); }
+
+  // 7 CTA
+  { const [c, x] = base(6, total); x.textBaseline = 'alphabetic';
+    x.fillStyle = INK; x.font = `800 96px ${FONT}`; let y = 420;
+    ['Check the price', 'before you buy.'].forEach(l => { x.fillText(l, 64, y); y += 112; });
+    x.fillStyle = MU; x.font = `500 46px ${FONT}`; y += 20;
+    ['Live prices in naira, free price alerts,', 'P2P rates and crypto news. All in one app.'].forEach(l => { x.fillText(l, 64, y); y += 62; });
+    x.fillStyle = G; rr(x, 64, y + 40, W - 128, 120, 60); x.fill();
+    x.fillStyle = '#fff'; x.font = `800 48px ${FONT}`; x.textAlign = 'center'; x.fillText('pricecheckng.com.ng', W / 2, y + 112); x.textAlign = 'left';
+    x.fillStyle = MU; x.font = `500 34px ${FONT}`; x.fillText('Save this post and follow for daily updates.', 64, y + 240);
+    x.fillText('Not financial advice.', 64, y + 292);
+    S.push(c); }
+
+  const best = gain[0], worst = lose[0];
+  const caption = `${up ? '📈' : '📉'} Today in crypto: the market is ${up ? 'up' : 'down'} ${Math.abs(ch).toFixed(1)}% in 24 hours.\n\n` +
+    `• Market cap: ${compact(Number(g.market_cap))}\n• Bitcoin dominance: ${Number(g.btc_dom).toFixed(1)}%\n• Fear & Greed: ${g.fng_value} (${g.fng_label})\n` +
+    `• Top gainer: ${best.name} ${pct(Number(best.change_24h_pct))}\n• Top loser: ${worst.name} ${pct(Number(worst.change_24h_pct))}\n\n` +
+    `Swipe for naira prices and the latest news 👉\nLive prices and free alerts: pricecheckng.com.ng (link in bio)\n\nNot financial advice.\n\n` +
+    `#crypto #bitcoin #cryptonews #nigeria #naira #cryptonigeria #ethereum #pricechecking`;
+  return { S, caption };
+}
+
+(async () => {
+  try {
+    try { await document.fonts.load(`800 40px "Plus Jakarta Sans"`); await document.fonts.load(`500 40px "Plus Jakarta Sans"`); } catch (e) {}
+    const { S, caption } = await build();
+    $('status').textContent = S.length + ' slides ready. Tap Download under each one, or use the button above to save them all.';
+    const box = $('slides'); box.innerHTML = '';
+    const blobs = [];
+    for (let i = 0; i < S.length; i++) {
+      const d = document.createElement('div'); d.className = 'slide'; d.appendChild(S[i]);
+      const row = document.createElement('div'); row.className = 'row';
+      const a = document.createElement('a'); a.className = 'btn alt'; a.textContent = 'Download slide ' + (i + 1); a.download = `pricecheckng-slide-${i + 1}.png`;
+      row.appendChild(a); d.appendChild(row); box.appendChild(d);
+      S[i].toBlob(b => { blobs[i] = b; a.href = URL.createObjectURL(b); }, 'image/png');
+    }
+    $('cap').value = caption;
+    $('copyCap').onclick = async () => { try { await navigator.clipboard.writeText(caption); $('copyCap').textContent = 'Copied'; } catch (e) { $('cap').select(); } };
+    const sb = $('shareAll'); sb.hidden = false;
+    sb.onclick = async () => {
+      const files = blobs.filter(Boolean).map((b, i) => new File([b], `pricecheckng-slide-${i + 1}.png`, { type: 'image/png' }));
+      try {
+        if (navigator.canShare && navigator.canShare({ files })) await navigator.share({ files });
+        else $('status').textContent = 'Your browser cannot share all at once. Use the Download buttons under each slide.';
+      } catch (e) {}
+    };
+  } catch (e) {
+    $('status').textContent = 'Could not load live data. Try again in a moment.';
+  }
+})();
+</script>
+</body>
+</html>
