@@ -108,7 +108,7 @@ function coinRows(x, y0, rows, valFn) {
 async function build() {
   const [g, coins, fx, fixed, news] = await Promise.all([
     get('market_global?select=market_cap,cap_change_24h,btc_dom,fng_value,fng_label&id=eq.1').then(r => r[0]),
-    get('coins?select=id,symbol,name,price_usd,change_24h_pct,volume_24h_usd&market_cap_rank=lte.100&change_24h_pct=not.is.null&order=market_cap_rank.asc&limit=100'),
+    get('coins?select=id,symbol,name,price_usd,change_24h_pct,volume_24h_usd&market_cap_rank=lte.50&change_24h_pct=not.is.null&order=market_cap_rank.asc&limit=50'),
     get('fx_rates?select=currency,per_usd&currency=eq.NGN'),
     get('coins?select=id,symbol,name,price_usd,change_24h_pct&id=in.(bitcoin,ethereum,tether,ripple,solana,binancecoin)'),
     get('news?select=source,title,published_at,topics&order=published_at.desc&limit=60')
@@ -152,10 +152,10 @@ async function build() {
     S.push(c); }
 
   // 3 gainers
-  { const [c, x] = base(2, total); const y = title(x, 'Top 5 gainers', 'Biggest 24-hour moves in the top 100 coins');
+  { const [c, x] = base(2, total); const y = title(x, 'Top 5 gainers', 'Biggest 24-hour moves in the top 50 coins');
     coinRows(x, y, gain, c => usd(Number(c.price_usd))); S.push(c); }
   // 4 losers
-  { const [c, x] = base(3, total); const y = title(x, 'Top 5 losers', 'Biggest 24-hour drops in the top 100 coins');
+  { const [c, x] = base(3, total); const y = title(x, 'Top 5 losers', 'Biggest 24-hour drops in the top 50 coins');
     coinRows(x, y, lose, c => usd(Number(c.price_usd))); S.push(c); }
 
   // 5 naira
@@ -180,8 +180,9 @@ async function build() {
     ['Live prices in naira, free price alerts,', 'P2P rates and crypto news. All in one app.'].forEach(l => { x.fillText(l, 64, y); y += 62; });
     x.fillStyle = G; rr(x, 64, y + 40, W - 128, 120, 60); x.fill();
     x.fillStyle = '#fff'; x.font = `800 48px ${FONT}`; x.textAlign = 'center'; x.fillText('pricecheckng.com.ng', W / 2, y + 112); x.textAlign = 'left';
-    x.fillStyle = MU; x.font = `500 34px ${FONT}`; x.fillText('Save this post and follow for daily updates.', 64, y + 240);
-    x.fillText('Not financial advice.', 64, y + 292);
+    x.fillStyle = MU; x.font = `500 34px ${FONT}`; x.fillStyle = INK; x.font = `800 40px ${FONT}`; x.fillText('Which coin should we cover tomorrow?', 64, y + 240);
+    x.fillStyle = G; x.fillText('Comment below. Link in bio.', 64, y + 296);
+    x.fillStyle = MU; x.font = `500 30px ${FONT}`; x.fillText('Follow for daily updates. Not financial advice.', 64, y + 352);
     S.push(c); }
 
   const best = gain[0], worst = lose[0];
