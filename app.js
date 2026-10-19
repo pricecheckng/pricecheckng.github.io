@@ -2233,7 +2233,7 @@ try {
 /* ---------- bell: red dot + notification list ---------- */
 (function bellInit() {
   const st = document.createElement("style");
-  st.textContent = `.bellbtn{position:relative}.bellbtn.has-new::after{content:"";position:absolute;top:7px;right:8px;width:11px;height:11px;border-radius:50%;background:#e53935;border:2px solid #0b7a4b}.nt-item{padding:12px 0;border-bottom:1px solid rgba(128,128,128,.2)}.nt-item b{display:block}.nt-item.new b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#e53935;margin-right:8px}.nt-item p{margin:4px 0 0;white-space:pre-line}.nt-item small{display:block;opacity:.6;margin-top:4px}.nt-list{max-height:55vh;overflow:auto;margin-bottom:12px}`;
+  st.textContent = `.bellbtn{position:relative}.bellbtn.has-new::after{content:"";position:absolute;top:7px;right:8px;width:11px;height:11px;border-radius:50%;background:#e53935;border:2px solid #0b7a4b}.nt-item{padding:12px 0;border-bottom:1px solid rgba(128,128,128,.2)}.nt-item b{display:block}.nt-item.new b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#e53935;margin-right:8px}.nt-item p{margin:4px 0 0;white-space:pre-line}.nt-item small{display:block;opacity:.6;margin-top:4px}.nt-list{margin-bottom:12px}.nt-tabs{display:flex;gap:6px;margin:4px 0 8px}.nt-tabs button{flex:1;position:relative;font:inherit;font-weight:700;padding:10px;border-radius:12px;border:1px solid rgba(128,128,128,.3);background:none;color:inherit;cursor:pointer}.nt-tabs button.on{background:#0b7a4b;border-color:#0b7a4b;color:#fff}.nt-tabs button.dot::after{content:"";position:absolute;top:8px;right:10px;width:8px;height:8px;border-radius:50%;background:#e53935}.nt-panel[hidden]{display:none}`;
   document.head.appendChild(st);
   const setDot = (n) => document.querySelectorAll(".bellbtn").forEach((b) => b.classList.toggle("has-new", n > 0));
   // News: the dot also shows when there is a headline newer than the last one this person opened.
@@ -2287,15 +2287,26 @@ try {
       if (!b) return;
       e.preventDefault();
       const signed = !!state.user;
+      const startNews = !signed || (newsNew && !unreadN);
       openSheet(
         `<div class="sheet-head"><span></span><div><h2 id="sheetTitle">Notifications</h2></div><button class="x" type="button" data-close aria-label="Close">×</button></div>` +
+          `<div class="nt-tabs" id="ntTabs"><button type="button" data-t="n" class="${startNews ? "" : "on"}${signed && unreadN ? " dot" : ""}">Alerts</button><button type="button" data-t="w" class="${startNews ? "on" : ""}${newsNew ? " dot" : ""}">News</button></div>` +
+          `<div class="nt-panel" id="ntPanelN"${startNews ? " hidden" : ""}>` +
           (signed
-            ? `<div class="nt-list" id="ntList"><p class="muted">Loading…</p></div>`
+            ? `<div class="nt-list" id="ntList"><p class="muted">Loading…</p></div><a class="btn ghost" href="#alerts" data-close>Go to my alerts</a>`
             : `<p class="muted" style="margin:6px 0 10px">Sign in to see your price alert notifications.</p><button class="btn ghost" type="button" id="ntSignin">Sign in</button>`) +
-          `<h3 style="margin:16px 0 4px;font-size:1rem">Latest crypto news</h3><div class="nt-list" id="ntNews"><p class="muted">Loading…</p></div>` +
-          `<a class="btn ghost" href="news.html">See all news</a>` +
-          (signed ? `<a class="btn ghost" href="#alerts" data-close>Go to my alerts</a>` : "")
+          `</div>` +
+          `<div class="nt-panel" id="ntPanelW"${startNews ? "" : " hidden"}><div class="nt-list" id="ntNews"><p class="muted">Loading…</p></div><a class="btn ghost" href="news.html">See all news</a></div>`
       );
+      const tabs = $("#ntTabs");
+      if (tabs)
+        tabs.onclick = (ev) => {
+          const t = ev.target.closest("button");
+          if (!t) return;
+          tabs.querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === t));
+          $("#ntPanelN").hidden = t.dataset.t !== "n";
+          $("#ntPanelW").hidden = t.dataset.t !== "w";
+        };
       const si = $("#ntSignin");
       if (si) si.onclick = () => authSheet("in", "Sign in to see your notifications.");
       const [notif, news] = await Promise.all([
