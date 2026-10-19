@@ -37,6 +37,7 @@
           
           <div class="pcn-prompts-title" id="pcnPromptTitle">Ask PCN AI:</div>
           <div class="pcn-prompts" id="pcnPrompts">
+            <button class="pcn-chip" data-query="What is the latest crypto news?">📰 What is the latest crypto news?</button>
             <button class="pcn-chip" data-query="Why is the market moving today?">🔥 Why is the market moving today?</button>
             <button class="pcn-chip" data-query="Are altcoins outperforming Bitcoin?">📈 Are altcoins outperforming Bitcoin?</button>
             <button class="pcn-chip" data-query="What cryptos are showing bullish momentum?">🚀 What cryptos are showing bullish momentum?</button>
@@ -112,6 +113,58 @@
       return '<b>Biggest 24-hour gainers in the top 100:</b><div style="margin-top:6px">' + li + '</div>' + note('A big rise does not mean it will keep rising. Not financial advice. <a href="movers.html" style="' + HL + '">All movers</a>');
     }
 
+
+    // ---- news answers: read from our own news table (no AI cost) ----
+    var NEWS_TOPICS = [
+      ['security', /(hack|exploit|scam|fraud|stolen|drain|phishing|rug)/i, 'hacks and scams'],
+      ['regulation', /(regulat|\bsec\b|cftc|law|ban\b|government|policy|lawsuit|court)/i, 'regulation'],
+      ['etf', /(\betfs?\b|institution|blackrock|fidelity|grayscale)/i, 'ETF and institutional'],
+      ['stablecoins', /(stablecoin|usdt|usdc|tether)/i, 'stablecoin'],
+      ['defi', /(defi|dex|uniswap|aave|staking)/i, 'DeFi'],
+      ['exchanges', /(exchange|binance|coinbase|kraken|bybit|okx)/i, 'exchange'],
+      ['tax', /(\btax)/i, 'tax'],
+      ['adoption', /(adopt|nigeria|africa|payment)/i, 'adoption'],
+      ['technology', /(upgrade|mainnet|technology|blockchain tech)/i, 'blockchain technology'],
+      ['altcoins', /(altcoin|memecoin|meme coin)/i, 'altcoin']
+    ];
+    function agoShort(t) {
+      var m = Math.max(0, Math.round((Date.now() - new Date(t)) / 60000));
+      if (m < 2) return 'just now'; if (m < 60) return m + ' min ago';
+      var h = Math.round(m / 60); if (h < 24) return h + ' hr ago';
+      var d = Math.round(h / 24); return d + (d === 1 ? ' day ago' : ' days ago');
+    }
+    async function answerNews(cfg, text) {
+      var topic = null, label = 'crypto', coin = null;
+      for (var i = 0; i < NEWS_TOPICS.length; i++) { if (NEWS_TOPICS[i][1].test(text)) { topic = NEWS_TOPICS[i][0]; label = NEWS_TOPICS[i][2]; break; } }
+      try {
+        var coins = await api(cfg, 'coins?select=id,symbol,name&market_cap_rank=lte.100&order=market_cap_rank.asc&limit=100');
+        for (var j = 0; j < coins.length && !coin; j++) {
+          var c = coins[j], nm = String(c.name || '').toLowerCase(), sy = String(c.symbol || '');
+          if ((nm.length >= 4 && text.toLowerCase().indexOf(nm) >= 0) || (sy.length >= 3 && new RegExp('\\b' + sy + '\\b', 'i').test(text))) coin = c;
+        }
+      } catch (e) {}
+      var q = 'news?select=source,title,url,summary,published_at,topics&order=published_at.desc&limit=40';
+      if (coin) { q += '&coin_ids=cs.{' + encodeURIComponent(coin.id) + '}'; label = coin.name; }
+      else if (topic) q += '&topics=cs.{' + topic + '}';
+      var rows = await api(cfg, q);
+      if (!rows.length && (coin || topic)) { rows = await api(cfg, 'news?select=source,title,url,summary,published_at,topics&order=published_at.desc&limit=40'); label = 'crypto'; coin = null; topic = null; }
+      var seen = {}, out = [];
+      rows.forEach(function (r) {
+        var k = String(r.title).toLowerCase().replace(/[^a-z0-9]+/g, ' ').slice(0, 40);
+        if (!seen[k] && out.length < 5 && /^https?:\/\//i.test(r.url)) { seen[k] = 1; out.push(r); }
+      });
+      if (!out.length) return 'No news to show right now. <a href="news.html" style="' + HL + '">Open the news page</a>';
+      var li = out.map(function (r) {
+        var sm = r.summary ? String(r.summary).slice(0, 130).replace(/\s+\S*$/, '') + '…' : '';
+        return '<li style="margin:0 0 10px"><a href="' + escapeHtml(r.url) + '" target="_blank" rel="noopener nofollow" style="color:#10201a;font-weight:700;text-decoration:none">' + escapeHtml(r.title) + '</a>' +
+          (sm ? '<div style="color:#5b6b64;font-size:13px;margin-top:2px">' + escapeHtml(sm) + '</div>' : '') +
+          '<div style="margin-top:4px"><span style="display:inline-block;border:1px solid #e1e9e4;border-radius:8px;padding:1px 8px;font-size:12px">' + escapeHtml(r.source) + '</span> <span style="color:#5b6b64;font-size:12px">' + agoShort(r.published_at) + '</span></div></li>';
+      }).join('');
+      var more = coin ? 'news.html?coin=' + encodeURIComponent(coin.id) : topic ? 'news.html?topic=' + topic : 'news.html';
+      return '<b>Latest ' + escapeHtml(label) + ' news</b><ul style="margin:8px 0 0;padding-left:18px">' + li + '</ul>' + note('Headlines come from publishers. Tap one to read it on their site. <a href="' + more + '" style="' + HL + '">See all news</a>');
+    }
+    var NEWS_Q = /(news|headline|happening|what'?s new|hack|exploit|scam|etf|regulat|lawsuit|\bsec\b|\btax)/i;
+
     function getToken() {
       try {
         for (var i = 0; i < localStorage.length; i++) {
@@ -129,7 +182,7 @@
       var tok = getToken();
       var signin = '<a href="#account" style="' + HL + '">Sign in with Google</a>';
       if (!tok) return 'To ask your own questions, ' + signin + ' first. It is free: 10 questions a day. You can also tap one of the questions below.';
-      var r = await fetch(cfg.SUPABASE_URL + '/functions/v1/pcn-chat', {
+      var r = await fetch(cfg.SUPABASE_URL + '/functions/v1/pcn-chat2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + tok },
         body: JSON.stringify({ question: text })
@@ -145,6 +198,7 @@
     }
 
     var ROUTES = {
+      "What is the latest crypto news?": answerNews,
       "Why is the market moving today?": answerSummary,
       "Are altcoins outperforming Bitcoin?": answerAlts,
       "What cryptos are showing bullish momentum?": answerBullish,
@@ -175,7 +229,7 @@
       try {
         var cfg = await import('./config.js');
         var fn = ROUTES[text];
-        html = fn ? await fn(cfg) : await askAI(cfg, text);
+        html = fn ? await fn(cfg, text) : (NEWS_Q.test(text) ? await answerNews(cfg, text) : await askAI(cfg, text));
       } catch (err) {
         html = 'Could not load live data right now. Try again in a moment. <a href="pulse.html" style="' + HL + '">Daily summary</a>';
       }
@@ -250,3 +304,4 @@
   if (!setupTabs()) document.addEventListener('DOMContentLoaded', setupTabs);
   var n = 0, iv = setInterval(function () { if (setupTabs() || ++n > 20) clearInterval(iv); }, 500);
 })();
+                                                                   
