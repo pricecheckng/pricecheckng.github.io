@@ -119,12 +119,12 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/bitway-price.html</loc>
+    <loc>https://pricecheckng.com.ng/stellar-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/stellar-price.html</loc>
+    <loc>https://pricecheckng.com.ng/bitway-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -144,12 +144,12 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/dai-price.html</loc>
+    <loc>https://pricecheckng.com.ng/uniswap-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/uniswap-price.html</loc>
+    <loc>https://pricecheckng.com.ng/dai-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -209,12 +209,12 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/crypto-com-chain-price.html</loc>
+    <loc>https://pricecheckng.com.ng/quant-network-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/quant-network-price.html</loc>
+    <loc>https://pricecheckng.com.ng/crypto-com-chain-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -229,12 +229,12 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/hashnote-usyc-price.html</loc>
+    <loc>https://pricecheckng.com.ng/okb-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/okb-price.html</loc>
+    <loc>https://pricecheckng.com.ng/hashnote-usyc-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -259,12 +259,12 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/aster-2-price.html</loc>
+    <loc>https://pricecheckng.com.ng/polkadot-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/polkadot-price.html</loc>
+    <loc>https://pricecheckng.com.ng/aster-2-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -294,12 +294,12 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/memecore-price.html</loc>
+    <loc>https://pricecheckng.com.ng/pepe-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/pepe-price.html</loc>
+    <loc>https://pricecheckng.com.ng/memecore-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -344,12 +344,12 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/usdgo-price.html</loc>
+    <loc>https://pricecheckng.com.ng/arbitrum-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/arbitrum-price.html</loc>
+    <loc>https://pricecheckng.com.ng/usdgo-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -359,12 +359,12 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/just-price.html</loc>
+    <loc>https://pricecheckng.com.ng/venice-token-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/venice-token-price.html</loc>
+    <loc>https://pricecheckng.com.ng/just-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -389,12 +389,12 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/blockchain-capital-price.html</loc>
+    <loc>https://pricecheckng.com.ng/jupiter-exchange-solana-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/jupiter-exchange-solana-price.html</loc>
+    <loc>https://pricecheckng.com.ng/blockchain-capital-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -424,6 +424,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://pricecheckng.com.ng/quack-ai-price.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://pricecheckng.com.ng/nexo-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -434,7 +439,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/open-usd-price.html</loc>
+    <loc>https://pricecheckng.com.ng/lighter-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -444,7 +449,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/lighter-price.html</loc>
+    <loc>https://pricecheckng.com.ng/open-usd-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -459,22 +464,17 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/akedo-price.html</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://pricecheckng.com.ng/aptos-price.html</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/blockstack-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/ether-fi-price.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/aptos-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -489,7 +489,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/stable-2-price.html</loc>
+    <loc>https://pricecheckng.com.ng/akedo-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -499,12 +499,17 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/celestia-price.html</loc>
+    <loc>https://pricecheckng.com.ng/stable-2-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/dash-price.html</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/celestia-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
@@ -515,11 +520,6 @@
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/pyth-network-price.html</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://pricecheckng.com.ng/vechain-price.html</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
