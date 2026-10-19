@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex"><title>API test</title>
+<style>
+:root{--bg:#0b1511;--card:#12201a;--ink:#eaf5ef;--mu:#8fa89c;--g:#16a34a;--line:#1f3329}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,sans-serif;padding:16px}
+main{max-width:640px;margin:0 auto}h1{font-size:22px;margin:8px 0 4px}p{color:var(--mu);margin:0 0 16px}
+label{display:block;font-size:13px;color:var(--mu);margin:12px 0 4px}
+input,select{width:100%;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);font-size:16px}
+button{margin-top:16px;width:100%;padding:14px;border:0;border-radius:12px;background:var(--g);color:#fff;font-weight:700;font-size:16px}
+pre{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px;overflow:auto;font-size:13px;white-space:pre-wrap;word-break:break-word;margin-top:16px}
+</style></head><body><main>
+<h1>PriceCheck NG API test</h1>
+<p>Private test page. The key is kept only in this browser tab and sent only to your own API.</p>
+<label for="base">Function address (example: https://abcd1234.supabase.co/functions/v1/api)</label>
+<input id="base" inputmode="url" autocapitalize="off" autocomplete="off" spellcheck="false">
+<label for="key">Your API key (pcn_live_...)</label>
+<input id="key" type="password" autocapitalize="off" autocomplete="off" spellcheck="false">
+<label for="ep">What to ask for</label>
+<select id="ep">
+<option value="/prices?symbols=btc,eth&currency=ngn">Prices: BTC and ETH in naira</option>
+<option value="/prices?limit=10">Top 10 coins in dollars</option>
+<option value="/coin/bitcoin?currency=ngn">One coin: Bitcoin in naira</option>
+<option value="/fx">Exchange rates</option>
+<option value="/market">Market summary</option>
+</select>
+<button id="go">Run test</button>
+<pre id="out">Result appears here.</pre>
+<script>
+const $=id=>document.getElementById(id);
+try{$('base').value=localStorage.getItem('api_base')||''}catch(e){}
+$('go').onclick=async()=>{
+  const base=$('base').value.trim().replace(/\/+$/,''), key=$('key').value.trim();
+  if(!base||!key){$('out').textContent='Fill in the address and the key first.';return}
+  try{localStorage.setItem('api_base',base)}catch(e){}
+  $('out').textContent='Loading...';
+  try{
+    const t=performance.now();
+    const r=await fetch(base+$('ep').value,{headers:{'x-api-key':key}});
+    const j=await r.json();
+    $('out').textContent='HTTP '+r.status+'  ('+Math.round(performance.now()-t)+' ms)\n\n'+JSON.stringify(j,null,2).slice(0,6000);
+  }catch(e){$('out').textContent='Could not reach the address. Check it is correct.\n'+e.message}
+};
+</script></main></body></html>
