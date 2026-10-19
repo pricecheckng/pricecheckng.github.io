@@ -1,22 +1,27 @@
 /* PriceCheck NG - bottom "Menu" tab: opens a sheet with Account, all tools and links */
 (function () {
+  var TOP = [
+    ['Account', 'Profile, alerts and settings', '#account'],
+    ['Daily contest', 'Predict the price and win', 'predict.html']
+  ];
   var GROUPS = [
-    { t: 'Your account', rows: [
-      ['Account', 'Profile, alerts and settings', '#account']
+    { t: 'Market', rows: [
+      ['Crypto news', 'Latest headlines from top outlets', 'news.html'],
+      ['Market summary', 'Today in 30 seconds, written by PCN AI', 'pulse.html'],
+      ['Market chart', 'Total market cap and Bitcoin dominance', 'market-chart.html'],
+      ['Heatmap', 'The whole market in one picture', 'heatmap.html'],
+      ['Fear & Greed', 'Is the market scared or greedy?', 'fear-greed.html'],
+      ['Top movers', 'Biggest gainers and losers', 'movers.html']
     ]},
-    { t: 'Tools', rows: [
+    { t: 'Naira & P2P', rows: [
       ['USDT P2P rates', 'Naira prices on Bybit, OKX and Bitget', 'p2p.html'],
       ['Is my P2P rate fair?', 'Check an agent\'s USDT rate', 'p2p-check.html'],
-      ['Crypto network checker', 'Avoid sending on the wrong network', 'network-check.html'],
-      ['Coin risk check', 'Warning signs before you buy', 'coin-risk.html'],
-           ['Market summary', 'Today in 30 seconds, written by PCN AI', 'pulse.html'],
-      ['Crypto news', 'Latest headlines from top outlets', 'news.html'],
-      ['Market chart', 'Total market cap and Bitcoin dominance', 'market-chart.html'], ['Heatmap', 'The whole market in one picture', 'heatmap.html'],
-      ['Fear & Greed', 'Is the market scared or greedy?', 'fear-greed.html'],
       ['Converter', 'Naira to crypto and back', 'converter.html'],
-      ['Top movers', 'Biggest gainers and losers', 'movers.html'],
-      ['Profit calculator', 'Work out your gain or loss', 'profit-calculator.html'],
-      ['Daily contest', 'Predict the price and win', 'predict.html']
+      ['Profit calculator', 'Work out your gain or loss', 'profit-calculator.html']
+    ]},
+    { t: 'Safety tools', rows: [
+      ['Crypto network checker', 'Avoid sending on the wrong network', 'network-check.html'],
+      ['Coin risk check', 'Warning signs before you buy', 'coin-risk.html']
     ]},
     { t: 'Learn', rows: [
       ['How to read candlesticks', 'A simple lesson for beginners', 'learn-candlesticks.html'],
@@ -24,11 +29,6 @@
       ['What is market cap?', 'Why price alone can fool you', 'learn-market-cap.html'],
       ['What is a stablecoin?', 'USDT and USDC explained', 'learn-stablecoins.html'],
       ['Fear & Greed Index', 'How to read the market mood', 'learn-fear-greed.html']
-    ]},
-    { t: 'More', rows: [
-      ['Telegram channel', 'News and updates', 'https://t.me/pricecheckNG', true],
-      ['Privacy Policy', '', 'privacy.html'],
-      ['Terms of Service', '', 'terms.html']
     ]}
   ];
   var css = '#mnu{position:fixed;inset:0;z-index:9999;visibility:hidden}' +
@@ -48,6 +48,14 @@
     '#mnu .m-r span{display:block;font-weight:600;font-size:15px}' +
     '#mnu .m-r small{display:block;font-size:12px;opacity:.65;margin-top:1px}' +
     '#mnu .m-r svg{flex:0 0 auto;opacity:.5}' +
+    '#mnu .m-g{border-radius:12px;background:rgba(127,127,127,.07);margin-bottom:6px;overflow:hidden}' +
+    '#mnu .m-gh{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:none;color:inherit;font:inherit;font-weight:700;font-size:15px;padding:13px 12px;cursor:pointer;text-align:left}' +
+    '#mnu .m-gh i{font-style:normal;font-size:20px;line-height:1;opacity:.6;transition:transform .2s}' +
+    '#mnu .m-g.open .m-gh i{transform:rotate(45deg)}' +
+    '#mnu .m-gb{display:none;padding:0 6px 6px}' +
+    '#mnu .m-g.open .m-gb{display:block}' +
+    '#mnu .m-gb .m-r{background:none;margin:0;padding:10px 8px;border-top:1px solid rgba(127,127,127,.15);border-radius:0}' +
+    '#mnu .m-gb .m-r:first-child{border-top:0}' +
     '@media(min-width:640px){#mnu .m-sh{bottom:auto;top:50%;border-radius:20px;transform:translateY(-40%);opacity:0;transition:transform .25s,opacity .25s}#mnu.on .m-sh{transform:translateY(-50%);opacity:1}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -55,11 +63,13 @@
   var chev = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
   var html = '<div class="m-sc" data-x></div><div class="m-sh" role="dialog" aria-modal="true" aria-label="Menu"><div class="m-gr"></div>' +
     '<div class="m-h"><b>Menu</b><button class="m-x" type="button" aria-label="Close" data-x>×</button></div>';
+  function row(r) {
+    return '<a class="m-r" href="' + r[2] + '"><div><span>' + esc(r[0]) + '</span>' + (r[1] ? '<small>' + esc(r[1]) + '</small>' : '') + '</div>' + chev + '</a>';
+  }
+  TOP.forEach(function (r) { html += row(r); });
+  html += '<div style="height:6px"></div>';
   GROUPS.forEach(function (g) {
-    html += '<div class="m-t">' + esc(g.t) + '</div>';
-    g.rows.forEach(function (r) {
-      html += '<a class="m-r" href="' + r[2] + '"' + (r[3] ? ' target="_blank" rel="noopener"' : '') + '><div><span>' + esc(r[0]) + '</span>' + (r[1] ? '<small>' + esc(r[1]) + '</small>' : '') + '</div>' + chev + '</a>';
-    });
+    html += '<div class="m-g"><button type="button" class="m-gh" aria-expanded="false"><span>' + esc(g.t) + '</span><i>+</i></button><div class="m-gb">' + g.rows.map(row).join('') + '</div></div>';
   });
   html += '</div>';
 
@@ -67,6 +77,13 @@
   function open() { box.classList.add('on'); document.body.style.overflow = 'hidden'; }
   function close() { box.classList.remove('on'); document.body.style.overflow = ''; }
   box.addEventListener('click', function (e) {
+    var gh = e.target.closest && e.target.closest('.m-gh');
+    if (gh) {
+      var g = gh.parentNode, was = g.classList.contains('open');
+      box.querySelectorAll('.m-g.open').forEach(function (x) { x.classList.remove('open'); x.firstChild.setAttribute('aria-expanded', 'false'); });
+      if (!was) { g.classList.add('open'); gh.setAttribute('aria-expanded', 'true'); }
+      return;
+    }
     if (e.target.closest && (e.target.closest('[data-x]') || e.target.closest('a.m-r'))) close();
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
