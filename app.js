@@ -592,6 +592,7 @@ function paintCoin(c) {
       <div class="cp-stat"><small>24h volume (${esc(state.cur)})</small><b>${secBig(c.volume_24h_usd)}</b></div>
       <div class="cp-stat" style="grid-column:1/-1"><small>Last updated</small><b>${ago(c.last_updated)}</b></div>
     </div>
+    <div id="coinNews"></div>
     <button class="btn" type="button" id="alertBtn">🔔 Set price alert</button>
     <div style="height:10px"></div>
     <button class="btn ghost" type="button" id="watchBtn">${watchLabel(c.id)}</button>
@@ -599,6 +600,7 @@ function paintCoin(c) {
     <button class="btn ghost" type="button" id="shareBtn">Share this coin</button>
     ${referralCardHtml()}`;
   $("#alertBtn").onclick = () => alertForm(c);
+  loadCoinNews(c);
   loadWatch().then(() => {
     const wb = $("#watchBtn");
     if (wb) wb.textContent = watchLabel(c.id);
@@ -633,6 +635,24 @@ function paintCoin(c) {
     } catch (_) {}
   };
   initChart(c, sp, sec);
+}
+
+/* ---------- coin news ---------- */
+async function loadCoinNews(c) {
+  const box = $("#coinNews");
+  if (!box) return;
+  try {
+    const { data } = await sb.from("news").select("source,title,url,published_at,image_url").contains("coin_ids", [c.id]).order("published_at", { ascending: false }).limit(5);
+    if (!$("#coinNews") || !data || !data.length) return;
+    const safe = (u) => (/^https?:\/\//i.test(u || "") ? u : "#");
+    box.innerHTML = `<div class="cp-card" style="user-select:auto;-webkit-user-select:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><h3 style="margin:0">${esc(c.name)} news</h3><a href="news.html?coin=${encodeURIComponent(c.id)}" style="font-size:.85rem;font-weight:600;color:#15803d;text-decoration:none">View all →</a></div>
+      ${data.map((n) => `<a href="${esc(safe(n.url))}" target="_blank" rel="noopener nofollow" style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid rgba(128,128,128,.2);color:inherit;text-decoration:none">
+        <div style="flex:1;min-width:0"><div style="font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(n.title)}</div>
+        <div style="font-size:.8rem;opacity:.65;margin-top:4px"><b>${esc(n.source)}</b> · ${ago(n.published_at)}</div></div>
+        ${n.image_url ? `<img src="${esc(n.image_url)}" alt="" width="72" height="72" loading="lazy" referrerpolicy="no-referrer" style="width:72px;height:72px;object-fit:cover;border-radius:12px;flex:none" onerror="this.remove()">` : ""}</a>`).join("")}
+      <p class="muted" style="margin:8px 0 0;font-size:.75rem">Headlines from publishers' feeds. Stories open on the publisher's site.</p></div>`;
+  } catch (_) {}
 }
 
 /* ---------- coin chart (ranges) ---------- */
