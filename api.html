@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PriceCheck NG API: crypto prices in naira</title>
+<meta name="description" content="A simple JSON API for crypto prices in naira, exchange rates and market data from PriceCheck NG.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://pricecheckng.com.ng/api.html">
+<style>
+:root{--bg:#0b1511;--card:#12201a;--ink:#eaf5ef;--mu:#8fa89c;--g:#16a34a;--gl:#22c55e;--line:#1f3329;--code:#0a120e}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+main{max-width:760px;margin:0 auto;padding:16px 16px 64px}
+a{color:var(--gl)}
+.top{display:flex;justify-content:space-between;align-items:center;padding:8px 0 20px}
+.brand{font-weight:800;color:var(--ink);text-decoration:none}.brand b{color:var(--gl)}
+h1{font-size:30px;line-height:1.2;margin:8px 0 8px}
+h2{font-size:21px;margin:36px 0 8px}
+h3{font-size:16px;margin:20px 0 6px;font-family:ui-monospace,Menlo,monospace;color:var(--gl)}
+p{margin:0 0 12px;color:var(--mu)} p b,li b{color:var(--ink)}
+.lead{font-size:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:12px 0}
+pre{background:var(--code);border:1px solid var(--line);border-radius:12px;padding:12px;overflow:auto;font:13px/1.5 ui-monospace,Menlo,monospace;color:#d6efe2;margin:8px 0 12px;white-space:pre}
+code{font:13px ui-monospace,Menlo,monospace;background:var(--code);padding:1px 6px;border-radius:6px;color:#d6efe2}
+table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}
+th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mu)}
+th{color:var(--ink)}
+.btn{display:inline-block;background:var(--g);color:#fff;font-weight:700;text-decoration:none;padding:13px 20px;border-radius:12px;margin:8px 0}
+.pill{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:99px;padding:2px 10px;color:var(--mu);margin-right:6px}
+ul{color:var(--mu);padding-left:20px;margin:0 0 12px} li{margin:4px 0}
+footer{margin-top:40px;font-size:13px;color:var(--mu)}
+</style></head><body><main>
+<div class="top"><a class="brand" href="/">PriceCheck <b>NG</b></a><a href="/">Back to the app</a></div>
+
+<span class="pill">Beta</span><span class="pill">Free</span>
+<h1>PriceCheck NG API</h1>
+<p class="lead">Crypto prices in naira, exchange rates and market data. One simple JSON API, built for Nigerian apps and bots.</p>
+<a class="btn" href="mailto:support@pricecheckng.com.ng?subject=PriceCheck%20NG%20API%20key%20request&body=Hi%2C%20I%20would%20like%20a%20free%20API%20key.%0A%0AName%3A%0AEmail%20for%20the%20key%3A%0AWhat%20I%20am%20building%20(website%2C%20app%2C%20Telegram%20bot%2C%20trading%20bot%2C%20research%2C%20other)%3A%0AExpected%20calls%20per%20month%3A%0AFree%20project%20or%20business%3F%0AWill%20you%20credit%20PriceCheck%20NG%3F%0AHow%20did%20you%20hear%20about%20us%3F">Request a free API key</a>
+
+<h2>Quick start</h2>
+<p>Send your key in the <code>x-api-key</code> header. All requests are <code>GET</code> and return JSON.</p>
+<pre>curl "API_BASE/prices?symbols=btc,eth&amp;currency=ngn" \
+  -H "x-api-key: pcn_live_YOUR_KEY"</pre>
+<pre>const r = await fetch("API_BASE/prices?symbols=btc&amp;currency=ngn", {
+  headers: { "x-api-key": "pcn_live_YOUR_KEY" }
+});
+const { data } = await r.json();
+console.log(data[0].price); // Bitcoin price in naira</pre>
+<p>Keep your key on your server. Do not put it in a public website or mobile app.</p>
+
+<h2>Endpoints</h2>
+<h3>GET /prices</h3>
+<p>A list of coins, sorted by market cap rank.</p>
+<table>
+<tr><th>Parameter</th><th>Description</th></tr>
+<tr><td><code>symbols</code></td><td>Comma-separated symbols or ids, for example <code>btc,eth</code>. Optional.</td></tr>
+<tr><td><code>currency</code></td><td><code>usd</code> (default), <code>ngn</code> or another supported currency.</td></tr>
+<tr><td><code>limit</code></td><td>1 to 250. Default 100.</td></tr>
+</table>
+<pre>{
+  "currency": "NGN",
+  "updated_at": "2026-10-19T11:00:00+00:00",
+  "data": [
+    { "id": "bitcoin", "symbol": "btc", "name": "Bitcoin",
+      "price": 109734340.25, "change_24h_pct": 0.38,
+      "volume_24h": 25589611576762.81, "rank": 1 }
+  ]
+}</pre>
+
+<h3>GET /coin/{id}</h3>
+<p>One coin by id or symbol, for example <code>/coin/bitcoin?currency=ngn</code>.</p>
+
+<h3>GET /fx</h3>
+<p>Exchange rates against the US dollar, including the naira.</p>
+
+<h3>GET /market</h3>
+<p>Global market summary: total market cap, Bitcoin dominance, and the Fear and Greed index.</p>
+
+<h2>Limits</h2>
+<table>
+<tr><th>Plan</th><th>Calls per month</th><th>Per minute</th></tr>
+<tr><td>Free</td><td>10,000</td><td>100</td></tr>
+<tr><td>Pro (coming soon)</td><td>100,000</td><td>300</td></tr>
+</table>
+<p>Each person gets <b>one free key</b>. Your monthly calls reset on the 1st of every month. Data refreshes about every 5 minutes, so polling more often than that does not give newer prices. Cache the result on your side.</p>
+<p>Prices update about every 5 minutes. That suits portfolio trackers, alert bots, apps and slower trading bots. For high-speed trading, use your exchange's own API.</p>
+
+<h3>GET /usage</h3>
+<p>Shows how much of your monthly quota you have used. This call is free and does not count against your limit.</p>
+<pre>{
+  "plan": "free",
+  "monthly_limit": 10000,
+  "monthly_used": 681,
+  "monthly_remaining": 9319,
+  "per_minute_limit": 30,
+  "resets_on": "2026-11-01"
+}</pre>
+
+<h2>Errors</h2>
+<table>
+<tr><th>Status</th><th>Meaning</th></tr>
+<tr><td><code>400</code></td><td>Unknown currency.</td></tr>
+<tr><td><code>401</code></td><td>Missing or invalid API key.</td></tr>
+<tr><td><code>404</code></td><td>Unknown endpoint or coin.</td></tr>
+<tr><td><code>429</code></td><td>Per-minute limit or monthly limit reached.</td></tr>
+<tr><td><code>503</code></td><td>Data is not ready yet. Try again shortly.</td></tr>
+</table>
+<p>Errors look like <code>{ "error": "invalid_api_key" }</code>.</p>
+
+<h2>Good to know</h2>
+<ul>
+<li>This is a beta. Fields may be added, and we will tell key holders before anything is removed.</li>
+<li>Prices are for information only. This is not financial advice, and we do not guarantee accuracy or uptime.</li>
+<li>Please credit PriceCheck NG where you show our data.</li>
+</ul>
+
+<footer>Questions: <a href="mailto:support@pricecheckng.com.ng">support@pricecheckng.com.ng</a></footer>
+</main></body></html>
