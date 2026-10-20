@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Track any token | PriceCheck NG</title>
+<meta name="description" content="Paste a token contract address or a DexScreener link to see its price in dollars and naira, liquidity, volume and risk warnings.">
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#fff;--card:#f6f7f8;--ink:#0f1a14;--mu:#5d6b64;--g:#16a34a;--gd:#0a7a3a;--line:#e3e8e5;--red:#d93b3b;--amb:#b7791f;--ambbg:#fff6e0;--redbg:#fdecec}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:#0a7a3a;color:#fff;padding:14px 16px;font-weight:800}
+header a{color:#fff;text-decoration:none}
+main{max-width:640px;margin:0 auto;padding:16px 16px 56px}
+h1{font-size:24px;line-height:1.2;margin:8px 0 6px}
+p{color:var(--mu);margin:0 0 12px}
+.box{display:flex;gap:8px;margin:12px 0}
+input{flex:1;min-width:0;padding:13px;border-radius:12px;border:1px solid var(--line);font-size:16px;background:#fff;color:var(--ink)}
+button{padding:13px 18px;border:0;border-radius:12px;background:var(--g);color:#fff;font-weight:700;font-size:16px}
+button.sec{background:#fff;color:var(--gd);border:1px solid var(--g)}
+button.sm{padding:8px 12px;font-size:14px;border-radius:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:14px 0}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+.name{font-weight:800;font-size:20px;overflow-wrap:anywhere}
+.chain{font-size:12px;color:var(--mu);border:1px solid var(--line);border-radius:99px;padding:2px 10px;background:#fff;white-space:nowrap}
+.price{font-size:26px;font-weight:800;margin:6px 0 0}
+.ngn{color:var(--mu);margin:0 0 8px}
+.up{color:var(--gd)}.dn{color:var(--red)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
+.t{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.t small{display:block;color:var(--mu);font-size:12px}.t b{font-size:15px}
+.warn{border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}
+.warn.r{background:var(--redbg);color:#8a1f1f}.warn.a{background:var(--ambbg);color:#7a4d0a}.warn.ok{background:#e9f8ee;color:#145c33}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
+.row:last-child{border:0}.row b{display:block}.row small{color:var(--mu)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.note{font-size:13px;color:var(--mu)}
+a{color:var(--gd)}
+</style></head><body>
+<header><a href="/">PriceCheck NG</a></header>
+<main>
+<h1>Track any token</h1>
+<p>Not on our list? Paste the token's <b>contract address</b> or a <b>DexScreener link</b>.</p>
+<div class="box"><input id="q" placeholder="0x... or dexscreener.com/..." autocapitalize="off" autocomplete="off" spellcheck="false"><button id="go">Check</button></div>
+<div id="msg" class="note"></div>
+<div id="res"></div>
+<h2 style="font-size:18px;margin:26px 0 0">My tracked tokens</h2>
+<div id="mine" class="card"><span class="note">Nothing yet. Check a token and tap Track.</span></div>
+<p class="note">Prices come from decentralised exchanges and can be very unreliable. Many new meme coins lose all their value, and some are scams. This is not financial advice. Never invest money you cannot afford to lose.</p>
+</main>
+<script type="module">
+let NGN = null;
+try {
+  const { SUPABASE_URL, SUPABASE_KEY } = await import("./config.js");
+  const r = await fetch(SUPABASE_URL + "/rest/v1/fx_rates?select=per_usd&currency=eq.NGN", { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } });
+  const j = await r.json(); if (j[0]) NGN = Number(j[0].per_usd);
+} catch (e) {}
+
+const $ = (id) => document.getElementById(id);
+const API = "https://api.dexscreener.com/latest/dex/";
+const KEY = "pc_tracked_tokens";
+const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; } };
+const save = (a) => { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} };
+
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function usd(n) {
+  n = Number(n); if (!isFinite(n)) return "n/a";
+  if (n === 0) return "$0";
+  if (n >= 1) return "$" + n.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  const d = Math.min(12, Math.max(2, 2 - Math.floor(Math.log10(n)) + 2));
+  return "$" + n.toFixed(d);
+}
+function ngn(n) {
+  n = Number(n); if (!isFinite(n)) return "n/a";
+  if (n >= 100) return "₦" + n.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  const d = Math.min(8, Math.max(2, 2 - Math.floor(Math.log10(n)) + 1));
+  return "₦" + n.toFixed(d);
+}
+function big(n) {
+  n = Number(n); if (!isFinite(n)) return "n/a";
+  if (n >= 1e9) return "$" + (n / 1e9).toFixed(2) + "B";
+  if (n >= 1e6) return "$" + (n / 1e6).toFixed(2) + "M";
+  if (n >= 1e3) return "$" + (n / 1e3).toFixed(1) + "K";
+  return "$" + n.toFixed(0);
+}
+function pct(n) { n = Number(n); if (!isFinite(n)) return "n/a"; return (n > 0 ? "+" : "") + n.toFixed(2) + "%"; }
+function age(ms) {
+  if (!ms) return "unknown";
+  const m = (Date.now() - ms) / 60000;
+  if (m < 60) return Math.max(1, Math.round(m)) + " min";
+  if (m < 2880) return Math.round(m / 60) + " hours";
+  return Math.round(m / 1440) + " days";
+}
+
+function parseInput(s) {
+  s = s.trim();
+  const m = s.match(/dexscreener\.com\/([a-z0-9-]+)\/([A-Za-z0-9]+)/i);
+  if (m) return { chain: m[1].toLowerCase(), pair: m[2] };
+  if (/^0x[a-fA-F0-9]{40}$/.test(s) || /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s)) return { token: s };
+  return null;
+}
+async function getJSON(u) {
+  const r = await fetch(u);
+  if (!r.ok) throw new Error("HTTP " + r.status);
+  return r.json();
+}
+async function lookup(p) {
+  if (p.token) {
+    const j = await getJSON(API + "tokens/" + encodeURIComponent(p.token));
+    const list = (j.pairs || []).filter((x) => x && x.baseToken && x.baseToken.address && x.baseToken.address.toLowerCase() === p.token.toLowerCase());
+    list.sort((a, b) => Number((b.liquidity || {}).usd || 0) - Number((a.liquidity || {}).usd || 0));
+    return list[0] || null;
+  }
+  const j = await getJSON(API + "pairs/" + encodeURIComponent(p.chain) + "/" + encodeURIComponent(p.pair));
+  return (j.pairs && j.pairs[0]) || j.pair || null;
+}
+
+function flags(x) {
+  const out = [];
+  const liq = Number((x.liquidity || {}).usd || 0);
+  const ageMin = x.pairCreatedAt ? (Date.now() - x.pairCreatedAt) / 60000 : null;
+  const tx = (x.txns || {}).h24 || {};
+  const ch = Number((x.priceChange || {}).h24);
+  if (liq < 10000) out.push(["r", "Very low liquidity (" + big(liq) + "). It may be impossible to sell, and the price can move a lot with one trade."]);
+  else if (liq < 50000) out.push(["a", "Low liquidity (" + big(liq) + "). Large trades will move the price."]);
+  if (ageMin !== null && ageMin < 1440) out.push(["r", "Very new: trading for only " + age(x.pairCreatedAt) + ". Most brand-new tokens fail or are scams."]);
+  else if (ageMin !== null && ageMin < 10080) out.push(["a", "New: trading for only " + age(x.pairCreatedAt) + "."]);
+  if (isFinite(ch) && ch <= -50) out.push(["r", "The price fell " + Math.abs(ch).toFixed(0) + "% in 24 hours."]);
+  if (Number(tx.buys) + Number(tx.sells) < 50) out.push(["a", "Very few trades in 24 hours, so the price may not be reliable."]);
+  if (Number(tx.buys) > 20 && Number(tx.sells) < Number(tx.buys) * 0.1) out.push(["r", "Many buys but almost no sells. This can mean holders are blocked from selling."]);
+  if (!out.length) out.push(["ok", "No obvious warning signs from this data, but that does not make it safe."]);
+  return out;
+}
+
+function show(x) {
+  const res = $("res"); res.replaceChildren();
+  const c = el("div", "card");
+  const top = el("div", "top");
+  top.append(el("div", "name", (x.baseToken.name || "Unknown") + " (" + (x.baseToken.symbol || "?") + ")"));
+  top.append(el("span", "chain", String(x.chainId)));
+  c.append(top);
+  c.append(el("div", "price", usd(x.priceUsd)));
+  if (NGN && x.priceUsd) c.append(el("div", "ngn", ngn(Number(x.priceUsd) * NGN)));
+  const pc = x.priceChange || {};
+  const g = el("div", "grid");
+  const tile = (a, b, cls) => { const t = el("div", "t"); t.append(el("small", null, a)); t.append(el("b", cls || "", b)); g.append(t); };
+  const cl = (v) => (Number(v) >= 0 ? "up" : "dn");
+  tile("1 hour", pct(pc.h1), cl(pc.h1)); tile("24 hours", pct(pc.h24), cl(pc.h24));
+  tile("Liquidity", big((x.liquidity || {}).usd)); tile("24h volume", big((x.volume || {}).h24));
+  tile("Market cap", big(x.marketCap || x.fdv)); tile("Trading for", age(x.pairCreatedAt));
+  c.append(g);
+  flags(x).forEach(([k, t]) => c.append(el("div", "warn " + k, t)));
+  const act = el("div", "actions");
+  const tr = el("button", null, "Track"); tr.onclick = () => { add(x); tr.textContent = "Tracked"; tr.disabled = true; };
+  act.append(tr);
+  if (typeof x.url === "string" && x.url.startsWith("https://dexscreener.com/")) {
+    const b = el("button", "sec", "Open chart"); b.onclick = () => window.open(x.url, "_blank", "noopener");
+    act.append(b);
+  }
+  c.append(act);
+  res.append(c);
+}
+
+function add(x) {
+  const a = load().filter((t) => !(t.chain === x.chainId && t.pair === x.pairAddress));
+  if (a.length >= 10) { $("msg").textContent = "You can track up to 10 tokens. Remove one first."; return; }
+  a.unshift({ chain: x.chainId, pair: x.pairAddress, name: x.baseToken.name, symbol: x.baseToken.symbol });
+  save(a); renderMine();
+}
+async function renderMine() {
+  const a = load(); const box = $("mine"); box.replaceChildren();
+  if (!a.length) { box.append(el("span", "note", "Nothing yet. Check a token and tap Track.")); return; }
+  for (const t of a) {
+    const row = el("div", "row"); const left = el("div"); const nm = el("b", null, (t.name || "") + " (" + (t.symbol || "") + ")"); const sm = el("small", null, "Loading...");
+    left.append(nm, sm);
+    const rm = el("button", "sec sm", "Remove"); rm.onclick = () => { save(load().filter((z) => !(z.chain === t.chain && z.pair === t.pair))); renderMine(); };
+    row.append(left, rm); box.append(row);
+    lookup({ chain: t.chain, pair: t.pair }).then((x) => {
+      if (!x) { sm.textContent = "Could not load"; return; }
+      sm.textContent = usd(x.priceUsd) + (NGN ? " · " + ngn(Number(x.priceUsd) * NGN) : "") + " · 24h " + pct((x.priceChange || {}).h24);
+    }).catch(() => { sm.textContent = "Could not load"; });
+  }
+}
+
+async function run() {
+  const p = parseInput($("q").value);
+  $("res").replaceChildren();
+  if (!p) { $("msg").textContent = "Paste a contract address (starts with 0x for most chains) or a dexscreener.com link."; return; }
+  $("msg").textContent = "Looking up...";
+  try {
+    const x = await lookup(p);
+    if (!x) { $("msg").textContent = "No trading pair found for that address. Check it is correct, and that the token trades on a decentralised exchange."; return; }
+    $("msg").textContent = ""; show(x);
+  } catch (e) { $("msg").textContent = "Could not reach the price service. Try again in a moment."; }
+}
+$("go").onclick = run;
+$("q").addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
+renderMine();
+</script></body></html>
