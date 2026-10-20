@@ -127,6 +127,23 @@ function niceTicks(lo, hi, n) {
   return out;
 }
 
+function fillGaps(d, stepSec) {
+  // GeckoTerminal sends a candle only when trades happened. Fill quiet periods with flat candles
+  // so the time axis stays even. Only the most recent 1500 periods are filled.
+  const step = stepSec * 1000, nowSlot = Math.floor(Date.now() / step) * step;
+  const lastT = d[d.length - 1].t, endT = Math.max(lastT, nowSlot);
+  const startT = Math.max(d[0].t, endT - 1500 * step);
+  const map = new Map(); d.forEach((c) => map.set(Math.floor(c.t / step) * step, c));
+  const out = []; let prev = d.find((c) => c.t >= startT) || d[0], pc = prev.o;
+  const before = d.filter((c) => c.t < startT); if (before.length) pc = before[before.length - 1].c;
+  for (let t = Math.floor(startT / step) * step; t <= endT; t += step) {
+    const c = map.get(t);
+    if (c) { out.push({ t, o: c.o, h: c.h, l: c.l, c: c.c, v: c.v }); pc = c.c; }
+    else out.push({ t, o: pc, h: pc, l: pc, c: pc, v: 0 });
+  }
+  return out;
+}
+
 function mountChart(box, x, showEmbed) {
   box.replaceChildren();
   const net = NET[x.chainId] || x.chainId, pool = x.pairAddress;
@@ -154,6 +171,7 @@ function mountChart(box, x, showEmbed) {
       const list = (((j.data || {}).attributes || {}).ohlcv_list) || [];
       if (list.length < 2) throw new Error("no data");
       S.data = list.map((a) => ({ t: a[0] * 1000, o: +a[1], h: +a[2], l: +a[3], c: +a[4], v: +a[5] })).sort((a, b) => a.t - b.t);
+      S.data = fillGaps(S.data, t[1] === "minute" ? t[2] * 60 : t[1] === "hour" ? t[2] * 3600 : 86400);
       S.n = Math.min(80, S.data.length); S.off = 0; S.hover = -1; st.hidden = true; draw();
     } catch (e) { if (showEmbed) { showEmbed(); } else { st.textContent = "Chart not available for this token."; } }
   }
