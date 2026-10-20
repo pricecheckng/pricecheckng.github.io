@@ -144,6 +144,13 @@ function fillGaps(d, stepSec) {
   return out;
 }
 
+function defaultN(d) {
+  let n = Math.min(80, d.length);
+  const traded = (k) => d.slice(d.length - k).filter((c) => c.v > 0).length;
+  while (n < Math.min(d.length, 400) && traded(n) < 10) n = Math.min(d.length, n + 40);
+  return n;
+}
+
 function mountChart(box, x, showEmbed) {
   box.replaceChildren();
   const net = NET[x.chainId] || x.chainId, pool = x.pairAddress;
@@ -152,7 +159,7 @@ function mountChart(box, x, showEmbed) {
   const tfBtns = TFS.map((t, i) => { const b = el("button", "tfb", t[0]); b.onclick = () => { S.tf = i; S.off = 0; load(); markBtns(); }; bar.append(b); return b; });
   const ty = el("button", "tfb", "Candles"); ty.onclick = () => { S.type = S.type === "candle" ? "line" : "candle"; ty.textContent = S.type === "candle" ? "Candles" : "Line"; draw(); }; bar.append(ty);
   const zo = el("button", "tfb", "−"); zo.onclick = () => zoom(1.3); const zi = el("button", "tfb", "+"); zi.onclick = () => zoom(1 / 1.3);
-  const rs = el("button", "tfb", "Latest"); rs.onclick = () => { S.off = 0; S.n = Math.min(80, S.data.length); draw(); };
+  const rs = el("button", "tfb", "Latest"); rs.onclick = () => { S.off = 0; S.n = defaultN(S.data); draw(); };
   bar.append(zo, zi, rs);
   const wrap = el("div", "cwrap"); const cv = document.createElement("canvas"); wrap.append(cv);
   const st = el("div", "note", "Loading chart..."); box.append(bar, wrap, st);
@@ -172,7 +179,7 @@ function mountChart(box, x, showEmbed) {
       if (list.length < 2) throw new Error("no data");
       S.data = list.map((a) => ({ t: a[0] * 1000, o: +a[1], h: +a[2], l: +a[3], c: +a[4], v: +a[5] })).sort((a, b) => a.t - b.t);
       S.data = fillGaps(S.data, t[1] === "minute" ? t[2] * 60 : t[1] === "hour" ? t[2] * 3600 : 86400);
-      S.n = Math.min(80, S.data.length); S.off = 0; S.hover = -1; st.hidden = true; draw();
+      S.n = defaultN(S.data); S.off = 0; S.hover = -1; st.hidden = true; draw();
     } catch (e) { if (showEmbed) { showEmbed(); } else { st.textContent = "Chart not available for this token."; } }
   }
 
@@ -191,7 +198,8 @@ function mountChart(box, x, showEmbed) {
     const Y = (p) => T + chh - ((p - lo) / (hi - lo)) * chh, X = (i) => L + cw * i + cw / 2;
     g.font = "11px system-ui,sans-serif"; g.textBaseline = "middle";
     g.strokeStyle = LN; g.fillStyle = MU; g.lineWidth = 1; g.textAlign = "left";
-    niceTicks(lo, hi, 5).forEach((v) => { const y = Math.round(Y(v)) + 0.5; g.beginPath(); g.moveTo(L, y); g.lineTo(L + pw, y); g.stroke(); g.fillText(fp(v), L + pw + 6, y); });
+    const lastY = Y(Math.min(Math.max(S.data[S.data.length - 1].c, lo), hi));
+    niceTicks(lo, hi, 5).forEach((v) => { const y = Math.round(Y(v)) + 0.5; g.beginPath(); g.moveTo(L, y); g.lineTo(L + pw, y); g.stroke(); if (Math.abs(y - lastY) > 12) g.fillText(fp(v), L + pw + 6, y); });
     // time axis
     g.textAlign = "center"; const every = Math.max(1, Math.round(S.n / 4)), tfm = TFS[S.tf][1];
     for (let i = every; i < S.n; i += every) {
