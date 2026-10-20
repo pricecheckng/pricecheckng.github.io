@@ -351,6 +351,7 @@ function add(x) {
   a.unshift({ chain: x.chainId, pair: x.pairAddress, name: x.baseToken.name, symbol: x.baseToken.symbol });
   save(a); renderMine();
 }
+function ageShort(ms) { const m = (Date.now() - ms) / 60000; return m < 60 ? Math.max(1, Math.round(m)) + " min" : m < 2880 ? Math.round(m / 60) + " h" : Math.round(m / 1440) + " days"; }
 async function renderMine() {
   const a = load(); const box = $("mine"); box.replaceChildren();
   if (!a.length) { box.append(el("span", "note", "Nothing yet. Check a token and tap Track.")); return; }
@@ -359,10 +360,15 @@ async function renderMine() {
     left.append(nm, sm);
     const rm = el("button", "sec sm", "Remove"); rm.onclick = () => { save(load().filter((z) => !(z.chain === t.chain && z.pair === t.pair))); renderMine(); };
     row.append(left, rm); box.append(row);
-    lookup({ chain: t.chain, pair: t.pair }).then((x) => {
-      if (!x) { sm.textContent = "Could not load"; return; }
-      sm.textContent = usd(x.priceUsd) + (local(x.priceUsd) ? " · " + local(x.priceUsd) : "") + " · 24h " + pct((x.priceChange || {}).h24);
-    }).catch(() => { sm.textContent = "Could not load"; });
+    const fmt = (p, ch) => usd(p) + (local(p) ? " · " + local(p) : "") + " · 24h " + pct(ch);
+    const attempt = async () => { const x = await lookup({ chain: t.chain, pair: t.pair }); if (!x) throw new Error("none"); return x; };
+    const ok = (x) => {
+      sm.textContent = fmt(x.priceUsd, (x.priceChange || {}).h24);
+      const all = load(); const m = all.find((z) => z.chain === t.chain && z.pair === t.pair);
+      if (m) { m.last = { p: x.priceUsd, ch: (x.priceChange || {}).h24, at: Date.now() }; save(all); }
+    };
+    const fail = () => { sm.textContent = t.last ? "Last price " + fmt(t.last.p, t.last.ch) + " (saved " + ageShort(t.last.at) + " ago, could not refresh)" : "Could not load. Try again later."; };
+    attempt().then(ok).catch(() => setTimeout(() => attempt().then(ok).catch(fail), 1500));
   }
 }
 
