@@ -276,7 +276,7 @@ async function getJSON(u) {
 async function lookup(p) {
   if (p.token) {
     const j = await getJSON(API + "tokens/" + encodeURIComponent(p.token));
-    const list = (j.pairs || []).filter((x) => x && x.baseToken && x.baseToken.address && x.baseToken.address.toLowerCase() === p.token.toLowerCase());
+    const list = (j.pairs || []).filter((x) => x && x.baseToken && x.baseToken.address && x.baseToken.address.toLowerCase() === p.token.toLowerCase() && (!p.chain || x.chainId === p.chain));
     list.sort((a, b) => Number((b.liquidity || {}).usd || 0) - Number((a.liquidity || {}).usd || 0));
     return list[0] || null;
   }
@@ -348,7 +348,7 @@ function show(x) {
 function add(x) {
   const a = load().filter((t) => !(t.chain === x.chainId && t.pair === x.pairAddress));
   if (a.length >= 10) { $("msg").textContent = "You can track up to 10 tokens. Remove one first."; return; }
-  a.unshift({ chain: x.chainId, pair: x.pairAddress, name: x.baseToken.name, symbol: x.baseToken.symbol });
+  a.unshift({ chain: x.chainId, pair: x.pairAddress, addr: x.baseToken.address, name: x.baseToken.name, symbol: x.baseToken.symbol });
   save(a); renderMine();
 }
 function ageShort(ms) { const m = (Date.now() - ms) / 60000; return m < 60 ? Math.max(1, Math.round(m)) + " min" : m < 2880 ? Math.round(m / 60) + " h" : Math.round(m / 1440) + " days"; }
@@ -361,7 +361,13 @@ async function renderMine() {
     const rm = el("button", "sec sm", "Remove"); rm.onclick = () => { save(load().filter((z) => !(z.chain === t.chain && z.pair === t.pair))); renderMine(); };
     row.append(left, rm); box.append(row);
     const fmt = (p, ch) => usd(p) + (local(p) ? " · " + local(p) : "") + " · 24h " + pct(ch);
-    const attempt = async () => { const x = await lookup({ chain: t.chain, pair: t.pair }); if (!x) throw new Error("none"); return x; };
+    const attempt = async () => {
+      let x = null;
+      try { x = await lookup({ chain: t.chain, pair: t.pair }); } catch (e) {}
+      if (!x && t.addr) { x = await lookup({ token: t.addr, chain: t.chain }); }
+      if (!x) throw new Error("none");
+      return x;
+    };
     const ok = (x) => {
       sm.textContent = fmt(x.priceUsd, (x.priceChange || {}).h24);
       const all = load(); const m = all.find((z) => z.chain === t.chain && z.pair === t.pair);
