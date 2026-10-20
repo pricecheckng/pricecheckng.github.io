@@ -49,7 +49,7 @@ a{color:var(--gd)}
 <div id="res"></div>
 <h2 style="font-size:18px;margin:26px 0 0">My tracked tokens</h2>
 <div id="mine" class="card"><span class="note">Nothing yet. Check a token and tap Track.</span></div>
-<p class="note">Prices come from decentralised exchanges and can be very unreliable. Many new meme coins lose all their value, and some are scams. This is not financial advice. Never invest money you cannot afford to lose.</p>
+<p class="note">Prices come from one trading pool on a decentralised exchange, so they can differ from other sources and can be very unreliable. Market cap is an estimate. Many new meme coins lose all their value, and some are scams. This is not financial advice. Never invest money you cannot afford to lose.</p>
 </main>
 <script type="module">
 const CUR = {
@@ -277,8 +277,18 @@ async function lookup(p) {
   if (p.token) {
     const j = await getJSON(API + "tokens/" + encodeURIComponent(p.token));
     const list = (j.pairs || []).filter((x) => x && x.baseToken && x.baseToken.address && x.baseToken.address.toLowerCase() === p.token.toLowerCase() && (!p.chain || x.chainId === p.chain));
-    list.sort((a, b) => Number((b.liquidity || {}).usd || 0) - Number((a.liquidity || {}).usd || 0));
-    return list[0] || null;
+    if (!list.length) return null;
+    const L = (x) => Number((x.liquidity || {}).usd || 0), V = (x) => Number((x.volume || {}).h24 || 0);
+    const maxL = Math.max.apply(null, list.map(L));
+    const good = list.filter((x) => L(x) >= maxL * 0.1);
+    good.sort((a, b) => V(b) - V(a) || L(b) - L(a));
+    const best = good[0];
+    const others = good.filter((x) => x !== best && Number(x.priceUsd) > 0).slice(0, 5);
+    if (others.length && Number(best.priceUsd) > 0) {
+      const diffs = others.map((x) => Math.abs(Number(x.priceUsd) - Number(best.priceUsd)) / Number(best.priceUsd));
+      best._spread = Math.max.apply(null, diffs);
+    }
+    return best;
   }
   const j = await getJSON(API + "pairs/" + encodeURIComponent(p.chain) + "/" + encodeURIComponent(p.pair));
   return (j.pairs && j.pairs[0]) || j.pair || null;
@@ -297,6 +307,9 @@ function flags(x) {
   if (isFinite(ch) && ch <= -50) out.push(["r", "The price fell " + Math.abs(ch).toFixed(0) + "% in 24 hours."]);
   if (Number(tx.buys) + Number(tx.sells) < 50) out.push(["a", "Very few trades in 24 hours, so the price may not be reliable."]);
   if (Number(tx.buys) > 20 && Number(tx.sells) < Number(tx.buys) * 0.1) out.push(["r", "Many buys but almost no sells. This can mean holders are blocked from selling."]);
+  const vol = Number((x.volume || {}).h24 || 0);
+  if (liq > 0 && vol < 20000) out.push(["a", "Very little trading in this pool (" + big(vol) + " in 24 hours), so the price and chart may be out of date or not match the wider market."]);
+  if (x._spread > 0.1) out.push(["a", "Other pools for this token show prices that differ by about " + Math.round(x._spread * 100) + "%. Check the price on another source before you act."]);
   if (!out.length) out.push(["ok", "No obvious warning signs from this data, but that does not make it safe."]);
   return out;
 }
