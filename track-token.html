@@ -31,7 +31,7 @@ button.sm{padding:8px 12px;font-size:14px;border-radius:10px}
 .warn{border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}
 .warn.r{background:var(--redbg);color:#8a1f1f}.warn.a{background:var(--ambbg);color:#7a4d0a}.warn.ok{background:#e9f8ee;color:#145c33}
 .row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--line)}
-.row:last-child{border:0}.row b{display:block}.row small{color:var(--mu)}
+.btns{display:flex;gap:6px;flex-shrink:0}.row:last-child{border:0}.row b{display:block}.row small{color:var(--mu)}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .note{font-size:13px;color:var(--mu)}
 .chartbox{margin-top:12px}.tb{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.tfb{padding:7px 11px;font-size:13px;border-radius:9px;background:#fff;color:var(--ink);border:1px solid var(--line);font-weight:600}.tfb.on{background:var(--g);color:#fff;border-color:var(--g)}.cwrap{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}.cwrap canvas{display:block;width:100%}.chartbox iframe{width:100%;height:420px;border:1px solid var(--line);border-radius:12px;background:#fff}
@@ -301,7 +301,7 @@ function flags(x) {
   return out;
 }
 
-function show(x) {
+function show(x, autoChart) {
   const res = $("res"); res.replaceChildren();
   const c = el("div", "card");
   const top = el("div", "top");
@@ -343,6 +343,7 @@ function show(x) {
   }
   c.append(act); c.append(chartBox);
   res.append(c);
+  if (autoChart) ch.click();
 }
 
 function add(x) {
@@ -359,7 +360,21 @@ async function renderMine() {
     const row = el("div", "row"); const left = el("div"); const nm = el("b", null, (t.name || "") + " (" + (t.symbol || "") + ")"); const sm = el("small", null, "Loading...");
     left.append(nm, sm);
     const rm = el("button", "sec sm", "Remove"); rm.onclick = () => { save(load().filter((z) => !(z.chain === t.chain && z.pair === t.pair))); renderMine(); };
-    row.append(left, rm); box.append(row);
+    const vw = el("button", "sm", "View");
+    vw.onclick = async () => {
+      vw.textContent = "Loading..."; vw.disabled = true;
+      try {
+        let x = null;
+        try { x = await lookup({ chain: t.chain, pair: t.pair }); } catch (e) {}
+        if (!x && t.addr) x = await lookup({ token: t.addr, chain: t.chain });
+        if (!x) throw new Error("none");
+        $("msg").textContent = ""; show(x, true);
+        $("res").scrollIntoView({ behavior: "smooth", block: "start" });
+      } catch (e) { $("msg").textContent = "Could not load " + (t.symbol || "that token") + " right now. Try again in a moment."; $("msg").scrollIntoView({ block: "center" }); }
+      vw.textContent = "View"; vw.disabled = false;
+    };
+    const btns = el("div", "btns"); btns.append(vw, rm);
+    row.append(left, btns); box.append(row);
     const fmt = (p, ch) => usd(p) + (local(p) ? " · " + local(p) : "") + " · 24h " + pct(ch);
     const attempt = async () => {
       let x = null;
@@ -381,6 +396,7 @@ async function renderMine() {
 async function run() {
   const p = parseInput($("q").value);
   $("res").replaceChildren();
+  if (!$("q").value.trim()) { $("msg").textContent = "Paste a token address or link first."; return; }
   if (!p) { $("msg").textContent = "We could not find a token address in that. Paste the contract address, or a link to the token from DexScreener, Etherscan, pump.fun, CoinGecko and similar sites."; return; }
   $("msg").textContent = "Looking up...";
   try {
