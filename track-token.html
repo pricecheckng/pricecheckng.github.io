@@ -34,7 +34,7 @@ button.sm{padding:8px 12px;font-size:14px;border-radius:10px}
 .row:last-child{border:0}.row b{display:block}.row small{color:var(--mu)}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .note{font-size:13px;color:var(--mu)}
-.chartbox{margin-top:12px}.chartbox iframe{width:100%;height:420px;border:1px solid var(--line);border-radius:12px;background:#fff}
+.chartbox{margin-top:12px}.tb{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.tfb{padding:7px 11px;font-size:13px;border-radius:9px;background:#fff;color:var(--ink);border:1px solid var(--line);font-weight:600}.tfb.on{background:var(--g);color:#fff;border-color:var(--g)}.cwrap{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}.cwrap canvas{display:block;width:100%}.chartbox iframe{width:100%;height:420px;border:1px solid var(--line);border-radius:12px;background:#fff}
 select{padding:10px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:15px;max-width:100%}
 .cur{display:flex;align-items:center;gap:8px;margin:0 0 6px}
 a{color:var(--gd)}
@@ -42,8 +42,8 @@ a{color:var(--gd)}
 <header><a href="/">PriceCheck NG</a></header>
 <main>
 <h1>Track any token</h1>
-<p>Not on our list? Paste the token's <b>contract address</b> or a <b>DexScreener link</b>.</p>
-<div class="box"><input id="q" placeholder="0x... or dexscreener.com/..." autocapitalize="off" autocomplete="off" spellcheck="false"><button id="go">Check</button></div>
+<p>Not on our list? Paste the token's <b>contract address</b>, or a <b>link</b> to it from DexScreener, Etherscan, pump.fun, CoinGecko and similar sites.</p>
+<div class="box"><input id="q" placeholder="Contract address or link" autocapitalize="off" autocomplete="off" spellcheck="false"><button id="go">Check</button></div>
 <div class="cur"><span class="note">Show price in</span><select id="cur"></select></div>
 <div id="msg" class="note"></div>
 <div id="res"></div>
@@ -104,11 +104,142 @@ function age(ms) {
   return Math.round(m / 1440) + " days";
 }
 
+// ---------- Own price chart (GeckoTerminal OHLCV) with DexScreener fallback ----------
+const NET = { ethereum: "eth", bsc: "bsc", polygon: "polygon_pos", arbitrum: "arbitrum", optimism: "optimism", base: "base", avalanche: "avax", solana: "solana", fantom: "ftm", cronos: "cro", pulsechain: "pulsechain", linea: "linea", zksync: "zksync", blast: "blast", scroll: "scroll", mantle: "mantle", sonic: "sonic", berachain: "berachain", abstract: "abstract", sui: "sui-network", ton: "ton", tron: "tron", celo: "celo", gnosis: "xdai", metis: "metis", unichain: "unichain", ronin: "ronin", hyperevm: "hyperevm" };
+const TFS = [["5m", "minute", 5], ["15m", "minute", 15], ["1H", "hour", 1], ["4H", "hour", 4], ["1D", "day", 1]];
+const SUB = "₀₁₂₃₄₅₆₇₈₉";
+function fp(p) {
+  p = Number(p); if (!isFinite(p)) return "";
+  if (p === 0) return "0";
+  if (p >= 1000) return p.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  if (p >= 1) return p.toFixed(p >= 100 ? 2 : 3);
+  if (p >= 0.0001) return p.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+  const z = Math.floor(-Math.log10(p)) - 0;      // leading zeros after the point + 1
+  const zeros = z - 1 + (p * Math.pow(10, z) >= 1 ? 0 : 1);
+  const digits = Math.round(p * Math.pow(10, zeros + 4)).toString().padStart(4, "0").slice(0, 4);
+  return "0.0" + String(zeros).split("").map((d) => SUB[d]).join("") + digits;
+}
+function fv(n) { n = Number(n); if (n >= 1e6) return (n / 1e6).toFixed(2) + "M"; if (n >= 1e3) return (n / 1e3).toFixed(1) + "K"; return n.toFixed(0); }
+function niceTicks(lo, hi, n) {
+  const span = hi - lo, raw = span / n, mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const step = [1, 2, 2.5, 5, 10].map((m) => m * mag).find((s) => s >= raw) || mag * 10;
+  const out = []; for (let v = Math.ceil(lo / step) * step; v <= hi; v += step) out.push(v);
+  return out;
+}
+
+function mountChart(box, x, showEmbed) {
+  box.replaceChildren();
+  const net = NET[x.chainId] || x.chainId, pool = x.pairAddress;
+  const S = { tf: 1, type: "candle", data: [], n: 80, off: 0, hover: -1 };
+  const bar = el("div", "tb");
+  const tfBtns = TFS.map((t, i) => { const b = el("button", "tfb", t[0]); b.onclick = () => { S.tf = i; S.off = 0; load(); markBtns(); }; bar.append(b); return b; });
+  const ty = el("button", "tfb", "Candles"); ty.onclick = () => { S.type = S.type === "candle" ? "line" : "candle"; ty.textContent = S.type === "candle" ? "Candles" : "Line"; draw(); }; bar.append(ty);
+  const zo = el("button", "tfb", "−"); zo.onclick = () => zoom(1.3); const zi = el("button", "tfb", "+"); zi.onclick = () => zoom(1 / 1.3);
+  const rs = el("button", "tfb", "Latest"); rs.onclick = () => { S.off = 0; S.n = Math.min(80, S.data.length); draw(); };
+  bar.append(zo, zi, rs);
+  const wrap = el("div", "cwrap"); const cv = document.createElement("canvas"); wrap.append(cv);
+  const st = el("div", "note", "Loading chart..."); box.append(bar, wrap, st);
+  const credit = el("div", "note"); credit.append("Chart data: "); const ca = el("a", null, "GeckoTerminal"); ca.href = "https://www.geckoterminal.com"; ca.target = "_blank"; ca.rel = "noopener nofollow"; credit.append(ca); box.append(credit);
+  function markBtns() { tfBtns.forEach((b, i) => b.classList.toggle("on", i === S.tf)); }
+  markBtns();
+
+  async function load() {
+    st.textContent = "Loading chart..."; st.hidden = false;
+    try {
+      const t = TFS[S.tf];
+      const u = "https://api.geckoterminal.com/api/v2/networks/" + encodeURIComponent(net) + "/pools/" + encodeURIComponent(pool) + "/ohlcv/" + t[1] + "?aggregate=" + t[2] + "&limit=1000&currency=usd";
+      const r = await fetch(u, { headers: { Accept: "application/json;version=20230302" } });
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const j = await r.json();
+      const list = (((j.data || {}).attributes || {}).ohlcv_list) || [];
+      if (list.length < 2) throw new Error("no data");
+      S.data = list.map((a) => ({ t: a[0] * 1000, o: +a[1], h: +a[2], l: +a[3], c: +a[4], v: +a[5] })).sort((a, b) => a.t - b.t);
+      S.n = Math.min(80, S.data.length); S.off = 0; S.hover = -1; st.hidden = true; draw();
+    } catch (e) { if (showEmbed) { showEmbed(); } else { st.textContent = "Chart not available for this token."; } }
+  }
+
+  const GRN = "#16a34a", RED = "#d93b3b", INK = "#0f1a14", MU = "#6b7a72", LN = "#e6ebe8";
+  function clampView() { S.n = Math.max(12, Math.min(S.n, S.data.length)); S.off = Math.max(0, Math.min(S.off, S.data.length - S.n)); }
+  function draw() {
+    if (!S.data.length) return; clampView();
+    const dpr = window.devicePixelRatio || 1, W = wrap.clientWidth, H = 360;
+    cv.width = W * dpr; cv.height = H * dpr; cv.style.width = W + "px"; cv.style.height = H + "px";
+    const g = cv.getContext("2d"); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
+    const L = 8, R = 62, T = 62, B = 22, pw = W - L - R, ph = H - T - B, vh = ph * 0.18, chh = ph - vh - 6;
+    const end = S.data.length - S.off, vis = S.data.slice(end - S.n, end);
+    let lo = Math.min(...vis.map((d) => d.l)), hi = Math.max(...vis.map((d) => d.h)); if (hi === lo) { hi *= 1.01; lo *= 0.99; }
+    const pad = (hi - lo) * 0.08; lo -= pad; hi += pad; if (lo < 0) lo = Math.min(...vis.map((d) => d.l)) * 0.9;
+    const vmax = Math.max(...vis.map((d) => d.v), 1e-12), cw = pw / S.n;
+    const Y = (p) => T + chh - ((p - lo) / (hi - lo)) * chh, X = (i) => L + cw * i + cw / 2;
+    g.font = "11px system-ui,sans-serif"; g.textBaseline = "middle";
+    g.strokeStyle = LN; g.fillStyle = MU; g.lineWidth = 1; g.textAlign = "left";
+    niceTicks(lo, hi, 5).forEach((v) => { const y = Math.round(Y(v)) + 0.5; g.beginPath(); g.moveTo(L, y); g.lineTo(L + pw, y); g.stroke(); g.fillText(fp(v), L + pw + 6, y); });
+    // time axis
+    g.textAlign = "center"; const every = Math.max(1, Math.round(S.n / 4)), tfm = TFS[S.tf][1];
+    for (let i = every; i < S.n; i += every) {
+      const d = new Date(vis[i].t);
+      const lab = tfm === "day" ? d.toLocaleDateString([], { day: "numeric", month: "short" }) : d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+      g.fillText(lab, X(i), H - B / 2 + 2);
+    }
+    // volume
+    vis.forEach((d, i) => { const h = (d.v / vmax) * vh; g.fillStyle = d.c >= d.o ? "rgba(22,163,74,.35)" : "rgba(217,59,59,.35)"; g.fillRect(X(i) - Math.max(1, cw * 0.35), T + ph - h, Math.max(2, cw * 0.7), h); });
+    // series
+    if (S.type === "candle") {
+      vis.forEach((d, i) => { const up = d.c >= d.o; g.strokeStyle = g.fillStyle = up ? GRN : RED; g.lineWidth = 1;
+        g.beginPath(); g.moveTo(X(i), Y(d.h)); g.lineTo(X(i), Y(d.l)); g.stroke();
+        const y1 = Y(d.o), y2 = Y(d.c); g.fillRect(X(i) - Math.max(1, cw * 0.35), Math.min(y1, y2), Math.max(2, cw * 0.7), Math.max(1, Math.abs(y2 - y1))); });
+    } else {
+      g.beginPath(); vis.forEach((d, i) => { i ? g.lineTo(X(i), Y(d.c)) : g.moveTo(X(i), Y(d.c)); }); g.strokeStyle = GRN; g.lineWidth = 2; g.stroke();
+      g.lineTo(X(S.n - 1), T + chh); g.lineTo(X(0), T + chh); g.closePath(); g.fillStyle = "rgba(22,163,74,.10)"; g.fill();
+    }
+    // last price line
+    const last = S.data[S.data.length - 1], ly = Y(Math.min(Math.max(last.c, lo), hi)), upL = last.c >= last.o;
+    g.setLineDash([3, 3]); g.strokeStyle = upL ? GRN : RED; g.lineWidth = 1; g.beginPath(); g.moveTo(L, ly); g.lineTo(L + pw, ly); g.stroke(); g.setLineDash([]);
+    g.fillStyle = upL ? GRN : RED; g.fillRect(L + pw + 1, ly - 9, R - 2, 18); g.fillStyle = "#fff"; g.textAlign = "left"; g.fillText(fp(last.c), L + pw + 4, ly);
+    // header + crosshair
+    const hi_i = S.hover >= 0 && S.hover < S.n ? S.hover : S.n - 1, d = vis[hi_i], prev = vis[hi_i - 1] || S.data[end - S.n + hi_i - 1] || d;
+    if (S.hover >= 0 && S.hover < S.n) {
+      const cx = X(S.hover), cy = Math.min(Math.max(Y(d.c), T), T + chh);
+      g.setLineDash([4, 4]); g.strokeStyle = "#8aa097"; g.lineWidth = 1; g.beginPath(); g.moveTo(cx, T); g.lineTo(cx, T + ph); g.moveTo(L, cy); g.lineTo(L + pw, cy); g.stroke(); g.setLineDash([]);
+      g.fillStyle = INK; g.fillRect(L + pw + 1, cy - 9, R - 2, 18); g.fillStyle = "#fff"; g.textAlign = "left"; g.fillText(fp(d.c), L + pw + 4, cy);
+    }
+    const chg = prev.c ? ((d.c - prev.c) / prev.c) * 100 : 0, col = d.c >= d.o ? GRN : RED, dt = new Date(d.t);
+    g.textAlign = "left"; g.fillStyle = MU; g.font = "12px system-ui,sans-serif"; g.fillText(dt.toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }), L, 12);
+    g.fillStyle = INK; g.fillText("O " + fp(d.o) + "   H " + fp(d.h), L, 29); g.fillText("L " + fp(d.l) + "   C " + fp(d.c), L, 46);
+    g.fillStyle = col; g.fillText((chg >= 0 ? "+" : "") + chg.toFixed(2) + "%", L + pw * 0.5, 12); g.fillStyle = MU; g.fillText("Vol " + fv(d.v) + " USD", L + pw * 0.5 + 62, 12);
+  }
+  function zoom(f) { S.n = Math.round(S.n * f); draw(); }
+  // pointers: 1 finger = crosshair, 2 fingers = pinch to zoom and pan, wheel = zoom
+  const P = new Map(); let pd = 0, pm = 0;
+  function idx(ev) { const rc = cv.getBoundingClientRect(), W = rc.width, cw = (W - 8 - 62) / S.n; return Math.floor((ev.clientX - rc.left - 8) / cw); }
+  cv.style.touchAction = "pan-y";
+  cv.addEventListener("pointerdown", (e) => { P.set(e.pointerId, e); if (P.size === 2) { const [a, b] = [...P.values()]; pd = Math.abs(a.clientX - b.clientX); pm = (a.clientX + b.clientX) / 2; } else { S.hover = idx(e); draw(); } });
+  cv.addEventListener("pointermove", (e) => {
+    if (!P.has(e.pointerId)) { if (e.pointerType === "mouse") { S.hover = idx(e); draw(); } return; }
+    P.set(e.pointerId, e);
+    if (P.size === 2) { const [a, b] = [...P.values()], d = Math.abs(a.clientX - b.clientX), m = (a.clientX + b.clientX) / 2, cw = (cv.getBoundingClientRect().width - 70) / S.n;
+      if (pd > 10 && d > 10) S.n = Math.round(S.n * (pd / d)); S.off += Math.round((m - pm) / cw); pd = d; pm = m; S.hover = -1; draw(); }
+    else { S.hover = idx(e); draw(); }
+  });
+  const up = (e) => { P.delete(e.pointerId); if (!P.size && e.pointerType !== "mouse") { S.hover = -1; draw(); } };
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  cv.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") { S.hover = -1; draw(); } });
+  cv.addEventListener("wheel", (e) => { e.preventDefault(); zoom(e.deltaY > 0 ? 1.15 : 1 / 1.15); }, { passive: false });
+  window.addEventListener("resize", draw);
+  load();
+}
+
 function parseInput(s) {
-  s = s.trim();
+  s = (s || "").trim();
+  // 1. A DexScreener link already names the chain and pair.
   const m = s.match(/dexscreener\.com\/([a-z0-9-]+)\/([A-Za-z0-9]+)/i);
   if (m) return { chain: m[1].toLowerCase(), pair: m[2] };
-  if (/^0x[a-fA-F0-9]{40}$/.test(s) || /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(s)) return { token: s };
+  // 2. An 0x address anywhere in the text (links from explorers, GeckoTerminal, CoinGecko, messages...).
+  const e = s.match(/0x[a-fA-F0-9]{40}/);
+  if (e) return { token: e[0] };
+  // 3. A Solana-style address as a whole word or as a link segment (pump.fun, Solscan, Birdeye...).
+  const parts = s.split(/[\s\/?#&=,;:()"'<>\[\]]+/);
+  for (const w of parts) { if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(w)) return { token: w }; }
   return null;
 }
 async function getJSON(u) {
@@ -167,12 +298,17 @@ function show(x) {
   act.append(tr);
   const chartBox = el("div", "chartbox"); chartBox.hidden = true;
   const ch = el("button", "sec", "Show chart");
-  ch.onclick = () => {
-    if (!chartBox.hidden) { chartBox.hidden = true; chartBox.replaceChildren(); ch.textContent = "Show chart"; return; }
+  const embed = () => {
+    chartBox.replaceChildren();
     const f = document.createElement("iframe");
     f.src = "https://dexscreener.com/" + encodeURIComponent(x.chainId) + "/" + encodeURIComponent(x.pairAddress) + "?embed=1&theme=light&trades=0&info=0";
     f.title = "Price chart"; f.loading = "lazy"; f.referrerPolicy = "no-referrer";
-    chartBox.append(f); chartBox.hidden = false; ch.textContent = "Hide chart";
+    chartBox.append(f);
+  };
+  ch.onclick = () => {
+    if (!chartBox.hidden) { chartBox.hidden = true; chartBox.replaceChildren(); ch.textContent = "Show chart"; return; }
+    chartBox.hidden = false; ch.textContent = "Hide chart";
+    mountChart(chartBox, x, embed);
   };
   act.append(ch);
   if (typeof x.url === "string" && x.url.startsWith("https://dexscreener.com/")) {
@@ -207,7 +343,7 @@ async function renderMine() {
 async function run() {
   const p = parseInput($("q").value);
   $("res").replaceChildren();
-  if (!p) { $("msg").textContent = "Paste a contract address (starts with 0x for most chains) or a dexscreener.com link."; return; }
+  if (!p) { $("msg").textContent = "We could not find a token address in that. Paste the contract address, or a link to the token from DexScreener, Etherscan, pump.fun, CoinGecko and similar sites."; return; }
   $("msg").textContent = "Looking up...";
   try {
     const x = await lookup(p);
