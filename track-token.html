@@ -276,7 +276,17 @@ async function getJSON(u) {
 async function lookup(p) {
   if (p.token) {
     const j = await getJSON(API + "tokens/" + encodeURIComponent(p.token));
-    const list = (j.pairs || []).filter((x) => x && x.baseToken && x.baseToken.address && x.baseToken.address.toLowerCase() === p.token.toLowerCase() && (!p.chain || x.chainId === p.chain));
+    let all = j.pairs || [];
+    const ch0 = p.chain || (all[0] && all[0].chainId);
+    if (ch0) {
+      try {
+        const k = await getJSON("https://api.dexscreener.com/token-pairs/v1/" + encodeURIComponent(ch0) + "/" + encodeURIComponent(p.token));
+        const arr = Array.isArray(k) ? k : (k && k.pairs) || [];
+        const seen = new Set(all.map((x) => x && x.pairAddress));
+        arr.forEach((x) => { if (x && !seen.has(x.pairAddress)) all.push(x); });
+      } catch (e) { /* keep the shorter list */ }
+    }
+    const list = all.filter((x) => x && x.baseToken && x.baseToken.address && x.baseToken.address.toLowerCase() === p.token.toLowerCase() && (!p.chain || x.chainId === p.chain));
     if (!list.length) return null;
     const L = (x) => Number((x.liquidity || {}).usd || 0), V = (x) => Number((x.volume || {}).h24 || 0);
     const maxL = Math.max.apply(null, list.map(L));
