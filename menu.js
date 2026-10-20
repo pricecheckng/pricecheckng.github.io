@@ -21,7 +21,8 @@
     ]},
     { t: 'Safety tools', rows: [
       ['Crypto network checker', 'Avoid sending on the wrong network', 'network-check.html'],
-      ['Coin risk check', 'Warning signs before you buy', 'coin-risk.html']
+      ['Coin risk check', 'Warning signs before you buy', 'coin-risk.html'],
+      ['Track any token', 'Not in the list? Paste a link or address', 'track-token.html']
     ]},
     { t: 'Learn', rows: [
       ['How to read candlesticks', 'A simple lesson for beginners', 'learn-candlesticks.html'],

@@ -380,7 +380,7 @@ async function loadCoins(reset) {
   state.page += 1;
   list.innerHTML = state.coins.length
     ? state.coins.map(coinRow).join("")
-    : emptyBox("No coins found", term ? `Nothing matches “${term}”. Try another name or symbol.` : "Prices are still loading. Check back in a few minutes.");
+    : emptyBox("No coins found", term ? `Nothing matches “${term}”. Try another name or symbol.` : "Prices are still loading. Check back in a few minutes.") + (term ? `<p class="muted" style="text-align:center;margin:12px 16px">Can't find it? <a href="track-token.html" style="font-weight:700">Track any token</a> by pasting its link or address.</p>` : "");
   $("#moreBtn").hidden = !state.more;
 }
 
