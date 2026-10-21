@@ -348,10 +348,14 @@ function contractFlags(d) {
     out.push([hi >= 0.3 ? "r" : hi >= 0.1 ? "a" : "n", "Trading tax: buy " + (isFinite(bt) ? p(bt) : "n/a") + ", sell " + (isFinite(st) ? p(st) : "n/a") + "." + (hi >= 0.1 ? " A high tax takes a big part of your money on every trade." : "")]);
   }
   if (d.is_open_source === "0") out.push(["a", "The contract code is not published, so nobody can check what it does."]);
-  if (d.is_mintable === "1") out.push(["a", "The owner can create more tokens, which can lower the price."]);
+  const oa = d.owner_address, gone = oa !== undefined && (oa === "" || /^0x0*(dead)?$/i.test(oa));
+  const pw = [];
+  if (d.is_mintable === "1") pw.push(["create more tokens", "The owner can create more tokens, which can lower the price."]);
+  if (d.transfer_pausable === "1") pw.push(["pause trading", "The owner can pause trading."]);
+  if (d.is_blacklisted === "1") pw.push(["block wallets", "The owner can block wallets from trading."]);
   if (d.hidden_owner === "1" || d.can_take_back_ownership === "1") out.push(["a", "The contract has a hidden owner or can take back control."]);
-  if (d.transfer_pausable === "1") out.push(["a", "The owner can pause trading."]);
-  if (d.is_blacklisted === "1") out.push(["a", "The owner can block wallets from trading."]);
+  if (pw.length && gone && d.hidden_owner !== "1" && d.can_take_back_ownership !== "1") out.push(["n", "The contract has owner powers (" + pw.map((z) => z[0]).join(", ") + "), but the owner has given up control, so they can't be used."]);
+  else pw.forEach((z) => out.push(["a", z[1]]));
   if (!out.some((z) => z[0] === "r" || z[0] === "a")) out.push(["ok", "No warning signs in the market data or the contract (checked by GoPlus). This is not a safety guarantee."]);
   return out;
 }
