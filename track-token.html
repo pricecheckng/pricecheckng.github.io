@@ -294,10 +294,12 @@ async function lookup(p) {
     const good = list.filter((x) => L(x) >= maxL * 0.1);
     good.sort((a, b) => V(b) - V(a) || L(b) - L(a));
     const best = good[0];
-    const others = good.filter((x) => x !== best && Number(x.priceUsd) > 0).slice(0, 5);
+    const created = good.map((x) => Number(x.pairCreatedAt)).filter((t) => t > 0);
+    if (created.length) best.pairCreatedAt = Math.min.apply(null, created);
+    const others = good.filter((x) => x !== best && Number(x.priceUsd) > 0).map((x) => Number(x.priceUsd)).sort((m, n) => m - n);
     if (others.length && Number(best.priceUsd) > 0) {
-      const diffs = others.map((x) => Math.abs(Number(x.priceUsd) - Number(best.priceUsd)) / Number(best.priceUsd));
-      best._spread = Math.max.apply(null, diffs);
+      const med = others.length % 2 ? others[(others.length - 1) / 2] : (others[others.length / 2 - 1] + others[others.length / 2]) / 2;
+      best._spread = Math.abs(med - Number(best.priceUsd)) / Number(best.priceUsd);
     }
     return best;
   }
