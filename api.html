@@ -27,13 +27,89 @@ th{color:var(--ink)}
 .pill{display:inline-block;font-size:12px;border:1px solid var(--line);border-radius:99px;padding:2px 10px;color:var(--mu);margin-right:6px}
 ul{color:var(--mu);padding-left:20px;margin:0 0 12px} li{margin:4px 0}
 footer{margin-top:40px;font-size:13px;color:var(--mu)}
+.kf{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin:14px 0 6px;position:relative}
+.kf input[type=text],.kf input[type=email]{display:block;width:100%;margin:0 0 10px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--code);color:var(--ink);font:inherit}
+.mu{color:var(--mu)}
 </style></head><body><main>
 <div class="top"><a class="brand" href="/">PriceCheck <b>NG</b></a><a href="/">Back to the app</a></div>
 
 <span class="pill">Beta</span><span class="pill">Free</span>
 <h1>PriceCheck NG API</h1>
-<p class="lead">Crypto prices in naira, exchange rates and market data. One simple JSON API, built for Nigerian apps and bots.</p>
-<a class="btn" href="mailto:support@pricecheckng.com.ng?subject=PriceCheck%20NG%20API%20key%20request&body=Hi%2C%20I%20would%20like%20a%20free%20API%20key.%0A%0AName%3A%0AEmail%20for%20the%20key%3A%0AWhat%20I%20am%20building%20(website%2C%20app%2C%20Telegram%20bot%2C%20trading%20bot%2C%20research%2C%20other)%3A%0AExpected%20calls%20per%20month%3A%0AFree%20project%20or%20business%3F%0AWill%20you%20credit%20PriceCheck%20NG%3F%0AHow%20did%20you%20hear%20about%20us%3F">Request a free API key</a>
+<p class="lead">Crypto prices in naira, exchange rates and market data. One simple JSON API, built for developers, trading bots and apps.</p>
+<div id="kd" class="kf">
+  <h2 style="margin:0 0 6px">Your API key</h2>
+  <p id="k0" class="mu">Loading...</p>
+  <div id="k1" hidden>
+    <p class="mu" style="margin:0 0 10px">Your key comes with your PriceCheck NG account. Sign in to the app, then open this page again and tap "Get my free key". No email needed.</p>
+    <a class="btn" href="/">Sign in on PriceCheck NG</a>
+  </div>
+  <div id="k2" hidden>
+    <p class="mu" style="margin:0 0 10px">Signed in as <b id="kem"></b> · <a href="#" id="kout">Sign out</a></p>
+    <div id="k3" hidden>
+      <input id="kn" type="text" placeholder="App or project name (optional)" maxlength="80" style="display:block;width:100%;margin:0 0 10px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--code);color:var(--ink);font:inherit">
+      <button id="kmk" class="btn" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700">Get my free key</button>
+    </div>
+    <div id="k4" hidden>
+      <p class="mu" style="margin:0 0 4px">Key</p>
+      <pre id="kkey" style="margin:0 0 8px"></pre>
+      <p id="kwarn" class="mu" style="font-size:13px" hidden><b>Copy it now.</b> For safety we only show the full key once. If you lose it, make a new one.</p>
+      <button id="kcp" class="btn" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700;margin-right:8px" hidden>Copy key</button>
+      <button id="krg" class="btn" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700;background:transparent;border:1px solid var(--line);color:var(--ink)">Make a new key</button>
+      <p id="kus" class="mu" style="margin:10px 0 0"></p>
+    </div>
+  </div>
+  <p id="km" class="mu" role="status" style="margin:8px 0 0"></p>
+</div>
+<p class="mu" style="font-size:13px">Need help? Write to <a href="mailto:support@pricecheckng.com.ng?subject=PriceCheck%20NG%20API">support@pricecheckng.com.ng</a>.</p>
+<script type="module">
+import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm";
+import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
+const FN = "https://inufnxvilubbsrcusakt.supabase.co/functions/v1/api-key";
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = (i) => document.getElementById(i);
+const msgs = {
+  too_many_requests: "Too many tries today. Please try again tomorrow.",
+  sign_in_required: "Please sign in again.",
+  email_not_confirmed: "Your Google email is not confirmed.",
+  try_again: "Something went wrong. Please try again in a minute.",
+  key_exists: "You already have a key.",
+};
+let token = "";
+const say = (t) => { $("km").textContent = t || ""; };
+const nf = (n) => Number(n || 0).toLocaleString("en-US");
+async function call(action, name) {
+  const r = await fetch(FN, { method: "POST", headers: { "Content-Type": "application/json", Authorization: "Bearer " + token }, body: JSON.stringify({ action, name }) });
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(msgs[j.error] || msgs.try_again);
+  return j;
+}
+function show(j) {
+  $("kem").textContent = j.email || "";
+  $("k3").hidden = !!j.has_key; $("k4").hidden = !j.has_key;
+  if (!j.has_key) return;
+  const full = !!j.key;
+  $("kkey").textContent = full ? j.key : j.prefix + "••••••••••••••••••••••••";
+  $("kwarn").hidden = !full; $("kcp").hidden = !full;
+  $("kus").textContent = "This month: " + nf(j.monthly_used) + " of " + nf(j.monthly_limit) + " calls used · " + j.per_minute_limit + " per minute · resets " + j.resets_on;
+}
+async function run(action, name) {
+  say("Please wait...");
+  try { show(await call(action, name)); say(""); } catch (e) { say(e.message); }
+}
+async function init() {
+  const { data } = await sb.auth.getSession();
+  const s = data && data.session;
+  $("k0").hidden = true;
+  if (!s) { $("k1").hidden = false; return; }
+  token = s.access_token; $("k2").hidden = false;
+  await run("get");
+}
+$("kout").onclick = async (e) => { e.preventDefault(); await sb.auth.signOut(); location.reload(); };
+$("kmk").onclick = () => run("create", $("kn").value);
+$("krg").onclick = () => { if (confirm("Make a new key? The old key will stop working right away.")) run("regenerate"); };
+$("kcp").onclick = async () => { try { await navigator.clipboard.writeText($("kkey").textContent); say("Copied."); } catch (e) { say("Press and hold the key to copy it."); } };
+init().catch(() => { $("k0").textContent = "Could not load. Please refresh."; });
+</script>
 
 <h2>Quick start</h2>
 <p>Send your key in the <code>x-api-key</code> header. All requests are <code>GET</code> and return JSON.</p>
