@@ -29,7 +29,8 @@
       ['How to avoid crypto scams', 'Stay safe on P2P and online', 'learn-scams.html'],
       ['What is market cap?', 'Why price alone can fool you', 'learn-market-cap.html'],
       ['What is a stablecoin?', 'USDT and USDC explained', 'learn-stablecoins.html'],
-      ['Fear & Greed Index', 'How to read the market mood', 'learn-fear-greed.html']
+      ['Fear & Greed Index', 'How to read the market mood', 'learn-fear-greed.html'],
+      ['Data sources', 'Where our prices and data come from', 'data-sources.html']
     ]}
   ];
   var css = '#mnu{position:fixed;inset:0;z-index:9999;visibility:hidden}' +
