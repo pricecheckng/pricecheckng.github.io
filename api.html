@@ -5,7 +5,7 @@
 <meta name="description" content="A simple JSON API for crypto prices in naira, exchange rates and market data from PriceCheck NG.">
 <link rel="canonical" href="https://pricecheckng.com.ng/api.html">
 <style>
-:root{--bg:#0b1511;--card:#12201a;--ink:#eaf5ef;--mu:#8fa89c;--g:#16a34a;--gl:#22c55e;--line:#1f3329;--code:#0a120e}
+:root{--bg:#ffffff;--card:#f6faf7;--ink:#10241a;--mu:#587064;--g:#16a34a;--gl:#15803d;--line:#dfe9e3;--code:#eef5f1}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 main{max-width:760px;margin:0 auto;padding:16px 16px 64px}
@@ -18,8 +18,8 @@ h3{font-size:16px;margin:20px 0 6px;font-family:ui-monospace,Menlo,monospace;col
 p{margin:0 0 12px;color:var(--mu)} p b,li b{color:var(--ink)}
 .lead{font-size:18px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:12px 0}
-pre{background:var(--code);border:1px solid var(--line);border-radius:12px;padding:12px;overflow:auto;font:13px/1.5 ui-monospace,Menlo,monospace;color:#d6efe2;margin:8px 0 12px;white-space:pre}
-code{font:13px ui-monospace,Menlo,monospace;background:var(--code);padding:1px 6px;border-radius:6px;color:#d6efe2}
+pre{background:var(--code);border:1px solid var(--line);border-radius:12px;padding:12px;overflow:auto;font:13px/1.5 ui-monospace,Menlo,monospace;color:#14532d;margin:8px 0 12px;white-space:pre}
+code{font:13px ui-monospace,Menlo,monospace;background:var(--code);padding:1px 6px;border-radius:6px;color:#14532d}
 table{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}
 th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top;color:var(--mu)}
 th{color:var(--ink)}
@@ -55,7 +55,8 @@ footer{margin-top:40px;font-size:13px;color:var(--mu)}
       <p id="kwarn" class="mu" style="font-size:13px" hidden><b>Copy it now.</b> For safety we only show the full key once. If you lose it, make a new one.</p>
       <button id="kcp" class="btn" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700;margin-right:8px" hidden>Copy key</button>
       <button id="krg" class="btn" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700;background:transparent;border:1px solid var(--line);color:var(--ink)">Make a new key</button>
-      <p id="kus" class="mu" style="margin:10px 0 0"></p>
+      <div style="margin:14px 0 6px;height:12px;border-radius:99px;background:var(--line);overflow:hidden"><div id="kbar" style="height:100%;width:0;background:var(--g);border-radius:99px;transition:width .4s"></div></div>
+      <p id="kus" class="mu" style="margin:0"></p>
     </div>
   </div>
   <p id="km" class="mu" role="status" style="margin:8px 0 0"></p>
@@ -90,6 +91,9 @@ function show(j) {
   const full = !!j.key;
   $("kkey").textContent = full ? j.key : j.prefix + "••••••••••••••••••••••••";
   $("kwarn").hidden = !full; $("kcp").hidden = !full;
+  var pct = Math.min(100, (j.monthly_used || 0) / (j.monthly_limit || 1) * 100);
+  $("kbar").style.width = (j.monthly_used > 0 ? Math.max(pct, 2) : 0) + "%";
+  $("kbar").style.background = pct >= 90 ? "#dc2626" : pct >= 70 ? "#d97706" : "var(--g)";
   $("kus").textContent = "This month: " + nf(j.monthly_used) + " of " + nf(j.monthly_limit) + " calls used · " + j.per_minute_limit + " per minute · resets " + j.resets_on;
 }
 async function run(action, name) {
