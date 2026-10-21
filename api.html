@@ -57,6 +57,10 @@ footer{margin-top:40px;font-size:13px;color:var(--mu)}
       <button id="krg" class="btn" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700;background:transparent;border:1px solid var(--line);color:var(--ink)">Make a new key</button>
       <div style="margin:14px 0 6px;height:12px;border-radius:99px;background:var(--line);overflow:hidden"><div id="kbar" style="height:100%;width:0;background:var(--g);border-radius:99px;transition:width .4s"></div></div>
       <p id="kus" class="mu" style="margin:0"></p>
+      <h3 style="font-family:inherit;color:var(--ink);margin:18px 0 6px">Test your key</h3>
+      <input id="kt" type="text" placeholder="Paste your key here" autocomplete="off" style="display:block;width:100%;margin:0 0 10px;padding:12px;border-radius:10px;border:1px solid var(--line);background:var(--code);color:var(--ink);font:inherit">
+      <button id="ktb" class="btn" type="button" style="border:0;cursor:pointer;font:inherit;font-weight:700;margin:0">Test now</button>
+      <pre id="kto" style="margin:10px 0 0" hidden></pre>
     </div>
   </div>
   <p id="km" class="mu" role="status" style="margin:8px 0 0"></p>
@@ -112,6 +116,17 @@ $("kout").onclick = async (e) => { e.preventDefault(); await sb.auth.signOut(); 
 $("kmk").onclick = () => run("create", $("kn").value);
 $("krg").onclick = () => { if (confirm("Make a new key? The old key will stop working right away.")) run("regenerate"); };
 $("kcp").onclick = async () => { try { await navigator.clipboard.writeText($("kkey").textContent); say("Copied."); } catch (e) { say("Press and hold the key to copy it."); } };
+$("ktb").onclick = async () => {
+  const k = $("kt").value.trim(), o = $("kto"); o.hidden = false;
+  if (!k) { o.textContent = "Paste your key first."; return; }
+  o.textContent = "Testing...";
+  try {
+    const r = await fetch("https://inufnxvilubbsrcusakt.supabase.co/functions/v1/api/prices?symbols=btc&currency=ngn", { headers: { "x-api-key": k } });
+    const t = await r.text();
+    o.textContent = (r.ok ? "Working. Status " : "Problem. Status ") + r.status + "\n" + t.slice(0, 600);
+    if (r.ok) run("get");
+  } catch (e) { o.textContent = "Could not reach the API. Please try again."; }
+};
 init().catch(() => { $("k0").textContent = "Could not load. Please refresh."; });
 </script>
 
