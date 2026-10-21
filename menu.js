@@ -2,7 +2,8 @@
 (function () {
   var TOP = [
     ['Account', 'Profile, alerts and settings', '#account'],
-    ['Daily contest', 'Predict the price and win', 'predict.html']
+    ['Daily contest', 'Predict the price and win', 'predict.html'],
+    ['API for developers', 'Free crypto price API, 10,000 calls a month', 'api.html', 1]
   ];
   var GROUPS = [
     { t: 'Market', rows: [
@@ -22,7 +23,7 @@
     { t: 'Safety tools', rows: [
       ['Crypto network checker', 'Avoid sending on the wrong network', 'network-check.html'],
       ['Coin risk check', 'Warning signs before you buy', 'coin-risk.html'],
-      ['Track any token', 'Not in the list? Paste a link or address', 'track-token.html']
+      ['Track any token', 'Not in the list? Paste a link or address', 'track-token.html', 1]
     ]},
     { t: 'Learn', rows: [
       ['How to read candlesticks', 'A simple lesson for beginners', 'learn-candlesticks.html'],
@@ -46,6 +47,7 @@
     '#mnu .m-x{border:0;background:rgba(127,127,127,.15);color:inherit;width:32px;height:32px;border-radius:50%;font-size:18px;line-height:1;cursor:pointer}' +
     '#mnu .m-t{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.55;margin:14px 0 6px}' +
     '#mnu .m-r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border-radius:12px;text-decoration:none;color:inherit;background:rgba(127,127,127,.07);margin-bottom:6px}' +
+    '#mnu .m-d{display:inline-block;width:8px;height:8px;border-radius:50%;background:#12a150;margin-left:7px;vertical-align:middle;box-shadow:0 0 0 3px rgba(18,161,80,.2)}' +
     '#mnu .m-r:active{background:rgba(18,161,80,.15)}' +
     '#mnu .m-r span{display:block;font-weight:600;font-size:15px}' +
     '#mnu .m-r small{display:block;font-size:12px;opacity:.65;margin-top:1px}' +
@@ -66,12 +68,12 @@
   var html = '<div class="m-sc" data-x></div><div class="m-sh" role="dialog" aria-modal="true" aria-label="Menu"><div class="m-gr"></div>' +
     '<div class="m-h"><b>Menu</b><button class="m-x" type="button" aria-label="Close" data-x>×</button></div>';
   function row(r) {
-    return '<a class="m-r" href="' + r[2] + '"><div><span>' + esc(r[0]) + '</span>' + (r[1] ? '<small>' + esc(r[1]) + '</small>' : '') + '</div>' + chev + '</a>';
+    return '<a class="m-r" href="' + r[2] + '"><div><span>' + esc(r[0]) + (r[3] ? '<em class="m-d"></em>' : '') + '</span>' + (r[1] ? '<small>' + esc(r[1]) + '</small>' : '') + '</div>' + chev + '</a>';
   }
   TOP.forEach(function (r) { html += row(r); });
   html += '<div style="height:6px"></div>';
   GROUPS.forEach(function (g) {
-    html += '<div class="m-g"><button type="button" class="m-gh" aria-expanded="false"><span>' + esc(g.t) + '</span><i>+</i></button><div class="m-gb">' + g.rows.map(row).join('') + '</div></div>';
+    html += '<div class="m-g"><button type="button" class="m-gh" aria-expanded="false"><span>' + esc(g.t) + (g.rows.some(function (r) { return r[3]; }) ? '<em class="m-d"></em>' : '') + '</span><i>+</i></button><div class="m-gb">' + g.rows.map(row).join('') + '</div></div>';
   });
   html += '</div>';
 
