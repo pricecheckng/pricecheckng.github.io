@@ -62,6 +62,7 @@ td:last-child,th:last-child{text-align:right;font-weight:700}
 .links a{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--ink);text-decoration:none;font-size:.9rem}
 .wa{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:#25d366;color:#fff!important;font-weight:800;font-size:.9rem;text-decoration:none;border-radius:999px;padding:9px 16px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.stats[hidden]{display:none}.stats div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}.stats small{display:block;color:var(--mut);font-size:.72rem}.stats b{font-size:.95rem}
+h3{font-size:1rem;margin:16px 0 4px}
 .note{color:var(--mut);font-size:.85rem;margin-top:14px}
 footer{border-top:1px solid var(--line);padding:18px 20px;text-align:center;color:var(--mut);font-size:.9rem}
 footer a{color:var(--mut)}`;
@@ -77,7 +78,17 @@ function page(c, i) {
   const rk = rankCol && Number.isFinite(Number(c[rankCol])) ? Math.round(Number(c[rankCol])) : 0;
   const waShare = `${name} (${sym}) price in Naira, USD and more: ${url}`;
   const others = top.filter((o) => o.id !== c.id).slice(0, 12).map((o) => `<a href="${o.id}-price.html">${esc(o.name)} price</a>`).join("");
-  const ld = JSON.stringify({ "@context": "https://schema.org", "@type": "WebPage", name: `${name} (${sym}) price`, url, description: desc, isPartOf: { "@type": "WebSite", name: "PriceCheck NG", url: SITE + "/" } });
+  const faq = [
+    [`What is the ${name} (${sym}) price in naira today?`, `The live ${name} price in Nigerian naira is shown at the top of this page and in the currency table. It is converted from the US dollar price at market exchange rates and updates through the day.`],
+    [`Where does PriceCheck NG get its ${sym} prices?`, `Prices come from public market data providers and are refreshed regularly. Prices are for information only, and the price on a particular exchange can be slightly different.`],
+    [`Can I get an alert when ${name} reaches a price?`, `Yes. You can set a free ${sym} price alert on PriceCheck NG and get notified by push notification or Telegram when ${sym} reaches your price or moves by a percent you choose.`],
+    [`Can I buy ${name} on PriceCheck NG?`, `No. PriceCheck NG is a price tracker, not an exchange. It does not hold your money or let you trade. This page is not financial advice.`]
+  ];
+  const faqHtml = `<h2>${esc(name)} price FAQ</h2>` + faq.map((q) => `<h3>${esc(q[0])}</h3><p>${esc(q[1])}</p>`).join("");
+  const ld = JSON.stringify([
+    { "@context": "https://schema.org", "@type": "WebPage", name: `${name} (${sym}) price`, url, description: desc, isPartOf: { "@type": "WebSite", name: "PriceCheck NG", url: SITE + "/" } },
+    { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map((q) => ({ "@type": "Question", name: q[0], acceptedAnswer: { "@type": "Answer", text: q[1] } })) }
+  ]);
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -125,6 +136,7 @@ ${css}
 <p class="note" style="text-align:center;margin-top:8px"><a href="./#coin/${c.id}" style="color:var(--g);font-weight:700">Or open the ${esc(sym)} chart in the app</a></p>
 <h2>About ${esc(name)} prices on PriceCheck NG</h2>
 <p>PriceCheck NG shows the live ${esc(name)} (${esc(sym)}) price in US dollars and in your choice of Nigerian naira (NGN), British pounds (GBP), euros (EUR), Ghanaian cedis (GHS), South African rand (ZAR), Kenyan shillings (KES), and more. You can set an alert for when ${esc(sym)} reaches a price or moves by a percent, and get notified by push notification or Telegram. It is free to use.</p>
+${faqHtml}
 <section id="news" hidden><div class="nhead"><h2>${esc(name)} news</h2><a href="news.html?coin=${c.id}">View all →</a></div><div id="newsList"></div><p class="note">Headlines from publishers' public feeds. Each story opens on the publisher's own site.</p></section>
 <h2>Other coins</h2>
 <div class="links">${others}<a href="./">All coins</a></div>
