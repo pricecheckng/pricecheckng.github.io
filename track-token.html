@@ -322,8 +322,9 @@ function flags(x) {
   if (Number(tx.buys) > 20 && Number(tx.sells) < Number(tx.buys) * 0.1) out.push(["r", "Many buys but almost no sells. This can mean holders are blocked from selling."]);
   const vol = Number((x.volume || {}).h24 || 0);
   if (liq > 0 && vol < 20000) out.push(["a", "Very little trading in this pool (" + big(vol) + " in 24 hours), so the price and chart may be out of date or not match the wider market."]);
-  if (x._spread > 0.1) out.push(["a", "Other pools for this token show prices that differ by about " + Math.round(x._spread * 100) + "%. Check the price on another source before you act."]);
-  if (!out.length) out.push(["ok", "No obvious warning signs from this data, but that does not make it safe."]);
+  if (x._spread > 0.1 && Number(x.marketCap || x.fdv) >= 1e9) out.push(["n", "This is a large, well-known coin. Small pools on decentralised exchanges can show odd prices, so use the price in the main list for the market price."]);
+  else if (x._spread > 0.1) out.push(["a", "Other pools for this token show prices that differ by about " + Math.round(x._spread * 100) + "%. Check the price on another source before you act."]);
+  if (!out.some((z) => z[0] !== "n")) out.push(["ok", "No obvious warning signs from this data, but that does not make it safe."]);
   return out;
 }
 
@@ -378,7 +379,7 @@ function show(x, autoChart) {
   tile("Liquidity", big((x.liquidity || {}).usd)); tile("24h volume", big((x.volume || {}).h24));
   tile("Market cap", big(x.marketCap || x.fdv)); tile("Trading for", age(x.pairCreatedAt));
   c.append(g);
-  const mflags = flags(x).map(([k, t]) => { const e = el("div", "warn " + k, t); c.append(e); return [k, e]; });
+  const mflags = flags(x).map(([k, t]) => { const e = el("div", k === "n" ? "note" : "warn " + k, t); c.append(e); return [k, e]; });
   if (GP[x.chainId]) {
     const box = el("div", "cbox"); box.append(el("div", "warn ok", "Checking the contract..."));
     c.append(box);
