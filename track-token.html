@@ -345,14 +345,14 @@ function contractFlags(d) {
   const bt = n(d.buy_tax), st = n(d.sell_tax);
   if (isFinite(bt) || isFinite(st)) {
     const hi = Math.max(isFinite(bt) ? bt : 0, isFinite(st) ? st : 0);
-    out.push([hi >= 0.3 ? "r" : hi >= 0.1 ? "a" : "ok", "Trading tax: buy " + (isFinite(bt) ? p(bt) : "n/a") + ", sell " + (isFinite(st) ? p(st) : "n/a") + "." + (hi >= 0.1 ? " A high tax takes a big part of your money on every trade." : "")]);
+    out.push([hi >= 0.3 ? "r" : hi >= 0.1 ? "a" : "n", "Trading tax: buy " + (isFinite(bt) ? p(bt) : "n/a") + ", sell " + (isFinite(st) ? p(st) : "n/a") + "." + (hi >= 0.1 ? " A high tax takes a big part of your money on every trade." : "")]);
   }
   if (d.is_open_source === "0") out.push(["a", "The contract code is not published, so nobody can check what it does."]);
   if (d.is_mintable === "1") out.push(["a", "The owner can create more tokens, which can lower the price."]);
   if (d.hidden_owner === "1" || d.can_take_back_ownership === "1") out.push(["a", "The contract has a hidden owner or can take back control."]);
   if (d.transfer_pausable === "1") out.push(["a", "The owner can pause trading."]);
   if (d.is_blacklisted === "1") out.push(["a", "The owner can block wallets from trading."]);
-  if (!out.some((z) => z[0] === "r" || z[0] === "a")) out.push(["ok", "GoPlus found no contract red flags. This is not a safety guarantee."]);
+  if (!out.some((z) => z[0] === "r" || z[0] === "a")) out.push(["ok", "No warning signs in the market data or the contract (checked by GoPlus). This is not a safety guarantee."]);
   return out;
 }
 function show(x, autoChart) {
@@ -372,12 +372,17 @@ function show(x, autoChart) {
   tile("Liquidity", big((x.liquidity || {}).usd)); tile("24h volume", big((x.volume || {}).h24));
   tile("Market cap", big(x.marketCap || x.fdv)); tile("Trading for", age(x.pairCreatedAt));
   c.append(g);
-  flags(x).forEach(([k, t]) => c.append(el("div", "warn " + k, t)));
+  const mflags = flags(x).map(([k, t]) => { const e = el("div", "warn " + k, t); c.append(e); return [k, e]; });
   if (GP[x.chainId]) {
     const box = el("div", "cbox"); box.append(el("div", "warn ok", "Checking the contract..."));
     c.append(box);
     contractCheck(x.chainId, x.baseToken.address).then((d) => {
-      box.replaceChildren(); contractFlags(d).forEach(([k, t]) => box.append(el("div", "warn " + k, t)));
+      box.replaceChildren(); const cf = contractFlags(d);
+      const bad = cf.some((z) => z[0] === "r" || z[0] === "a");
+      const mok = mflags.filter((z) => z[0] === "ok");
+      if (cf.some((z) => z[0] === "ok") && mok.length) mok.forEach((z) => z[1].remove());
+      if (bad) mok.forEach((z) => z[1].remove());
+      cf.forEach(([k, t]) => box.append(el("div", k === "n" ? "note" : "warn " + k, t)));
       box.append(el("div", "note", "Contract check by GoPlus Security."));
     }).catch(() => { box.replaceChildren(el("div", "note", "Contract check is not available right now.")); });
   }
