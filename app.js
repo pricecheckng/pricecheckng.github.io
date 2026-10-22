@@ -14,7 +14,7 @@ if (!SUPABASE_KEY || SUPABASE_KEY.startsWith("PASTE_")) {
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
 const PAGE = 50;
-const COLS = "id,symbol,name,image_url,market_cap_rank,price_usd,price_ngn,market_cap_usd,volume_24h_usd,change_24h_pct,tier,last_updated";
+const COLS = "id,symbol,name,image_url,market_cap_rank,price_usd,price_ngn,market_cap_usd,volume_24h_usd,change_24h_pct,tier,last_updated,kind";
 
 /* ---------- currencies (USD is always shown on top; one more is chosen) ---------- */
 const CURRENCIES = {
@@ -293,7 +293,7 @@ function coinRow(c) {
   const on = state.watch.has(c.id);
   return `<div class="cw"><button class="star${on ? " on" : ""}" type="button" data-star="${esc(c.id)}" aria-label="${on ? "Remove from watchlist" : "Add to watchlist"}" aria-pressed="${on}">${on ? "★" : "☆"}</button><button class="coin" type="button" data-id="${esc(c.id)}">
     <img class="logo" src="${esc(c.image_url || "")}" alt="" loading="lazy" width="40" height="40">
-    <div class="meta"><b>${esc(c.name)}</b><span>${sym} · <span class="chg ${d.c}">${d.t}</span></span></div>
+    <div class="meta"><b>${esc(c.name)}</b><span>${sym} · <span class="chg ${d.c}">${d.t}</span>${c.kind === "tokenized" ? '<em style="font-style:normal;font-size:.72rem;background:rgba(22,163,74,.14);color:#15803d;border-radius:99px;padding:1px 8px;margin-left:6px">Tokenized asset</em>' : ""}</span></div>
     <div class="px"><b>${fmtUsd(c.price_usd)}</b><span>${fmtLocal(secondPrice(c), state.cur)}</span></div>
   </button></div>`;
 }
@@ -351,6 +351,7 @@ async function loadCoins(reset) {
   if (term) q = q.or(`name.ilike.%${term}%,symbol.ilike.%${term}%`);
   else {
     // Hide tokenized funds and similar products from the main list (they still show when searched).
+    q = q.or("kind.is.null,kind.neq.tokenized");
     for (const w of HIDE_NAMES) q = q.not("name", "ilike", `%${w}%`);
     for (const sy of HIDE_SYMBOLS) q = q.not("symbol", "ilike", sy);
   }
@@ -577,7 +578,7 @@ function paintCoin(c) {
   $("#coinBody").innerHTML = `
     <div class="cp-head">
       <img class="logo lg" src="${esc(c.image_url || "")}" alt="" width="48" height="48">
-      <div><h1>${esc(c.name)}</h1><p>${esc(sym)}${c.market_cap_rank ? " · Rank #" + c.market_cap_rank : ""}</p></div>
+      <div><h1>${esc(c.name)}</h1><p>${esc(sym)}${c.market_cap_rank && c.kind !== "tokenized" ? " · Rank #" + c.market_cap_rank : ""}${c.kind === "tokenized" ? '<em style="font-style:normal;font-size:.72rem;background:rgba(22,163,74,.14);color:#15803d;border-radius:99px;padding:1px 8px;margin-left:6px">Tokenized asset</em>' : ""}</p>${c.kind === "tokenized" ? '<p class="muted" style="font-size:.85rem;margin:6px 0 0">A tokenized asset tracks the value of a fund, bond, stock or similar. Its price does not move like normal crypto and it may trade very little.</p>' : ""}</div>
     </div>
     <div class="cp-price">
       <small>PRICE IN USD</small>
