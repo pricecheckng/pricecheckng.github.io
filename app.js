@@ -611,6 +611,7 @@ function paintCoin(c) {
       <div class="cp-stat"><small>24h volume (${esc(state.cur)})</small><b>${secBig(c.volume_24h_usd)}</b></div>
       <div class="cp-stat" style="grid-column:1/-1"><small>Last updated</small><b>${ago(c.last_updated)}</b></div>
     </div>
+    <div id="coinMarkets"></div>
     <div id="coinNews"></div>
     <button class="btn" type="button" id="alertBtn" style="padding:10px 14px;min-height:0;font-size:.95rem;border-radius:12px">🔔 Set price alert</button>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 4px">
@@ -620,6 +621,7 @@ function paintCoin(c) {
     ${referralCardHtml()}`;
   $("#alertBtn").onclick = () => alertForm(c);
   loadCoinNews(c);
+  loadCoinMarkets(c);
   loadWatch().then(() => {
     const wb = $("#watchBtn");
     if (wb) wb.textContent = watchLabel(c.id);
@@ -657,6 +659,36 @@ function paintCoin(c) {
 }
 
 /* ---------- coin news ---------- */
+const EX_NAMES = { binance: "Binance", bybit: "Bybit", okx: "OKX", kucoin: "KuCoin", gate: "Gate", mexc: "MEXC", bitget: "Bitget", htx: "HTX", cryptocom: "Crypto.com", lbank: "LBank", whitebit: "WhiteBIT", bitmart: "BitMart", coinex: "CoinEx", poloniex: "Poloniex", digifinex: "DigiFinex", xt: "XT", kraken: "Kraken", bitstamp: "Bitstamp", bitfinex: "Bitfinex", bitvavo: "Bitvavo", valr: "VALR", btcturk: "BTCTurk", coinbase: "Coinbase", bingx: "BingX", phemex: "Phemex" };
+const EX_ORDER = ["binance", "bybit", "okx", "kucoin", "gate", "mexc", "bitget", "htx", "cryptocom", "lbank", "whitebit", "poloniex", "digifinex", "xt", "kraken", "bitstamp", "bitfinex", "bitvavo", "valr", "btcturk", "coinbase", "bingx", "phemex"];
+function exBadge(key) {
+  let h = 0;
+  for (const ch of String(key)) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  const name = EX_NAMES[key] || String(key);
+  const k = EX_ORDER.indexOf(key);
+  const logo = k < 0 ? "" : `<span style="position:absolute;inset:0;background:#fff url(logos/exchanges.png) no-repeat;background-size:180px 120px;background-position:-${(k % 6) * 30}px -${Math.floor(k / 6) * 30}px"></span>`;
+  return `<span style="position:relative;flex:none;width:30px;height:30px;border-radius:8px;background:hsl(${h},45%,40%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;overflow:hidden">${esc(name.charAt(0).toUpperCase())}${logo}</span>`;
+}
+async function loadCoinMarkets(c) {
+  try {
+    const box = $("#coinMarkets");
+    if (!box) return;
+    const { data, error } = await sb.rpc("coin_markets", { p_id: c.id });
+    if (error || !data || !data.length) return;
+    const rows = data
+      .slice(0, 10)
+      .map(
+        (r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:${i ? "1px solid var(--line,#e3ece6)" : "0"}">
+          <span style="flex:none;width:22px;color:#6b7c72;font-size:.85rem">${i + 1}</span>
+          ${exBadge(r.exchange)}
+          <b style="flex:1;min-width:0">${esc(EX_NAMES[r.exchange] || r.exchange)}</b>
+          <span style="text-align:right"><b>${fmtUsd(r.price_usd)}</b><br><small style="color:#6b7c72">${fmtBig(r.volume_usd, "$")} · ${Number(r.share_pct).toFixed(1)}%</small></span>
+        </div>`
+      )
+      .join("");
+    box.innerHTML = `<div class="card" style="margin:14px 0 4px"><h3 style="margin:0 0 4px">Where ${esc(c.symbol.toUpperCase())} is traded</h3><p class="note" style="margin:0 0 6px">Price on each exchange, with its 24h volume and share of the total. Collected by PriceCheck NG from the exchanges directly.</p>${rows}</div>`;
+  } catch (_) {}
+}
 async function loadCoinNews(c) {
   const box = $("#coinNews");
   if (!box) return;
