@@ -998,7 +998,7 @@ async function renderAlerts() {
       t.innerHTML = `<a href="#account" class="ac-tip"><span class="ac-tip-ic">✈</span><span><b>Don't want to miss an alert?</b><br>Connect Telegram and your alerts will arrive there too.</span><span class="ac-chev">${acIco("chev")}</span></a>`;
     });
   }
-  const [pa, po, pp] = await Promise.all([
+  const [pa, po, pp, pt] = await Promise.all([
     sb
       .from("price_alerts")
       .select("id,target_price,currency,direction,status,created_at,triggered_at,coins(name,symbol,image_url)")
@@ -1008,6 +1008,7 @@ async function renderAlerts() {
       .from("percent_alerts")
       .select("id,pct,base_price,direction,status,created_at,triggered_at,coins(name,symbol,image_url)")
       .order("created_at", { ascending: false }),
+    sb.from("token_alerts").select("id,chain,symbol,name,target_price,direction,status,created_at,triggered_at").order("created_at", { ascending: false }),
   ]);
   const box = $("#alerts");
   if (!box) return;
@@ -1015,7 +1016,7 @@ async function renderAlerts() {
     box.innerHTML = emptyBox("Could not load alerts", "Check your connection and try again.");
     return;
   }
-  const items = [...(pa.data || []).map((a) => ({ kind: "price", a })), ...(po.data || []).map((a) => ({ kind: "portfolio", a })), ...(pp.data || []).map((a) => ({ kind: "percent", a }))].sort(
+  const items = [...(pa.data || []).map((a) => ({ kind: "price", a })), ...(po.data || []).map((a) => ({ kind: "portfolio", a })), ...(pp.data || []).map((a) => ({ kind: "percent", a })), ...(pt.data || []).map((a) => ({ kind: "token", a }))].sort(
     (x, y) => new Date(y.a.created_at) - new Date(x.a.created_at)
   );
   lastAlertItems = items;
@@ -1025,7 +1026,7 @@ async function renderAlerts() {
   }
   const pfActive = (po.data || []).filter((a) => a.status === "active").length;
   const cnt = (arr) => (arr || []).filter((a) => a.status === "active").length;
-  const countLine = `<p class="muted" style="margin:0;padding:12px 14px;font-size:.88rem;border-bottom:1px solid rgba(127,127,127,.18)">Active: coin ${cnt(pa.data)}/${PRICE_ALERT_LIMIT} · move ${cnt(pp.data)}/${PCT_ALERT_LIMIT} · portfolio ${pfActive}/${PORTFOLIO_ALERT_LIMIT}</p>`;
+  const countLine = `<p class="muted" style="margin:0;padding:12px 14px;font-size:.88rem;border-bottom:1px solid rgba(127,127,127,.18)">Active: coin ${cnt(pa.data)}/${PRICE_ALERT_LIMIT} · move ${cnt(pp.data)}/${PCT_ALERT_LIMIT} · portfolio ${pfActive}/${PORTFOLIO_ALERT_LIMIT}${(pt.data || []).length ? ` · token ${cnt(pt.data)}` : ""}</p>`;
   box.innerHTML =
     countLine +
     items
@@ -1053,6 +1054,15 @@ async function renderAlerts() {
             <div class="acts">${chip}${act}</div>
           </div>`;
         }
+        if (kind === "token") {
+          const tsym = (a.symbol || a.name || "Token").toUpperCase();
+          const tstat = a.status === "paused" ? ` · pool not found` : "";
+          return `<div class="alert">
+            <div class="logo" aria-hidden="true" style="display:flex;align-items:center;justify-content:center;background:#effcf3;border-radius:50%;font-size:20px;width:40px;height:40px">🔍</div>
+            <div class="meta"><b>${esc(tsym)} ${a.direction === "above" ? "rises to" : "falls to"} ${esc(fmtUsd(Number(a.target_price)))}</b><span>${esc(a.chain)} token · ${when}${tstat}</span></div>
+            <div class="acts">${chip}${act}</div>
+          </div>`;
+        }
         const sym = (a.coins?.symbol || "").toUpperCase();
         return `<div class="alert">
           <img class="logo" src="${esc(a.coins?.image_url || "")}" alt="" loading="lazy" width="40" height="40">
@@ -1068,7 +1078,7 @@ async function renderAlerts() {
     if (!b) return;
     const aid = b.dataset.aid;
     const kind = b.dataset.kind;
-    const table = kind === "portfolio" ? "portfolio_alerts" : kind === "percent" ? "percent_alerts" : "price_alerts";
+    const table = kind === "portfolio" ? "portfolio_alerts" : kind === "percent" ? "percent_alerts" : kind === "token" ? "token_alerts" : "price_alerts";
     if (b.dataset.act === "cancel") {
       const { error: er } =
         kind === "percent" ? await sb.from(table).delete().eq("id", aid) : await sb.from(table).update({ status: "cancelled" }).eq("id", aid);
@@ -1380,6 +1390,7 @@ document.addEventListener("click", (e) => {
       const sym = (a.coins?.symbol || "").toUpperCase();
       if (k === "portfolio") rows.push(["Portfolio", "", a.direction === "above" ? "rises to" : "falls to", a.target_value, a.currency, a.status, a.created_at, a.triggered_at || ""]);
       else if (k === "percent") rows.push(["Move", sym, a.direction === "up" ? "rises" : a.direction === "down" ? "falls" : "moves", a.pct + "%", "from " + a.base_price + " USD", a.status, a.created_at, a.triggered_at || ""]);
+      else if (k === "token") rows.push(["Token", (a.symbol || a.name || "").toUpperCase(), a.direction === "above" ? "rises to" : "falls to", a.target_price, "USD (" + a.chain + ")", a.status, a.created_at, a.triggered_at || ""]);
       else rows.push(["Price", sym, a.direction === "above" ? "rises to" : "falls to", a.target_price, a.currency, a.status, a.created_at, a.triggered_at || ""]);
     });
     downloadCsv(`pricecheck-alerts-${csvDay()}.csv`, rows);

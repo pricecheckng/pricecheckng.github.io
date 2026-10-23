@@ -2,7 +2,8 @@
 // Run from the repo root:  node scripts/gen-coin-pages.mjs
 import fs from "node:fs";
 
-const COUNT = 100;
+const COUNT = 500;            // how many coin pages to write
+const MIN_VOLUME = 10000;     // a coin needs at least this much 24h volume (USD) to get a page
 const read = (f) => fs.readFileSync(f, "utf8");
 
 // Site address comes from the CNAME file (falls back to the live domain).
@@ -28,7 +29,9 @@ const get = async (p) => {
 const sample = (await get("coins?select=*&limit=1"))[0] || {};
 const rankCol = ["market_cap_rank", "rank", "cmc_rank"].find((c) => c in sample);
 const order = rankCol ? rankCol + ".asc.nullslast" : "market_cap.desc.nullslast";
-const rows = await get("coins?select=id,symbol,name,price_usd" + (rankCol ? "," + rankCol : "") + "&price_usd=not.is.null" + (rankCol ? "&" + rankCol + "=not.is.null" : "") + "&order=" + order + "&limit=300");
+// Only coins that really trade, were updated in the last 3 days, and are not tokenized assets.
+const fresh = new Date(Date.now() - 3 * 864e5).toISOString();
+const rows = await get("coins?select=id,symbol,name,price_usd" + (rankCol ? "," + rankCol : "") + "&price_usd=not.is.null" + (rankCol ? "&" + rankCol + "=not.is.null" : "") + "&volume_24h_usd=gte." + MIN_VOLUME + "&last_updated=gte." + encodeURIComponent(fresh) + "&or=(kind.is.null,kind.neq.tokenized)&order=" + order + "&limit=1500");
 
 // Leave out tokenized funds, bridged copies and other noise.
 const JUNK = /(heloc|tokenized|treasury|t-bill|money market|\bfund\b|\bnav\b|real estate|bridged|restaked|liquid staking|staked|\bshares?\b)/i;
@@ -210,7 +213,10 @@ Promise.all([get("coins?id=eq." + ID + "&select=price_usd,change_24h_pct,last_up
 top.forEach((c, i) => fs.writeFileSync(c.id + "-price.html", page(c, i)));
 
 // List of the coins that have a page (used by the homepage "Popular coins" section).
-fs.writeFileSync("coin-pages.json", JSON.stringify(top.map((c) => ({ id: c.id, symbol: c.symbol, name: c.name }))));
+// If two coins share a symbol, the homepage list keeps the first one (the higher ranked).
+const seenSym = new Set();
+const listed = top.filter((c) => { const k = String(c.symbol).toUpperCase(); if (seenSym.has(k)) return false; seenSym.add(k); return true; });
+fs.writeFileSync("coin-pages.json", JSON.stringify(listed.map((c) => ({ id: c.id, symbol: c.symbol, name: c.name }))));
 
 // Rebuild the sitemap: keep every non-coin entry, add the coin pages.
 let sm = "";

@@ -38,6 +38,11 @@ button.sm{padding:8px 12px;font-size:14px;border-radius:10px}
 select{padding:10px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:15px;max-width:100%}
 .cur{display:flex;align-items:center;gap:8px;margin:0 0 6px}
 a{color:var(--gd)}
+.apanel{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
+.apanel .frm{display:flex;gap:8px;margin:8px 0}.apanel select{flex:0 0 auto}
+.apanel .chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
+.chipb{padding:6px 11px;font-size:13px;border-radius:99px;background:#fff;color:var(--gd);border:1px solid var(--g);font-weight:600}
+.arow .btns{align-items:center}
 </style></head><body>
 <header><a href="/">PriceCheck NG</a></header>
 <main>
@@ -50,6 +55,7 @@ a{color:var(--gd)}
 <div id="res"></div>
 <h2 style="font-size:18px;margin:26px 0 0">My tracked tokens</h2>
 <div id="mine" class="card"><span class="note">Nothing yet. Check a token and tap Track.</span></div>
+<div id="malerts" hidden><h2 style="font-size:18px;margin:26px 0 0">My token alerts</h2><div id="almine" class="card"></div></div>
 <p class="note">Prices come from one trading pool on a decentralised exchange, so they can differ from other sources and can be very unreliable. Market cap is an estimate. Many new meme coins lose all their value, and some are scams. This is not financial advice. Never invest money you cannot afford to lose.</p>
 </main>
 <script type="module">
@@ -73,6 +79,18 @@ const API = "https://api.dexscreener.com/latest/dex/";
 const KEY = "pc_tracked_tokens";
 const load = () => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch (e) { return []; } };
 const save = (a) => { try { localStorage.setItem(KEY, JSON.stringify(a)); } catch (e) {} };
+
+// ---------- Token alerts (needs a PriceCheck NG account) ----------
+let sb = null;
+try {
+  const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+  const { SUPABASE_URL, SUPABASE_KEY } = await import("./config.js");
+  sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch (e) {}
+async function signedIn() {
+  if (!sb) return false;
+  try { const { data } = await sb.auth.getSession(); return !!(data && data.session); } catch (e) { return false; }
+}
 
 function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
 function usd(n) {
@@ -396,6 +414,10 @@ function show(x, autoChart) {
   const act = el("div", "actions");
   const tr = el("button", null, "Track"); tr.onclick = () => { add(x); tr.textContent = "Tracked"; tr.disabled = true; };
   act.append(tr);
+  const alBox = el("div", "apanel"); alBox.hidden = true;
+  const al = el("button", "sec", "Set alert");
+  al.onclick = () => { if (!alBox.hidden) { alBox.hidden = true; alBox.replaceChildren(); return; } alBox.hidden = false; alertPanel(x, alBox); };
+  act.append(al);
   const chartBox = el("div", "chartbox"); chartBox.hidden = true;
   const ch = el("button", "sec", "Show chart");
   const embed = () => {
@@ -415,14 +437,97 @@ function show(x, autoChart) {
     const b = el("button", "sec", "View on DexScreener"); b.onclick = () => window.open(x.url, "_blank", "noopener");
     act.append(b);
   }
-  c.append(act); c.append(chartBox);
+  c.append(act); c.append(alBox); c.append(chartBox);
   res.append(c);
   if (autoChart) ch.click();
 }
 
+// Turns a number into a plain price text for the input box (no 1e-7 style).
+function inPrice(v) {
+  if (!(v > 0)) return "";
+  if (v >= 1) return String(Number(v.toFixed(4)));
+  const d = Math.min(18, 3 - Math.floor(Math.log10(v)));
+  return String(Number(v.toFixed(d)));
+}
+async function alertPanel(x, box) {
+  box.replaceChildren();
+  const now = Number(x.priceUsd);
+  if (!sb) { box.append(el("div", "note", "Alerts are not available right now. Try again later.")); return; }
+  if (!(now > 0)) { box.append(el("div", "note", "This token has no price right now, so an alert cannot be set.")); return; }
+  if (!(await signedIn())) {
+    const m = el("div", "warn ok", "Sign in to set an alert. "); const a = el("a", null, "Sign in on PriceCheck NG"); a.href = "/#alerts"; m.append(a);
+    box.append(m); return;
+  }
+  box.append(el("div", "note", "Alert me when the price (in US dollars) goes:"));
+  const frm = el("div", "frm");
+  const dir = document.createElement("select");
+  [["above", "Above"], ["below", "Below"]].forEach(([v, t]) => { const o = document.createElement("option"); o.value = v; o.textContent = t; dir.append(o); });
+  const inp = document.createElement("input"); inp.inputMode = "decimal"; inp.placeholder = "Price in $"; inp.autocomplete = "off";
+  frm.append(dir, inp); box.append(frm);
+  const chips = el("div", "chips");
+  [[10, "+10%"], [25, "+25%"], [-10, "-10%"], [-25, "-25%"]].forEach(([p, t]) => {
+    const b = el("button", "chipb", t); b.type = "button";
+    b.onclick = () => { dir.value = p > 0 ? "above" : "below"; inp.value = inPrice(now * (1 + p / 100)); };
+    chips.append(b);
+  });
+  box.append(chips);
+  box.append(el("div", "note", "Now: " + usd(now) + ". The price is taken from this one trading pool, so it can differ from other sites."));
+  const msg = el("div", "note"); msg.style.margin = "8px 0 0";
+  const go = el("button", null, "Save alert"); go.style.marginTop = "8px";
+  box.append(go, msg);
+  go.onclick = async () => {
+    msg.className = "note"; msg.textContent = "";
+    const v = parseFloat(String(inp.value).replace(/,/g, ""));
+    if (!isFinite(v) || v <= 0) { msg.textContent = "Type the price you want, for example " + inPrice(now * 1.1) + "."; return; }
+    if (dir.value === "above" && v <= now) { msg.textContent = "For Above, the price must be higher than " + usd(now) + ". Pick Below, or a higher price."; return; }
+    if (dir.value === "below" && v >= now) { msg.textContent = "For Below, the price must be lower than " + usd(now) + ". Pick Above, or a lower price."; return; }
+    go.disabled = true; go.textContent = "Saving...";
+    const { error } = await sb.from("token_alerts").insert({ chain: x.chainId, pair: x.pairAddress, token_addr: x.baseToken.address, symbol: x.baseToken.symbol, name: x.baseToken.name, target_price: v, direction: dir.value });
+    go.disabled = false; go.textContent = "Save alert";
+    if (error) {
+      const em = error.message || "";
+      msg.replaceChildren();
+      if (/limit/i.test(em)) msg.textContent = "You have reached your limit of active token alerts. Cancel one first (see My token alerts below).";
+      else if (/row-level|polic|permission/i.test(em)) {
+        msg.append("The alert was not saved. Alerts need notifications turned on in the app, and a confirmed account. ");
+        const a = el("a", null, "Check in the Alerts tab"); a.href = "/#alerts"; msg.append(a);
+      } else msg.textContent = "Could not save the alert. Check your connection and try again.";
+      return;
+    }
+    box.replaceChildren(el("div", "warn ok", "Alert set. We will tell you when " + (x.baseToken.symbol || "this token") + " goes " + dir.value + " " + usd(v) + "."));
+    try {
+      const [ps, tg] = await Promise.all([sb.from("push_subscriptions").select("id").limit(1), sb.from("telegram_links").select("chat_id").limit(1)]);
+      if (!(ps.data || []).length && !(tg.data || []).length) {
+        const w = el("div", "warn a", "You will not get a message yet, because notifications are off. "); const a = el("a", null, "Turn them on or connect Telegram"); a.href = "/#alerts"; w.append(a); box.append(w);
+      }
+    } catch (e) {}
+    renderAlerts();
+  };
+}
+async function renderAlerts() {
+  const wrap = $("malerts"), box = $("almine");
+  if (!sb || !(await signedIn())) { wrap.hidden = true; return; }
+  const { data, error } = await sb.from("token_alerts").select("id,chain,symbol,name,direction,target_price,status,created_at,triggered_at").order("created_at", { ascending: false }).limit(50);
+  if (error || !(data || []).length) { wrap.hidden = true; return; }
+  wrap.hidden = false; box.replaceChildren();
+  for (const a of data) {
+    const row = el("div", "row arow"); const left = el("div");
+    left.append(el("b", null, (a.symbol || a.name || "Token") + " " + (a.direction === "above" ? "above " : "below ") + usd(a.target_price)));
+    left.append(el("small", null, a.chain + " · " + (a.status === "triggered" ? "Triggered" : a.status === "active" ? "Active" : a.status === "paused" ? "Paused (pool not found)" : "Cancelled")));
+    const b = el("button", "sec sm", a.status === "active" ? "Cancel" : "Delete");
+    b.onclick = async () => {
+      b.disabled = true;
+      const r = a.status === "active" ? await sb.from("token_alerts").update({ status: "cancelled" }).eq("id", a.id) : await sb.from("token_alerts").delete().eq("id", a.id);
+      if (r.error) { b.disabled = false; $("msg").textContent = "Could not change the alert. Try again."; return; }
+      renderAlerts();
+    };
+    const btns = el("div", "btns"); btns.append(b); row.append(left, btns); box.append(row);
+  }
+}
+
 function add(x) {
   const a = load().filter((t) => !(t.chain === x.chainId && t.pair === x.pairAddress));
-  if (a.length >= 10) { $("msg").textContent = "You can track up to 10 tokens. Remove one first."; return; }
+  if (a.length >= 30) { $("msg").textContent = "You can track up to 30 tokens. Remove one first."; return; }
   a.unshift({ chain: x.chainId, pair: x.pairAddress, addr: x.baseToken.address, name: x.baseToken.name, symbol: x.baseToken.symbol });
   save(a); renderMine();
 }
@@ -486,4 +591,5 @@ sel.onchange = () => { cur = sel.value; try { localStorage.setItem("pc_cur", cur
 $("go").onclick = run;
 $("q").addEventListener("keydown", (e) => { if (e.key === "Enter") run(); });
 renderMine();
+renderAlerts();
 </script></body></html>
