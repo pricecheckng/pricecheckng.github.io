@@ -690,7 +690,7 @@ async function loadCoinMarkets(c) {
     const lo = data.reduce((m, r) => (Number(r.price_usd) < Number(m.price_usd) ? r : m), data[0]);
     const gap = Number(lo.price_usd) > 0 ? ((Number(hi.price_usd) - Number(lo.price_usd)) / Number(lo.price_usd)) * 100 : 0;
     const gapHtml = data.length > 1 ? `<p style="margin:0 0 8px;padding:8px 10px;border-radius:10px;background:#eef6f0;font-size:.88rem;line-height:1.35">Highest: <b>${esc(EX_NAMES[hi.exchange] || hi.exchange)}</b> ${fmtUsd(hi.price_usd)} · Lowest: <b>${esc(EX_NAMES[lo.exchange] || lo.exchange)}</b> ${fmtUsd(lo.price_usd)} · Gap <b>${gap.toFixed(2)}%</b></p>` : "";
-    box.innerHTML = `<div class="card" style="margin:14px 0 4px"><h3 style="margin:0 0 4px">Where ${esc(c.symbol.toUpperCase())} is traded</h3><p class="note" style="margin:0 0 6px">Price on each exchange, how far it is from the middle price (small, coloured), 24h volume (Vol) and share of the total. Refreshed every 5 minutes. Collected by PriceCheck NG from the exchanges directly.</p>${rows}</div>`;
+    box.innerHTML = `<div class="card" style="margin:14px 0 4px"><h3 style="margin:0 0 4px">Where ${esc(c.symbol.toUpperCase())} is traded</h3><p class="note" style="margin:0 0 6px">Price on each exchange, how far it is from the middle price (small, coloured), 24h volume (Vol) and share of the total. Refreshed every 5 minutes. Collected by PriceCheck NG from the exchanges directly.</p>${gapHtml}${rows}</div>`;
   } catch (_) {}
 }
 async function loadCoinNews(c) {
