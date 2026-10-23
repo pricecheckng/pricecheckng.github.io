@@ -682,11 +682,11 @@ async function loadCoinMarkets(c) {
           <span style="flex:none;width:22px;color:#6b7c72;font-size:.85rem">${i + 1}</span>
           ${exBadge(r.exchange)}
           <b style="flex:1;min-width:0">${esc(EX_NAMES[r.exchange] || r.exchange)}</b>
-          <span style="text-align:right;line-height:1.3"><b>${fmtUsd(r.price_usd)}</b><br><small style="color:#6b7c72;line-height:1.3">${fmtBig(r.volume_usd, "$")} · ${Number(r.share_pct).toFixed(1)}%</small></span>
+          <div style="text-align:right;line-height:1.25"><div style="font-weight:700;margin:0">${fmtUsd(r.price_usd)}</div><div style="color:#6b7c72;font-size:.82rem;margin:2px 0 0">Vol ${fmtBig(r.volume_usd, "$")} · ${Number(r.share_pct).toFixed(1)}%</div></div>
         </div>`
       )
       .join("");
-    box.innerHTML = `<div class="card" style="margin:14px 0 4px"><h3 style="margin:0 0 4px">Where ${esc(c.symbol.toUpperCase())} is traded</h3><p class="note" style="margin:0 0 6px">Price on each exchange, with its 24h volume and share of the total. Collected by PriceCheck NG from the exchanges directly.</p>${rows}</div>`;
+    box.innerHTML = `<div class="card" style="margin:14px 0 4px"><h3 style="margin:0 0 4px">Where ${esc(c.symbol.toUpperCase())} is traded</h3><p class="note" style="margin:0 0 6px">Price on each exchange, with its 24h volume (Vol) and share of the total volume. Collected by PriceCheck NG from the exchanges directly.</p>${rows}</div>`;
   } catch (_) {}
 }
 async function loadCoinNews(c) {
