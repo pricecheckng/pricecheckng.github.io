@@ -2,7 +2,8 @@
 // Run from the repo root:  node scripts/gen-coin-pages.mjs
 import fs from "node:fs";
 
-const COUNT = 100;
+const COUNT = 500;            // how many coin pages to write
+const MIN_VOLUME = 10000;     // a coin needs at least this much 24h volume (USD) to get a page
 const read = (f) => fs.readFileSync(f, "utf8");
 
 // Site address comes from the CNAME file (falls back to the live domain).
@@ -28,7 +29,9 @@ const get = async (p) => {
 const sample = (await get("coins?select=*&limit=1"))[0] || {};
 const rankCol = ["market_cap_rank", "rank", "cmc_rank"].find((c) => c in sample);
 const order = rankCol ? rankCol + ".asc.nullslast" : "market_cap.desc.nullslast";
-const rows = await get("coins?select=id,symbol,name,price_usd" + (rankCol ? "," + rankCol : "") + "&price_usd=not.is.null" + (rankCol ? "&" + rankCol + "=not.is.null" : "") + "&order=" + order + "&limit=300");
+// Only coins that really trade, were updated in the last 3 days, and are not tokenized assets.
+const fresh = new Date(Date.now() - 3 * 864e5).toISOString();
+const rows = await get("coins?select=id,symbol,name,price_usd" + (rankCol ? "," + rankCol : "") + "&price_usd=not.is.null" + (rankCol ? "&" + rankCol + "=not.is.null" : "") + "&volume_24h_usd=gte." + MIN_VOLUME + "&last_updated=gte." + encodeURIComponent(fresh) + "&or=(kind.is.null,kind.neq.tokenized)&order=" + order + "&limit=1500");
 
 // Leave out tokenized funds, bridged copies and other noise.
 const JUNK = /(heloc|tokenized|treasury|t-bill|money market|\bfund\b|\bnav\b|real estate|bridged|restaked|liquid staking|staked|\bshares?\b)/i;
@@ -57,10 +60,12 @@ table{width:100%;border-collapse:collapse;margin-top:6px}
 td,th{text-align:left;padding:10px 4px;border-top:1px solid var(--line);font-size:.95rem}
 td:last-child,th:last-child{text-align:right;font-weight:700}
 .btn{display:block;box-shadow:0 6px 18px rgba(11,125,77,.3);text-align:center;background:var(--g);color:#fff;font-weight:800;text-decoration:none;border-radius:14px;padding:14px;margin-top:16px}
+.nhead{display:flex;align-items:baseline;justify-content:space-between}.nhead a{color:var(--g);font-weight:700;font-size:.9rem;text-decoration:none}.ni{display:block;padding:12px 0;border-top:1px solid var(--line);color:var(--ink);text-decoration:none}.ni b{display:block;line-height:1.35}.ni span{display:block;color:var(--mut);font-size:.8rem;margin-top:3px}
 .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .links a{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--ink);text-decoration:none;font-size:.9rem}
 .wa{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:#25d366;color:#fff!important;font-weight:800;font-size:.9rem;text-decoration:none;border-radius:999px;padding:9px 16px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.stats[hidden]{display:none}.stats div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}.stats small{display:block;color:var(--mut);font-size:.72rem}.stats b{font-size:.95rem}
+h3{font-size:1rem;margin:16px 0 4px}
 .note{color:var(--mut);font-size:.85rem;margin-top:14px}
 footer{border-top:1px solid var(--line);padding:18px 20px;text-align:center;color:var(--mut);font-size:.9rem}
 footer a{color:var(--mut)}`;
@@ -76,7 +81,17 @@ function page(c, i) {
   const rk = rankCol && Number.isFinite(Number(c[rankCol])) ? Math.round(Number(c[rankCol])) : 0;
   const waShare = `${name} (${sym}) price in Naira, USD and more: ${url}`;
   const others = top.filter((o) => o.id !== c.id).slice(0, 12).map((o) => `<a href="${o.id}-price.html">${esc(o.name)} price</a>`).join("");
-  const ld = JSON.stringify({ "@context": "https://schema.org", "@type": "WebPage", name: `${name} (${sym}) price`, url, description: desc, isPartOf: { "@type": "WebSite", name: "PriceCheck NG", url: SITE + "/" } });
+  const faq = [
+    [`What is the ${name} (${sym}) price in naira today?`, `The live ${name} price in Nigerian naira is shown at the top of this page and in the currency table. It is converted from the US dollar price at market exchange rates and updates through the day.`],
+    [`Where does PriceCheck NG get its ${sym} prices?`, `Prices come from public market data providers and are refreshed regularly. Prices are for information only, and the price on a particular exchange can be slightly different.`],
+    [`Can I get an alert when ${name} reaches a price?`, `Yes. You can set a free ${sym} price alert on PriceCheck NG and get notified by push notification or Telegram when ${sym} reaches your price or moves by a percent you choose.`],
+    [`Can I buy ${name} on PriceCheck NG?`, `No. PriceCheck NG is a price tracker, not an exchange. It does not hold your money or let you trade. This page is not financial advice.`]
+  ];
+  const faqHtml = `<h2>${esc(name)} price FAQ</h2>` + faq.map((q) => `<h3>${esc(q[0])}</h3><p>${esc(q[1])}</p>`).join("");
+  const ld = JSON.stringify([
+    { "@context": "https://schema.org", "@type": "WebPage", name: `${name} (${sym}) price`, url, description: desc, isPartOf: { "@type": "WebSite", name: "PriceCheck NG", url: SITE + "/" } },
+    { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: faq.map((q) => ({ "@type": "Question", name: q[0], acceptedAnswer: { "@type": "Answer", text: q[1] } })) }
+  ]);
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -124,11 +139,13 @@ ${css}
 <p class="note" style="text-align:center;margin-top:8px"><a href="./#coin/${c.id}" style="color:var(--g);font-weight:700">Or open the ${esc(sym)} chart in the app</a></p>
 <h2>About ${esc(name)} prices on PriceCheck NG</h2>
 <p>PriceCheck NG shows the live ${esc(name)} (${esc(sym)}) price in US dollars and in your choice of Nigerian naira (NGN), British pounds (GBP), euros (EUR), Ghanaian cedis (GHS), South African rand (ZAR), Kenyan shillings (KES), and more. You can set an alert for when ${esc(sym)} reaches a price or moves by a percent, and get notified by push notification or Telegram. It is free to use.</p>
+${faqHtml}
+<section id="news" hidden><div class="nhead"><h2>${esc(name)} news</h2><a href="news.html?coin=${c.id}">View all →</a></div><div id="newsList"></div><p class="note">Headlines from publishers' public feeds. Each story opens on the publisher's own site.</p></section>
 <h2>Other coins</h2>
 <div class="links">${others}<a href="./">All coins</a></div>
 <p class="note">Prices come from third-party sources and may be delayed or differ from the price on an exchange. Currency conversions use exchange rates and may differ from the rate you would actually get. This is information only, not financial advice.</p>
 </main>
-<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="plus.html">Plus &amp; Contact</a></footer>
+<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="api.html">API</a> · <a href="data-sources.html">Data sources</a> · <a href="contact.html">Contact</a><br>Some supply data: <a href="https://www.livecoinwatch.com" target="_blank" rel="noopener">Live Coin Watch</a></footer>
 <script type="module">
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
 const ID = ${JSON.stringify(c.id)};
@@ -145,6 +162,13 @@ const money = (n, c) => {
     return c + " " + n.toFixed(2);
   }
 };
+const ago = (t) => { const m = Math.max(0, Math.round((Date.now() - new Date(t)) / 60000)); if (m < 2) return "just now"; if (m < 60) return m + " min ago"; const h = Math.round(m / 60); if (h < 24) return h + " hr ago"; const d = Math.round(h / 24); return d + (d === 1 ? " day ago" : " days ago"); };
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+get("news?select=source,title,url,published_at&coin_ids=cs.{" + ID + "}&order=published_at.desc&limit=5").then((rows) => {
+  if (!rows || !rows.length) return;
+  document.getElementById("newsList").innerHTML = rows.map((n) => '<a class="ni" href="' + esc(/^https?:\\/\\//i.test(n.url) ? n.url : "#") + '" target="_blank" rel="noopener nofollow"><b>' + esc(n.title) + '</b><span>' + esc(n.source) + " · " + ago(n.published_at) + "</span></a>").join("");
+  document.getElementById("news").hidden = false;
+}).catch(() => {});
 Promise.all([get("coins?id=eq." + ID + "&select=price_usd,change_24h_pct,last_updated,market_cap_usd,volume_24h_usd,market_cap_rank"), get("fx_rates?select=currency,per_usd")])
   .then(([coins, fx]) => {
     const c = coins && coins[0];
@@ -189,14 +213,19 @@ Promise.all([get("coins?id=eq." + ID + "&select=price_usd,change_24h_pct,last_up
 top.forEach((c, i) => fs.writeFileSync(c.id + "-price.html", page(c, i)));
 
 // List of the coins that have a page (used by the homepage "Popular coins" section).
-fs.writeFileSync("coin-pages.json", JSON.stringify(top.map((c) => ({ id: c.id, symbol: c.symbol, name: c.name }))));
+// If two coins share a symbol, the homepage list keeps the first one (the higher ranked).
+const seenSym = new Set();
+const listed = top.filter((c) => { const k = String(c.symbol).toUpperCase(); if (seenSym.has(k)) return false; seenSym.add(k); return true; });
+fs.writeFileSync("coin-pages.json", JSON.stringify(listed.map((c) => ({ id: c.id, symbol: c.symbol, name: c.name }))));
 
+const TODAY = new Date().toISOString().slice(0, 10);
 // Rebuild the sitemap: keep every non-coin entry, add the coin pages.
 let sm = "";
 try { sm = read("sitemap.xml"); } catch (e) {}
 const blocks = sm.match(/<url>[\s\S]*?<\/url>/g) || [];
 const keep = blocks.filter((b) => !/-price\.html<\/loc>/.test(b)).map((b) => "  " + b.trim().replace(/\n\s*/g, "\n    ").replace(/\n    <\/url>/, "\n  </url>"));
-const coinBlocks = top.map((c) => `  <url>\n    <loc>${SITE}/${c.id}-price.html</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>`);
+const coinBlocks = top.map((c) => `  <url>\n    <loc>${SITE}/${c.id}-price.html</loc>\n    <lastmod>${TODAY}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>`);
 const out = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...keep, ...coinBlocks].join("\n")}\n</urlset>\n`;
 fs.writeFileSync("sitemap.xml", out);
 console.log(`Wrote ${top.length} coin pages (rank column: ${rankCol || "market_cap"}) and a sitemap with ${keep.length + coinBlocks.length} URLs for ${SITE}`);
+  
