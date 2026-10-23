@@ -145,7 +145,7 @@ ${faqHtml}
 <div class="links">${others}<a href="./">All coins</a></div>
 <p class="note">Prices come from third-party sources and may be delayed or differ from the price on an exchange. Currency conversions use exchange rates and may differ from the rate you would actually get. This is information only, not financial advice.</p>
 </main>
-<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="contact.html">Contact</a><br>Some supply data: <a href="https://www.livecoinwatch.com" target="_blank" rel="noopener">Live Coin Watch</a></footer>
+<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="api.html">API</a> · <a href="data-sources.html">Data sources</a> · <a href="contact.html">Contact</a><br>Some supply data: <a href="https://www.livecoinwatch.com" target="_blank" rel="noopener">Live Coin Watch</a></footer>
 <script type="module">
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
 const ID = ${JSON.stringify(c.id)};
@@ -218,12 +218,13 @@ const seenSym = new Set();
 const listed = top.filter((c) => { const k = String(c.symbol).toUpperCase(); if (seenSym.has(k)) return false; seenSym.add(k); return true; });
 fs.writeFileSync("coin-pages.json", JSON.stringify(listed.map((c) => ({ id: c.id, symbol: c.symbol, name: c.name }))));
 
+const TODAY = new Date().toISOString().slice(0, 10);
 // Rebuild the sitemap: keep every non-coin entry, add the coin pages.
 let sm = "";
 try { sm = read("sitemap.xml"); } catch (e) {}
 const blocks = sm.match(/<url>[\s\S]*?<\/url>/g) || [];
 const keep = blocks.filter((b) => !/-price\.html<\/loc>/.test(b)).map((b) => "  " + b.trim().replace(/\n\s*/g, "\n    ").replace(/\n    <\/url>/, "\n  </url>"));
-const coinBlocks = top.map((c) => `  <url>\n    <loc>${SITE}/${c.id}-price.html</loc>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>`);
+const coinBlocks = top.map((c) => `  <url>\n    <loc>${SITE}/${c.id}-price.html</loc>\n    <lastmod>${TODAY}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>`);
 const out = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...keep, ...coinBlocks].join("\n")}\n</urlset>\n`;
 fs.writeFileSync("sitemap.xml", out);
 console.log(`Wrote ${top.length} coin pages (rank column: ${rankCol || "market_cap"}) and a sitemap with ${keep.length + coinBlocks.length} URLs for ${SITE}`);
