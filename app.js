@@ -612,11 +612,11 @@ function paintCoin(c) {
       <div class="cp-stat" style="grid-column:1/-1"><small>Last updated</small><b>${ago(c.last_updated)}</b></div>
     </div>
     <div id="coinNews"></div>
-    <button class="btn" type="button" id="alertBtn">🔔 Set price alert</button>
-    <div style="height:10px"></div>
-    <button class="btn ghost" type="button" id="watchBtn">${watchLabel(c.id)}</button>
-    <div style="height:10px"></div>
-    <button class="btn ghost" type="button" id="shareBtn">Share this coin</button>
+    <button class="btn" type="button" id="alertBtn" style="padding:10px 14px;min-height:0;font-size:.95rem;border-radius:12px">🔔 Set price alert</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 4px">
+      <button class="btn ghost" type="button" id="watchBtn" style="padding:9px 8px;min-height:0;font-size:.88rem;border-radius:12px">${watchLabel(c.id)}</button>
+      <button class="btn ghost" type="button" id="shareBtn" style="padding:9px 8px;min-height:0;font-size:.88rem;border-radius:12px">Share</button>
+    </div>
     ${referralCardHtml()}`;
   $("#alertBtn").onclick = () => alertForm(c);
   loadCoinNews(c);
@@ -2552,9 +2552,6 @@ function renderAccount() {
     }</div></div>
     <div id="pushCard" data-full="1"></div>
     <div id="tgCard"></div>
-    <div class="ac-card">
-      <details class="ac-help"><summary class="ac-row">${`<span class="ac-ic">${acIco("help")}</span><div class="ac-rt"><b>Notifications not working?</b><small>Troubleshoot common issues</small></div>`}${chev}</summary><div class="ac-help-body">${PUSH_STEPS}</div></details>
-    </div>
     <div id="adminSlot"></div>
     <button class="btn ghost" type="button" id="signOut">Sign out</button>
     <div id="delSlot"></div></section>${footer()}`;
