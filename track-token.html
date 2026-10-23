@@ -489,16 +489,16 @@ async function alertPanel(x, box) {
       msg.replaceChildren();
       if (/limit/i.test(em)) msg.textContent = "You have reached your limit of active token alerts. Cancel one first (see My token alerts below).";
       else if (/row-level|polic|permission/i.test(em)) {
-        msg.append("The alert was not saved. Alerts need notifications turned on in the app, and a confirmed account. ");
-        const a = el("a", null, "Check in the Alerts tab"); a.href = "/#alerts"; msg.append(a);
+        msg.append("The alert was not saved. Alerts need Telegram connected, and a confirmed account. ");
+        const a = el("a", null, "Connect Telegram in the Alerts tab"); a.href = "/#alerts"; msg.append(a);
       } else msg.textContent = "Could not save the alert. Check your connection and try again.";
       return;
     }
     box.replaceChildren(el("div", "warn ok", "Alert set. We will tell you when " + (x.baseToken.symbol || "this token") + " goes " + dir.value + " " + usd(v) + "."));
     try {
-      const [ps, tg] = await Promise.all([sb.from("push_subscriptions").select("id").limit(1), sb.from("telegram_links").select("chat_id").limit(1)]);
-      if (!(ps.data || []).length && !(tg.data || []).length) {
-        const w = el("div", "warn a", "You will not get a message yet, because notifications are off. "); const a = el("a", null, "Turn them on or connect Telegram"); a.href = "/#alerts"; w.append(a); box.append(w);
+      const tg = await sb.from("telegram_links").select("chat_id").limit(1);
+      if (!(tg.data || []).length) {
+        const w = el("div", "warn a", "You will not get a message yet, because Telegram is not connected. "); const a = el("a", null, "Connect Telegram"); a.href = "/#alerts"; w.append(a); box.append(w);
       }
     } catch (e) {}
     renderAlerts();

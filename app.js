@@ -823,7 +823,7 @@ function alertForm(c) {
     <label class="field"><span>Target price</span>
       <input id="target" inputmode="decimal" autocomplete="off" placeholder="Enter price"></label>
     <p class="hint" id="hint">Enter the price you want to be alerted at.</p>
-    ${state.pushOn ? "" : `<p class="hint">Alerts need notifications. We’ll ask you to turn them on when you save.</p>`}
+    ${state.pushOn ? "" : `<p class="hint">Alerts are sent through Telegram. Connect it first in the Alerts tab.</p>`}
     <p class="err" id="err" hidden></p>
     <button class="btn" type="button" id="saveAlert">Create alert</button>`);
 
@@ -902,7 +902,7 @@ function alertDone(c, t, cur, up) {
       <div class="big">✅</div>
       <h2 id="sheetTitle">Alert set</h2>
       <p>We’ll notify you when ${esc(sym)} ${up ? "rises to" : "falls to"} ${esc(fmtCur(t, cur))}.</p>
-      ${state.pushOn ? "" : `<button class="btn" type="button" id="pushBtn">Turn on notifications</button><div style="height:10px"></div>`}
+      ${state.pushOn ? "" : `<button class="btn" type="button" id="pushBtn">Connect Telegram</button><div style="height:10px"></div>`}
       <button class="btn ghost" type="button" data-close>Done</button>
     </div>`);
   const pb = $("#pushBtn");
@@ -1012,7 +1012,7 @@ async function renderAlerts() {
     $("#newAlert").onclick = newAlertSheet;
     sb.from("telegram_links").select("chat_id").maybeSingle().then(({ data }) => {
       const t = $("#tgTip");
-      if (!t || data) return;
+      return;
       t.innerHTML = `<a href="#account" class="ac-tip"><span class="ac-tip-ic">✈</span><span><b>Don't want to miss an alert?</b><br>Connect Telegram and your alerts will arrive there too.</span><span class="ac-chev">${acIco("chev")}</span></a>`;
     });
   }
@@ -1724,7 +1724,7 @@ function portfolioAlertSheet() {
     </div>
     <label class="field"><span>Alert me when my total reaches</span><input id="paTarget" inputmode="decimal" autocomplete="off" placeholder="Enter an amount"></label>
     <p class="hint" id="paHint">Enter the total value you want to be alerted at.</p>
-    ${state.pushOn ? "" : `<p class="hint">Alerts need notifications. We’ll ask you to turn them on when you save.</p>`}
+    ${state.pushOn ? "" : `<p class="hint">Alerts are sent through Telegram. Connect it first in the Alerts tab.</p>`}
     <p class="err" id="err" hidden></p>
     <button class="btn" type="button" id="paSave">Create alert</button>`);
   const parse = () => parseFloat(($("#paTarget").value || "").replace(/,/g, ""));
@@ -2018,35 +2018,14 @@ const PUSH_HELP = `<details class="card" style="margin-top:10px"><summary><b>Not
 
 function renderPushCard(el) {
   if (!el) return;
-  const full = el.dataset.full === "1";
-  if (full) return renderAcctPush(el);
-  if (!pushSupported()) {
-    el.innerHTML = `<div class="card"><b>Notifications unavailable</b><p>${
-      isIos() ? "On iPhone, tap Share, then Add to Home Screen, and open PriceCheck NG from there to enable notifications." : "This browser does not support push notifications. Try Chrome."
-    }</p></div>`;
-  } else if (Notification.permission === "denied") {
-    el.innerHTML = `<div class="card"><b>Notifications are blocked</b><p>Allow notifications for this site in your browser settings, then come back.</p></div>${full ? PUSH_HELP : ""}`;
-  } else if (state.pushOn) {
-    el.innerHTML = `<div class="card ok"><p>🔔 Notifications are on for this device.</p><p class="note" style="margin:6px 0 0">Telegram is the most reliable. Push can be delayed when your phone saves battery.</p>${full ? '<button class="btn ghost" type="button" id="pushTest">Send test notification</button>' : ""}</div>${full ? PUSH_HELP : ""}`;
-    const t = $("#pushTest");
-    if (t) {
-      t.onclick = async () => {
-        t.disabled = true;
-        const { error } = await sb.rpc("send_test_notification");
-        if (error) {
-          toast(/wait/i.test(error.message || "") ? "Please wait a minute before sending another test." : "Could not send the test. Please try again.");
-          setTimeout(() => (t.disabled = false), 5000);
-          return;
-        }
-        toast("Test sent. It should arrive within a minute or two 🔔");
-        setTimeout(() => (t.disabled = false), 60000);
-      };
-    }
+  if (el.dataset.full === "1") {
+    el.innerHTML = "";
+    return;
+  }
+  if (state.pushOn) {
+    el.innerHTML = `<div class="card ok"><p>✈ Telegram is connected. Your alerts will arrive there.</p></div>`;
   } else {
-    el.innerHTML = `<div class="card"><b>Get alerts on your phone</b><p>Turn on notifications so you hear about it the moment a price is reached.</p><button class="btn" type="button" id="pushBtn2">Turn on notifications</button></div>${full ? PUSH_HELP : ""}`;
-    $("#pushBtn2").onclick = async () => {
-      if (await enablePush()) renderPushCard(el);
-    };
+    el.innerHTML = `<div class="card"><b>Connect Telegram to get alerts</b><p>Alerts are sent through Telegram, so you never miss one. No Telegram yet? Install it from <a href="https://play.google.com/store/apps/details?id=org.telegram.messenger" target="_blank" rel="noopener">Play Store</a> or the <a href="https://apps.apple.com/app/telegram-messenger/id686449807" target="_blank" rel="noopener">App Store</a>, make an account, then come back and tap Connect.</p><button class="btn" type="button" data-tg-connect>Connect Telegram</button></div>`;
   }
 }
 
@@ -2056,84 +2035,31 @@ const b64ToU8 = (s) => {
   return Uint8Array.from(raw, (ch) => ch.charCodeAt(0));
 };
 
-async function checkPush() {
-  state.pushOn = false;
+async function hasTelegram() {
+  if (!state.user) return false;
   try {
-    if (pushSupported() && Notification.permission === "granted" && state.user) {
-      const reg = await navigator.serviceWorker.ready;
-      state.pushOn = !!(await reg.pushManager.getSubscription());
-    }
-  } catch (_) {}
+    const { data } = await sb.from("telegram_links").select("chat_id").maybeSingle();
+    return !!data;
+  } catch (_) {
+    return false;
+  }
+}
+async function checkPush() {
+  state.pushOn = await hasTelegram();
   if ($("#pushCard")) renderPushCard($("#pushCard"));
 }
 
 async function enablePush() {
-  if (!state.user) {
-    authSheet("in", "Sign in to turn on notifications.");
-    return false;
-  }
-  if (!pushSupported()) {
-    toast("This browser does not support notifications.");
-    return false;
-  }
-  try {
-    const perm = await Notification.requestPermission();
-    if (perm !== "granted") {
-      toast("Notifications were not allowed.");
-      return false;
-    }
-    try {
-      localStorage.removeItem("pc_push_off");
-    } catch (_) {}
-    const reg = await navigator.serviceWorker.ready;
-    let sub = await reg.pushManager.getSubscription();
-    if (!sub) {
-      const { data: key, error } = await sb.rpc("vapid_public_key");
-      if (error || !key) throw new Error("Could not load the notification key.");
-      sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToU8(key.trim()) });
-    }
-    const j = sub.toJSON();
-    const { error: e2 } = await sb
-      .from("push_subscriptions")
-      .upsert({ user_id: state.user.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth }, { onConflict: "endpoint" });
-    if (e2) throw e2;
+  if (await hasTelegram()) {
     state.pushOn = true;
-    toast("Notifications are on 🔔");
     return true;
-  } catch (err) {
-    console.error(err);
-    toast("Could not turn on notifications. Please try again.");
-    return false;
   }
+  await connectTelegram();
+  return false;
 }
 
 // After sign-in, if this browser already allowed notifications, switch them back on quietly (no prompt, no message).
 async function silentPush() {
-  let off = false;
-  try {
-    off = localStorage.getItem("pc_push_off") === "1";
-  } catch (_) {}
-  try {
-    if (!off && state.user && pushSupported() && Notification.permission === "granted" && state.pushSyncedFor !== state.user.id) {
-      const reg = await navigator.serviceWorker.ready;
-      let sub = await reg.pushManager.getSubscription();
-      if (!sub) {
-        const { data: key, error } = await sb.rpc("vapid_public_key");
-        if (error || !key) throw new Error("no key");
-        sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToU8(key.trim()) });
-      }
-      const j = sub.toJSON();
-      const { error: e2 } = await sb
-        .from("push_subscriptions")
-        .upsert({ user_id: state.user.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth }, { onConflict: "endpoint" });
-      if (!e2) state.pushSyncedFor = state.user.id;
-      let last = 0;
-      try {
-        last = Number(localStorage.getItem("pc_push_renewed") || 0);
-      } catch (_) {}
-      if (Date.now() - last > 864e5) await renewPush();
-    }
-  } catch (_) {}
   await checkPush();
 }
 
@@ -2169,22 +2095,11 @@ async function renewPush() {
 // Alerts need notifications: make sure this device is subscribed and saved for this account.
 async function ensurePush() {
   if (!state.user) return false;
-  if (!state.pushOn) return await enablePush();
-  try {
-    const reg = await navigator.serviceWorker.ready;
-    const sub = await reg.pushManager.getSubscription();
-    if (!sub) return await enablePush();
-    const j = sub.toJSON();
-    const { error } = await sb
-      .from("push_subscriptions")
-      .upsert({ user_id: state.user.id, endpoint: j.endpoint, p256dh: j.keys.p256dh, auth: j.keys.auth }, { onConflict: "endpoint" });
-    return !error;
-  } catch (_) {
-    return false;
-  }
+  state.pushOn = await hasTelegram();
+  return state.pushOn;
 }
 const IOS_MSG = "On iPhone, tap Share, then Add to Home Screen, and open PriceCheck NG from your home screen. Then you can set alerts.";
-const NEED_PUSH_MSG = "Turn on notifications to set alerts. Without them we can't tell you when the price is reached.";
+const NEED_PUSH_MSG = "Connect Telegram first to set alerts. Open the Alerts tab and tap Connect Telegram.";
 
 /* ---------- install banner (Android / Chrome) ---------- */
 function installBannerHtml() {
@@ -2468,13 +2383,6 @@ async function disconnectTelegram() {
 async function setAlertChannel(value) {
   const { data } = await sb.auth.getUser();
   if (!data?.user) return;
-  if (
-    value === "push" &&
-    !("Notification" in window && Notification.permission === "granted")
-  ) {
-    toast("Turn on notifications for this device first.");
-    return;
-  }
   const { error } = await sb
     .from("notification_prefs")
     .upsert(
@@ -2667,52 +2575,7 @@ function renderAccount() {
 }
 
 function renderAcctPush(el) {
-  const sw = (on) => `<button type="button" class="ac-sw${on ? " on" : ""}" role="switch" aria-checked="${on}" aria-label="Notifications" data-push-sw><i></i></button>`;
-  let sub, tail = "", extra = "";
-  if (!pushSupported()) {
-    sub = isIos() ? "On iPhone, tap Share, then Add to Home Screen, and open PriceCheck NG from there." : "This browser does not support push notifications. Try Chrome.";
-  } else if (Notification.permission === "denied") {
-    sub = "Blocked. Allow notifications for this site in your browser settings.";
-  } else if (state.pushOn) {
-    sub = "Push notifications are enabled on this device.";
-    tail = sw(true);
-    extra = `<button class="ac-btn" type="button" id="pushTest">${acIco("send")} Send test notification</button><button class="ac-btn" type="button" id="pushRenew" style="margin-top:8px">↻ Not getting push? Refresh notifications</button>`;
-  } else {
-    sub = "Turn on notifications to hear about alerts the moment they happen.";
-    tail = sw(false);
-  }
-  el.innerHTML = `<div class="ac-card">${acRow("bell", "Notifications", sub, tail)}${extra}</div>`;
-  const on = !!state.pushOn;
-  const pill = $("#acPushPill");
-  if (pill) {
-    pill.textContent = on ? "ON" : "OFF";
-    pill.className = "ac-pill" + (on ? "" : " off");
-  }
-  const ps = $("#acPushSub");
-  if (ps) ps.textContent = on ? "Enabled · This device" : "Not enabled on this device";
-  const rn = $("#pushRenew");
-  if (rn) {
-    rn.onclick = async () => {
-      rn.disabled = true;
-      const ok = await renewPush();
-      rn.disabled = false;
-      toast(ok ? "Notifications refreshed on this device ✅" : "Could not refresh. Try turning notifications off and on.");
-    };
-  }
-  const t = $("#pushTest");
-  if (t) {
-    t.onclick = async () => {
-      t.disabled = true;
-      const { error } = await sb.rpc("send_test_notification");
-      if (error) {
-        toast(/wait/i.test(error.message || "") ? "Please wait a minute before sending another test." : "Could not send the test. Please try again.");
-        setTimeout(() => (t.disabled = false), 5000);
-        return;
-      }
-      toast("Test sent. It should arrive within a minute or two 🔔");
-      setTimeout(() => (t.disabled = false), 60000);
-    };
-  }
+  if (el) el.innerHTML = "";
 }
 
 async function disablePush() {
@@ -2752,7 +2615,7 @@ async function telegramCardHtml() {
   const tgRow = data
     ? acRow("tg", "Telegram", "Connected", `<span class="ac-pill soft">CONNECTED</span>`)
     : acRow("tg", "Telegram", "Get your alerts in Telegram", `<button class="ac-pill" type="button" data-tg-connect>Connect</button>`);
-  const channels = `<div class="ac-card"><h3>Alert channels</h3><p>Choose how you want to receive your alerts.</p>${pushRow}${tgRow}${
+  const channels = `<div class="ac-card"><h3>Alert channels</h3><p>Your alerts are sent to Telegram.</p>${tgRow}${
     data ? `<button class="ac-btn" type="button" data-tg-disconnect>${acIco("unlink")} Disconnect Telegram</button>` : ""
   }</div>`;
   if (!data) return channels;
@@ -2761,7 +2624,7 @@ async function telegramCardHtml() {
   const ch = pref?.channel || "both";
   const seg = (v, label) => `<button type="button" class="${ch === v ? "on" : ""}" data-alert-channel="${v}"><span class="rd"></span>${label}</button>`;
   const delivery = `<div class="ac-card"><h3>Alert delivery</h3><p>Choose where your alerts are sent.</p><div class="ac-seg">${seg("both", "Both")}${seg("push", "Push")}${seg("telegram", "Telegram")}</div></div>`;
-  return channels + delivery + (await dailySummaryCardHtml(ch));
+  return channels + (await dailySummaryCardHtml("telegram"));
 }
 
 async function dailySummaryCardHtml(channel) {
@@ -2804,7 +2667,7 @@ function percentAlertSheet(c) {
       <button type="button" data-dir="either" aria-pressed="true">↕ Either</button>
     </div>
     <p class="hint" id="pctHint"></p>
-    ${state.pushOn ? "" : `<p class="hint">Alerts need notifications. We’ll ask you to turn them on when you save.</p>`}
+    ${state.pushOn ? "" : `<p class="hint">Alerts are sent through Telegram. Connect it first in the Alerts tab.</p>`}
     <p class="err" id="err" hidden></p>
     <button class="btn" type="button" id="savePct">Create alert</button>`);
 
