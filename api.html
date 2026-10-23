@@ -119,6 +119,7 @@ $("kcp").onclick = async () => { try { await navigator.clipboard.writeText($("kk
 $("ktb").onclick = async () => {
   const k = $("kt").value.trim(), o = $("kto"); o.hidden = false;
   if (!k) { o.textContent = "Paste your key first."; return; }
+  if (/[^\x20-\x7e]/.test(k)) { o.textContent = "That is only the hidden preview of your key, not the full key. The full key is shown once, when you make it. Tap Make a new key, copy the new key straight away, then paste it here."; return; }
   o.textContent = "Testing...";
   try {
     const r = await fetch("https://inufnxvilubbsrcusakt.supabase.co/functions/v1/api/prices?symbols=btc&currency=ngn", { headers: { "x-api-key": k } });
