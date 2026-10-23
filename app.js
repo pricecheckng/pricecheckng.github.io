@@ -195,6 +195,22 @@ async function loadPopular() {
       "</div>";
   } catch (_) {}
 }
+
+// Home page: a calm, closable hint for signed-in people who have not connected Telegram yet.
+async function tgHomeTip() {
+  try {
+    if (!state.user) return;
+    let hide = 0;
+    try { hide = Number(localStorage.getItem("pc_tg_hide") || 0); } catch (_) {}
+    if (Date.now() - hide < 7 * 864e5) return;
+    const { data } = await sb.from("telegram_links").select("chat_id").maybeSingle();
+    const t = $("#tgHome");
+    if (!t || data) return;
+    t.innerHTML = `<div class="ac-tip" style="position:relative;padding-right:40px"><span class="ac-tip-ic">✈</span><span><b>Never miss an alert</b><br>Telegram is the most reliable way to get them. Connect it in 10 seconds.<br><button class="ac-pill" type="button" data-tg-connect style="margin-top:8px">Connect Telegram</button></span><button type="button" id="tgHomeX" aria-label="Close" style="position:absolute;top:6px;right:8px;border:0;background:none;font-size:22px;line-height:1;color:#6b7c72;padding:6px">×</button></div>`;
+    const x = $("#tgHomeX");
+    if (x) x.onclick = () => { try { localStorage.setItem("pc_tg_hide", String(Date.now())); } catch (_) {} t.innerHTML = ""; };
+  } catch (_) {}
+}
 async function renderMarket() {
   await state.fxReady;
   acctCss();
@@ -209,6 +225,7 @@ async function renderMarket() {
     </section>
     ${iosBannerHtml()}
     ${installBannerHtml()}
+    <div id="tgHome"></div>
     <div class="curbar">
       <label for="curSel">Second price in</label>
       <select id="curSel" aria-label="Choose second currency">
@@ -230,6 +247,7 @@ async function renderMarket() {
     <div class="more"><button id="moreBtn" class="ac-btn" type="button" hidden>Show more coins</button></div>
     ${footer()}`;
   loadPopular();
+  tgHomeTip();
   $("#q").addEventListener(
     "input",
     debounce((e) => {
@@ -2009,7 +2027,7 @@ function renderPushCard(el) {
   } else if (Notification.permission === "denied") {
     el.innerHTML = `<div class="card"><b>Notifications are blocked</b><p>Allow notifications for this site in your browser settings, then come back.</p></div>${full ? PUSH_HELP : ""}`;
   } else if (state.pushOn) {
-    el.innerHTML = `<div class="card ok"><p>🔔 Notifications are on for this device.</p>${full ? '<button class="btn ghost" type="button" id="pushTest">Send test notification</button>' : ""}</div>${full ? PUSH_HELP : ""}`;
+    el.innerHTML = `<div class="card ok"><p>🔔 Notifications are on for this device.</p><p class="note" style="margin:6px 0 0">Telegram is the most reliable. Push can be delayed when your phone saves battery.</p>${full ? '<button class="btn ghost" type="button" id="pushTest">Send test notification</button>' : ""}</div>${full ? PUSH_HELP : ""}`;
     const t = $("#pushTest");
     if (t) {
       t.onclick = async () => {
