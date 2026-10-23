@@ -660,13 +660,13 @@ function paintCoin(c) {
 
 /* ---------- coin news ---------- */
 const EX_NAMES = { binance: "Binance", bybit: "Bybit", okx: "OKX", kucoin: "KuCoin", gate: "Gate", mexc: "MEXC", bitget: "Bitget", htx: "HTX", cryptocom: "Crypto.com", lbank: "LBank", whitebit: "WhiteBIT", bitmart: "BitMart", coinex: "CoinEx", poloniex: "Poloniex", digifinex: "DigiFinex", xt: "XT", kraken: "Kraken", bitstamp: "Bitstamp", bitfinex: "Bitfinex", bitvavo: "Bitvavo", valr: "VALR", btcturk: "BTCTurk", coinbase: "Coinbase", bingx: "BingX", phemex: "Phemex" };
-const EX_ORDER = ["binance", "bybit", "okx", "kucoin", "gate", "mexc", "bitget", "htx", "cryptocom", "lbank", "whitebit", "poloniex", "digifinex", "xt", "kraken", "bitstamp", "bitfinex", "bitvavo", "valr", "btcturk", "coinbase", "bingx", "phemex"];
+const EX_ORDER = ["binance", "bybit", "okx", "kucoin", "gate", "mexc", "bitget", "htx", "cryptocom", "lbank", "whitebit", "poloniex", "digifinex", "xt", "kraken", "bitstamp", "bitfinex", "bitvavo", "valr", "btcturk", "coinbase", "bingx", "phemex", "bitmart", "coinex"];
 function exBadge(key) {
   let h = 0;
   for (const ch of String(key)) h = (h * 31 + ch.charCodeAt(0)) % 360;
   const name = EX_NAMES[key] || String(key);
   const k = EX_ORDER.indexOf(key);
-  const logo = k < 0 ? "" : `<span style="position:absolute;inset:0;background:#fff url(logos/exchanges.png) no-repeat;background-size:180px 120px;background-position:-${(k % 6) * 30}px -${Math.floor(k / 6) * 30}px"></span>`;
+  const logo = k < 0 ? "" : `<span style="position:absolute;inset:0;background:url(exchanges.png) no-repeat;background-size:180px 150px;background-position:-${(k % 6) * 30}px -${Math.floor(k / 6) * 30}px"></span>`;
   return `<span style="position:relative;flex:none;width:30px;height:30px;border-radius:8px;background:hsl(${h},45%,40%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;overflow:hidden">${esc(name.charAt(0).toUpperCase())}${logo}</span>`;
 }
 async function loadCoinMarkets(c) {
@@ -678,11 +678,11 @@ async function loadCoinMarkets(c) {
     const rows = data
       .slice(0, 10)
       .map(
-        (r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-top:${i ? "1px solid var(--line,#e3ece6)" : "0"}">
+        (r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;line-height:1.3;border-top:${i ? "1px solid var(--line,#e3ece6)" : "0"}">
           <span style="flex:none;width:22px;color:#6b7c72;font-size:.85rem">${i + 1}</span>
           ${exBadge(r.exchange)}
           <b style="flex:1;min-width:0">${esc(EX_NAMES[r.exchange] || r.exchange)}</b>
-          <span style="text-align:right"><b>${fmtUsd(r.price_usd)}</b><br><small style="color:#6b7c72">${fmtBig(r.volume_usd, "$")} · ${Number(r.share_pct).toFixed(1)}%</small></span>
+          <span style="text-align:right;line-height:1.3"><b>${fmtUsd(r.price_usd)}</b><br><small style="color:#6b7c72;line-height:1.3">${fmtBig(r.volume_usd, "$")} · ${Number(r.share_pct).toFixed(1)}%</small></span>
         </div>`
       )
       .join("");
