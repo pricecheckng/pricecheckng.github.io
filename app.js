@@ -613,6 +613,8 @@ function paintCoin(c) {
       ${Number(c.circulating_supply) > 0 ? `<div class="cp-stat" style="grid-column:1/-1"><small>Circulating supply</small><b>${fmtBig(c.circulating_supply, "")} ${esc(sym)}</b></div>` : ""}
       <div class="cp-stat" style="grid-column:1/-1"><small>Last updated</small><b>${ago(c.last_updated)}</b></div>
     </div>
+    <div id="coinExtras"></div>
+    <div id="coinConv"></div>
     <div id="coinVote"></div>
     <div id="coinMarkets"></div>
     <div id="coinNews"></div>
@@ -627,6 +629,8 @@ function paintCoin(c) {
   loadCoinMarkets(c);
   loadCoinChanges(c);
   loadCoinVote(c);
+  loadCoinExtras(c);
+  paintConverter(c);
   loadWatch().then(() => {
     const wb = $("#watchBtn");
     if (wb) wb.textContent = watchLabel(c.id);
@@ -673,6 +677,47 @@ function exBadge(key) {
   const k = EX_ORDER.indexOf(key);
   const logo = k < 0 ? "" : `<span style="position:absolute;inset:0;background:url(exchanges.png) no-repeat;background-size:180px 150px;background-position:-${(k % 6) * 30}px -${Math.floor(k / 6) * 30}px"></span>`;
   return `<span style="position:relative;flex:none;width:30px;height:30px;border-radius:8px;background:hsl(${h},45%,40%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;overflow:hidden">${esc(name.charAt(0).toUpperCase())}${logo}</span>`;
+}
+function paintConverter(c) {
+  const box = $("#coinConv");
+  const px = Number(c.price_usd), ngn = Number(c.price_ngn);
+  if (!box || !(px > 0)) return;
+  const sym = c.symbol.toUpperCase();
+  const rate = ngn > 0 ? ngn / px : 0;
+  const fld = (id, lab) => `<label style="display:block;margin:0 0 8px"><span style="display:block;font-size:.78rem;color:#6b7c72;margin:0 0 3px">${lab}</span><input id="${id}" type="text" inputmode="decimal" autocomplete="off" style="width:100%;padding:11px 12px;border:1px solid var(--line,#e3ece6);border-radius:12px;font-size:1rem;background:#fff;color:inherit"></label>`;
+  box.innerHTML = `<div class="cp-card" style="margin:14px 0"><h3 style="margin:0 0 10px">${esc(sym)} converter</h3>${fld("cvCoin", esc(sym))}${fld("cvUsd", "US dollars (USD)")}${rate ? fld("cvNgn", "Naira (NGN)") : ""}<p class="muted" style="margin:2px 0 0;font-size:.8rem">Type in any box and the others update. Uses the latest price shown above.</p></div>`;
+  const f = { coin: $("#cvCoin"), usd: $("#cvUsd"), ngn: $("#cvNgn") };
+  const num = (el) => { const v = parseFloat(String(el.value).replace(/,/g, "")); return isFinite(v) && v >= 0 ? v : null; };
+  const put = (el, v, d) => { if (el) el.value = v == null ? "" : Number(v.toFixed(d)).toLocaleString("en-US", { maximumFractionDigits: d, useGrouping: false }); };
+  const fill = (from, v) => {
+    const coin = from === "coin" ? v : from === "usd" ? v / px : v / rate / px;
+    if (from !== "coin") put(f.coin, coin, 8);
+    if (from !== "usd") put(f.usd, coin * px, 2);
+    if (from !== "ngn") put(f.ngn, coin * px * rate, 2);
+  };
+  for (const k of ["coin", "usd", "ngn"]) {
+    if (!f[k]) continue;
+    f[k].addEventListener("input", () => { const v = num(f[k]); if (v == null) { for (const o of ["coin", "usd", "ngn"]) if (o !== k && f[o]) f[o].value = ""; return; } fill(k, v); });
+  }
+  f.coin.value = "1";
+  fill("coin", 1);
+}
+async function loadCoinExtras(c) {
+  try {
+    const box = $("#coinExtras");
+    if (!box) return;
+    const { data, error } = await sb.rpc("coin_extras", { p_id: c.id });
+    if (error || !data) return;
+    const sym = c.symbol.toUpperCase();
+    const tile = (lab, val) => `<div class="cp-stat"><small>${lab}</small><b>${val}</b></div>`;
+    const t = [];
+    if (Number(data.fdv) > 0) t.push(tile("Fully diluted value ($)", fmtBig(data.fdv, "$")));
+    if (Number(data.total_supply) > 0) t.push(tile("Total supply", `${fmtBig(data.total_supply, "")} ${esc(sym)}`));
+    t.push(tile("Max supply", Number(data.max_supply) > 0 ? `${fmtBig(data.max_supply, "")} ${esc(sym)}` : "Not available"));
+    const cats = Array.isArray(data.categories) ? data.categories.filter((x) => typeof x === "string" && x) : [];
+    const chips = cats.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0">${cats.map((x) => `<span style="font-size:.78rem;font-weight:600;color:#15803d;background:#eaf6ee;border-radius:99px;padding:3px 10px">${esc(x)}</span>`).join("")}</div>` : "";
+    box.innerHTML = `<div class="cp-stats" style="margin-top:0">${t.join("")}</div>${chips}`;
+  } catch (_) {}
 }
 async function loadCoinMarkets(c) {
   try {
