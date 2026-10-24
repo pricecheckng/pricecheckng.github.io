@@ -678,14 +678,14 @@ function paintCoin(c) {
 }
 
 /* ---------- coin news ---------- */
-const EX_NAMES = { binance: "Binance", bybit: "Bybit", okx: "OKX", kucoin: "KuCoin", gate: "Gate", mexc: "MEXC", bitget: "Bitget", htx: "HTX", cryptocom: "Crypto.com", lbank: "LBank", whitebit: "WhiteBIT", bitmart: "BitMart", coinex: "CoinEx", poloniex: "Poloniex", digifinex: "DigiFinex", xt: "XT", kraken: "Kraken", bitstamp: "Bitstamp", bitfinex: "Bitfinex", bitvavo: "Bitvavo", valr: "VALR", btcturk: "BTCTurk", coinbase: "Coinbase", bingx: "BingX", phemex: "Phemex" };
-const EX_ORDER = ["binance", "bybit", "okx", "kucoin", "gate", "mexc", "bitget", "htx", "cryptocom", "lbank", "whitebit", "poloniex", "digifinex", "xt", "kraken", "bitstamp", "bitfinex", "bitvavo", "valr", "btcturk", "coinbase", "bingx", "phemex", "bitmart", "coinex"];
+const EX_NAMES = { binance: "Binance", bybit: "Bybit", okx: "OKX", kucoin: "KuCoin", gate: "Gate", mexc: "MEXC", bitget: "Bitget", htx: "HTX", cryptocom: "Crypto.com", lbank: "LBank", whitebit: "WhiteBIT", bitmart: "BitMart", coinex: "CoinEx", poloniex: "Poloniex", digifinex: "DigiFinex", xt: "XT", kraken: "Kraken", bitstamp: "Bitstamp", bitfinex: "Bitfinex", bitvavo: "Bitvavo", valr: "VALR", btcturk: "BTCTurk", coinbase: "Coinbase", bingx: "BingX", phemex: "Phemex", bit2me: "Bit2Me", pionex: "Pionex", bigone: "BigONE", coindcx: "CoinDCX", hashkey: "HashKey", wazirx: "WazirX", bitopro: "BitoPro", bitso: "Bitso" };
+const EX_ORDER = ["binance", "bybit", "okx", "kucoin", "gate", "mexc", "bitget", "htx", "cryptocom", "lbank", "whitebit", "poloniex", "digifinex", "xt", "kraken", "bitstamp", "bitfinex", "bitvavo", "valr", "btcturk", "coinbase", "bingx", "phemex", "bitmart", "coinex", "bit2me", "pionex", "bigone", "coindcx", "hashkey", "wazirx", "bitopro", "bitso"];
 function exBadge(key) {
   let h = 0;
   for (const ch of String(key)) h = (h * 31 + ch.charCodeAt(0)) % 360;
   const name = EX_NAMES[key] || String(key);
   const k = EX_ORDER.indexOf(key);
-  const logo = k < 0 ? "" : `<span style="position:absolute;inset:0;background:url(exchanges.png) no-repeat;background-size:180px 150px;background-position:-${(k % 6) * 30}px -${Math.floor(k / 6) * 30}px"></span>`;
+  const logo = k < 0 ? "" : `<span style="position:absolute;inset:0;background:url(exchanges.png) no-repeat;background-size:180px 210px;background-position:-${(k % 6) * 30}px -${Math.floor(k / 6) * 30}px"></span>`;
   return `<span style="position:relative;flex:none;width:30px;height:30px;border-radius:8px;background:hsl(${h},45%,40%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;overflow:hidden">${esc(name.charAt(0).toUpperCase())}${logo}</span>`;
 }
 function paintConverter(c) {
@@ -772,7 +772,7 @@ async function loadCoinExtras(c) {
   } catch (_) {}
 }
 // Quote currency each exchange feed uses (all others are USDT; "" = mixed, show the coin only)
-const EX_QUOTE = { coinbase: "USD", kraken: "USD", bitstamp: "USD", bitfinex: "USD", bitvavo: "EUR", valr: "" };
+const EX_QUOTE = { coinbase: "USD", kraken: "USD", bitstamp: "USD", bitfinex: "USD", bitvavo: "EUR", valr: "", bit2me: "EUR", bitso: "" };
 async function loadCoinMarkets(c) {
   try {
     const box = $("#coinMarkets");
@@ -789,7 +789,7 @@ async function loadCoinMarkets(c) {
         </div>`; }
       )
       .join("");
-    const rows = rowHtml(data.slice(0, 10), 0) + (data.length > 10 ? `<details style="border-top:1px solid var(--line,#e3ece6)"><summary style="padding:10px 0 2px;color:#15803d;font-weight:700;cursor:pointer;list-style:none">Show ${data.length - 10} more exchange${data.length - 10 === 1 ? "" : "s"} ▾</summary>${rowHtml(data.slice(10), 10)}</details>` : "");
+    const PER = 10;
     const hi = data.reduce((m, r) => (Number(r.price_usd) > Number(m.price_usd) ? r : m), data[0]);
     const lo = data.reduce((m, r) => (Number(r.price_usd) < Number(m.price_usd) ? r : m), data[0]);
     const gap = Number(lo.price_usd) > 0 ? ((Number(hi.price_usd) - Number(lo.price_usd)) / Number(lo.price_usd)) * 100 : 0;
@@ -797,7 +797,21 @@ async function loadCoinMarkets(c) {
       <div style="background:#eaf6ee;border-radius:10px;padding:6px 10px;line-height:1.25;min-width:0"><span style="display:block;font-size:.66rem;font-weight:700;letter-spacing:.04em;color:#15803d">▲ HIGHEST</span><span style="display:block;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font-weight:700">${esc(EX_NAMES[hi.exchange] || hi.exchange)}</span> <span style="color:#15803d">${fmtUsdX(hi.price_usd)}</span></span></div>
       <div style="background:#fbeeee;border-radius:10px;padding:6px 10px;line-height:1.25;min-width:0"><span style="display:block;font-size:.66rem;font-weight:700;letter-spacing:.04em;color:#b91c1c">▼ LOWEST</span><span style="display:block;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font-weight:700">${esc(EX_NAMES[lo.exchange] || lo.exchange)}</span> <span style="color:#b91c1c">${fmtUsdX(lo.price_usd)}</span></span></div>
     </div><p style="margin:0 0 6px;font-size:.8rem;color:#6b7c72">Gap: <span style="font-weight:700;display:inline">${gap.toFixed(2)}%</span> between highest and lowest</p>` : "";
-    box.innerHTML = `<div class="card" style="margin:14px 0 4px"><h3 style="margin:0 0 4px">Where ${esc(c.symbol.toUpperCase())} is traded</h3><p class="note" style="margin:0 0 6px">Price on each exchange, how far it is from the middle price (small, coloured), 24h volume (Vol) and share of the total. Under each name: the trading pair and its spread, the gap between the best buy and sell price (smaller means a smoother market). Refreshed every 5 minutes. Collected by PriceCheck NG from the exchanges directly.</p>${gapHtml}${rows}</div>`;
+    box.innerHTML = `<div class="card" style="margin:14px 0 4px"><h3 style="margin:0 0 4px">Where ${esc(c.symbol.toUpperCase())} is traded</h3><p class="note" style="margin:0 0 6px">Price on each exchange, how far it is from the middle price (small, coloured), 24h volume (Vol) and share of the total. Under each name: the trading pair and its spread, the gap between the best buy and sell price (smaller means a smoother market). Refreshed every 5 minutes. Collected by PriceCheck NG from the exchanges directly.</p>${gapHtml}<div id="mkRows"></div><div id="mkPager"></div></div>`;
+    let pg = 0;
+    const pages = Math.ceil(data.length / PER);
+    const paint = () => {
+      $("#mkRows").innerHTML = rowHtml(data.slice(pg * PER, pg * PER + PER), pg * PER);
+      const pe = $("#mkPager");
+      if (pages < 2) { pe.innerHTML = ""; return; }
+      const b = (label, to, on, off) => `<button type="button" data-pg="${to}" ${off ? "disabled" : ""} style="min-width:36px;height:36px;padding:0 10px;border-radius:10px;font:inherit;font-weight:700;border:1px solid ${on ? "#0b7a3e" : "var(--line,#d5e3da)"};background:${on ? "#0b7a3e" : "#fff"};color:${on ? "#fff" : off ? "#b6bcc6" : "#0b7a3e"}">${label}</button>`;
+      let h = b("‹", pg - 1, false, pg === 0);
+      for (let p = 0; p < pages; p++) h += b(p + 1, p, p === pg, false);
+      h += b("›", pg + 1, false, pg === pages - 1);
+      pe.innerHTML = `<div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:10px 0 2px">${h}</div><p style="margin:6px 0 0;text-align:center;font-size:.78rem;color:#6b7c72">Showing ${pg * PER + 1}–${Math.min(data.length, pg * PER + PER)} of ${data.length} exchanges</p>`;
+      pe.querySelectorAll("button[data-pg]").forEach((el) => { el.onclick = () => { pg = Number(el.dataset.pg); paint(); const t = $("#mkRows"); if (t) t.scrollIntoView({ block: "nearest" }); }; });
+    };
+    paint();
   } catch (_) {}
 }
 async function loadCoinChanges(c) {
