@@ -55,7 +55,7 @@ button.share{padding:10px 16px;border:1px solid var(--g);border-radius:12px;back
 <header><a href="/">PriceCheck NG</a></header>
 <main>
 <h1 id="h1">Compare coins</h1>
-<p>Pick up to four coins and see them side by side: price in dollars and naira, how much they moved, market cap, trading volume and supply.</p>
+<p>Pick up to four coins and see them side by side: price in dollars and your local currency, how much they moved, market cap, trading volume and supply.</p>
 <div id="chips" class="chips"></div>
 <div class="search"><input id="q" type="search" placeholder="Add a coin: type a name or symbol" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Add a coin"><div id="dd" class="dd" hidden></div></div>
 <div id="msg"></div>
@@ -69,7 +69,11 @@ const $ = (id) => document.getElementById(id);
 const COLORS = ["#16a34a", "#2563eb", "#d97706", "#9333ea"];
 const COLS = "id,symbol,name,image_url,market_cap_rank,price_usd,price_ngn,market_cap_usd,volume_24h_usd,change_24h_pct,circulating_supply,sparkline,kind";
 const POPULAR = [["bitcoin", "ethereum"], ["bitcoin", "solana"], ["ethereum", "solana"], ["bitcoin", "ripple"], ["ethereum", "binancecoin"], ["dogecoin", "shiba-inu"], ["solana", "cardano"], ["bitcoin", "ethereum", "solana"]];
-let sb, coins = [];
+let sb, coins = [], fx = {}, cur = "NGN";
+const CUR = { NGN: "₦", GBP: "£", EUR: "€", GHS: "GH₵", ZAR: "R", CAD: "CA$", AUD: "A$", AED: "AED ", CNY: "CN¥", KES: "KSh ", TZS: "TSh ", UGX: "USh ", INR: "₹", JPY: "¥" };
+try { const sc = localStorage.getItem("pc_cur"); if (CUR[sc]) cur = sc; } catch (_) {}
+const localPx = (c) => (cur === "NGN" ? Number(c.price_ngn) : fx[cur] ? Number(c.price_usd) * fx[cur] : NaN);
+const loc = (n) => { n = Number(n); return isFinite(n) && n > 0 ? CUR[cur] + n.toLocaleString("en-US", { maximumFractionDigits: n >= 1000 ? 0 : n >= 1 ? 2 : 4 }) : "–"; };
 
 const el = (t, a, ...kids) => {
   const n = document.createElement(t);
@@ -134,7 +138,7 @@ function summary() {
 function table() {
   const rows = [
     ["Price (USD)", (c) => usd(c.price_usd), null],
-    ["Price (NGN)", (c) => ngn(c.price_ngn), null],
+    ["Price (" + cur + ")", (c) => loc(localPx(c)), null],
     ["24h change", (c) => pctEl(Number(c.change_24h_pct)), (c) => Number(c.change_24h_pct), "max"],
     ["7d change", (c) => pctEl(chg7(c)), (c) => chg7(c), "max"],
     ["Market cap", (c) => big(c.market_cap_usd, "$"), (c) => Number(c.market_cap_usd), "max"],
@@ -231,6 +235,8 @@ document.addEventListener("click", (e) => { if (!e.target.closest(".search")) $(
     const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
     const { SUPABASE_URL, SUPABASE_KEY } = await import("./config.js");
     sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+    try { const { data: f } = await sb.from("fx_rates").select("currency,per_usd"); (f || []).forEach((r) => { fx[r.currency] = Number(r.per_usd); }); } catch (_) {}
+    if (cur !== "NGN" && !fx[cur]) cur = "NGN";
     const param = new URLSearchParams(location.search).get("c");
     const want = (param ? param.split(",") : ["bitcoin", "ethereum"]).map((x) => x.trim().toLowerCase());
     coins = await fetchCoins(want);
