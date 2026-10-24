@@ -32,7 +32,8 @@
       ['What is market cap?', 'Why price alone can fool you', 'learn-market-cap.html'],
       ['What is a stablecoin?', 'USDT and USDC explained', 'learn-stablecoins.html'],
       ['Fear & Greed Index', 'How to read the market mood', 'learn-fear-greed.html'],
-      ['Data sources', 'Where our prices and data come from', 'data-sources.html']
+      ['Data sources', 'Where our prices and data come from', 'data-sources.html'],
+      ['About & founder', 'Who built PriceCheck NG and when', 'about.html']
     ]}
   ];
   var css = '#mnu{position:fixed;inset:0;z-index:9999;visibility:hidden}' +

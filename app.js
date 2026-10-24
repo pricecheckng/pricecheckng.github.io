@@ -159,7 +159,7 @@ const skeleton = (n = 6) =>
   Array.from({ length: n }, () => `<div class="sk"><i></i><div><i style="width:60%"></i><i style="width:35%;margin-top:8px"></i></div><i></i></div>`).join("");
 const emptyBox = (title, text) => `<div class="empty"><b>${esc(title)}</b>${esc(text)}</div>`;
 const footer = () =>
-  `<p class="foot">Price data by <a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a>. <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Rates By Exchange Rate API</a>. Some supply data: <a href="https://www.livecoinwatch.com" target="_blank" rel="noopener">Live Coin Watch</a>. Prices are for information only and are not financial advice.<br><a href="https://t.me/pricecheckNG" target="_blank" rel="noopener" style="display:inline-block;margin:12px 0 4px;padding:9px 16px;border-radius:999px;background:#229ed9;color:#fff;font-weight:700;text-decoration:none">✈ Join our Telegram channel</a><br><b>Learn:</b> <a href="learn-candlesticks.html">Candlesticks</a> · <a href="learn-scams.html">Avoid scams</a> · <a href="learn-market-cap.html">Market cap</a> · <a href="learn-stablecoins.html">Stablecoins</a> · <a href="learn-fear-greed.html">Fear &amp; Greed</a><br><a href="compare.html">Compare coins</a> · <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="contact.html">Contact</a><br>Support: <a href="mailto:support@pricecheckng.com.ng">support@pricecheckng.com.ng</a></p>`;
+  `<p class="foot">Price data by <a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a>. <a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Rates By Exchange Rate API</a>. Some supply data: <a href="https://www.livecoinwatch.com" target="_blank" rel="noopener">Live Coin Watch</a>. Prices are for information only and are not financial advice.<br><a href="https://t.me/pricecheckNG" target="_blank" rel="noopener" style="display:inline-block;margin:12px 0 4px;padding:9px 16px;border-radius:999px;background:#229ed9;color:#fff;font-weight:700;text-decoration:none">✈ Join our Telegram channel</a><br><b>Learn:</b> <a href="learn-candlesticks.html">Candlesticks</a> · <a href="learn-scams.html">Avoid scams</a> · <a href="learn-market-cap.html">Market cap</a> · <a href="learn-stablecoins.html">Stablecoins</a> · <a href="learn-fear-greed.html">Fear &amp; Greed</a><br><a href="compare.html">Compare coins</a> · <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="about.html">About</a> · <a href="contact.html">Contact</a><br>© ${new Date().getFullYear()} PriceCheck NG · Founded 2026 by Abdullahi Abdulyekeen, Nigeria<br>Support: <a href="mailto:support@pricecheckng.com.ng">support@pricecheckng.com.ng</a></p>`;
 const gate = (text) =>
   `<section class="page"><h1>Sign in</h1><div class="card"><p>${esc(text)}</p><button class="btn" data-auth>Continue with Google</button></div></section>`;
 
@@ -3009,3 +3009,14 @@ function track(kind, key) {
 })();
 import "./tools-card.js";
 import "./invite.js";
+
+/* ---------- Organization info for search engines (founder, year, country) ---------- */
+try {
+  if (!document.getElementById("orgLd")) {
+    const ld = document.createElement("script");
+    ld.type = "application/ld+json";
+    ld.id = "orgLd";
+    ld.textContent = JSON.stringify({ "@context": "https://schema.org", "@type": "Organization", name: "PriceCheck NG", url: "https://pricecheckng.com.ng", foundingDate: "2026", founder: { "@type": "Person", name: "Abdullahi Abdulyekeen" }, address: { "@type": "PostalAddress", addressCountry: "NG" }, sameAs: ["https://t.me/pricecheckNG"] });
+    document.head.appendChild(ld);
+  }
+} catch (_) {}
