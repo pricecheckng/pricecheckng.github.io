@@ -76,6 +76,15 @@ function fmtUsd(n) {
   const max = a >= 1 ? 2 : a >= 0.01 ? 4 : a >= 0.0001 ? 6 : 8;
   return "$" + n.toLocaleString("en-US", { minimumFractionDigits: a >= 1 ? 2 : 0, maximumFractionDigits: max });
 }
+// Exchange prices: show enough decimals so small differences between exchanges are visible
+function fmtUsdX(n) {
+  if (n == null) return "–";
+  n = Number(n);
+  const a = Math.abs(n);
+  if (a >= 1000) return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  if (a >= 1) return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 });
+  return "$" + Number(n.toPrecision(5)).toLocaleString("en-US", { maximumFractionDigits: 14 });
+}
 function fmtNgn(n) {
   if (n == null) return "–";
   n = Number(n);
@@ -746,7 +755,7 @@ async function loadCoinMarkets(c) {
           <span style="flex:none;width:22px;color:#6b7c72;font-size:.85rem">${i + 1}</span>
           ${exBadge(r.exchange)}
           <b style="flex:1;min-width:0">${esc(EX_NAMES[r.exchange] || r.exchange)}</b>
-          <div style="text-align:right;line-height:1.25"><div style="font-weight:700;margin:0">${fmtUsd(r.price_usd)} <small style="font-weight:600;font-size:.78rem;color:${Number(r.diff_pct) > 0 ? "#15803d" : Number(r.diff_pct) < 0 ? "#b91c1c" : "#6b7c72"}">${r.diff_pct == null ? "" : (Number(r.diff_pct) > 0 ? "+" : "") + Number(r.diff_pct).toFixed(2) + "%"}</small></div><div style="color:#6b7c72;font-size:.82rem;margin:2px 0 0">Vol ${fmtBig(r.volume_usd, "$")} · ${Number(r.share_pct).toFixed(1)}%</div></div>
+          <div style="text-align:right;line-height:1.25"><div style="font-weight:700;margin:0">${fmtUsdX(r.price_usd)} <small style="font-weight:600;font-size:.78rem;color:${Number(r.diff_pct) > 0 ? "#15803d" : Number(r.diff_pct) < 0 ? "#b91c1c" : "#6b7c72"}">${r.diff_pct == null ? "" : (Number(r.diff_pct) > 0 ? "+" : "") + Number(r.diff_pct).toFixed(2) + "%"}</small></div><div style="color:#6b7c72;font-size:.82rem;margin:2px 0 0">Vol ${fmtBig(r.volume_usd, "$")} · ${Number(r.share_pct).toFixed(1)}%</div></div>
         </div>`; }
       )
       .join("");
@@ -755,8 +764,8 @@ async function loadCoinMarkets(c) {
     const lo = data.reduce((m, r) => (Number(r.price_usd) < Number(m.price_usd) ? r : m), data[0]);
     const gap = Number(lo.price_usd) > 0 ? ((Number(hi.price_usd) - Number(lo.price_usd)) / Number(lo.price_usd)) * 100 : 0;
     const gapHtml = data.length > 1 ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 4px">
-      <div style="background:#eaf6ee;border-radius:10px;padding:6px 10px;line-height:1.25;min-width:0"><span style="display:block;font-size:.66rem;font-weight:700;letter-spacing:.04em;color:#15803d">▲ HIGHEST</span><span style="display:block;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font-weight:700">${esc(EX_NAMES[hi.exchange] || hi.exchange)}</span> <span style="color:#15803d">${fmtUsd(hi.price_usd)}</span></span></div>
-      <div style="background:#fbeeee;border-radius:10px;padding:6px 10px;line-height:1.25;min-width:0"><span style="display:block;font-size:.66rem;font-weight:700;letter-spacing:.04em;color:#b91c1c">▼ LOWEST</span><span style="display:block;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font-weight:700">${esc(EX_NAMES[lo.exchange] || lo.exchange)}</span> <span style="color:#b91c1c">${fmtUsd(lo.price_usd)}</span></span></div>
+      <div style="background:#eaf6ee;border-radius:10px;padding:6px 10px;line-height:1.25;min-width:0"><span style="display:block;font-size:.66rem;font-weight:700;letter-spacing:.04em;color:#15803d">▲ HIGHEST</span><span style="display:block;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font-weight:700">${esc(EX_NAMES[hi.exchange] || hi.exchange)}</span> <span style="color:#15803d">${fmtUsdX(hi.price_usd)}</span></span></div>
+      <div style="background:#fbeeee;border-radius:10px;padding:6px 10px;line-height:1.25;min-width:0"><span style="display:block;font-size:.66rem;font-weight:700;letter-spacing:.04em;color:#b91c1c">▼ LOWEST</span><span style="display:block;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font-weight:700">${esc(EX_NAMES[lo.exchange] || lo.exchange)}</span> <span style="color:#b91c1c">${fmtUsdX(lo.price_usd)}</span></span></div>
     </div><p style="margin:0 0 6px;font-size:.8rem;color:#6b7c72">Gap: <span style="font-weight:700;display:inline">${gap.toFixed(2)}%</span> between highest and lowest</p>` : "";
     box.innerHTML = `<div class="card" style="margin:14px 0 4px"><h3 style="margin:0 0 4px">Where ${esc(c.symbol.toUpperCase())} is traded</h3><p class="note" style="margin:0 0 6px">Price on each exchange, how far it is from the middle price (small, coloured), 24h volume (Vol) and share of the total. Refreshed every 5 minutes. Collected by PriceCheck NG from the exchanges directly.</p>${gapHtml}${rows}</div>`;
   } catch (_) {}
