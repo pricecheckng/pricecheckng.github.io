@@ -726,7 +726,7 @@ async function loadCoinExtras(c) {
     }
     t.push(tile("Max supply", Number(data.max_supply) > 0 ? `${fmtBig(data.max_supply, "")} ${esc(sym)}` : "Not available"));
     const cats = Array.isArray(data.categories) ? data.categories.filter((x) => typeof x === "string" && x) : [];
-    const chips = cats.length ? `<div style="grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap">${cats.map((x) => `<span style="font-size:.78rem;font-weight:600;color:#15803d;background:#eaf6ee;border-radius:99px;padding:3px 10px">${esc(x)}</span>`).join("")}</div>` : "";
+    const chips = cats.length ? `<div style="grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap">${cats.map((x) => `<span style="font-size:.78rem;font-weight:600;color:#15803d;background:#eaf6ee;border-radius:99px;padding:3px 10px">${esc(x.replace(/_/g, " "))}</span>`).join("")}</div>` : "";
     const LN = { website: "Website", whitepaper: "Whitepaper", reddit: "Reddit", twitter: "X (Twitter)", telegram: "Telegram", discord: "Discord", medium: "Medium", youtube: "YouTube", linkedin: "LinkedIn" };
     const lk = data.links && typeof data.links === "object" ? data.links : {};
     const pills = Object.keys(LN).filter((k) => typeof lk[k] === "string" && /^https:\/\//.test(lk[k])).map((k) => `<a href="${esc(lk[k])}" target="_blank" rel="noopener nofollow" style="display:inline-block;padding:7px 14px;border-radius:99px;background:#f1f5f2;color:#15803d;font-weight:600;font-size:.88rem;text-decoration:none">${LN[k]}</a>`).join("");

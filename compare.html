@@ -73,7 +73,7 @@ let sb, coins = [], fx = {}, cur = "NGN";
 const CUR = { NGN: "₦", GBP: "£", EUR: "€", GHS: "GH₵", ZAR: "R", CAD: "CA$", AUD: "A$", AED: "AED ", CNY: "CN¥", KES: "KSh ", TZS: "TSh ", UGX: "USh ", INR: "₹", JPY: "¥" };
 try { const sc = localStorage.getItem("pc_cur"); if (CUR[sc]) cur = sc; } catch (_) {}
 const localPx = (c) => (cur === "NGN" ? Number(c.price_ngn) : fx[cur] ? Number(c.price_usd) * fx[cur] : NaN);
-const loc = (n) => { n = Number(n); return isFinite(n) && n > 0 ? CUR[cur] + n.toLocaleString("en-US", { maximumFractionDigits: n >= 1000 ? 0 : n >= 1 ? 2 : 4 }) : "–"; };
+const loc = (n) => { n = Number(n); return isFinite(n) && n > 0 ? CUR[cur] + n.toLocaleString("en-US", { maximumFractionDigits: n >= 1000 ? 0 : n >= 1 ? 2 : n >= 0.01 ? 4 : n >= 0.0001 ? 6 : 9 }) : "–"; };
 
 const el = (t, a, ...kids) => {
   const n = document.createElement(t);
