@@ -743,6 +743,8 @@ async function loadCoinExtras(c) {
     box.innerHTML = t.join("") + chips + info;
   } catch (_) {}
 }
+// Quote currency each exchange feed uses (all others are USDT)
+const EX_QUOTE = { coinbase: "USD", kraken: "USD", bitstamp: "USD", bitfinex: "USD", bitvavo: "EUR", valr: "ZAR", btcturk: "TRY" };
 async function loadCoinMarkets(c) {
   try {
     const box = $("#coinMarkets");
@@ -754,7 +756,7 @@ async function loadCoinMarkets(c) {
         (r, k) => { const i = k + off; return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;line-height:1.3;border-top:${i ? "1px solid var(--line,#e3ece6)" : "0"}">
           <span style="flex:none;width:22px;color:#6b7c72;font-size:.85rem">${i + 1}</span>
           ${exBadge(r.exchange)}
-          <b style="flex:1;min-width:0">${esc(EX_NAMES[r.exchange] || r.exchange)}</b>
+          <div style="flex:1;min-width:0;line-height:1.25"><b>${esc(EX_NAMES[r.exchange] || r.exchange)}</b><div style="font-size:.74rem;color:#6b7c72;margin-top:1px">${esc(c.symbol.toUpperCase())}/${EX_QUOTE[r.exchange] || "USDT"}</div></div>
           <div style="text-align:right;line-height:1.25"><div style="font-weight:700;margin:0">${fmtUsdX(r.price_usd)} <small style="font-weight:600;font-size:.78rem;color:${Number(r.diff_pct) > 0 ? "#15803d" : Number(r.diff_pct) < 0 ? "#b91c1c" : "#6b7c72"}">${r.diff_pct == null ? "" : (Number(r.diff_pct) > 0 ? "+" : "") + Number(r.diff_pct).toFixed(2) + "%"}</small></div><div style="color:#6b7c72;font-size:.82rem;margin:2px 0 0">Vol ${fmtBig(r.volume_usd, "$")} · ${Number(r.share_pct).toFixed(1)}%</div></div>
         </div>`; }
       )
