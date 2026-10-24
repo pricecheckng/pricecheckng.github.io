@@ -727,11 +727,11 @@ function explainerHtml(c, sym) {
     [`Pair (for example ${sym}/USD)`, `The two things being swapped. ${sym}/USD means ${sym} is priced in US dollars. Some exchanges use other currencies, so the pair tells you which one.`]
   ];
   const row = (t, d) => `<div style="padding:10px 0;border-top:1px solid var(--line,#e3ece6)"><b style="display:block;font-size:.95rem">${t}</b><span style="font-size:.9rem;line-height:1.5;color:#51615a">${d}</span></div>`;
-  return `<details class="cp-card" style="padding:0;overflow:hidden;background:#f7fbf8;border-color:#cfe6d7">
-    <summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:12px;padding:14px 16px;-webkit-tap-highlight-color:transparent">
-      <span style="flex:none;width:36px;height:36px;border-radius:50%;background:#0b7a3e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800">?</span>
-      <span style="flex:1;min-width:0"><b style="display:block;font-size:1rem">New to crypto? How to read this page</b><span style="font-size:.85rem;color:#6b7c72">Simple meanings of every number, tap to open</span></span>
-      <span class="exArrow" style="flex:none;color:#0b7a3e;font-size:1.2rem">▾</span>
+  return `<details class="cp-card" style="padding:0;overflow:hidden;margin-bottom:10px;border-radius:14px;background:#f7fbf8;border-color:#cfe6d7">
+    <summary style="list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;padding:9px 12px;-webkit-tap-highlight-color:transparent">
+      <span style="flex:none;width:22px;height:22px;border-radius:50%;background:#0b7a3e;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem">?</span>
+      <b style="flex:1;min-width:0;font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">New to crypto? How to read this page</b>
+      <span class="exArrow" style="flex:none;color:#0b7a3e;font-size:.9rem">▾</span>
     </summary>
     <div style="padding:0 16px 14px">
       ${items.map((x) => row(x[0], x[1])).join("")}
