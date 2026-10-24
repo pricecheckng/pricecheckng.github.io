@@ -1,0 +1,241 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Compare crypto coins side by side | PriceCheck NG</title>
+<meta name="description" content="Compare two to four coins side by side: price in dollars and naira, 24h and 7 day change, market cap, volume and supply, with a 7 day performance chart.">
+<link rel="canonical" href="https://pricecheckng.com.ng/compare.html">
+<style>
+:root{--bg:#fff;--card:#f6f7f8;--ink:#0f1a14;--mu:#5d6b64;--g:#16a34a;--gd:#0a7a3a;--line:#e3e8e5;--red:#d93b3b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:#0a7a3a;color:#fff;padding:14px 16px;font-weight:800}
+header a{color:#fff;text-decoration:none}
+main{max-width:720px;margin:0 auto;padding:16px 16px 56px}
+h1{font-size:24px;line-height:1.2;margin:8px 0 6px}
+h2{font-size:18px;margin:26px 0 8px}
+p{color:var(--mu);margin:0 0 12px}
+a{color:var(--gd)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+.chip{display:flex;align-items:center;gap:6px;padding:5px 6px 5px 8px;border-radius:99px;border:1.5px solid var(--line);background:#fff;font-weight:700;font-size:14px}
+.chip img{width:20px;height:20px;border-radius:50%}
+.chip button{border:0;background:none;color:var(--mu);font-size:18px;line-height:1;padding:2px 6px;cursor:pointer}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.search{position:relative;margin:8px 0}
+.search input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font-size:16px;background:#fff;color:var(--ink)}
+.dd{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:5;overflow:hidden}
+.dd button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.dd button:last-child{border:0}
+.dd img{width:24px;height:24px;border-radius:50%}
+.dd small{color:var(--mu);margin-left:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:14px 0}
+.sum{font-size:15px;color:var(--ink);line-height:1.55}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
+table{border-collapse:collapse;width:100%;min-width:100%}
+th,td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line);font-size:14.5px;white-space:nowrap}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:#fff;color:var(--mu);font-weight:600;min-width:112px;z-index:1}
+thead th{font-weight:800;background:#fafbfa;vertical-align:bottom}
+thead th:first-child{background:#fafbfa}
+tbody tr:last-child td{border-bottom:0}
+.th{display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.th img{width:28px;height:28px;border-radius:50%}
+.th a{text-decoration:none;color:var(--ink)}
+.th small{color:var(--mu);font-weight:600}
+.up{color:var(--gd);font-weight:700}.dn{color:var(--red);font-weight:700}
+.best{background:#eaf6ee}
+.chart{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px}
+.chart svg{display:block;width:100%;height:auto}
+.leg{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;margin-top:6px}
+.leg span{display:flex;align-items:center;gap:6px;font-weight:600}
+.pop{display:flex;gap:8px;flex-wrap:wrap}
+.pop a{padding:7px 12px;border:1px solid var(--g);border-radius:99px;background:#fff;text-decoration:none;font-size:14px;font-weight:600}
+button.share{padding:10px 16px;border:1px solid var(--g);border-radius:12px;background:#fff;color:var(--gd);font-weight:700;font-size:15px}
+.note{font-size:13px;color:var(--mu)}
+#msg{min-height:20px;font-size:14px;color:var(--mu)}
+</style></head><body>
+<header><a href="/">PriceCheck NG</a></header>
+<main>
+<h1 id="h1">Compare coins</h1>
+<p>Pick up to four coins and see them side by side: price in dollars and naira, how much they moved, market cap, trading volume and supply.</p>
+<div id="chips" class="chips"></div>
+<div class="search"><input id="q" type="search" placeholder="Add a coin: type a name or symbol" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Add a coin"><div id="dd" class="dd" hidden></div></div>
+<div id="msg"></div>
+<div id="out"></div>
+<h2>Popular comparisons</h2>
+<div class="pop" id="pop"></div>
+<p class="note" style="margin-top:22px">Prices and figures come from PriceCheck NG's own exchange data and other public sources and can be a few minutes old. A higher price per coin does not mean a bigger or better coin: compare market cap instead. This is information only and not financial advice.</p>
+</main>
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const COLORS = ["#16a34a", "#2563eb", "#d97706", "#9333ea"];
+const COLS = "id,symbol,name,image_url,market_cap_rank,price_usd,price_ngn,market_cap_usd,volume_24h_usd,change_24h_pct,circulating_supply,sparkline,kind";
+const POPULAR = [["bitcoin", "ethereum"], ["bitcoin", "solana"], ["ethereum", "solana"], ["bitcoin", "ripple"], ["ethereum", "binancecoin"], ["dogecoin", "shiba-inu"], ["solana", "cardano"], ["bitcoin", "ethereum", "solana"]];
+let sb, coins = [];
+
+const el = (t, a, ...kids) => {
+  const n = document.createElement(t);
+  for (const k in a || {}) { if (k === "class") n.className = a[k]; else if (k === "text") n.textContent = a[k]; else n.setAttribute(k, a[k]); }
+  for (const c of kids) if (c != null) n.append(c.nodeType ? c : document.createTextNode(String(c)));
+  return n;
+};
+const usd = (n) => {
+  n = Number(n); if (!isFinite(n)) return "–";
+  const a = Math.abs(n), d = a >= 1 ? 2 : a >= 0.01 ? 4 : a >= 0.0001 ? 6 : 8;
+  return "$" + n.toLocaleString("en-US", { minimumFractionDigits: a >= 1 ? 2 : 0, maximumFractionDigits: d });
+};
+const ngn = (n) => { n = Number(n); return isFinite(n) && n > 0 ? "₦" + n.toLocaleString("en-US", { maximumFractionDigits: n >= 100 ? 0 : 4 }) : "–"; };
+const big = (n, pre) => { n = Number(n); return isFinite(n) && n > 0 ? pre + n.toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 2 }) : "–"; };
+const pctN = (v) => (v == null || !isFinite(v) ? null : v);
+const pctEl = (v) => { v = pctN(v); return v == null ? el("span", { text: "–" }) : el("span", { class: v >= 0 ? "up" : "dn", text: (v > 0 ? "+" : "") + v.toFixed(2) + "%" }); };
+const spark = (c) => (Array.isArray(c.sparkline) ? c.sparkline.map(Number).filter((v) => isFinite(v) && v > 0) : []);
+const chg7 = (c) => { const s = spark(c), p = Number(c.price_usd); return s.length >= 2 && p > 0 ? (p / s[0] - 1) * 100 : null; };
+const ids = () => coins.map((c) => c.id);
+
+function setUrl() {
+  const q = ids().join(",");
+  try { history.replaceState(null, "", q ? "compare.html?c=" + encodeURIComponent(q) : "compare.html"); } catch (_) {}
+}
+async function fetchCoins(list) {
+  const clean = list.filter((x) => /^[a-z0-9._-]{1,100}$/.test(x)).slice(0, 4);
+  if (!clean.length) return [];
+  const { data } = await sb.from("coins").select(COLS).in("id", clean);
+  const map = new Map((data || []).map((c) => [c.id, c]));
+  return clean.map((i) => map.get(i)).filter(Boolean);
+}
+function title() {
+  if (coins.length >= 2) {
+    const t = coins.map((c) => c.name).join(" vs ");
+    $("h1").textContent = t + ": price, market cap and volume compared";
+    document.title = t + " compared | PriceCheck NG";
+  } else { $("h1").textContent = "Compare coins"; document.title = "Compare crypto coins side by side | PriceCheck NG"; }
+}
+function drawChips() {
+  const box = $("chips"); box.replaceChildren();
+  coins.forEach((c, i) => {
+    const b = el("button", { type: "button", "aria-label": "Remove " + c.name, text: "×" });
+    b.onclick = () => { coins.splice(i, 1); render(); };
+    box.append(el("span", { class: "chip" }, el("span", { class: "dot", style: "background:" + COLORS[i] }), c.image_url ? el("img", { src: c.image_url, alt: "", width: "20", height: "20", referrerpolicy: "no-referrer" }) : null, c.name + " (" + String(c.symbol).toUpperCase() + ")", b));
+  });
+  $("q").disabled = coins.length >= 4;
+  $("q").placeholder = coins.length >= 4 ? "Maximum four coins" : "Add a coin: type a name or symbol";
+}
+function summary() {
+  if (coins.length < 2) return null;
+  const [a, b] = coins;
+  const ratio = Number(a.market_cap_usd) / Number(b.market_cap_usd);
+  const big1 = ratio >= 1 ? a : b, small1 = ratio >= 1 ? b : a, r = ratio >= 1 ? ratio : 1 / ratio;
+  const parts = [];
+  parts.push(`${a.name} (${String(a.symbol).toUpperCase()}) is ${usd(a.price_usd)} and ${b.name} (${String(b.symbol).toUpperCase()}) is ${usd(b.price_usd)} right now.`);
+  if (isFinite(r) && r > 0) parts.push(`${big1.name} has a market cap about ${r >= 10 ? Math.round(r) : r.toFixed(1)} times that of ${small1.name}.`);
+  const ca = pctN(Number(a.change_24h_pct)), cb = pctN(Number(b.change_24h_pct));
+  if (ca != null && cb != null) parts.push(`In the last 24 hours ${a.name} moved ${ca > 0 ? "+" : ""}${ca.toFixed(2)}% and ${b.name} ${cb > 0 ? "+" : ""}${cb.toFixed(2)}%.`);
+  parts.push("A higher price per coin does not mean a bigger coin. Market cap shows the real size.");
+  return el("div", { class: "card sum", text: parts.join(" ") });
+}
+function table() {
+  const rows = [
+    ["Price (USD)", (c) => usd(c.price_usd), null],
+    ["Price (NGN)", (c) => ngn(c.price_ngn), null],
+    ["24h change", (c) => pctEl(Number(c.change_24h_pct)), (c) => Number(c.change_24h_pct), "max"],
+    ["7d change", (c) => pctEl(chg7(c)), (c) => chg7(c), "max"],
+    ["Market cap", (c) => big(c.market_cap_usd, "$"), (c) => Number(c.market_cap_usd), "max"],
+    ["24h volume", (c) => big(c.volume_24h_usd, "$"), (c) => Number(c.volume_24h_usd), "max"],
+    ["Volume / market cap", (c) => { const v = Number(c.volume_24h_usd) / Number(c.market_cap_usd); return isFinite(v) && v > 0 ? (v * 100).toFixed(1) + "%" : "–"; }, null],
+    ["Rank", (c) => (c.market_cap_rank && c.kind !== "tokenized" ? "#" + c.market_cap_rank : "–"), null],
+    ["Circulating supply", (c) => (Number(c.circulating_supply) > 0 ? big(c.circulating_supply, "") + " " + String(c.symbol).toUpperCase() : "–"), null],
+  ];
+  const thead = el("tr", null, el("th", { text: "" }), ...coins.map((c, i) => el("th", null, el("div", { class: "th" }, c.image_url ? el("img", { src: c.image_url, alt: "", width: "28", height: "28", referrerpolicy: "no-referrer" }) : null, el("a", { href: "/#coin/" + encodeURIComponent(c.id), text: c.name }), el("small", { text: String(c.symbol).toUpperCase() })))));
+  const body = rows.map(([label, f, num, mode]) => {
+    let bestI = -1;
+    if (num && coins.length > 1) {
+      let bv = -Infinity; coins.forEach((c, i) => { const v = num(c); if (v != null && isFinite(v) && v > bv) { bv = v; bestI = i; } });
+    }
+    return el("tr", null, el("td", { text: label }), ...coins.map((c, i) => el("td", { class: i === bestI ? "best" : "" }, f(c))));
+  });
+  return el("div", { class: "tw" }, el("table", null, el("thead", null, thead), el("tbody", null, ...body)));
+}
+function chart() {
+  const series = coins.map((c, i) => ({ c, i, s: spark(c) })).filter((x) => x.s.length >= 2);
+  if (!series.length) return null;
+  const W = 600, H = 240, pl = 8, pr = 8, pt = 14, pb = 14;
+  const norm = series.map((x) => ({ ...x, n: x.s.map((v) => (v / x.s[0]) * 100) }));
+  let lo = Infinity, hi = -Infinity;
+  norm.forEach((x) => x.n.forEach((v) => { if (v < lo) lo = v; if (v > hi) hi = v; }));
+  if (hi - lo < 1) { hi += 0.5; lo -= 0.5; }
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("role", "img");
+  svg.setAttribute("aria-label", "Seven day performance of the selected coins, all starting at 100");
+  const y = (v) => pt + (1 - (v - lo) / (hi - lo)) * (H - pt - pb);
+  const base = document.createElementNS(ns, "line");
+  base.setAttribute("x1", pl); base.setAttribute("x2", W - pr); base.setAttribute("y1", y(100)); base.setAttribute("y2", y(100));
+  base.setAttribute("stroke", "#cfd9d2"); base.setAttribute("stroke-dasharray", "4 4"); svg.append(base);
+  norm.forEach((x) => {
+    const pts = x.n.map((v, k) => (pl + (k / (x.n.length - 1)) * (W - pl - pr)).toFixed(1) + "," + y(v).toFixed(1)).join(" ");
+    const pl2 = document.createElementNS(ns, "polyline");
+    pl2.setAttribute("points", pts); pl2.setAttribute("fill", "none"); pl2.setAttribute("stroke", COLORS[x.i]); pl2.setAttribute("stroke-width", "2.5"); pl2.setAttribute("stroke-linejoin", "round"); pl2.setAttribute("stroke-linecap", "round");
+    svg.append(pl2);
+  });
+  const leg = el("div", { class: "leg" }, ...norm.map((x) => { const v = x.n[x.n.length - 1] - 100; return el("span", null, el("i", { class: "dot", style: "background:" + COLORS[x.i] }), x.c.name + " ", el("b", { class: v >= 0 ? "up" : "dn", text: (v > 0 ? "+" : "") + v.toFixed(1) + "%" })); }));
+  return el("div", null, el("h2", { text: "7 day performance" }), el("div", { class: "chart" }, svg, leg), el("p", { class: "note", style: "margin-top:6px", text: "All coins start at 100, so you can see which one grew faster over the week, whatever the price." }));
+}
+function render() {
+  title(); drawChips(); setUrl();
+  const out = $("out"); out.replaceChildren();
+  if (coins.length < 2) { out.append(el("div", { class: "card", text: coins.length ? "Add one more coin to compare." : "Add two or more coins to compare them." })); return; }
+  const s = summary(); if (s) out.append(s);
+  out.append(table());
+  const ch = chart(); if (ch) out.append(ch);
+  const sh = el("button", { type: "button", class: "share", text: "Share this comparison" });
+  sh.onclick = async () => {
+    const url = location.href;
+    try { if (navigator.share) { await navigator.share({ title: document.title, url }); return; } } catch (_) { return; }
+    try { await navigator.clipboard.writeText(url); $("msg").textContent = "Link copied."; } catch (_) { $("msg").textContent = "Copy the address from your browser to share."; }
+  };
+  out.append(el("div", { style: "margin-top:16px" }, sh));
+}
+
+let tm;
+$("q").addEventListener("input", () => {
+  clearTimeout(tm);
+  const raw = $("q").value.trim();
+  const q = raw.replace(/[^A-Za-z0-9 .-]/g, "").slice(0, 30);
+  const dd = $("dd");
+  if (q.length < 1) { dd.hidden = true; return; }
+  tm = setTimeout(async () => {
+    const { data } = await sb.from("coins").select("id,symbol,name,image_url,market_cap_rank,kind")
+      .or(`name.ilike.%${q}%,symbol.ilike.${q}%`).or("kind.is.null,kind.neq.tokenized")
+      .order("market_cap_rank", { ascending: true, nullsFirst: false }).limit(8);
+    dd.replaceChildren();
+    const have = new Set(ids());
+    (data || []).filter((c) => !have.has(c.id)).forEach((c) => {
+      const b = el("button", { type: "button" }, c.image_url ? el("img", { src: c.image_url, alt: "", width: "24", height: "24", referrerpolicy: "no-referrer" }) : null, el("b", { text: c.name }), el("small", { text: String(c.symbol).toUpperCase() }));
+      b.onclick = async () => {
+        dd.hidden = true; $("q").value = "";
+        const [full] = await fetchCoins([c.id]);
+        if (full && coins.length < 4 && !ids().includes(full.id)) { coins.push(full); render(); }
+      };
+      dd.append(b);
+    });
+    dd.hidden = !dd.children.length;
+  }, 200);
+});
+document.addEventListener("click", (e) => { if (!e.target.closest(".search")) $("dd").hidden = true; });
+
+(async () => {
+  const pop = $("pop");
+  for (const p of POPULAR) {
+    pop.append(el("a", { href: "compare.html?c=" + p.join(","), text: p.map((x) => x.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())).join(" vs ") }));
+  }
+  try {
+    const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+    const { SUPABASE_URL, SUPABASE_KEY } = await import("./config.js");
+    sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+    const param = new URLSearchParams(location.search).get("c");
+    const want = (param ? param.split(",") : ["bitcoin", "ethereum"]).map((x) => x.trim().toLowerCase());
+    coins = await fetchCoins(want);
+    render();
+  } catch (_) { $("msg").textContent = "Could not load the coins. Please check your connection and try again."; }
+})();
+</script>
+</body></html>
