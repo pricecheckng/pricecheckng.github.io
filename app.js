@@ -611,9 +611,9 @@ function paintCoin(c) {
       <div class="cp-stat"><small>24h volume ($)</small><b>${fmtBig(c.volume_24h_usd, "$")}</b></div>
       <div class="cp-stat"><small>24h volume (${esc(state.cur)})</small><b>${secBig(c.volume_24h_usd)}</b></div>
       ${Number(c.circulating_supply) > 0 ? `<div class="cp-stat" style="grid-column:1/-1"><small>Circulating supply</small><b>${fmtBig(c.circulating_supply, "")} ${esc(sym)}</b></div>` : ""}
+      <div id="coinExtras" style="display:contents"></div>
       <div class="cp-stat" style="grid-column:1/-1"><small>Last updated</small><b>${ago(c.last_updated)}</b></div>
     </div>
-    <div id="coinExtras"></div>
     <div id="coinConv"></div>
     <div id="coinVote"></div>
     <div id="coinMarkets"></div>
@@ -716,8 +716,8 @@ async function loadCoinExtras(c) {
     if (Number(data.total_supply) > 0) t.push(tile("Total supply", `${fmtBig(data.total_supply, "")} ${esc(sym)}`));
     t.push(tile("Max supply", Number(data.max_supply) > 0 ? `${fmtBig(data.max_supply, "")} ${esc(sym)}` : "Not available"));
     const cats = Array.isArray(data.categories) ? data.categories.filter((x) => typeof x === "string" && x) : [];
-    const chips = cats.length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0">${cats.map((x) => `<span style="font-size:.78rem;font-weight:600;color:#15803d;background:#eaf6ee;border-radius:99px;padding:3px 10px">${esc(x)}</span>`).join("")}</div>` : "";
-    box.innerHTML = `<div class="cp-stats" style="margin-top:0">${t.join("")}</div>${chips}`;
+    const chips = cats.length ? `<div style="grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap">${cats.map((x) => `<span style="font-size:.78rem;font-weight:600;color:#15803d;background:#eaf6ee;border-radius:99px;padding:3px 10px">${esc(x)}</span>`).join("")}</div>` : "";
+    box.innerHTML = t.join("") + chips;
   } catch (_) {}
 }
 async function loadCoinMarkets(c) {
