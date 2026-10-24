@@ -680,12 +680,13 @@ function exBadge(key) {
 }
 function paintConverter(c) {
   const box = $("#coinConv");
-  const px = Number(c.price_usd), ngn = Number(c.price_ngn);
+  const px = Number(c.price_usd), second = secondPrice(c);
   if (!box || !(px > 0)) return;
+  const cur = CURRENCIES[state.cur] || CURRENCIES.NGN;
   const sym = c.symbol.toUpperCase();
-  const rate = ngn > 0 ? ngn / px : 0;
+  const rate = second > 0 && state.cur !== "USD" ? second / px : 0;
   const fld = (id, lab) => `<label style="display:block;margin:0 0 8px"><span style="display:block;font-size:.78rem;color:#6b7c72;margin:0 0 3px">${lab}</span><input id="${id}" type="text" inputmode="decimal" autocomplete="off" style="width:100%;padding:11px 12px;border:1px solid var(--line,#e3ece6);border-radius:12px;font-size:1rem;background:#fff;color:inherit"></label>`;
-  box.innerHTML = `<div class="cp-card" style="margin:14px 0"><h3 style="margin:0 0 10px">${esc(sym)} converter</h3>${fld("cvCoin", esc(sym))}${fld("cvUsd", "US dollars (USD)")}${rate ? fld("cvNgn", "Naira (NGN)") : ""}<p class="muted" style="margin:2px 0 0;font-size:.8rem">Type in any box and the others update. Uses the latest price shown above.</p></div>`;
+  box.innerHTML = `<div class="cp-card" style="margin:14px 0"><h3 style="margin:0 0 10px">${esc(sym)} converter</h3>${fld("cvCoin", esc(sym))}${fld("cvUsd", "US dollars (USD)")}${rate ? fld("cvNgn", `${esc(cur.name)} (${esc(state.cur)})`) : ""}<p class="muted" style="margin:2px 0 0;font-size:.8rem">Type in any box and the others update. Uses the latest price shown above.</p></div>`;
   const f = { coin: $("#cvCoin"), usd: $("#cvUsd"), ngn: $("#cvNgn") };
   const num = (el) => { const v = parseFloat(String(el.value).replace(/,/g, "")); return isFinite(v) && v >= 0 ? v : null; };
   const put = (el, v, d) => { if (el) el.value = v == null ? "" : Number(v.toFixed(d)).toLocaleString("en-US", { maximumFractionDigits: d, useGrouping: false }); };
