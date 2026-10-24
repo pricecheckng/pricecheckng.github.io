@@ -12,6 +12,7 @@
       ['Market chart', 'Total market cap and Bitcoin dominance', 'market-chart.html'],
       ['Heatmap', 'The whole market in one picture', 'heatmap.html'],
       ['Fear & Greed', 'Is the market scared or greedy?', 'fear-greed.html'],
+      ['Compare coins', 'Put two to four coins side by side', 'compare.html'],
       ['Top movers', 'Biggest gainers and losers', 'movers.html']
     ]},
     { t: 'Naira & P2P', rows: [
