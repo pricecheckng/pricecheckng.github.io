@@ -680,17 +680,17 @@ async function loadCoinMarkets(c) {
     if (!box) return;
     const { data, error } = await sb.rpc("coin_markets", { p_id: c.id });
     if (error || !data || !data.length) return;
-    const rows = data
-      .slice(0, 10)
+    const rowHtml = (list, off) => list
       .map(
-        (r, i) => `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;line-height:1.3;border-top:${i ? "1px solid var(--line,#e3ece6)" : "0"}">
+        (r, k) => { const i = k + off; return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;line-height:1.3;border-top:${i ? "1px solid var(--line,#e3ece6)" : "0"}">
           <span style="flex:none;width:22px;color:#6b7c72;font-size:.85rem">${i + 1}</span>
           ${exBadge(r.exchange)}
           <b style="flex:1;min-width:0">${esc(EX_NAMES[r.exchange] || r.exchange)}</b>
           <div style="text-align:right;line-height:1.25"><div style="font-weight:700;margin:0">${fmtUsd(r.price_usd)} <small style="font-weight:600;font-size:.78rem;color:${Number(r.diff_pct) > 0 ? "#15803d" : Number(r.diff_pct) < 0 ? "#b91c1c" : "#6b7c72"}">${r.diff_pct == null ? "" : (Number(r.diff_pct) > 0 ? "+" : "") + Number(r.diff_pct).toFixed(2) + "%"}</small></div><div style="color:#6b7c72;font-size:.82rem;margin:2px 0 0">Vol ${fmtBig(r.volume_usd, "$")} · ${Number(r.share_pct).toFixed(1)}%</div></div>
-        </div>`
+        </div>`; }
       )
       .join("");
+    const rows = rowHtml(data.slice(0, 10), 0) + (data.length > 10 ? `<details style="border-top:1px solid var(--line,#e3ece6)"><summary style="padding:10px 0 2px;color:#15803d;font-weight:700;cursor:pointer;list-style:none">Show ${data.length - 10} more exchange${data.length - 10 === 1 ? "" : "s"} ▾</summary>${rowHtml(data.slice(10), 10)}</details>` : "");
     const hi = data.reduce((m, r) => (Number(r.price_usd) > Number(m.price_usd) ? r : m), data[0]);
     const lo = data.reduce((m, r) => (Number(r.price_usd) < Number(m.price_usd) ? r : m), data[0]);
     const gap = Number(lo.price_usd) > 0 ? ((Number(hi.price_usd) - Number(lo.price_usd)) / Number(lo.price_usd)) * 100 : 0;
