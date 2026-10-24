@@ -613,6 +613,7 @@ function paintCoin(c) {
       ${Number(c.circulating_supply) > 0 ? `<div class="cp-stat" style="grid-column:1/-1"><small>Circulating supply</small><b>${fmtBig(c.circulating_supply, "")} ${esc(sym)}</b></div>` : ""}
       <div class="cp-stat" style="grid-column:1/-1"><small>Last updated</small><b>${ago(c.last_updated)}</b></div>
     </div>
+    <div id="coinVote"></div>
     <div id="coinMarkets"></div>
     <div id="coinNews"></div>
     <button class="btn" type="button" id="alertBtn" style="padding:10px 14px;min-height:0;font-size:.95rem;border-radius:12px">🔔 Set price alert</button>
@@ -625,6 +626,7 @@ function paintCoin(c) {
   loadCoinNews(c);
   loadCoinMarkets(c);
   loadCoinChanges(c);
+  loadCoinVote(c);
   loadWatch().then(() => {
     const wb = $("#watchBtn");
     if (wb) wb.textContent = watchLabel(c.id);
@@ -748,6 +750,63 @@ async function loadCoinChanges(c) {
     box.innerHTML = `<div class="cp-card" style="margin-top:12px"><h3 style="margin:0 0 8px">Price change</h3><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;text-align:center">${cells
       .map(([k, v]) => `<div><span style="display:block;font-size:.74rem;color:#6b7c72">${k}</span><span style="display:block;font-weight:700;font-size:.86rem;color:${v == null ? "#6b7c72" : v >= 0 ? "#15803d" : "#b91c1c"}">${v == null ? "–" : (v > 0 ? "+" : "") + v.toFixed(Math.abs(v) >= 100 ? 0 : 1) + "%"}</span></div>`)
       .join("")}</div></div>`;
+  } catch (_) {}
+}
+function voteDevice() {
+  try {
+    let d = localStorage.getItem("pc_dev");
+    if (!d || !/^[A-Za-z0-9_-]{8,64}$/.test(d)) {
+      d = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(36).slice(2)).replace(/[^A-Za-z0-9_-]/g, "");
+      localStorage.setItem("pc_dev", d);
+    }
+    return d;
+  } catch (_) {
+    return "anon" + Math.random().toString(36).slice(2, 12);
+  }
+}
+async function loadCoinVote(c) {
+  try {
+    const box = $("#coinVote");
+    if (!box) return;
+    const sym = esc(c.symbol.toUpperCase());
+    const today = new Date().toISOString().slice(0, 10);
+    const key = "pc_vote_" + c.id;
+    let mine = 0;
+    try {
+      const raw = localStorage.getItem(key) || "";
+      if (raw.split("|")[0] === today) mine = Number(raw.split("|")[1]) || 0;
+    } catch (_) {}
+    const draw = (bull, bear, voted) => {
+      const total = bull + bear;
+      const bp = total ? Math.round((bull / total) * 100) : 0;
+      const btn = (v, label) => `<button type="button" data-vote="${v}" style="flex:1;padding:10px 8px;border-radius:12px;border:1.5px solid ${voted === v ? (v === 1 ? "#15803d" : "#b91c1c") : "#cfd9d2"};background:${voted === v ? (v === 1 ? "#e8f5ec" : "#fdecec") : "#fff"};font:inherit;font-weight:700;color:inherit">${label}</button>`;
+      const bars = voted
+        ? `<div style="display:flex;height:10px;border-radius:6px;overflow:hidden;margin:12px 0 6px;background:#e5ebe7"><div style="width:${bp}%;background:#16a34a"></div><div style="width:${100 - bp}%;background:#dc2626"></div></div>
+           <div style="display:flex;justify-content:space-between;font-size:.88rem"><span style="color:#15803d;font-weight:700">${bp}% Bullish</span><span style="color:#b91c1c;font-weight:700">${100 - bp}% Bearish</span></div>
+           <p class="note" style="margin:6px 0 0">${total} vote${total === 1 ? "" : "s"} today from visitors of this site. You can change your vote today.</p>`
+        : `<p class="note" style="margin:8px 0 0">${total ? "Vote to see what others think." : "Be the first to vote today."}</p>`;
+      box.innerHTML = `<div class="card" style="margin:14px 0 4px"><h3 style="margin:0 0 8px">How do you feel about ${sym} today?</h3><div style="display:flex;gap:8px">${btn(1, "🚀 Bullish")}${btn(-1, "👎 Bearish")}</div>${bars}</div>`;
+      box.querySelectorAll("[data-vote]").forEach((b) => {
+        b.onclick = async () => {
+          const v = Number(b.getAttribute("data-vote"));
+          box.querySelectorAll("button").forEach((x) => (x.disabled = true));
+          const { data, error } = await sb.rpc("coin_vote", { p_id: c.id, p_vote: v, p_device: voteDevice() });
+          if (error || !data || !data.length) {
+            toast(/too many/i.test((error && error.message) || "") ? "Too many votes. Please try again later." : "Could not save your vote. Please try again.");
+            draw(bull, bear, voted);
+            return;
+          }
+          try {
+            localStorage.setItem(key, today + "|" + v);
+          } catch (_) {}
+          draw(Number(data[0].bullish) || 0, Number(data[0].bearish) || 0, v);
+        };
+      });
+    };
+    const { data, error } = await sb.rpc("coin_sentiment", { p_id: c.id });
+    if (error) return;
+    const r = (data && data[0]) || { bullish: 0, bearish: 0 };
+    draw(Number(r.bullish) || 0, Number(r.bearish) || 0, mine);
   } catch (_) {}
 }
 async function loadCoinNews(c) {
