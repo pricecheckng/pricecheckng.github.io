@@ -714,10 +714,24 @@ async function loadCoinExtras(c) {
     const t = [];
     if (Number(data.fdv) > 0) t.push(tile("Fully diluted value ($)", fmtBig(data.fdv, "$")));
     if (Number(data.total_supply) > 0) t.push(tile("Total supply", `${fmtBig(data.total_supply, "")} ${esc(sym)}`));
+    const ath = Number(data.ath), px0 = Number(c.price_usd);
+    if (ath > 0) {
+      const below = px0 > 0 ? ((px0 / ath - 1) * 100) : null;
+      t.push(`<div class="cp-stat"><small>All-time high ($)</small><b>${fmtUsd(ath)}</b>${below != null && below < 0 ? `<small style="color:#b91c1c;font-weight:600">${below.toFixed(1)}% from the peak</small>` : ""}</div>`);
+    }
+    if (Number(data.exchanges) > 0) t.push(tile("Listed on", `${Number(data.exchanges).toLocaleString("en-US")} exchanges`));
+    if (Number(data.age_days) > 0) {
+      const y = Math.floor(Number(data.age_days) / 365);
+      t.push(tile("Age", y >= 1 ? `${y} year${y === 1 ? "" : "s"}` : `${Number(data.age_days)} days`));
+    }
     t.push(tile("Max supply", Number(data.max_supply) > 0 ? `${fmtBig(data.max_supply, "")} ${esc(sym)}` : "Not available"));
     const cats = Array.isArray(data.categories) ? data.categories.filter((x) => typeof x === "string" && x) : [];
     const chips = cats.length ? `<div style="grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap">${cats.map((x) => `<span style="font-size:.78rem;font-weight:600;color:#15803d;background:#eaf6ee;border-radius:99px;padding:3px 10px">${esc(x)}</span>`).join("")}</div>` : "";
-    box.innerHTML = t.join("") + chips;
+    const LN = { website: "Website", whitepaper: "Whitepaper", reddit: "Reddit", twitter: "X (Twitter)", telegram: "Telegram", discord: "Discord", medium: "Medium", youtube: "YouTube", linkedin: "LinkedIn" };
+    const lk = data.links && typeof data.links === "object" ? data.links : {};
+    const pills = Object.keys(LN).filter((k) => typeof lk[k] === "string" && /^https:\/\//.test(lk[k])).map((k) => `<a href="${esc(lk[k])}" target="_blank" rel="noopener nofollow" style="display:inline-block;padding:7px 14px;border-radius:99px;background:#f1f5f2;color:#15803d;font-weight:600;font-size:.88rem;text-decoration:none">${LN[k]}</a>`).join("");
+    const info = pills ? `<div class="cp-stat" style="grid-column:1/-1"><small>Official links</small><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">${pills}</div></div>` : "";
+    box.innerHTML = t.join("") + chips + info;
   } catch (_) {}
 }
 async function loadCoinMarkets(c) {
