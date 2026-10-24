@@ -470,7 +470,7 @@ async function renderCoin(id) {
   await state.fxReady;
   const my = ++state.req;
   view.innerHTML = `<section class="page"><a href="#market" style="display:inline-block;margin:4px 0 14px;color:#15803d;font-weight:600;text-decoration:none">← All coins</a><div id="coinBody">${skeleton(3)}</div></section>${footer()}`;
-  const { data, error } = await sb.from("coins").select(COLS + ",sparkline").eq("id", id).maybeSingle();
+  const { data, error } = await sb.from("coins").select(COLS + ",sparkline,circulating_supply").eq("id", id).maybeSingle();
   if (my !== state.req || !$("#coinBody")) return;
   if (error || !data) {
     $("#coinBody").innerHTML = emptyBox(error ? "Could not load this coin" : "Coin not found", error ? "Check your connection and try again." : "It may have been removed, or the link is wrong.");
@@ -604,11 +604,13 @@ function paintCoin(c) {
       <div class="sub">${m.flag} ${fmtLocal(second, state.cur)} <span class="cp-pill ${d.c}" style="margin-left:6px">${d.t}</span> <span class="muted">24h</span></div>
     </div>
     <div class="cp-card"><h3>Price chart</h3>${chartHtml}</div>
+    <div id="coinChanges"></div>
     <div class="cp-stats">
       <div class="cp-stat"><small>Market cap ($)</small><b>${fmtBig(c.market_cap_usd, "$")}</b></div>
       <div class="cp-stat"><small>Market cap (${esc(state.cur)})</small><b>${secBig(c.market_cap_usd)}</b></div>
       <div class="cp-stat"><small>24h volume ($)</small><b>${fmtBig(c.volume_24h_usd, "$")}</b></div>
       <div class="cp-stat"><small>24h volume (${esc(state.cur)})</small><b>${secBig(c.volume_24h_usd)}</b></div>
+      ${Number(c.circulating_supply) > 0 ? `<div class="cp-stat" style="grid-column:1/-1"><small>Circulating supply</small><b>${fmtBig(c.circulating_supply, "")} ${esc(sym)}</b></div>` : ""}
       <div class="cp-stat" style="grid-column:1/-1"><small>Last updated</small><b>${ago(c.last_updated)}</b></div>
     </div>
     <div id="coinMarkets"></div>
@@ -622,6 +624,7 @@ function paintCoin(c) {
   $("#alertBtn").onclick = () => alertForm(c);
   loadCoinNews(c);
   loadCoinMarkets(c);
+  loadCoinChanges(c);
   loadWatch().then(() => {
     const wb = $("#watchBtn");
     if (wb) wb.textContent = watchLabel(c.id);
@@ -689,8 +692,62 @@ async function loadCoinMarkets(c) {
     const hi = data.reduce((m, r) => (Number(r.price_usd) > Number(m.price_usd) ? r : m), data[0]);
     const lo = data.reduce((m, r) => (Number(r.price_usd) < Number(m.price_usd) ? r : m), data[0]);
     const gap = Number(lo.price_usd) > 0 ? ((Number(hi.price_usd) - Number(lo.price_usd)) / Number(lo.price_usd)) * 100 : 0;
-    const gapHtml = data.length > 1 ? `<p style="margin:0 0 8px;padding:8px 10px;border-radius:10px;background:#eef6f0;font-size:.88rem;line-height:1.35">Highest: <b>${esc(EX_NAMES[hi.exchange] || hi.exchange)}</b> ${fmtUsd(hi.price_usd)} · Lowest: <b>${esc(EX_NAMES[lo.exchange] || lo.exchange)}</b> ${fmtUsd(lo.price_usd)} · Gap <b>${gap.toFixed(2)}%</b></p>` : "";
+    const gapHtml = data.length > 1 ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 6px">
+      <div style="background:#e8f5ec;color:#15803d;border-radius:12px;padding:8px 10px;line-height:1.3"><span style="display:block;font-size:.74rem;font-weight:700">▲ HIGHEST</span><span style="display:block;font-weight:700">${esc(EX_NAMES[hi.exchange] || hi.exchange)}</span><span style="display:block;font-size:.9rem">${fmtUsd(hi.price_usd)}</span></div>
+      <div style="background:#fdecec;color:#b91c1c;border-radius:12px;padding:8px 10px;line-height:1.3"><span style="display:block;font-size:.74rem;font-weight:700">▼ LOWEST</span><span style="display:block;font-weight:700">${esc(EX_NAMES[lo.exchange] || lo.exchange)}</span><span style="display:block;font-size:.9rem">${fmtUsd(lo.price_usd)}</span></div>
+    </div><p style="margin:0 0 8px;font-size:.85rem;color:#6b7c72">Gap between highest and lowest: <b style="display:inline">${gap.toFixed(2)}%</b></p>` : "";
     box.innerHTML = `<div class="card" style="margin:14px 0 4px"><h3 style="margin:0 0 4px">Where ${esc(c.symbol.toUpperCase())} is traded</h3><p class="note" style="margin:0 0 6px">Price on each exchange, how far it is from the middle price (small, coloured), 24h volume (Vol) and share of the total. Refreshed every 5 minutes. Collected by PriceCheck NG from the exchanges directly.</p>${gapHtml}${rows}</div>`;
+  } catch (_) {}
+}
+async function loadCoinChanges(c) {
+  try {
+    const box = $("#coinChanges");
+    if (!box) return;
+    const px = Number(c.price_usd);
+    const get = async (iv, lim) => {
+      try {
+        const ctl = new AbortController();
+        const to = setTimeout(() => ctl.abort(), 8000);
+        const res = await fetch(`https://data-api.binance.vision/api/v3/klines?symbol=${encodeURIComponent(c.symbol.toUpperCase())}USDT&interval=${iv}&limit=${lim}`, { signal: ctl.signal });
+        clearTimeout(to);
+        if (!res.ok) return null;
+        const rows = await res.json();
+        if (!Array.isArray(rows) || rows.length < 2) return null;
+        const sr = rows.map((k) => ({ t: k[0], p: Number(k[4]) })).filter((o) => isFinite(o.p) && o.p > 0);
+        const l = sr.length ? sr[sr.length - 1].p : 0;
+        return l && px && px / l > 0.8 && px / l < 1.25 ? sr : null;
+      } catch (_) {
+        return null;
+      }
+    };
+    const [h, d] = await Promise.all([get("1h", 336), get("1d", 365)]);
+    const at = (sr, ms, iv) => {
+      if (!sr) return null;
+      const target = Date.now() - ms;
+      let best = null;
+      for (const o of sr) {
+        if (o.t + iv <= target) best = o;
+        else break;
+      }
+      if (!best && sr[0].t - target < 5 * 864e5) best = sr[0];
+      return best;
+    };
+    const pct = (sr, ms, iv) => {
+      const o = at(sr, ms, iv);
+      return o && px ? (px / o.p - 1) * 100 : null;
+    };
+    const cells = [
+      ["1h", pct(h, 36e5, 36e5)],
+      ["24h", Number.isFinite(Number(c.change_24h_pct)) ? Number(c.change_24h_pct) : null],
+      ["7d", pct(h, 7 * 864e5, 36e5)],
+      ["14d", pct(h, 14 * 864e5, 36e5)],
+      ["30d", pct(d, 30 * 864e5, 864e5)],
+      ["1y", pct(d, 365 * 864e5, 864e5)],
+    ];
+    if (!cells.some((x) => x[1] != null)) return;
+    box.innerHTML = `<div class="cp-card" style="margin-top:12px"><h3 style="margin:0 0 8px">Price change</h3><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px;text-align:center">${cells
+      .map(([k, v]) => `<div><span style="display:block;font-size:.74rem;color:#6b7c72">${k}</span><span style="display:block;font-weight:700;font-size:.86rem;color:${v == null ? "#6b7c72" : v >= 0 ? "#15803d" : "#b91c1c"}">${v == null ? "–" : (v > 0 ? "+" : "") + v.toFixed(Math.abs(v) >= 100 ? 0 : 1) + "%"}</span></div>`)
+      .join("")}</div></div>`;
   } catch (_) {}
 }
 async function loadCoinNews(c) {
