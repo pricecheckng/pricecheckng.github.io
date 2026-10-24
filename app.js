@@ -873,7 +873,7 @@ async function loadCoinNews(c) {
   const box = $("#coinNews");
   if (!box) return;
   try {
-    const { data } = await sb.from("news").select("source,title,url,published_at,image_url").contains("coin_ids", [c.id]).order("published_at", { ascending: false }).limit(5);
+    const { data } = await sb.from("news").select("source,title,url,published_at,image_url").contains("coin_ids", [c.id]).gte("published_at", new Date(Date.now() - 24 * 3600 * 1000).toISOString()).order("published_at", { ascending: false }).limit(5);
     if (!$("#coinNews") || !data || !data.length) return;
     const safe = (u) => (/^https?:\/\//i.test(u || "") ? u : "#");
     box.innerHTML = `<div class="cp-card" style="user-select:auto;-webkit-user-select:auto">
