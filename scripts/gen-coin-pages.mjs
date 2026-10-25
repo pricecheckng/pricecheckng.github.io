@@ -39,6 +39,63 @@ const good = rows.filter((c) => c.id && c.symbol && c.name && /^[a-z0-9-]+$/.tes
 const top = good.slice(0, COUNT);
 if (top.length < 30) throw new Error("Only " + top.length + " coins found. Not writing anything.");
 
+
+// ---- Exchange facts: what our own exchange data says about each coin (unique text for every page) ----
+const EX_NAMES = { binance: "Binance", bybit: "Bybit", okx: "OKX", kucoin: "KuCoin", gate: "Gate", mexc: "MEXC", bitget: "Bitget", htx: "HTX", cryptocom: "Crypto.com", lbank: "LBank", whitebit: "WhiteBIT", bitmart: "BitMart", coinex: "CoinEx", poloniex: "Poloniex", digifinex: "DigiFinex", xt: "XT", kraken: "Kraken", bitstamp: "Bitstamp", bitfinex: "Bitfinex", bitvavo: "Bitvavo", valr: "VALR", btcturk: "BTCTurk", coinbase: "Coinbase", bingx: "BingX", phemex: "Phemex", bit2me: "Bit2Me", pionex: "Pionex", bigone: "BigONE", coindcx: "CoinDCX", hashkey: "HashKey", wazirx: "WazirX", bitopro: "BitoPro", bitso: "Bitso", luno: "Luno", upbit: "Upbit", bithumb: "Bithumb", coinone: "Coinone", korbit: "Korbit", bitkub: "Bitkub" };
+
+// Builds the "where it trades" text and table. Runs here (so Google sees it) and again in the browser (so it stays live).
+function mkHtml(rows, name, sym, names, when) {
+  const e = (x) => String(x == null ? "" : x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const list = (rows || []).filter((r) => Number(r.price_usd) > 0 && Number(r.volume_usd) > 0);
+  if (list.length < 2) return "";
+  const nm = (k) => names[k] || k;
+  const px = (n) => {
+    n = Number(n);
+    const o = n >= 1000 ? { maximumFractionDigits: 0 } : n >= 1 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { maximumSignificantDigits: 4 };
+    return "$" + n.toLocaleString("en-US", o);
+  };
+  const big = (n) => {
+    n = Number(n);
+    return n >= 1e9 ? "$" + (n / 1e9).toFixed(2) + " billion" : n >= 1e6 ? "$" + (n / 1e6).toFixed(1) + " million" : n >= 1e3 ? "$" + Math.round(n / 1e3) + " thousand" : "$" + Math.round(n);
+  };
+  const hi = list.reduce((m, r) => (Number(r.price_usd) > Number(m.price_usd) ? r : m), list[0]);
+  const lo = list.reduce((m, r) => (Number(r.price_usd) < Number(m.price_usd) ? r : m), list[0]);
+  const gap = ((Number(hi.price_usd) - Number(lo.price_usd)) / Number(lo.price_usd)) * 100;
+  const byVol = list.slice().sort((a, b) => Number(b.volume_usd) - Number(a.volume_usd));
+  const total = list.reduce((t, r) => t + Number(r.volume_usd), 0);
+  const lead = byVol[0];
+  const sp = list.filter((r) => r.spread_pct != null && Number(r.spread_pct) >= 0);
+  const tight = sp.length ? sp.reduce((m, r) => (Number(r.spread_pct) < Number(m.spread_pct) ? r : m), sp[0]) : null;
+  const d = when ? new Date(when).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : "";
+  let t = `<p>${e(name)} (${e(sym)}) is traded on ${list.length} exchanges that PriceCheck NG tracks directly. `;
+  t += `The lowest price is on ${e(nm(lo.exchange))} at ${px(lo.price_usd)} and the highest is on ${e(nm(hi.exchange))} at ${px(hi.price_usd)}, a gap of ${gap < 0.01 ? "under 0.01" : gap.toFixed(2)}%. `;
+  t += `${e(nm(lead.exchange))} has the most trading, with ${big(lead.volume_usd)} in the last 24 hours (${(100 * Number(lead.volume_usd) / total).toFixed(0)}% of the volume across these exchanges). `;
+  if (tight) t += `The tightest spread, meaning the smallest gap between the best buy and sell price, is on ${e(nm(tight.exchange))} at ${Number(tight.spread_pct) < 0.001 ? "under 0.001" : Number(tight.spread_pct).toFixed(Number(tight.spread_pct) < 0.1 ? 3 : 2)}%. `;
+  t += `Combined 24 hour volume on these exchanges is ${big(total)}.</p>`;
+  const tr = byVol.slice(0, 10).map((r, i) => `<tr><td>${i + 1}. ${e(nm(r.exchange))}</td><td>${px(r.price_usd)}</td><td>${big(r.volume_usd)}</td><td>${r.spread_pct == null ? "-" : Number(r.spread_pct) < 0.001 ? "&lt;0.001%" : Number(r.spread_pct).toFixed(Number(r.spread_pct) < 0.1 ? 3 : 2) + "%"}</td></tr>`).join("");
+  t += `<table class="mk"><thead><tr><th>Exchange</th><th>Price</th><th>24h volume</th><th>Spread</th></tr></thead><tbody>${tr}</tbody></table>`;
+  t += `<p class="note">${d ? "Snapshot from " + d + ". " : ""}Prices are collected from each exchange directly. They differ a little between exchanges because each has its own buyers and sellers. Not financial advice.</p>`;
+  return t;
+}
+
+// Fetch the exchange data for every coin we write a page for (a few at a time). If it fails, the page is written without it.
+const MK = new Map();
+const WHEN = new Date().toISOString();
+{
+  const queue = top.map((c) => c.id);
+  const worker = async () => {
+    while (queue.length) {
+      const id = queue.shift();
+      try {
+        const r = await fetch(SUPABASE_URL + "/rest/v1/rpc/coin_markets", { method: "POST", headers: { ...H, "Content-Type": "application/json" }, body: JSON.stringify({ p_id: id }), signal: AbortSignal.timeout(15000) });
+        if (r.ok) { const rows = await r.json(); if (Array.isArray(rows) && rows.length >= 2) MK.set(id, rows); }
+      } catch (e) {}
+    }
+  };
+  await Promise.all(Array.from({ length: 8 }, worker));
+  console.log(`Exchange facts added to ${MK.size} of ${top.length} coin pages`);
+}
+
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const css = `:root{--g:#0b7d4d;--ink:#0f1a14;--mut:#55635a;--line:#e3e9e5;--bg:#fff;--card:#f6f8f7}
 *{box-sizing:border-box}
@@ -66,6 +123,7 @@ td:last-child,th:last-child{text-align:right;font-weight:700}
 .wa{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:#25d366;color:#fff!important;font-weight:800;font-size:.9rem;text-decoration:none;border-radius:999px;padding:9px 16px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.stats[hidden]{display:none}.stats div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}.stats small{display:block;color:var(--mut);font-size:.72rem}.stats b{font-size:.95rem}
 h3{font-size:1rem;margin:16px 0 4px}
+table.mk{margin:10px 0 0;font-size:.88rem}table.mk th{font-size:.75rem;color:var(--mut);font-weight:700;padding:6px 4px}table.mk td,table.mk th{text-align:right}table.mk td:first-child,table.mk th:first-child{text-align:left}table.mk td{font-weight:500}table.mk td:last-child,table.mk th:last-child{font-weight:500}
 .note{color:var(--mut);font-size:.85rem;margin-top:14px}
 footer{border-top:1px solid var(--line);padding:18px 20px;text-align:center;color:var(--mut);font-size:.9rem}
 footer a{color:var(--mut)}`;
@@ -137,6 +195,7 @@ ${css}
 <table id="tbl"><tbody></tbody></table>
 <a class="btn" href="./#coin/${c.id}?alert=1">Set a free ${esc(sym)} price alert</a>
 <p class="note" style="text-align:center;margin-top:8px"><a href="./#coin/${c.id}" style="color:var(--g);font-weight:700">Or open the ${esc(sym)} chart in the app</a></p>
+<section id="mk">${MK.has(c.id) ? `<h2>Where ${esc(name)} (${esc(sym)}) is traded</h2>` + mkHtml(MK.get(c.id), name, sym, EX_NAMES, WHEN) : ""}</section>
 <h2>About ${esc(name)} prices on PriceCheck NG</h2>
 <p>PriceCheck NG shows the live ${esc(name)} (${esc(sym)}) price in US dollars and in your choice of Nigerian naira (NGN), British pounds (GBP), euros (EUR), Ghanaian cedis (GHS), South African rand (ZAR), Kenyan shillings (KES), and more. You can set an alert for when ${esc(sym)} reaches a price or moves by a percent, and get notified by push notification or Telegram. It is free to use.</p>
 ${faqHtml}
@@ -165,6 +224,15 @@ const money = (n, c) => {
 };
 const ago = (t) => { const m = Math.max(0, Math.round((Date.now() - new Date(t)) / 60000)); if (m < 2) return "just now"; if (m < 60) return m + " min ago"; const h = Math.round(m / 60); if (h < 24) return h + " hr ago"; const d = Math.round(h / 24); return d + (d === 1 ? " day ago" : " days ago"); };
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+const EXN = ${JSON.stringify(EX_NAMES)};
+const mkHtml = ${mkHtml.toString()};
+fetch(SUPABASE_URL + "/rest/v1/rpc/coin_markets", { method: "POST", headers: { ...H, "Content-Type": "application/json" }, body: JSON.stringify({ p_id: ID }) })
+  .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
+  .then((rows) => {
+    const h = mkHtml(rows, NAME, SYM, EXN, new Date().toISOString());
+    if (h) document.getElementById("mk").innerHTML = "<h2>Where " + esc(NAME) + " (" + esc(SYM) + ") is traded</h2>" + h;
+  })
+  .catch(() => {});
 get("news?select=source,title,url,published_at&coin_ids=cs.{" + ID + "}&order=published_at.desc&limit=5").then((rows) => {
   if (!rows || !rows.length) return;
   document.getElementById("newsList").innerHTML = rows.map((n) => '<a class="ni" href="' + esc(/^https?:\\/\\//i.test(n.url) ? n.url : "#") + '" target="_blank" rel="noopener nofollow"><b>' + esc(n.title) + '</b><span>' + esc(n.source) + " · " + ago(n.published_at) + "</span></a>").join("");
