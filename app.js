@@ -790,13 +790,17 @@ async function loadCoinMarkets(c) {
       )
       .join("");
     const PER = 10;
-    const hi = data.reduce((m, r) => (Number(r.price_usd) > Number(m.price_usd) ? r : m), data[0]);
-    const lo = data.reduce((m, r) => (Number(r.price_usd) < Number(m.price_usd) ? r : m), data[0]);
+    const EX_LOCAL = { bitvavo: "EUR", bit2me: "EUR", valr: "ZAR", bitso: "MXN", luno: "local currency", upbit: "KRW", bithumb: "KRW", coinone: "KRW", korbit: "KRW", bitkub: "THB" };
+    const mainEx = data.filter((r) => !EX_LOCAL[r.exchange]);
+    const rankEx = mainEx.length >= 2 ? mainEx : data;
+    const localEx = mainEx.length >= 2 ? data.filter((r) => EX_LOCAL[r.exchange]) : [];
+    const hi = rankEx.reduce((m, r) => (Number(r.price_usd) > Number(m.price_usd) ? r : m), rankEx[0]);
+    const lo = rankEx.reduce((m, r) => (Number(r.price_usd) < Number(m.price_usd) ? r : m), rankEx[0]);
     const gap = Number(lo.price_usd) > 0 ? ((Number(hi.price_usd) - Number(lo.price_usd)) / Number(lo.price_usd)) * 100 : 0;
     const gapHtml = data.length > 1 ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:0 0 4px">
       <div style="background:#eaf6ee;border-radius:10px;padding:6px 10px;line-height:1.25;min-width:0"><span style="display:block;font-size:.66rem;font-weight:700;letter-spacing:.04em;color:#15803d">▲ HIGHEST</span><span style="display:block;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font-weight:700">${esc(EX_NAMES[hi.exchange] || hi.exchange)}</span> <span style="color:#15803d">${fmtUsdX(hi.price_usd)}</span></span></div>
       <div style="background:#fbeeee;border-radius:10px;padding:6px 10px;line-height:1.25;min-width:0"><span style="display:block;font-size:.66rem;font-weight:700;letter-spacing:.04em;color:#b91c1c">▼ LOWEST</span><span style="display:block;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span style="font-weight:700">${esc(EX_NAMES[lo.exchange] || lo.exchange)}</span> <span style="color:#b91c1c">${fmtUsdX(lo.price_usd)}</span></span></div>
-    </div><p style="margin:0 0 6px;font-size:.8rem;color:#6b7c72">Gap: <span style="font-weight:700;display:inline">${gap.toFixed(2)}%</span> between highest and lowest</p>` : "";
+    </div><p style="margin:0 0 6px;font-size:.8rem;color:#6b7c72">Gap: <span style="font-weight:700;display:inline">${gap.toFixed(2)}%</span> between highest and lowest${localEx.length ? ". Left out: exchanges priced in other currencies (" + localEx.slice(0, 3).map((r) => esc(EX_NAMES[r.exchange] || r.exchange) + " " + EX_LOCAL[r.exchange]).join(", ") + (localEx.length > 3 ? " and more" : "") + "), which carry local premiums" : ""}</p>` : "";
     box.innerHTML = `<div class="card" style="margin:14px 0 4px"><h3 style="margin:0 0 4px">Where ${esc(c.symbol.toUpperCase())} is traded</h3><p class="note" style="margin:0 0 6px">Price on each exchange, how far it is from the middle price (small, coloured), 24h volume (Vol) and share of the total. Under each name: the trading pair and its spread, the gap between the best buy and sell price (smaller means a smoother market). Refreshed every 5 minutes. Collected by PriceCheck NG from the exchanges directly.</p>${gapHtml}<div id="mkRows"></div><div id="mkPager"></div></div>`;
     let pg = 0;
     const pages = Math.ceil(data.length / PER);
