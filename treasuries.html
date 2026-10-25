@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crypto treasuries: which companies hold Bitcoin and Ethereum | PriceCheck NG</title>
+<meta name="description" content="See which public companies hold the most Bitcoin, Ethereum, Solana and other crypto: how many coins they own, what they are worth today and how much they are up or down.">
+<link rel="canonical" href="https://pricecheckng.com.ng/treasuries.html">
+<style>
+:root{--bg:#fff;--card:#f6f7f8;--ink:#0f1a14;--mu:#5d6b64;--g:#16a34a;--gd:#0a7a3a;--line:#e3e8e5;--red:#d93b3b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:#0a7a3a;color:#fff;padding:14px 16px;font-weight:800}
+header a{color:#fff;text-decoration:none}
+main{max-width:720px;margin:0 auto;padding:16px 16px 56px}
+h1{font-size:24px;line-height:1.2;margin:8px 0 6px}
+h2{font-size:18px;margin:26px 0 8px}
+p{color:var(--mu);margin:0 0 12px}
+a{color:var(--gd)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.chip{display:flex;align-items:center;gap:6px;padding:6px 12px 6px 8px;border-radius:99px;border:1.5px solid var(--line);background:#fff;font:inherit;font-weight:700;font-size:14px;color:var(--ink);cursor:pointer}
+.chip img{width:20px;height:20px;border-radius:50%}
+.chip.on{background:var(--gd);border-color:var(--gd);color:#fff}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.st{background:var(--card);border-radius:14px;padding:12px}
+.st small{display:block;color:var(--mu);font-size:.8rem}
+.st b{display:block;font-size:1.05rem;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:14px 0}
+.row{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.rk{flex:none;width:26px;color:var(--mu);font-size:.85rem}
+.nm{flex:1;min-width:0;line-height:1.25}
+.nm b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm span{font-size:.78rem;color:var(--mu)}
+.rt{text-align:right;line-height:1.25;flex:none}
+.rt b{display:block}
+.rt span{font-size:.78rem;color:var(--mu)}
+.up{color:var(--gd);font-weight:700}.dn{color:var(--red);font-weight:700}
+.pg{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:12px 0 2px}
+.pg button{min-width:36px;height:36px;padding:0 10px;border-radius:10px;font:inherit;font-weight:700;border:1px solid var(--line);background:#fff;color:var(--gd);cursor:pointer}
+.pg button.on{background:var(--gd);border-color:var(--gd);color:#fff}
+.pg button:disabled{color:#b6bcc6;cursor:default}
+.note{font-size:13px;color:var(--mu)}
+#msg{min-height:20px;font-size:14px;color:var(--mu)}
+details{border:1px solid var(--line);border-radius:14px;background:#f7fbf8;margin:14px 0;padding:0 14px}
+summary{cursor:pointer;font-weight:700;padding:12px 0}
+details p{margin:0 0 10px}
+</style></head><body>
+<header><a href="/">PriceCheck NG</a></header>
+<main>
+<h1>Crypto treasuries</h1>
+<p id="lead">Some companies keep Bitcoin and other coins on their books, the way others keep gold or cash. This page shows who holds how much, and what it is worth today.</p>
+<div id="chips" class="chips"></div>
+<div id="msg">Loading…</div>
+<div id="sum" class="stats" hidden></div>
+<div id="list"></div>
+<div id="pager"></div>
+<details><summary>What is a crypto treasury?</summary>
+<p>A treasury is the money and assets a company keeps in reserve. A crypto treasury company has put part of that reserve into coins such as Bitcoin or Ethereum, usually because it expects the coins to grow in value over time.</p>
+<p>The <b>value now</b> is the number of coins multiplied by today's price. <b>Up or down</b> compares that with what the company paid for the coins on average. A company can be up even if the price falls, if it bought early and cheaply.</p>
+<p>These companies are mostly listed on stock markets, so their holdings are published in public reports. Counts can change when a company buys, sells or reports late.</p>
+</details>
+<p class="note">Who holds what: public company filings, collected by <a href="https://www.coingecko.com/en/treasuries/bitcoin" rel="noopener nofollow">CoinGecko</a>. Values use PriceCheck NG's live prices. Holdings can be out of date until the next report. This is information only and not financial advice.</p>
+</main>
+<footer style="border-top:1px solid #e3e8e5;padding:18px 16px;text-align:center;color:#5d6b64;font-size:.9rem"><a href="privacy.html" style="color:#5d6b64">Privacy Policy</a> · <a href="terms.html" style="color:#5d6b64">Terms of Service</a><div style="margin-top:8px">© <span class="yr">2026</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></div><script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script></footer>
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const CUR = { NGN: "₦", GBP: "£", EUR: "€", GHS: "GH₵", ZAR: "R", CAD: "CA$", AUD: "A$", AED: "AED ", CNY: "CN¥", KES: "KSh ", TZS: "TSh ", UGX: "USh ", INR: "₹", JPY: "¥" };
+let sb, fx = {}, cur = "NGN", coins = [], rows = [], sel = "bitcoin", pg = 0;
+const PER = 15;
+try { const sc = localStorage.getItem("pc_cur"); if (CUR[sc]) cur = sc; } catch (_) {}
+const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const compact = (n, pre) => { n = Number(n); return isFinite(n) && n > 0 ? (pre || "") + n.toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 2 }) : "–"; };
+const num = (n) => { n = Number(n); return isFinite(n) ? n.toLocaleString("en-US", { maximumFractionDigits: n >= 100 ? 0 : 2 }) : "–"; };
+const loc = (usd) => { const r = cur === "USD" ? 1 : fx[cur]; return r && Number(usd) > 0 ? CUR[cur] + (Number(usd) * r).toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 2 }) : ""; };
+const flag = (cc) => (/^[A-Za-z]{2}$/.test(cc || "") ? String.fromCodePoint(...cc.toUpperCase().split("").map((c) => 127397 + c.charCodeAt(0))) : "");
+const ago = (t) => { const m = Math.max(1, Math.round((Date.now() - new Date(t)) / 6e4)); return m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " d ago"; };
+
+function chips() {
+  $("chips").innerHTML = coins.map((c) => `<button type="button" class="chip${c.coin_id === sel ? " on" : ""}" data-c="${esc(c.coin_id)}">${c.image_url ? `<img src="${esc(c.image_url)}" alt="" width="20" height="20">` : ""}${esc(c.name)}</button>`).join("");
+  $("chips").querySelectorAll("button").forEach((b) => { b.onclick = () => pick(b.dataset.c); });
+}
+function summary() {
+  const c = coins.find((x) => x.coin_id === sel);
+  if (!c) return;
+  const sym = String(c.symbol || "").toUpperCase();
+  const top = rows[0];
+  $("lead").textContent = top ? `${top.name} holds the most ${c.name}: about ${num(top.holdings)} ${sym}. In total ${c.companies} companies hold ${compact(c.total_holdings)} ${sym}, worth about ${compact(c.value_usd, "$")} today.` : "Some companies keep Bitcoin and other coins on their books, the way others keep gold or cash.";
+  document.title = `${c.name} treasuries: which companies hold ${c.name} | PriceCheck NG`;
+  $("sum").hidden = false;
+  $("sum").innerHTML = `<div class="st"><small>Companies holding</small><b>${num(c.companies)}</b></div>
+  <div class="st"><small>Total ${esc(sym)} held</small><b>${compact(c.total_holdings)} ${esc(sym)}</b></div>
+  <div class="st"><small>Value now</small><b>${compact(c.value_usd, "$")}</b>${loc(c.value_usd) ? `<small>${loc(c.value_usd)}</small>` : ""}</div>
+  <div class="st"><small>Share of all ${esc(c.name)}</small><b>${c.dominance_pct != null ? Number(c.dominance_pct).toFixed(2) + "%" : "–"}</b><small>updated ${ago(c.updated_at)}</small></div>`;
+}
+function paint() {
+  const c = coins.find((x) => x.coin_id === sel);
+  const sym = String((c && c.symbol) || "").toUpperCase();
+  const slice = rows.slice(pg * PER, pg * PER + PER);
+  $("list").innerHTML = `<div class="card" style="padding:4px 16px">${slice.map((r) => {
+    const p = r.pnl_pct == null ? "" : `<span class="${r.pnl_pct >= 0 ? "up" : "dn"}">${r.pnl_pct > 0 ? "+" : ""}${Number(r.pnl_pct).toFixed(1)}%</span>`;
+    return `<div class="row"><span class="rk">${r.rank_no}</span><div class="nm"><b>${esc(r.name)}</b><span>${flag(r.country)} ${esc(r.ticker || "")}${r.pct_supply ? ` · ${Number(r.pct_supply).toFixed(r.pct_supply < 0.1 ? 3 : 2)}% of supply` : ""}</span></div>
+      <div class="rt"><b>${num(r.holdings)} ${esc(sym)}</b><span>${compact(r.value_usd, "$")}${loc(r.value_usd) ? " · " + loc(r.value_usd) : ""}</span>${p ? `<br>${p}` : ""}</div></div>`;
+  }).join("")}</div>`;
+  const pages = Math.ceil(rows.length / PER);
+  if (pages < 2) { $("pager").innerHTML = ""; return; }
+  const b = (l, to, on, off) => `<button type="button" data-p="${to}" class="${on ? "on" : ""}" ${off ? "disabled" : ""}>${l}</button>`;
+  let h = b("‹", pg - 1, false, pg === 0);
+  for (let i = 0; i < pages; i++) h += b(i + 1, i, i === pg, false);
+  h += b("›", pg + 1, false, pg === pages - 1);
+  $("pager").innerHTML = `<div class="pg">${h}</div><p class="note" style="text-align:center;margin:6px 0 0">Showing ${pg * PER + 1}–${Math.min(rows.length, pg * PER + PER)} of ${rows.length} companies</p>`;
+  $("pager").querySelectorAll("button[data-p]").forEach((x) => { x.onclick = () => { pg = Number(x.dataset.p); paint(); $("list").scrollIntoView({ block: "start" }); }; });
+}
+async function pick(id) {
+  sel = id; pg = 0; chips();
+  $("msg").textContent = "Loading…";
+  const { data, error } = await sb.rpc("treasury_list", { p_coin: id });
+  rows = error || !data ? [] : data;
+  $("msg").textContent = rows.length ? "" : "No data for this coin yet.";
+  summary(); paint();
+  try { history.replaceState(null, "", "?c=" + encodeURIComponent(id)); } catch (_) {}
+}
+(async () => {
+  try {
+    const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+    const { SUPABASE_URL, SUPABASE_KEY } = await import("./config.js");
+    sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+    try { const { data: f } = await sb.from("fx_rates").select("currency,per_usd"); (f || []).forEach((r) => { fx[r.currency] = Number(r.per_usd); }); } catch (_) {}
+    if (cur !== "USD" && !fx[cur]) cur = "NGN";
+    const { data, error } = await sb.rpc("treasury_coins");
+    coins = error || !data ? [] : data;
+    if (!coins.length) { $("msg").textContent = "The list is being collected. Please check back in a little while."; return; }
+    const want = new URLSearchParams(location.search).get("c");
+    await pick(coins.some((c) => c.coin_id === want) ? want : coins[0].coin_id);
+  } catch (_) { $("msg").textContent = "Could not load the list. Please check your connection and try again."; }
+})();
+</script>
+</body></html>
