@@ -314,7 +314,7 @@ function exHtml(rows, name, key, meta, when, links, local) {
   const avg = cmp.length >= 5 ? cmp.reduce((t, r) => t + Number(r.diff_pct), 0) / cmp.length : null;
   const sp = list.filter((r) => r.spread_pct != null && Number(r.spread_pct) >= 0);
   const tight = sp.length >= 3 ? sp.reduce((m, r) => (Number(r.spread_pct) < Number(m.spread_pct) ? r : m), sp[0]) : null;
-  let t = `<p>PriceCheck NG tracks ${meta && meta.coins ? meta.coins : list.length} coins on ${e(name)}, with about ${big(meta && meta.volume ? meta.volume : list.reduce((x, r) => x + Number(r.volume_usd), 0))} traded across them in the last 24 hours. `;
+  let t = `<p>${meta && meta.rank ? e(name) + " ranks #" + meta.rank + " of " + meta.of + " exchanges we track by 24 hour trading volume, with " + meta.share + "% of the total. " : ""}PriceCheck NG tracks ${meta && meta.coins ? meta.coins : list.length} coins on ${e(name)}, with about ${big(meta && meta.volume ? meta.volume : list.reduce((x, r) => x + Number(r.volume_usd), 0))} traded across them in the last 24 hours. `;
   t += `The most traded coin is ${e(top.symbol)} (${e(top.name)}), with ${big(top.volume_usd)} in 24 hours at ${px(top.price_usd)}. `;
   if (avg != null) t += `Across its busiest coins, ${e(name)} prices are on average ${Math.abs(avg) < 0.005 ? "in line with" : Math.abs(avg).toFixed(2) + "% " + (avg > 0 ? "above" : "below")} the middle price of all exchanges. `;
   if (tight) t += `Its tightest spread (the gap between best buy and sell price) is on ${e(tight.symbol)} at ${Number(tight.spread_pct) < 0.001 ? "under 0.001" : Number(tight.spread_pct).toFixed(Number(tight.spread_pct) < 0.1 ? 3 : 2)}%. `;
@@ -323,7 +323,7 @@ function exHtml(rows, name, key, meta, when, links, local) {
   const lk = new Set(links || []);
   const tr = list.slice(0, 40).map((r, i) => `<tr><td>${i + 1}. ${lk.has(r.coin_id) ? `<a href="${e(r.coin_id)}-price.html">${e(r.symbol)}</a>` : e(r.symbol)} <small>${e(r.name)}</small></td><td>${px(r.price_usd)}</td><td>${big(r.volume_usd)}</td><td>${pct(r.diff_pct)}</td></tr>`).join("");
   t += `<table class="mk"><thead><tr><th>Coin</th><th>Price</th><th>24h volume</th><th>vs market</th></tr></thead><tbody>${tr}</tbody></table>`;
-  t += `<p class="note">${d ? "Snapshot from " + d + ". " : ""}“vs market” is how far this exchange's price is from the middle price across all exchanges we track. Prices are collected from the exchange directly. PriceCheck NG does not run, own or recommend any exchange. Before you deposit money, check that the exchange is allowed to serve customers in your country. Not financial advice.</p>`;
+  t += `<p class="note">${d ? "Snapshot from " + d + ". " : ""}Volume counts only the coins we track on this exchange (at least $50 thousand a day each), so it is smaller than the headline figure other sites publish. “vs market” is how far this exchange's price is from the middle price across all exchanges we track. Prices are collected from the exchange directly. PriceCheck NG does not run, own or recommend any exchange. Before you deposit money, check that the exchange is allowed to serve customers in your country. Not financial advice.</p>`;
   return t;
 }
 
@@ -333,6 +333,9 @@ const exPages = [];
 if (Array.isArray(EXLIST) && EXLIST.length) {
   EXLIST = EXLIST.filter((x) => /^[a-z0-9]{2,20}$/.test(x.exchange) && Number(x.coins) >= 5);
   const coinIds = top.map((c) => c.id);
+  const shr = (v) => (v < 0.1 ? "under 0.1" : v < 1 ? v.toFixed(1) : v.toFixed(0));
+  const exTotal = EXLIST.reduce((t, z) => t + Number(z.volume_usd), 0);
+  const exMeta = (x) => ({ coins: x.coins, volume: x.volume_usd, rank: EXLIST.indexOf(x) + 1, of: EXLIST.length, share: shr(100 * Number(x.volume_usd) / exTotal) });
   const exCss = css;
   const exShell = (title, desc, canon, body, extraJs) => `<!doctype html>
 <html lang="en">
@@ -375,7 +378,7 @@ ${extraJs || ""}
     let rows = [];
     try { rows = await rpc("exchange_markets", { p_ex: x.exchange }); } catch (err) { continue; }
     const name = exName(x.exchange);
-    const body0 = exHtml(rows, name, x.exchange, { coins: x.coins, volume: x.volume_usd }, WHEN, coinIds, LOCAL[x.exchange]);
+    const body0 = exHtml(rows, name, x.exchange, exMeta(x), WHEN, coinIds, LOCAL[x.exchange]);
     if (!body0) continue;
     const k = EX_ORDER.indexOf(x.exchange);
     const logoHtml = k < 0 ? `<span class="exb" style="display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--g)">${esc(name.charAt(0))}</span>` : `<span class="exb" style="background:url(exchanges.png) no-repeat;background-size:264px 308px;background-position:-${(k % 6) * 44}px -${Math.floor(k / 6) * 44}px"></span>`;
@@ -395,7 +398,12 @@ const rpc = (fn, b) => fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, { method: "POS
 const exHtml = ${exHtml.toString()};
 Promise.all([rpc("exchange_markets", { p_ex: KEY }), rpc("exchange_list")]).then(([rows, lst]) => {
   const m = (lst || []).find((z) => z.exchange === KEY);
-  const h = exHtml(rows, NAME, KEY, m ? { coins: m.coins, volume: m.volume_usd } : null, new Date().toISOString(), LINKS, LOCALQ);
+  const ok = (lst || []).filter((z) => Number(z.coins) >= 5 && /^[a-z0-9]{2,20}$/.test(z.exchange));
+  const tot = ok.reduce((t, z) => t + Number(z.volume_usd), 0);
+  const ix = ok.findIndex((z) => z.exchange === KEY);
+  const meta = m ? { coins: m.coins, volume: m.volume_usd } : null;
+  if (meta && ix >= 0 && tot > 0) { meta.rank = ix + 1; meta.of = ok.length; const sh = 100 * Number(m.volume_usd) / tot; meta.share = sh < 0.1 ? "under 0.1" : sh < 1 ? sh.toFixed(1) : sh.toFixed(0); }
+  const h = exHtml(rows, NAME, KEY, meta, new Date().toISOString(), LINKS, LOCALQ);
   if (h) document.getElementById("ex").innerHTML = h;
 }).catch(() => {});
 </script>`;
@@ -404,11 +412,11 @@ Promise.all([rpc("exchange_markets", { p_ex: KEY }), rpc("exchange_list")]).then
   }
   // Index page
   if (exPages.length) {
-    const items = EXLIST.filter((x) => exPages.includes(`exchange-${x.exchange}.html`)).map((x) => `<a href="exchange-${x.exchange}.html"><span><b>${esc(exName(x.exchange))}</b><br><small>${x.coins} coins tracked</small></span><span style="text-align:right"><b>${Number(x.volume_usd) >= 1e9 ? "$" + (Number(x.volume_usd) / 1e9).toFixed(2) + " B" : "$" + (Number(x.volume_usd) / 1e6).toFixed(0) + " M"}</b><br><small>24h volume</small></span></a>`).join("");
+    const items = EXLIST.filter((x) => exPages.includes(`exchange-${x.exchange}.html`)).map((x, i) => `<a href="exchange-${x.exchange}.html"><span><b>${i + 1}. ${esc(exName(x.exchange))}</b><br><small>${x.coins} coins tracked · ${shr(100 * Number(x.volume_usd) / exTotal)}% of volume</small></span><span style="text-align:right"><b>${Number(x.volume_usd) >= 1e9 ? "$" + (Number(x.volume_usd) / 1e9).toFixed(2) + " B" : "$" + (Number(x.volume_usd) / 1e6).toFixed(0) + " M"}</b><br><small>24h volume</small></span></a>`).join("");
     const body = `<h1>Crypto exchanges compared</h1>
-<p class="sub">${exPages.length} exchanges that PriceCheck NG tracks directly, ranked by 24 hour trading volume across the coins we follow. Open one to see its coins, prices and how they compare with the market.</p>
+<p class="sub">${exPages.length} exchanges that PriceCheck NG tracks directly, ranked by 24 hour trading volume across the coins we follow. Exchanges do not have a market cap like coins do, so trading volume and number of coins are the best way to compare their size. Open one to see its coins, prices and how they compare with the market.</p>
 <div class="box exl">${items}</div>
-<p class="note">Snapshot from ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}. Volume is the 24 hour trading volume across the coins we track on each exchange, in US dollars. PriceCheck NG does not run, own or recommend any exchange. Not financial advice.</p>`;
+<p class="note">Snapshot from ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}. Volume is the 24 hour spot trading volume across the coins we track on each exchange, in US dollars. It only counts coins with at least $50 thousand of daily volume, so these totals are smaller than the headline figures other sites publish for the same exchanges. PriceCheck NG does not run, own or recommend any exchange. Not financial advice.</p>`;
     fs.writeFileSync("exchanges.html", exShell("Crypto exchanges compared: volume and coins tracked | PriceCheck NG", `Compare ${exPages.length} crypto exchanges by 24 hour trading volume and number of coins tracked. Live data collected by PriceCheck NG.`, "exchanges.html", body, ""));
     exPages.push("exchanges.html");
   }
