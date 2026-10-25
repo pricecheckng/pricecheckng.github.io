@@ -65,8 +65,9 @@ details p{margin:0 0 10px}
 <p id="lead">Are USDT, USDC and other stablecoins holding their $1 price? Updated every 15 minutes.</p>
 <div id="msg">Loading…</div>
 <div id="stats" class="stats"></div>
-<h2>Top stablecoins</h2>
+<h2>Stablecoins by size</h2>
 <div id="list" class="card" style="padding:4px 16px"></div>
+<div id="pager" class="pg"></div>
 <details><summary>How to read this page</summary>
 <p><b>A stablecoin</b> is a coin built to stay at one dollar. Many Nigerians use USDT to save and to trade, so it matters that the price holds.</p>
 <p><b>Holding $1</b> means the price is within half a cent (0.5%) of one dollar. <b>Slipping</b> means it is a little off. <b>Off peg</b> means it has moved far from one dollar, which is a warning sign. Do not buy or hold large amounts of a coin that is off peg until the reason is clear.</p>
@@ -106,11 +107,20 @@ async function load() {
   const a = d.assets, top = a[0] || {};
   const off = a.filter((x) => x.price != null && Math.abs(x.price - 1) > 0.005).length;
   const wk = a.reduce((s, x) => s + (x.circ || 0), 0) - a.reduce((s, x) => s + (x.week || x.circ || 0), 0);
-  $("stats").innerHTML = [["All stablecoins", usd(d.total), "total supply"], [top.symbol || "Largest", usd(top.circ), top.name || ""], ["Off peg now", off + " of " + a.length, off ? "check the list below" : "all top coins are holding"], ["Top 12, 7 days", (wk >= 0 ? "+" : "−") + usd(Math.abs(wk)), "change in supply"]].map(([x, v, s]) => `<div class="st"><small>${x}</small><b>${v}</b><small>${s}</small></div>`).join("");
-  $("list").innerHTML = a.map((x, i) => {
-    const st = status(x.price), ch = x.week ? (x.circ - x.week) / x.week * 100 : null;
-    return `<div class="row"><div class="rk">${i + 1}</div><div class="nm"><b>${x.symbol}</b><span>${x.name} · ${usd(x.circ)}</span></div><div class="rt"><b>${x.price != null ? "$" + Number(x.price).toFixed(4) : "–"}</b><span class="badge ${st[0]}" style="padding:1px 8px;font-size:.72rem">${st[1]}</span>${ch != null ? `<span style="display:block" class="${ch >= 0 ? "up" : "dn"}">${ch >= 0 ? "+" : ""}${ch.toFixed(1)}% in 7 days</span>` : ""}</div></div>`;
-  }).join("");
+  $("stats").innerHTML = [["All stablecoins", usd(d.total), "total supply"], [top.symbol || "Largest", usd(top.circ), top.name || ""], ["Off peg now", off + " of " + a.length, off ? "check the list below" : "all are holding"], ["Supply, 7 days", (wk >= 0 ? "+" : "−") + usd(Math.abs(wk)), "change across this list"]].map(([x, v, s]) => `<div class="st"><small>${x}</small><b>${v}</b><small>${s}</small></div>`).join("");
+  const PER = 10, pages = Math.max(1, Math.ceil(a.length / PER));
+  const paint = (pg) => {
+    $("list").innerHTML = a.slice((pg - 1) * PER, pg * PER).map((x, k) => {
+      const i = (pg - 1) * PER + k, st = status(x.price), ch = x.week ? (x.circ - x.week) / x.week * 100 : null;
+      return `<div class="row"><div class="rk">${i + 1}</div><div class="nm"><b>${x.symbol}</b><span>${x.name} · ${usd(x.circ)}</span></div><div class="rt"><b>${x.price != null ? "$" + Number(x.price).toFixed(4) : "–"}</b><span class="badge ${st[0]}" style="padding:1px 8px;font-size:.72rem">${st[1]}</span>${ch != null ? `<span style="display:block" class="${ch >= 0 ? "up" : "dn"}">${ch >= 0 ? "+" : ""}${ch.toFixed(1)}% in 7 days</span>` : ""}</div></div>`;
+    }).join("");
+    let h = `<button ${pg === 1 ? "disabled" : ""} data-p="${pg - 1}">‹</button>`;
+    for (let p = 1; p <= pages; p++) h += `<button class="${p === pg ? "on" : ""}" data-p="${p}">${p}</button>`;
+    h += `<button ${pg === pages ? "disabled" : ""} data-p="${pg + 1}">›</button>`;
+    $("pager").innerHTML = pages > 1 ? h : "";
+    $("pager").querySelectorAll("button").forEach((b) => { b.onclick = () => { paint(+b.dataset.p); $("list").scrollIntoView({ block: "start" }); }; });
+  };
+  paint(1);
   if (d.updated_at) $("lead").textContent = "Are USDT, USDC and other stablecoins holding their $1 price? Updated " + ago(Math.floor(new Date(d.updated_at) / 1000)) + ".";
 }
 (async () => { await boot(); await load(); setInterval(load, 300000); })();
