@@ -13,7 +13,9 @@
       ['Heatmap', 'The whole market in one picture', 'heatmap.html'],
       ['Fear & Greed', 'Is the market scared or greedy?', 'fear-greed.html'],
       ['Compare coins', 'Put two to four coins side by side', 'compare.html'],
-      ['Top movers', 'Biggest gainers and losers', 'movers.html']
+      ['Top movers', 'Biggest gainers and losers', 'movers.html'],
+      ['Bitcoin network', 'Fees, mempool, blocks and halving', 'network.html'],
+      ['Treasuries', 'Which companies and countries hold crypto', 'treasuries.html']
     ]},
     { t: 'Naira & P2P', rows: [
       ['USDT P2P rates', 'Naira prices on Bybit, OKX and Bitget', 'p2p.html'],
