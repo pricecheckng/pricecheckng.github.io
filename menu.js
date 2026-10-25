@@ -17,6 +17,7 @@
       ['Bitcoin network', 'Fees, mempool, blocks and halving', 'network.html'],
       ['Ethereum gas fees', 'What it costs to send ETH and USDT', 'gas.html'],
       ['Stablecoin health', 'Is USDT holding its $1 price?', 'stablecoins.html'],
+      ['Exchanges compared', 'Volume and coins on each exchange', 'exchanges.html'],
       ['Treasuries', 'Which companies and countries hold crypto', 'treasuries.html']
     ]},
     { t: 'Naira & P2P', rows: [
