@@ -5,20 +5,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>USDT to Naira P2P Rate Today: Bybit, OKX, Bitget | PriceCheck NG</title>
 <meta name="description" content="Compare today's USDT to Naira P2P buy and sell prices on Bybit, OKX and Bitget, and see how far they are from the official dollar rate. Free on PriceCheck NG.">
-<link rel="canonical" href="https://pricecheckng.github.io/p2p.html">
+<link rel="canonical" href="https://pricecheckng.com.ng/p2p.html">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="theme-color" content="#0b7a4b">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="PriceCheck NG">
 <meta property="og:title" content="USDT to Naira P2P rate today">
 <meta property="og:description" content="Live USDT/NGN P2P buy and sell prices on Bybit, OKX and Bitget, compared with the official rate.">
-<meta property="og:url" content="https://pricecheckng.github.io/p2p.html">
-<meta property="og:image" content="https://pricecheckng.github.io/icon-512.png">
+<meta property="og:url" content="https://pricecheckng.com.ng/p2p.html">
+<meta property="og:image" content="https://pricecheckng.com.ng/icon-512.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"USDT to Naira P2P rate comparison","url":"https://pricecheckng.github.io/p2p.html","description":"Live USDT to Naira P2P prices on Bybit, OKX and Bitget compared with the official rate.","isPartOf":{"@type":"WebSite","name":"PriceCheck NG","url":"https://pricecheckng.github.io/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"USDT to Naira P2P rate comparison","url":"https://pricecheckng.com.ng/p2p.html","description":"Live USDT to Naira P2P prices on Bybit, OKX and Bitget compared with the official rate.","isPartOf":{"@type":"WebSite","name":"PriceCheck NG","url":"https://pricecheckng.com.ng/"}}</script>
 <style>
 :root{--g:#0b7d4d;--ink:#0f1a14;--mut:#55635a;--line:#e3e9e5;--bg:#fff;--card:#f6f8f7;--up:#0b7d4d;--down:#c62828}
 @media (prefers-color-scheme:dark){:root{--ink:#e9f1ec;--mut:#9db0a5;--line:#26332c;--bg:#0e1511;--card:#16201a;--up:#3ddc97;--down:#ff6b6b}}
@@ -131,6 +131,9 @@ function spark(h) {
   const svg = $("spark"), leg = $("leg");
   const by = {};
   (h || []).filter((r) => r.side === "buy").forEach((r) => { (by[r.source] = by[r.source] || []).push({ t: new Date(r.at).getTime(), v: Number(r.typical) }); });
+  const raw = Object.values(by).flat().map((p) => p.v).sort((a, b) => a - b);
+  const mid = raw.length ? raw[Math.floor(raw.length / 2)] : 0;
+  if (mid > 0) Object.keys(by).forEach((s) => { by[s] = by[s].filter((p) => Math.abs(p.v / mid - 1) <= 0.025); if (!by[s].length) delete by[s]; });
   const all = Object.values(by).flat();
   if (all.length < 4) { svg.parentElement.parentElement.hidden = true; return; }
   const t0 = Math.min(...all.map((p) => p.t)), t1 = Math.max(...all.map((p) => p.t)) || t0 + 1;
@@ -173,12 +176,12 @@ async function load() {
   const gapTxt = fx && avg ? "Official rate <b>" + N(fx) + "</b> · P2P " + (avg >= fx ? "+" : "−") + Math.abs(((avg / fx) - 1) * 100).toFixed(1) + "%" : "";
   $("snap").innerHTML = '<div class="sh"><b>USDT / NGN</b><span class="live"><i></i>Live · ' + ago(newest) + "</span></div>" +
     "<table><tr><th>Exchange</th><th>Buy</th><th>Sell</th></tr>" + names.map(row).join("") + "</table>" +
-    '<div class="ft"><span>' + gapTxt + "</span><span>pricecheckng.github.io</span></div>";
+    '<div class="ft"><span>' + gapTxt + "</span><span>pricecheckng.com.ng</span></div>";
   $("upd").textContent = "Prices are for trades of about ₦100,000. Buy = Naira you pay per USDT, Sell = Naira you receive. Each price is the middle of the top 5 adverts. Refreshes about every 5 minutes.";
 
   // share
   const first = buys[0] ? src[buys[0]].buy : null;
-  const txt = "USDT to Naira P2P today" + (first ? ": buy from " + N(first.typical) : "") + ". Compare Bybit, OKX and Bitget live: https://pricecheckng.github.io/p2p.html";
+  const txt = "USDT to Naira P2P today" + (first ? ": buy from " + N(first.typical) : "") + ". Compare Bybit, OKX and Bitget live: https://pricecheckng.com.ng/p2p.html";
   $("wa").href = "https://wa.me/?text=" + encodeURIComponent(txt);
 
   try {
