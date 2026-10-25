@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Stablecoin health: is USDT holding its $1 peg? | PriceCheck NG</title>
+<meta name="description" content="Live stablecoin check: is USDT, USDC and other stablecoins holding their one dollar price, how much of each exists, and how supply changed this week.">
+<link rel="canonical" href="https://pricecheckng.com.ng/stablecoins.html">
+<style>
+:root{--bg:#fff;--card:#f6f7f8;--ink:#0f1a14;--mu:#5d6b64;--g:#16a34a;--gd:#0a7a3a;--line:#e3e8e5;--red:#d93b3b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:#0a7a3a;color:#fff;padding:14px 16px;font-weight:800}
+header a{color:#fff;text-decoration:none}
+main{max-width:720px;margin:0 auto;padding:16px 16px 56px}
+h1{font-size:24px;line-height:1.2;margin:8px 0 6px}
+h2{font-size:18px;margin:26px 0 8px}
+p{color:var(--mu);margin:0 0 12px}
+a{color:var(--gd)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.chip{display:flex;align-items:center;gap:6px;padding:6px 12px 6px 8px;border-radius:99px;border:1.5px solid var(--line);background:#fff;font:inherit;font-weight:700;font-size:14px;color:var(--ink);cursor:pointer}
+.chip img{width:20px;height:20px;border-radius:50%}
+.chip.on{background:var(--gd);border-color:var(--gd);color:#fff}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.st{background:var(--card);border-radius:14px;padding:12px}
+.st small{display:block;color:var(--mu);font-size:.8rem}
+.st b{display:block;font-size:1.05rem;margin-top:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:14px 0}
+.row{display:flex;align-items:center;gap:10px;padding:11px 0;border-top:1px solid var(--line)}
+.row:first-child{border-top:0}
+.rk{flex:none;width:26px;color:var(--mu);font-size:.85rem}
+.nm{flex:1;min-width:0;line-height:1.25}
+.nm b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm span{font-size:.78rem;color:var(--mu)}
+.rt{text-align:right;line-height:1.25;flex:none}
+.rt b{display:block}
+.rt span{font-size:.78rem;color:var(--mu)}
+.up{color:var(--gd);font-weight:700}.dn{color:var(--red);font-weight:700}
+.pg{display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin:12px 0 2px}
+.pg button{min-width:36px;height:36px;padding:0 10px;border-radius:10px;font:inherit;font-weight:700;border:1px solid var(--line);background:#fff;color:var(--gd);cursor:pointer}
+.pg button.on{background:var(--gd);border-color:var(--gd);color:#fff}
+.pg button:disabled{color:#b6bcc6;cursor:default}
+.note{font-size:13px;color:var(--mu)}
+#msg{min-height:20px;font-size:14px;color:var(--mu)}
+details{border:1px solid var(--line);border-radius:14px;background:#f7fbf8;margin:14px 0;padding:0 14px}
+summary{cursor:pointer;font-weight:700;padding:12px 0}
+details p{margin:0 0 10px}
+.fees{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.fee{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
+.fee small{display:block;color:var(--mu);font-size:.8rem}
+.fee b{display:block;font-size:1.35rem;margin:2px 0}
+.fee span{font-size:.82rem;color:var(--mu)}
+.fee.top{background:#eaf6ee;border-color:#bfe3cb}
+.badge{display:inline-block;padding:3px 10px;border-radius:99px;font-weight:700;font-size:.8rem}
+.b-q{background:#dcf5e5;color:#15803d}.b-n{background:#fff4dc;color:#b45309}.b-b{background:#fdecec;color:#dc2626}
+.bar{height:10px;border-radius:99px;background:#e3e8e5;overflow:hidden;margin:8px 0 4px}
+.bar i{display:block;height:100%;background:var(--g);border-radius:99px}
+.blk{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.blk:first-child{border-top:0}
+.blk b{min-width:84px}
+.blk .mid{flex:1;min-width:0;font-size:.82rem;color:var(--mu);line-height:1.3}
+.blk .rt{font-size:.82rem;color:var(--mu);text-align:right}
+</style></head><body>
+<header><a href="/">PriceCheck NG</a></header>
+<main>
+<h1>Stablecoin health</h1>
+<p id="lead">Are USDT, USDC and other stablecoins holding their $1 price? Updated every 15 minutes.</p>
+<div id="msg">Loading…</div>
+<div id="stats" class="stats"></div>
+<h2>Top stablecoins</h2>
+<div id="list" class="card" style="padding:4px 16px"></div>
+<details><summary>How to read this page</summary>
+<p><b>A stablecoin</b> is a coin built to stay at one dollar. Many Nigerians use USDT to save and to trade, so it matters that the price holds.</p>
+<p><b>Holding $1</b> means the price is within half a cent (0.5%) of one dollar. <b>Slipping</b> means it is a little off. <b>Off peg</b> means it has moved far from one dollar, which is a warning sign. Do not buy or hold large amounts of a coin that is off peg until the reason is clear.</p>
+<p><b>Supply</b> is how many of the coin exist. If the supply is growing, more people are using it. A fast fall in supply over a week can mean people are cashing out.</p>
+<p><b>Why the price can differ here and on P2P:</b> this page shows the global market price. Naira P2P rates are different, because they include local demand. See our <a href="p2p.html">USDT P2P rates</a>.</p>
+</details>
+<p class="note">Stablecoin data: <a href="https://defillama.com/stablecoins" rel="noopener nofollow">DefiLlama</a>, collected every 15 minutes. Information only, not financial advice.</p>
+</main>
+<footer style="border-top:1px solid #e3e8e5;padding:18px 16px;text-align:center;color:#5d6b64;font-size:.9rem"><a href="privacy.html" style="color:#5d6b64">Privacy Policy</a> · <a href="terms.html" style="color:#5d6b64">Terms of Service</a><div style="margin-top:8px">© <span class="yr">2026</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></div><script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script></footer>
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const CUR = { NGN: "₦", GBP: "£", EUR: "€", GHS: "GH₵", ZAR: "R", CAD: "CA$", AUD: "A$", AED: "AED ", CNY: "CN¥", KES: "KSh ", TZS: "TSh ", UGX: "USh ", INR: "₹", JPY: "¥" };
+let sb, fx = {}, cur = "NGN";
+try { const sc = localStorage.getItem("pc_cur"); if (CUR[sc]) cur = sc; } catch (_) {}
+const num = (n, d) => (isFinite(n) && n !== null ? Number(n).toLocaleString("en-US", { maximumFractionDigits: d == null ? 0 : d }) : "–");
+const ago = (ts) => { const s = Math.max(0, Math.round(Date.now() / 1000 - ts)); return s < 90 ? s + " sec ago" : s < 5400 ? Math.round(s / 60) + " min ago" : Math.round(s / 3600) + " h ago"; };
+async function boot() {
+  try {
+    const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
+    const { SUPABASE_URL, SUPABASE_KEY } = await import("./config.js");
+    sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+    try { const { data: f } = await sb.from("fx_rates").select("currency,per_usd"); (f || []).forEach((r) => { fx[r.currency] = Number(r.per_usd); }); } catch (_) {}
+    if (!fx[cur]) cur = "NGN";
+  } catch (_) {}
+}
+const usd = (n) => n >= 1e9 ? "$" + (n / 1e9).toFixed(2) + " B" : n >= 1e6 ? "$" + (n / 1e6).toFixed(1) + " M" : "$" + num(n);
+function status(p) {
+  if (p == null) return ["b-n", "No price"];
+  const d = Math.abs(p - 1);
+  return d <= 0.005 ? ["b-q", "Holding $1"] : d <= 0.02 ? ["b-n", "Slipping"] : ["b-b", "Off peg"];
+}
+async function load() {
+  let d = null;
+  try { const { data, error } = await sb.rpc("stable_status"); if (!error && data) d = data; } catch (_) {}
+  if (!d || !d.assets) { $("msg").textContent = "The data is being collected. Please check back in a few minutes."; return; }
+  $("msg").textContent = "";
+  const a = d.assets, top = a[0] || {};
+  const off = a.filter((x) => x.price != null && Math.abs(x.price - 1) > 0.005).length;
+  const wk = a.reduce((s, x) => s + (x.circ || 0), 0) - a.reduce((s, x) => s + (x.week || x.circ || 0), 0);
+  $("stats").innerHTML = [["All stablecoins", usd(d.total), "total supply"], [top.symbol || "Largest", usd(top.circ), top.name || ""], ["Off peg now", off + " of " + a.length, off ? "check the list below" : "all top coins are holding"], ["Top 12, 7 days", (wk >= 0 ? "+" : "−") + usd(Math.abs(wk)), "change in supply"]].map(([x, v, s]) => `<div class="st"><small>${x}</small><b>${v}</b><small>${s}</small></div>`).join("");
+  $("list").innerHTML = a.map((x, i) => {
+    const st = status(x.price), ch = x.week ? (x.circ - x.week) / x.week * 100 : null;
+    return `<div class="row"><div class="rk">${i + 1}</div><div class="nm"><b>${x.symbol}</b><span>${x.name} · ${usd(x.circ)}</span></div><div class="rt"><b>${x.price != null ? "$" + Number(x.price).toFixed(4) : "–"}</b><span class="badge ${st[0]}" style="padding:1px 8px;font-size:.72rem">${st[1]}</span>${ch != null ? `<span style="display:block" class="${ch >= 0 ? "up" : "dn"}">${ch >= 0 ? "+" : ""}${ch.toFixed(1)}% in 7 days</span>` : ""}</div></div>`;
+  }).join("");
+  if (d.updated_at) $("lead").textContent = "Are USDT, USDC and other stablecoins holding their $1 price? Updated " + ago(Math.floor(new Date(d.updated_at) / 1000)) + ".";
+}
+(async () => { await boot(); await load(); setInterval(load, 300000); })();
+</script>
+</body></html>

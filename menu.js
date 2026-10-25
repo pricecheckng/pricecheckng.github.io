@@ -15,6 +15,8 @@
       ['Compare coins', 'Put two to four coins side by side', 'compare.html'],
       ['Top movers', 'Biggest gainers and losers', 'movers.html'],
       ['Bitcoin network', 'Fees, mempool, blocks and halving', 'network.html'],
+      ['Ethereum gas fees', 'What it costs to send ETH and USDT', 'gas.html'],
+      ['Stablecoin health', 'Is USDT holding its $1 price?', 'stablecoins.html'],
       ['Treasuries', 'Which companies and countries hold crypto', 'treasuries.html']
     ]},
     { t: 'Naira & P2P', rows: [
