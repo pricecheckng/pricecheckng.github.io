@@ -83,17 +83,15 @@ details p{margin:0 0 10px}
 <p><b>Mempool</b> is the waiting room. Transfers wait there until a miner puts them in a block. The longer the queue, the higher the fee you need to jump ahead.</p>
 <p><b>A block</b> is a batch of confirmed transfers, found about every 10 minutes. <b>Difficulty</b> adjusts about every two weeks so blocks keep coming at that pace. The <b>halving</b> cuts the reward for miners in half about every four years.</p>
 </details>
-<p class="note">Network data: <a href="https://mempool.space" rel="noopener nofollow">mempool.space</a>. Prices: PriceCheck NG. Figures are estimates and change every minute. This is information only and not financial advice.</p>
+<p class="note">Network data: <a href="https://mempool.space" rel="noopener nofollow">mempool.space</a>, collected every two minutes. Prices: PriceCheck NG. Figures are estimates and change every minute. This is information only and not financial advice.</p>
 </main>
 <footer style="border-top:1px solid #e3e8e5;padding:18px 16px;text-align:center;color:#5d6b64;font-size:.9rem"><a href="privacy.html" style="color:#5d6b64">Privacy Policy</a> · <a href="terms.html" style="color:#5d6b64">Terms of Service</a><div style="margin-top:8px">© <span class="yr">2026</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></div><script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script></footer>
 <script type="module">
 const $ = (id) => document.getElementById(id);
-const API = "https://mempool.space/api";
 const CUR = { NGN: "₦", GBP: "£", EUR: "€", GHS: "GH₵", ZAR: "R", CAD: "CA$", AUD: "A$", AED: "AED ", CNY: "CN¥", KES: "KSh ", TZS: "TSh ", UGX: "USh ", INR: "₹", JPY: "¥" };
 const TX_VB = 140, HALVING = 1050000;
 let sb, fx = {}, cur = "NGN", btc = 0;
 try { const sc = localStorage.getItem("pc_cur"); if (CUR[sc]) cur = sc; } catch (_) {}
-const get = async (p) => { const r = await fetch(API + p); if (!r.ok) throw new Error(r.status); return r.json(); };
 const num = (n, d) => (isFinite(n) ? Number(n).toLocaleString("en-US", { maximumFractionDigits: d == null ? 0 : d }) : "–");
 const money = (usd) => !(btc > 0) ? "" : usd < 0.01 ? "under $0.01" : "$" + usd.toLocaleString("en-US", { maximumFractionDigits: usd >= 100 ? 0 : 2, minimumFractionDigits: usd >= 100 ? 0 : 2 });
 const locm = (usd) => { const r = fx[cur]; return r && usd > 0 ? CUR[cur] + (usd * r).toLocaleString("en-US", { maximumFractionDigits: usd * r >= 100 ? 0 : 2 }) : ""; };
@@ -128,14 +126,15 @@ function paintBlocks(blocks) {
   $("blocks").innerHTML = blocks.slice(0, 6).map((b) => `<div class="blk"><b>#${b.height}</b><div class="mid">${b.extras && b.extras.pool ? b.extras.pool.name : "Unknown miner"}<br>${num(b.tx_count)} transfers · ${(b.size / 1e6).toFixed(2)} MB</div><div class="rt">${ago(b.timestamp)}</div></div>`).join("");
 }
 async function load() {
-  const [f, mp, bl, df] = await Promise.allSettled([get("/v1/fees/recommended"), get("/mempool"), get("/v1/blocks"), get("/v1/difficulty-adjustment")]);
-  const ok = (x) => x.status === "fulfilled" ? x.value : null;
-  if (!ok(f) && !ok(bl)) { $("msg").textContent = "Could not load the network data right now. Please try again in a minute."; return; }
+  let d = null;
+  try { const { data, error } = await sb.rpc("network_status"); if (!error && data) d = data; } catch (_) {}
+  if (!d || (!d.fees && !d.blocks)) { $("msg").textContent = "The network data is being collected. Please check back in a minute."; return; }
   $("msg").textContent = "";
-  if (ok(f)) paintFees(ok(f));
-  if (ok(mp) && ok(bl)) paintStats(ok(mp), ok(bl));
-  if (ok(df)) paintDiff(ok(df));
-  if (ok(bl) && ok(bl)[0]) { paintBlocks(ok(bl)); paintHalving(ok(bl)[0].height); }
+  if (d.fees) paintFees(d.fees);
+  if (d.mempool && d.blocks) paintStats(d.mempool, d.blocks);
+  if (d.diff) paintDiff(d.diff);
+  if (d.blocks && d.blocks[0]) { paintBlocks(d.blocks); paintHalving(d.blocks[0].height); }
+  if (d.updated_at) $("lead").textContent = "How much does it cost to send Bitcoin right now, and how busy is the network? Updated " + ago(Math.floor(new Date(d.updated_at) / 1000)) + ".";
 }
 (async () => {
   try {
