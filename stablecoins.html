@@ -50,7 +50,7 @@ details p{margin:0 0 10px}
 .fee span{font-size:.82rem;color:var(--mu)}
 .fee.top{background:#eaf6ee;border-color:#bfe3cb}
 .badge{display:inline-block;padding:3px 10px;border-radius:99px;font-weight:700;font-size:.8rem}
-.b-q{background:#dcf5e5;color:#15803d}.b-n{background:#fff4dc;color:#b45309}.b-b{background:#fdecec;color:#dc2626}
+.b-g{background:#eceff1;color:#5d6b64}.b-q{background:#dcf5e5;color:#15803d}.b-n{background:#fff4dc;color:#b45309}.b-b{background:#fdecec;color:#dc2626}
 .bar{height:10px;border-radius:99px;background:#e3e8e5;overflow:hidden;margin:8px 0 4px}
 .bar i{display:block;height:100%;background:var(--g);border-radius:99px}
 .blk{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
@@ -72,6 +72,7 @@ details p{margin:0 0 10px}
 <p><b>A stablecoin</b> is a coin built to stay at one dollar. Many Nigerians use USDT to save and to trade, so it matters that the price holds.</p>
 <p><b>Holding $1</b> means the price is within half a cent (0.5%) of one dollar. <b>Slipping</b> means it is a little off. <b>Off peg</b> means it has moved far from one dollar, which is a warning sign. Do not buy or hold large amounts of a coin that is off peg until the reason is clear.</p>
 <p><b>Supply</b> is how many of the coin exist. If the supply is growing, more people are using it. A fast fall in supply over a week can mean people are cashing out.</p>
+<p><b>No price data</b> means the data source has no market price for that coin, so we cannot say if it holds $1. <b>Small coins</b> (under about $100 million) trade thinly, so their price can jump around and show a warning that fades quickly. A change in supply of hundreds of percent is hidden because it usually comes from a tiny starting amount.</p>
 <p><b>Why the price can differ here and on P2P:</b> this page shows the global market price. Naira P2P rates are different, because they include local demand. See our <a href="p2p.html">USDT P2P rates</a>.</p>
 </details>
 <p class="note">Stablecoin data: <a href="https://defillama.com/stablecoins" rel="noopener nofollow">DefiLlama</a>, collected every 15 minutes. Information only, not financial advice.</p>
@@ -95,7 +96,7 @@ async function boot() {
 }
 const usd = (n) => n >= 1e9 ? "$" + (n / 1e9).toFixed(2) + " B" : n >= 1e6 ? "$" + (n / 1e6).toFixed(1) + " M" : "$" + num(n);
 function status(p) {
-  if (p == null) return ["b-n", "No price"];
+  if (p == null) return ["b-g", "No price data"];
   const d = Math.abs(p - 1);
   return d <= 0.005 ? ["b-q", "Holding $1"] : d <= 0.02 ? ["b-n", "Slipping"] : ["b-b", "Off peg"];
 }
@@ -112,7 +113,7 @@ async function load() {
   const paint = (pg) => {
     $("list").innerHTML = a.slice((pg - 1) * PER, pg * PER).map((x, k) => {
       const i = (pg - 1) * PER + k, st = status(x.price), ch = x.week ? (x.circ - x.week) / x.week * 100 : null;
-      return `<div class="row"><div class="rk">${i + 1}</div><div class="nm"><b>${x.symbol}</b><span>${x.name} · ${usd(x.circ)}</span></div><div class="rt"><b>${x.price != null ? "$" + Number(x.price).toFixed(4) : "–"}</b><span class="badge ${st[0]}" style="padding:1px 8px;font-size:.72rem">${st[1]}</span>${ch != null ? `<span style="display:block" class="${ch >= 0 ? "up" : "dn"}">${ch >= 0 ? "+" : ""}${ch.toFixed(1)}% in 7 days</span>` : ""}</div></div>`;
+      return `<div class="row"><div class="rk">${i + 1}</div><div class="nm"><b>${x.symbol}</b><span>${x.name} · ${usd(x.circ)}</span></div><div class="rt"><b>${x.price != null ? "$" + Number(x.price).toFixed(4) : "–"}</b><span class="badge ${st[0]}" style="padding:1px 8px;font-size:.72rem">${st[1]}</span>${ch != null && Math.abs(ch) <= 500 ? `<span style="display:block" class="${ch >= 0 ? "up" : "dn"}">${ch >= 0 ? "+" : ""}${ch.toFixed(1)}% in 7 days</span>` : ""}</div></div>`;
     }).join("");
     let h = `<button ${pg === 1 ? "disabled" : ""} data-p="${pg - 1}">‹</button>`;
     for (let p = 1; p <= pages; p++) h += `<button class="${p === pg ? "on" : ""}" data-p="${p}">${p}</button>`;
