@@ -133,7 +133,15 @@ function spark(h) {
   (h || []).filter((r) => r.side === "buy").forEach((r) => { (by[r.source] = by[r.source] || []).push({ t: new Date(r.at).getTime(), v: Number(r.typical) }); });
   const raw = Object.values(by).flat().map((p) => p.v).sort((a, b) => a - b);
   const mid = raw.length ? raw[Math.floor(raw.length / 2)] : 0;
-  if (mid > 0) Object.keys(by).forEach((s) => { by[s] = by[s].filter((p) => Math.abs(p.v / mid - 1) <= 0.025); if (!by[s].length) delete by[s]; });
+  const med = (a) => { const b = a.slice().sort((x, y) => x - y); return b[Math.floor(b.length / 2)]; };
+  Object.keys(by).forEach((s) => {
+    let a = by[s].slice().sort((x, y) => x.t - y.t);
+    if (mid > 0) a = a.filter((p) => Math.abs(p.v / mid - 1) <= 0.025);
+    // drop short dips and spikes: compare each point with the middle value of the points around it
+    const W = 12;
+    a = a.filter((p, i) => { const win = a.slice(Math.max(0, i - W), i + W + 1).map((q) => q.v); return win.length < 5 || Math.abs(p.v / med(win) - 1) <= 0.01; });
+    if (a.length) by[s] = a; else delete by[s];
+  });
   const all = Object.values(by).flat();
   if (all.length < 4) { svg.parentElement.parentElement.hidden = true; return; }
   const t0 = Math.min(...all.map((p) => p.t)), t1 = Math.max(...all.map((p) => p.t)) || t0 + 1;
