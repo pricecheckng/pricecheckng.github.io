@@ -56,12 +56,6 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/exchange-bitget.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/exchange-binance.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
@@ -122,13 +116,13 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/exchange-poloniex.html</loc>
+    <loc>https://pricecheckng.com.ng/exchange-whitebit.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/exchange-whitebit.html</loc>
+    <loc>https://pricecheckng.com.ng/exchange-poloniex.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
@@ -146,13 +140,19 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://pricecheckng.com.ng/exchange-bithumb.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://pricecheckng.com.ng/exchange-digifinex.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/exchange-bithumb.html</loc>
+    <loc>https://pricecheckng.com.ng/exchange-bitget.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
@@ -818,13 +818,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/pyth-network-price.html</loc>
+    <loc>https://pricecheckng.com.ng/vechain-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/vechain-price.html</loc>
+    <loc>https://pricecheckng.com.ng/pyth-network-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -842,13 +842,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/curve-dao-token-price.html</loc>
+    <loc>https://pricecheckng.com.ng/usual-usd-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/usual-usd-price.html</loc>
+    <loc>https://pricecheckng.com.ng/curve-dao-token-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -956,19 +956,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/pendle-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/starknet-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/falcon-finance-ff-price.html</loc>
+    <loc>https://pricecheckng.com.ng/pendle-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -980,7 +974,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/sun-token-price.html</loc>
+    <loc>https://pricecheckng.com.ng/falcon-finance-ff-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -992,19 +986,25 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://pricecheckng.com.ng/sun-token-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://pricecheckng.com.ng/first-digital-usd-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/lido-dao-price.html</loc>
+    <loc>https://pricecheckng.com.ng/unibase-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/unibase-price.html</loc>
+    <loc>https://pricecheckng.com.ng/lido-dao-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1130,13 +1130,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/basic-attention-token-price.html</loc>
+    <loc>https://pricecheckng.com.ng/jito-governance-token-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/jito-governance-token-price.html</loc>
+    <loc>https://pricecheckng.com.ng/basic-attention-token-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1154,13 +1154,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/zebec-network-price.html</loc>
+    <loc>https://pricecheckng.com.ng/ethereum-name-service-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/ethereum-name-service-price.html</loc>
+    <loc>https://pricecheckng.com.ng/zebec-network-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1202,13 +1202,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/syrup-price.html</loc>
+    <loc>https://pricecheckng.com.ng/iota-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/iota-price.html</loc>
+    <loc>https://pricecheckng.com.ng/syrup-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1250,13 +1250,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/trust-wallet-token-price.html</loc>
+    <loc>https://pricecheckng.com.ng/zama-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/zama-price.html</loc>
+    <loc>https://pricecheckng.com.ng/trust-wallet-token-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1286,13 +1286,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/cap-4-price.html</loc>
+    <loc>https://pricecheckng.com.ng/meteora-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/meteora-price.html</loc>
+    <loc>https://pricecheckng.com.ng/cap-4-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1352,13 +1352,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/railgun-price.html</loc>
+    <loc>https://pricecheckng.com.ng/doublezero-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/doublezero-price.html</loc>
+    <loc>https://pricecheckng.com.ng/railgun-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1430,25 +1430,25 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/chiliz-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/jpycoin-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/zksync-price.html</loc>
+    <loc>https://pricecheckng.com.ng/chiliz-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/ecash-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/zksync-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1640,13 +1640,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/stonk-3-price.html</loc>
+    <loc>https://pricecheckng.com.ng/ultima-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/ultima-price.html</loc>
+    <loc>https://pricecheckng.com.ng/stonk-3-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1658,25 +1658,25 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/elrond-erd-2-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/3jane-usd3-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/prometeus-price.html</loc>
+    <loc>https://pricecheckng.com.ng/frax-usd-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/frax-usd-price.html</loc>
+    <loc>https://pricecheckng.com.ng/elrond-erd-2-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/prometeus-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1694,25 +1694,25 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/stronghold-token-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/bitget-wrapped-btc-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/cash-cat-price.html</loc>
+    <loc>https://pricecheckng.com.ng/stronghold-token-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/peaq-2-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/cash-cat-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1736,13 +1736,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/chip-2-price.html</loc>
+    <loc>https://pricecheckng.com.ng/walrus-2-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/walrus-2-price.html</loc>
+    <loc>https://pricecheckng.com.ng/chip-2-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1766,13 +1766,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/wemix-token-price.html</loc>
+    <loc>https://pricecheckng.com.ng/qtum-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/qtum-price.html</loc>
+    <loc>https://pricecheckng.com.ng/wemix-token-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1814,13 +1814,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/ore-price.html</loc>
+    <loc>https://pricecheckng.com.ng/mina-protocol-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/mina-protocol-price.html</loc>
+    <loc>https://pricecheckng.com.ng/ore-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1898,13 +1898,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/numa-x-price.html</loc>
+    <loc>https://pricecheckng.com.ng/dola-usd-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/dola-usd-price.html</loc>
+    <loc>https://pricecheckng.com.ng/numa-x-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1916,13 +1916,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/ecomi-price.html</loc>
+    <loc>https://pricecheckng.com.ng/livepeer-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/livepeer-price.html</loc>
+    <loc>https://pricecheckng.com.ng/ecomi-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -1982,13 +1982,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/dusk-network-price.html</loc>
+    <loc>https://pricecheckng.com.ng/diem-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/diem-price.html</loc>
+    <loc>https://pricecheckng.com.ng/dusk-network-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2024,13 +2024,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/theta-fuel-price.html</loc>
+    <loc>https://pricecheckng.com.ng/amp-token-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/amp-token-price.html</loc>
+    <loc>https://pricecheckng.com.ng/theta-fuel-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2108,7 +2108,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/threshold-network-token-price.html</loc>
+    <loc>https://pricecheckng.com.ng/axelar-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2120,13 +2120,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/axelar-price.html</loc>
+    <loc>https://pricecheckng.com.ng/holotoken-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/holotoken-price.html</loc>
+    <loc>https://pricecheckng.com.ng/unifai-network-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2144,7 +2144,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/unifai-network-price.html</loc>
+    <loc>https://pricecheckng.com.ng/marscat-token-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2156,13 +2156,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/marscat-token-price.html</loc>
+    <loc>https://pricecheckng.com.ng/io-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/io-price.html</loc>
+    <loc>https://pricecheckng.com.ng/threshold-network-token-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2192,13 +2192,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/purr-2-price.html</loc>
+    <loc>https://pricecheckng.com.ng/zignaly-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/zignaly-price.html</loc>
+    <loc>https://pricecheckng.com.ng/purr-2-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2288,13 +2288,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/berachain-bera-price.html</loc>
+    <loc>https://pricecheckng.com.ng/nusd-2-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/nusd-2-price.html</loc>
+    <loc>https://pricecheckng.com.ng/berachain-bera-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2312,12 +2312,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/mubarak-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/dappos-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
@@ -2325,6 +2319,12 @@
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/newton-project-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/mubarak-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2384,13 +2384,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/ontology-price.html</loc>
+    <loc>https://pricecheckng.com.ng/goplus-security-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/goplus-security-price.html</loc>
+    <loc>https://pricecheckng.com.ng/ontology-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2408,25 +2408,25 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/aria-chain-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/aztec-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/jelly-my-jelly-price.html</loc>
+    <loc>https://pricecheckng.com.ng/aria-chain-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/holoworld-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/jelly-my-jelly-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2450,13 +2450,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/novachargex-coin-price.html</loc>
+    <loc>https://pricecheckng.com.ng/snek-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/snek-price.html</loc>
+    <loc>https://pricecheckng.com.ng/novachargex-coin-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2486,19 +2486,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/anonymous-cat-price.html</loc>
+    <loc>https://pricecheckng.com.ng/based-brett-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/lcx-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://pricecheckng.com.ng/based-brett-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2523,6 +2517,18 @@
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/allora-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/nillion-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/anonymous-cat-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2558,13 +2564,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/nillion-price.html</loc>
+    <loc>https://pricecheckng.com.ng/metronome-synth-usd-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/metronome-synth-usd-price.html</loc>
+    <loc>https://pricecheckng.com.ng/nockchain-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2594,12 +2600,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/nockchain-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/toshi-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
@@ -2618,6 +2618,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://pricecheckng.com.ng/folks-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://pricecheckng.com.ng/nano-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
@@ -2625,12 +2631,6 @@
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/proprietary-trading-network-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://pricecheckng.com.ng/axis-robotics-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2648,7 +2648,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/folks-price.html</loc>
+    <loc>https://pricecheckng.com.ng/axis-robotics-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2684,12 +2684,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/pha-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/fractal-bitcoin-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
@@ -2708,19 +2702,31 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/gekko-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/cortex-2-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://pricecheckng.com.ng/gekko-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://pricecheckng.com.ng/nkyc-token-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/pha-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/abey-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2733,12 +2739,6 @@
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/ankr-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://pricecheckng.com.ng/abey-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2774,13 +2774,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/cat-in-a-dogs-world-price.html</loc>
+    <loc>https://pricecheckng.com.ng/request-network-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/request-network-price.html</loc>
+    <loc>https://pricecheckng.com.ng/cat-in-a-dogs-world-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2822,13 +2822,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/concordium-price.html</loc>
+    <loc>https://pricecheckng.com.ng/aurora-near-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/aurora-near-price.html</loc>
+    <loc>https://pricecheckng.com.ng/concordium-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2894,13 +2894,25 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/casper-network-price.html</loc>
+    <loc>https://pricecheckng.com.ng/pay-coin-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/pirate-chain-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/casper-network-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/alchemist-ai-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -2918,24 +2930,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/alchemist-ai-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://pricecheckng.com.ng/pay-coin-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://pricecheckng.com.ng/osmosis-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/api3-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
@@ -2948,6 +2942,18 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://pricecheckng.com.ng/osmosis-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/ong-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://pricecheckng.com.ng/zilliqa-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
@@ -2955,12 +2961,6 @@
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/notcoin-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://pricecheckng.com.ng/ong-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -3002,6 +3002,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://pricecheckng.com.ng/skyai-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://pricecheckng.com.ng/mbg-by-multibank-group-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
@@ -3020,19 +3026,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/skyai-price.html</loc>
+    <loc>https://pricecheckng.com.ng/bulla-3-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/ark-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://pricecheckng.com.ng/bulla-3-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -3062,7 +3062,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/asset-price.html</loc>
+    <loc>https://pricecheckng.com.ng/binance-usd-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -3074,7 +3074,7 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/binance-usd-price.html</loc>
+    <loc>https://pricecheckng.com.ng/lista-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -3092,7 +3092,13 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/lista-price.html</loc>
+    <loc>https://pricecheckng.com.ng/mcoin1-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/asset-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -3105,12 +3111,6 @@
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/meme-horse-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://pricecheckng.com.ng/mcoin1-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -3134,12 +3134,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/sahara-ai-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/synapse-2-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
@@ -3147,6 +3141,12 @@
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/orbs-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/sahara-ai-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -3176,25 +3176,25 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/degen-base-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/templar-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/wiki-cat-price.html</loc>
+    <loc>https://pricecheckng.com.ng/degen-base-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/bankercoin-2-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/wiki-cat-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -3212,12 +3212,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/ocean-protocol-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/b3-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
@@ -3230,13 +3224,25 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/iota-2-price.html</loc>
+    <loc>https://pricecheckng.com.ng/ocean-protocol-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/bifrost-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/iota-2-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/across-protocol-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -3254,31 +3260,19 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/cargox-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://pricecheckng.com.ng/across-protocol-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://pricecheckng.com.ng/coti-price.html</loc>
-    <lastmod>2026-10-25</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://pricecheckng.com.ng/zerebro-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pricecheckng.com.ng/troll-2-price.html</loc>
+    <loc>https://pricecheckng.com.ng/cargox-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/coti-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
@@ -3291,6 +3285,12 @@
   </url>
   <url>
     <loc>https://pricecheckng.com.ng/sign-global-price.html</loc>
+    <lastmod>2026-10-25</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pricecheckng.com.ng/troll-2-price.html</loc>
     <lastmod>2026-10-25</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
