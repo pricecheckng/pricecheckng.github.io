@@ -231,7 +231,7 @@ async function renderMarket() {
       <p>Live crypto prices in <b>USD</b> and your own currency.</p>
       <label class="search">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input id="q" type="search" inputmode="search" placeholder="Search Bitcoin, ETH, Solana…" autocomplete="off" aria-label="Search coins" value="${esc(state.q)}">
+        <input id="q" type="search" inputmode="search" enterkeyhint="search" placeholder="Search Bitcoin, ETH, Solana…" autocomplete="off" aria-label="Search coins" value="${esc(state.q)}">
       </label>
     </section>
     ${iosBannerHtml()}
@@ -255,7 +255,7 @@ async function renderMarket() {
     <p class="note" id="staleNote" hidden style="background:#fff7e6;border-radius:12px;padding:10px 12px"></p>
     <div id="popBox"></div>
     <div id="toolBox"></div>
-    <div id="liveTag"><i></i>Live prices</div>
+    <div id="liveTag"><i></i><span>Live prices</span></div>
     <div id="list" class="list" aria-label="Coins"></div>
     <div class="more"><button id="moreBtn" class="ac-btn" type="button" hidden>Show more coins</button></div>
     <div id="pager" aria-label="Pages"></div>
@@ -269,6 +269,17 @@ async function renderMarket() {
       loadCoins(true);
     }, 250)
   );
+  $("#q").addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    state.q = e.target.value.trim();
+    loadCoins(true);
+    e.target.blur(); // closes the keyboard so the results are visible
+    setTimeout(() => {
+      const t = $("#toolBox") || $("#list");
+      if (t) window.scrollTo({ top: Math.max(0, t.getBoundingClientRect().top + window.scrollY - 80), behavior: "smooth" });
+    }, 350);
+  });
   $("#curSel").onchange = (e) => {
     state.cur = e.target.value;
     try {
@@ -577,7 +588,7 @@ const Live = (() => {
   const subbed = new Set(); // symbols we are subscribed to
   const lastOk = new Map(); // SYM -> last accepted price
   let pageCoin = null; // coin shown on a coin page
-  let ws = null, kind = "binance", open = false, fails = 0, retry = null, syncT = null, io = null, idleAt = Date.now(), pingT = null, gotTick = false, seq = 1, started = false;
+  let ws = null, kind = "binance", epi = 0, open = false, fails = 0, retry = null, syncT = null, io = null, idleAt = Date.now(), pingT = null, gotTick = false, seq = 1, started = false;
   const pend = new Map(); // coin id -> direction, painted in the next animation frame
   let raf = 0;
 
@@ -607,7 +618,21 @@ const Live = (() => {
     const t = document.getElementById("liveTag");
     if (t) t.classList.toggle("on", !!on);
   };
-  const url = () => (kind === "binance" ? "wss://stream.binance.com:9443/stream" : "wss://stream.bybit.com/v5/public/spot");
+  // port 443 first (mobile networks often block 9443), then Binance's data-only mirror, then Bybit
+  const EPS = [
+    { k: "binance", u: "wss://stream.binance.com:443/stream" },
+    { k: "binance", u: "wss://data-stream.binance.vision/stream" },
+    { k: "bybit", u: "wss://stream.bybit.com/v5/public/spot" },
+  ];
+  const url = () => EPS[epi].u;
+  const dbg = (m) => {
+    if (!/[?&]live=debug/.test(location.search)) return;
+    const t = document.getElementById("liveTag");
+    if (t) {
+      t.classList.add("on");
+      t.lastChild.textContent = " [" + EPS[epi].k + " " + EPS[epi].u.replace("wss://", "").split("/")[0] + "] " + m;
+    }
+  };
   const send = (obj) => {
     try {
       if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj));
@@ -645,6 +670,7 @@ const Live = (() => {
       return fail();
     }
     ws = w;
+    dbg("connecting");
     const guardT = setTimeout(() => {
       if (ws === w && !open) {
         close();
@@ -655,6 +681,7 @@ const Live = (() => {
       clearTimeout(guardT);
       open = true;
       fails = 0;
+      dbg("connected");
       if (kind === "bybit") pingT = setInterval(() => send({ op: "ping" }), 20000);
       sync();
     };
@@ -688,14 +715,19 @@ const Live = (() => {
   }
   function fail() {
     fails++;
-    if (fails >= 3 && kind === "binance") {
-      kind = "bybit";
+    dbg("failed (" + fails + ")");
+    let wait = Math.min(30000, 1500 * 2 ** fails);
+    if (fails >= 2) {
       fails = 0;
-    } else if (fails >= 4 && kind === "bybit") {
-      return; // give up quietly; the page keeps its one-minute prices
+      epi++;
+      if (epi >= EPS.length) {
+        epi = 0;
+        wait = 120000; // everything failed: try again in 2 minutes; prices keep their one-minute refresh meanwhile
+      } else wait = 1500;
+      kind = EPS[epi].k;
     }
     clearTimeout(retry);
-    retry = setTimeout(connect, Math.min(30000, 1500 * 2 ** fails));
+    retry = setTimeout(connect, wait);
   }
   function sync() {
     clearTimeout(syncT);
@@ -744,6 +776,7 @@ const Live = (() => {
     if (!gotTick) {
       gotTick = true;
       tag(true);
+      dbg("live, first price received");
     }
   }
   function flash(el, dir) {
@@ -3508,3 +3541,23 @@ try {
     document.head.appendChild(ld);
   }
 } catch (_) {}
+
+/* ---------- keyboard: every input gets a Go key, and Enter presses the main button of its form ---------- */
+(() => {
+  const SEL = "input:not([enterkeyhint]):not([type=checkbox]):not([type=radio]):not([type=range]):not([type=hidden])";
+  const mark = (root) => root && root.querySelectorAll && root.querySelectorAll(SEL).forEach((i) => i.setAttribute("enterkeyhint", i.type === "search" ? "search" : "go"));
+  mark(document);
+  new MutationObserver((ms) => {
+    for (const m of ms) for (const n of m.addedNodes) if (n.nodeType === 1) mark(n.matches && n.matches("input") ? n.parentNode : n);
+  }).observe(document.body, { childList: true, subtree: true });
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter" || e.isComposing) return;
+    const t = e.target;
+    if (!(t instanceof HTMLInputElement) || t.id === "q" || t.type === "search") return;
+    const scope = t.closest(".sheet, form, .card, section") || document;
+    const btn = [...scope.querySelectorAll("button.btn:not(.ghost):not([disabled])")].find((b) => b.offsetParent && b.id !== "delGo");
+    e.preventDefault();
+    t.blur();
+    if (btn) btn.click();
+  });
+})();
