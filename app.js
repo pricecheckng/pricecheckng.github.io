@@ -18,6 +18,7 @@ const COLS = "id,symbol,name,image_url,market_cap_rank,price_usd,price_ngn,marke
 
 /* ---------- currencies (USD is always shown on top; one more is chosen) ---------- */
 const CURRENCIES = {
+  USD: { flag: "🇺🇸", sym: "$", name: "United States dollar" },
   NGN: { flag: "🇳🇬", sym: "₦", name: "Nigerian naira" },
   GBP: { flag: "🇬🇧", sym: "£", name: "British pound" },
   EUR: { flag: "🇪🇺", sym: "€", name: "Euro" },
@@ -36,9 +37,9 @@ const CURRENCIES = {
 function loadCur() {
   try {
     const c = localStorage.getItem("pc_cur");
-    return CURRENCIES[c] ? c : "NGN";
+    return CURRENCIES[c] ? c : "USD";
   } catch (_) {
-    return "NGN";
+    return "USD";
   }
 }
 
@@ -64,9 +65,21 @@ async function loadFx() {
     } catch (_) {}
   }
   // If the saved currency has no rate (and is not NGN, which has its own price), fall back to NGN
-  if (state.cur !== "NGN" && !state.fx[state.cur]) state.cur = "NGN";
+  state.fx.USD = 1;
+  if (state.cur !== "NGN" && !state.fx[state.cur]) state.cur = "USD";
 }
 state.fxReady = loadFx();
+// Used by the Menu's currency picker (menu.js)
+window.PCN_CUR = {
+  get: () => state.cur,
+  list: () => Object.entries(CURRENCIES).filter(([code]) => code === "USD" || code === "NGN" || state.fx[code]).map(([code, m]) => ({ code, flag: m.flag, sym: m.sym.trim(), name: m.name })),
+  set(code) {
+    if (!CURRENCIES[code]) return;
+    state.cur = code;
+    try { localStorage.setItem("pc_cur", code); } catch (_) {}
+    route();
+  },
+};
 
 /* ---------- formatting ---------- */
 function fmtUsd(n) {
@@ -228,7 +241,7 @@ async function renderMarket() {
   view.innerHTML = `
     <section class="hero">
       <h1>Check the price <span>before you buy.</span></h1>
-      <p>Live crypto prices in <b>USD</b> and your own currency.</p>
+      <p>Live crypto prices in <b>USD</b>. Change the currency anytime in the Menu.</p>
       <label class="search">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="q" type="search" inputmode="search" enterkeyhint="search" placeholder="Search Bitcoin, ETH, Solana…" autocomplete="off" aria-label="Search coins" value="${esc(state.q)}">
@@ -237,21 +250,12 @@ async function renderMarket() {
     ${iosBannerHtml()}
     ${installBannerHtml()}
     <div id="tgHome"></div>
-    <div class="curbar">
-      <label for="curSel">Second price in</label>
-      <select id="curSel" aria-label="Choose second currency">
-        ${Object.entries(CURRENCIES)
-          .filter(([code]) => code === "NGN" || state.fx[code])
-          .map(([code, m]) => `<option value="${code}"${code === state.cur ? " selected" : ""}>${m.flag} ${code} · ${esc(m.name)}</option>`)
-          .join("")}
-      </select>
-    </div>
     <div class="ac-seg mk-tabs" id="tabs" style="grid-template-columns:repeat(2,1fr);margin:12px 0">
       <button type="button" class="${state.tab === "all" ? "on" : ""}" data-tab="all">All coins</button>
       <button type="button" class="${state.tab === "watch" ? "on" : ""}" data-tab="watch">★ Watchlist</button>
     </div>
     <p class="note">Prices update every minute for most major coins. Other coins update less often.</p>
-    <p class="note" id="fxNote">${fxNoteText()}</p>
+    <p class="note" id="fxNote"${state.cur === "USD" ? " hidden" : ""}>${fxNoteText()}</p>
     <p class="note" id="staleNote" hidden style="background:#fff7e6;border-radius:12px;padding:10px 12px"></p>
     <div id="popBox"></div>
     <div id="toolBox"></div>
@@ -280,15 +284,6 @@ async function renderMarket() {
       if (t) window.scrollTo({ top: Math.max(0, t.getBoundingClientRect().top + window.scrollY - 80), behavior: "smooth" });
     }, 350);
   });
-  $("#curSel").onchange = (e) => {
-    state.cur = e.target.value;
-    try {
-      localStorage.setItem("pc_cur", state.cur);
-    } catch (_) {}
-    const list = $("#list");
-    if (list && state.coins.length) list.innerHTML = rowsHtml(state.coins);
-    $("#fxNote").textContent = fxNoteText();
-  };
   $("#moreBtn").onclick = () => loadCoins(false);
   $("#pager").addEventListener("click", (e) => {
     const b = e.target.closest("[data-pg]");
@@ -348,7 +343,7 @@ function coinRow(c) {
   return `<div class="cw"><button class="star${on ? " on" : ""}" type="button" data-star="${esc(c.id)}" aria-label="${on ? "Remove from watchlist" : "Add to watchlist"}" aria-pressed="${on}">${on ? "★" : "☆"}</button><button class="coin" type="button" data-id="${esc(c.id)}">
     <img class="logo" src="${esc(c.image_url || "")}" alt="" loading="lazy" width="40" height="40">
     <div class="meta"><b>${esc(c.name)}</b><span>${sym} · <span class="chg ${d.c}">${d.t}</span>${c.kind === "tokenized" ? '<em style="font-style:normal;font-size:.72rem;background:rgba(22,163,74,.14);color:#15803d;border-radius:99px;padding:1px 8px;margin-left:6px">Tokenized asset</em>' : ""}</span></div>
-    <div class="px"><b>${fmtUsd(c.price_usd)}</b><span>${fmtLocal(secondPrice(c), state.cur)}</span></div>
+    <div class="px"><b>${fmtUsd(c.price_usd)}</b>${state.cur === "USD" ? "" : `<span>${fmtLocal(secondPrice(c), state.cur)}</span>`}</div>
   </button></div>`;
 }
 
@@ -839,7 +834,7 @@ const Live = (() => {
           const m = CURRENCIES[state.cur];
           const pill = sub.querySelector(".cp-pill");
           const first = sub.firstChild;
-          if (first && first.nodeType === 3) first.nodeValue = `${m.flag} ${fmtLocal(secondPrice(c), state.cur)} `;
+          if (first && first.nodeType === 3 && state.cur !== "USD") first.nodeValue = `${m.flag} ${fmtLocal(secondPrice(c), state.cur)} `;
           if (pill) {
             pill.textContent = d.t;
             pill.className = "cp-pill " + d.c;
@@ -1090,7 +1085,7 @@ function paintCoin(c) {
   const sp = Array.isArray(c.sparkline) ? c.sparkline.map(Number).filter((v) => isFinite(v)) : [];
   const second = secondPrice(c);
   const ratio = c.price_usd && second != null ? second / Number(c.price_usd) : 0;
-  const sec = (usd) => (ratio ? fmtLocal(usd * ratio, state.cur) : "–");
+  const sec = (usd) => (state.cur === "USD" ? "" : ratio ? fmtLocal(usd * ratio, state.cur) : "–");
   const secBig = (usd) => (ratio && usd != null ? fmtBig(Number(usd) * ratio, m.sym) : "–");
   const chartHtml = `<div class="cp-wk" id="cpWk"></div>
     <div class="seg" id="cpRanges" role="group" aria-label="Chart range" style="margin:10px 0;display:grid;grid-template-columns:repeat(5,1fr);gap:4px">${Object.keys(CHART_RANGES).map((k) => `<button type="button" data-r="${k}" aria-pressed="${k === "7D"}">${k}</button>`).join("")}</div>
@@ -1107,15 +1102,15 @@ function paintCoin(c) {
     <div class="cp-price">
       <small>PRICE IN USD</small>
       <div class="big">${fmtUsd(c.price_usd)}</div>
-      <div class="sub">${m.flag} ${fmtLocal(second, state.cur)} <span class="cp-pill ${d.c}" style="margin-left:6px">${d.t}</span> <span class="muted">24h</span></div>
+      <div class="sub">${state.cur === "USD" ? "" : `${m.flag} ${fmtLocal(second, state.cur)} `}<span class="cp-pill ${d.c}"${state.cur === "USD" ? "" : ' style="margin-left:6px"'}>${d.t}</span> <span class="muted">24h</span></div>
     </div>
     <div class="cp-card"><h3>Price chart</h3>${chartHtml}</div>
     <div id="coinChanges"></div>
     <div class="cp-stats">
       <div class="cp-stat"><small>Market cap ($)</small><b>${fmtBig(c.market_cap_usd, "$")}</b></div>
-      <div class="cp-stat"><small>Market cap (${esc(state.cur)})</small><b>${secBig(c.market_cap_usd)}</b></div>
+      ${state.cur === "USD" ? "" : `<div class="cp-stat"><small>Market cap (${esc(state.cur)})</small><b>${secBig(c.market_cap_usd)}</b></div>`}
       <div class="cp-stat"><small>24h volume ($)</small><b>${fmtBig(c.volume_24h_usd, "$")}</b></div>
-      <div class="cp-stat"><small>24h volume (${esc(state.cur)})</small><b>${secBig(c.volume_24h_usd)}</b></div>
+      ${state.cur === "USD" ? "" : `<div class="cp-stat"><small>24h volume (${esc(state.cur)})</small><b>${secBig(c.volume_24h_usd)}</b></div>`}
       ${Number(c.circulating_supply) > 0 ? `<div class="cp-stat" style="grid-column:1/-1"><small>Circulating supply</small><b>${fmtBig(c.circulating_supply, "")} ${esc(sym)}</b></div>` : ""}
       <div id="coinExtras" style="display:contents"></div>
       <div class="cp-stat" style="grid-column:1/-1"><small>Last updated</small><b>${ago(c.last_updated)}</b></div>
@@ -1545,7 +1540,7 @@ function mountChart(series, sec, range) {
     return range === "7D" || range === "30D" ? `${day}, ${dt.toLocaleTimeString([], { hour: "numeric" })}` : day;
   };
   const paint = (i, active) => {
-    read.innerHTML = `<b>${fmtUsd(sp[i])}</b><span>${sec(sp[i])} · ${label(i)}</span>`;
+    read.innerHTML = `<b>${fmtUsd(sp[i])}</b><span>${state.cur === "USD" ? "" : sec(sp[i]) + " · "}${label(i)}</span>`;
     const v = active ? "visible" : "hidden";
     line.setAttribute("visibility", v);
     dot.setAttribute("visibility", v);
@@ -1584,7 +1579,7 @@ function alertForm(c) {
     </div>
     <div class="seg" role="group" aria-label="Currency">
       <button type="button" data-cur="usd" aria-pressed="true">🇺🇸 USD</button>
-      <button type="button" data-cur="${second}" aria-pressed="false">${sm.flag} ${state.cur}</button>
+      ${state.cur === "USD" ? "" : `<button type="button" data-cur="${second}" aria-pressed="false">${sm.flag} ${state.cur}</button>`}
     </div>
     <label class="field"><span>Target price</span>
       <input id="target" inputmode="decimal" autocomplete="off" placeholder="Enter price"></label>
@@ -2005,7 +2000,7 @@ function paintPortfolio() {
     return;
   }
   const rate = state.fx[state.cur];
-  const sec = (usd) => (rate ? fmtLocal(usd * rate, state.cur) : "–");
+  const sec = (usd) => (state.cur === "USD" ? "" : rate ? fmtLocal(usd * rate, state.cur) : "–");
   let total = 0, chg24 = 0, cost = 0, costVal = 0;
   const items = rows.map((r) => {
     const price = Number(r.coins.price_usd);
@@ -2106,7 +2101,7 @@ function paintPortfolio() {
           }</div>
           ${many && open ? `<div class="pf-lots">${g.lots.map((it) => lotRow(it, sym)).join("")}</div>` : ""}
         </div>
-        <div class="pf-val"><b>${fmtUsd(g.val)}</b><span>${sec(g.val)}</span></div>
+        <div class="pf-val"><b>${fmtUsd(g.val)}</b>${state.cur === "USD" ? "" : `<span>${sec(g.val)}</span>`}</div>
       </div>`;
     })
     .join("");
@@ -2114,7 +2109,7 @@ function paintPortfolio() {
     <div class="cp-price">
       <small>TOTAL VALUE</small>
       <div class="big">${fmtUsd(total)}</div>
-      <div class="sub">${m.flag} ${sec(total)}</div>
+      <div class="sub">${state.cur === "USD" ? "" : `${m.flag} ${sec(total)}`}</div>
       <div class="pf-pills">
         ${day ? `<span><span class="cp-pill ${day.c}">${day.t}</span> <span class="muted">today</span></span>` : ""}
         ${pnlPct ? `<span><span class="cp-pill ${pnlPct.c}">${signedUsd(pnlTotal)} (${pnlPct.t})</span> <span class="muted">profit / loss</span></span>` : ""}
@@ -2881,7 +2876,7 @@ function showInstallBanner() {
   if (!slot || document.querySelector("#instBanner") || document.querySelector("#iosBanner")) return;
   const html = installBannerHtml();
   if (!html) return;
-  const bar = document.querySelector(".curbar");
+  const bar = document.querySelector("#tgHome");
   if (bar) bar.insertAdjacentHTML("beforebegin", html);
 }
 document.addEventListener("click", async (e) => {

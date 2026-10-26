@@ -65,3 +65,5 @@ html.dk .chip{background:#1b2a22;color:#9db0a5}
 html.dk .chip.triggered{background:#33270f!important;color:#f0b44c!important}
 /* round 4: logos with transparent black artwork (e.g. Ondo) sit on a light disc */
 html.dk .logo{background:#e9f1ec}
+
+html.dk #cps .c-sh{background:#121a15;color:#e9f1ec}html.dk #cps .c-r.sel{background:rgba(61,220,151,.14)}html.dk #cps .c-r em{color:#3ddc97}html.dk #cps input{background:#16201a;color:#e9f1ec;border-color:#2a3a31}

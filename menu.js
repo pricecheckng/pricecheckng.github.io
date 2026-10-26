@@ -67,6 +67,22 @@
     '#mnu .m-g.open .m-gb{display:block}' +
     '#mnu .m-gb .m-r{background:none;margin:0;padding:10px 8px;border-top:1px solid rgba(127,127,127,.15);border-radius:0}' +
     '#mnu .m-gb .m-r:first-child{border-top:0}' +
+    '#mnu .m-cu{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 2px}' +
+    '#mnu .m-cu span{font-weight:600;font-size:15px}' +
+    '#mnu .m-cb{display:flex;align-items:center;gap:8px;border:0;border-radius:12px;background:rgba(127,127,127,.14);color:inherit;font:inherit;font-weight:700;font-size:15px;padding:10px 14px;min-width:110px;justify-content:center;cursor:pointer}' +
+    '#cps{position:fixed;inset:0;z-index:10000;visibility:hidden}#cps.on{visibility:visible}' +
+    '#cps .c-sc{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .2s}#cps.on .c-sc{opacity:1}' +
+    '#cps .c-sh{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;height:84vh;display:flex;flex-direction:column;background:#fff;color:#10201a;border-radius:20px 20px 0 0;padding:14px 16px 0;transform:translateY(100%);transition:transform .25s ease}#cps.on .c-sh{transform:none}' +
+    '#cps .c-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}#cps .c-h b{font-size:18px}' +
+    '#cps .c-x{border:0;background:rgba(127,127,127,.15);color:inherit;width:32px;height:32px;border-radius:50%;font-size:18px;line-height:1;cursor:pointer}' +
+    '#cps input{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:12px 14px;border-radius:12px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);color:inherit;margin-bottom:8px}' +
+    '#cps .c-l{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(20px + env(safe-area-inset-bottom))}' +
+    '#cps .c-r{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:inherit;font:inherit;text-align:left;padding:12px 10px;border-radius:12px;cursor:pointer}' +
+    '#cps .c-r.sel{background:rgba(18,161,80,.14)}' +
+    '#cps .c-r i{font-style:normal;font-size:24px;width:30px;text-align:center}' +
+    '#cps .c-r b{font-size:15px}#cps .c-r small{opacity:.6;font-size:13px;margin-left:6px}' +
+    '#cps .c-r em{margin-left:auto;color:#12a150;font-style:normal;font-weight:800}' +
+    '#cps .c-n{opacity:.6;text-align:center;padding:24px 0}' +
     '@media(min-width:640px){#mnu .m-sh{bottom:auto;top:50%;border-radius:20px;transform:translateY(-40%);opacity:0;transition:transform .25s,opacity .25s}#mnu.on .m-sh{transform:translateY(-50%);opacity:1}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -77,6 +93,7 @@
   function row(r) {
     return '<a class="m-r" href="' + r[2] + '"><div><span>' + esc(r[0]) + (r[3] ? '<em class="m-d"></em>' : '') + '</span>' + (r[1] ? '<small>' + esc(r[1]) + '</small>' : '') + '</div>' + chev + '</a>';
   }
+  html += '<div class="m-cu" id="mCu" hidden><span>Currency</span><button type="button" class="m-cb" id="mCb" aria-haspopup="dialog"></button></div>';
   TOP.forEach(function (r) { html += row(r); });
   html += '<div style="height:6px"></div>';
   GROUPS.forEach(function (g) {
@@ -98,6 +115,37 @@
     if (e.target.closest && (e.target.closest('[data-x]') || e.target.closest('a.m-r'))) close();
   });
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
+  /* ---- currency picker (like CoinMarketCap): USD by default, any currency from the list ---- */
+  var cps = document.createElement('div'); cps.id = 'cps';
+  cps.innerHTML = '<div class="c-sc" data-cx></div><div class="c-sh" role="dialog" aria-modal="true" aria-label="Choose currency"><div class="c-h"><b>Currency</b><button type="button" class="c-x" data-cx aria-label="Close">×</button></div><input id="cpsQ" type="search" enterkeyhint="search" placeholder="Search currency" autocomplete="off" aria-label="Search currency"><div class="c-l" id="cpsL"></div></div>';
+  document.body.appendChild(cps);
+  function api() { return window.PCN_CUR; }
+  function paintBtn() {
+    var a = api(), r = document.getElementById('mCu'); if (!a) { if (r) r.hidden = true; return; }
+    r.hidden = false;
+    var c = a.get(), it = a.list().filter(function (x) { return x.code === c; })[0] || { flag: '', code: c };
+    document.getElementById('mCb').innerHTML = '<span style="font-size:18px">' + it.flag + '</span><span>' + esc(it.code) + '</span><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M4 8l8 9 8-9z"/></svg>';
+  }
+  function paintList(q) {
+    var a = api(); if (!a) return;
+    q = (q || '').toLowerCase().trim();
+    var cur = a.get(), rows = a.list().filter(function (x) { return !q || (x.code + ' ' + x.name + ' ' + x.sym).toLowerCase().indexOf(q) > -1; });
+    document.getElementById('cpsL').innerHTML = rows.length ? rows.map(function (x) {
+      return '<button type="button" class="c-r' + (x.code === cur ? ' sel' : '') + '" data-code="' + x.code + '"><i>' + x.flag + '</i><span><b>' + esc(x.name) + '</b><small>' + x.code + ' - ' + esc(x.sym) + '</small></span>' + (x.code === cur ? '<em>✓</em>' : '') + '</button>';
+    }).join('') : '<div class="c-n">No currency found</div>';
+  }
+  function openCps() { paintList(''); document.getElementById('cpsQ').value = ''; cps.classList.add('on'); }
+  function closeCps() { cps.classList.remove('on'); }
+  box.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('#mCb')) openCps(); });
+  cps.addEventListener('click', function (e) {
+    var t = e.target.closest && e.target.closest('[data-code]');
+    if (t) { api().set(t.getAttribute('data-code')); closeCps(); close(); paintBtn(); return; }
+    if (e.target.closest && e.target.closest('[data-cx]')) closeCps();
+  });
+  document.getElementById('cpsQ').addEventListener('input', function (e) { paintList(e.target.value); });
+  document.getElementById('cpsQ').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
+  var _open = open; open = function () { paintBtn(); _open(); };
+
 
   function init() {
     var a = document.querySelector('.tabs a[data-tab="account"]'); if (!a) return false;
