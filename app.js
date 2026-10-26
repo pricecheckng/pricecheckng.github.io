@@ -590,10 +590,12 @@ const Live = (() => {
   let pageCoin = null; // coin shown on a coin page
   let ws = null, kind = "binance", epi = 0, open = false, fails = 0, retry = null, syncT = null, io = null, idleAt = Date.now(), pingT = null, gotTick = false, seq = 1, started = false;
   const pend = new Map(); // coin id -> direction, painted in the next animation frame
+  const GAP = 5000; // the screen refreshes together every 5 seconds, like CoinMarketCap
+  const painted = new Map(); // coin id -> price currently shown
   let raf = 0;
 
   const css = document.createElement("style");
-  css.textContent = `@keyframes lfu{0%{color:#12a150;background:rgba(18,161,80,.22)}100%{background:transparent}}@keyframes lfd{0%{color:#e5484d;background:rgba(229,72,77,.2)}100%{background:transparent}}.lf-u{animation:lfu 1s ease-out}.lf-d{animation:lfd 1s ease-out}#liveTag{display:none;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--muted);margin:2px 0 8px}#liveTag.on{display:flex}#liveTag i{width:8px;height:8px;border-radius:50%;background:#12a150;box-shadow:0 0 0 0 rgba(18,161,80,.6);animation:lfp 1.6s infinite}@keyframes lfp{70%{box-shadow:0 0 0 7px rgba(18,161,80,0)}100%{box-shadow:0 0 0 0 rgba(18,161,80,0)}}`;
+  css.textContent = `@keyframes lfu{0%,55%{color:#16c784}100%{color:inherit}}@keyframes lfd{0%,55%{color:#ea3943}100%{color:inherit}}.lf-u{animation:lfu 1.1s ease-out}.lf-d{animation:lfd 1.1s ease-out}#liveTag{display:none;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--muted);margin:2px 0 8px}#liveTag.on{display:flex}#liveTag i{width:8px;height:8px;border-radius:50%;background:#12a150;box-shadow:0 0 0 0 rgba(18,161,80,.6);animation:lfp 1.6s infinite}@keyframes lfp{70%{box-shadow:0 0 0 7px rgba(18,161,80,0)}100%{box-shadow:0 0 0 0 rgba(18,161,80,0)}}`;
   document.head.appendChild(css);
 
   const eligible = (c) => c && c.symbol && !NOLIVE.has(String(c.symbol).toUpperCase()) && c.kind !== "tokenized" && /^[A-Za-z0-9]{2,12}$/.test(c.symbol) && Number(c.market_cap_rank) > 0 && Number(c.market_cap_rank) <= 400;
@@ -766,18 +768,38 @@ const Live = (() => {
       if (ref > 0 && Math.abs(price / ref - 1) > tol) continue; // looks wrong: ignore this tick
       lastOk.set(sym, price);
       if (price === old) continue;
-      const dir = price > old ? "u" : "d";
+      if (!painted.has(id)) painted.set(id, old);
       if (c.price_ngn != null && old > 0) c.price_ngn = Number(c.price_ngn) * (price / old);
       c.price_usd = price;
       if (pct != null && isFinite(pct)) c.change_24h_pct = pct;
-      pend.set(id, dir);
+      queue(id);
     }
-    if (pend.size && !raf) raf = requestAnimationFrame(paint);
     if (!gotTick) {
       gotTick = true;
       tag(true);
       dbg("live, first price received");
     }
+  }
+  // CoinMarketCap updates the whole screen together about every 5 seconds, and only the prices that changed flash.
+  const dirty = new Set();
+  let flushT = null;
+  function queue(id) {
+    dirty.add(id);
+    if (!flushT)
+      flushT = setInterval(() => {
+        if (document.hidden) return;
+        for (const cid of dirty) {
+          const c = state.coinMap.get(cid);
+          const shown = painted.get(cid);
+          const now = c ? Number(c.price_usd) : NaN;
+          if (c && shown !== undefined && now !== shown) {
+            painted.set(cid, now);
+            pend.set(cid, now > shown ? "u" : "d");
+          }
+        }
+        dirty.clear();
+        if (pend.size && !raf) raf = requestAnimationFrame(paint);
+      }, GAP);
   }
   function flash(el, dir) {
     if (!el) return;
