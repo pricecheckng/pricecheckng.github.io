@@ -187,7 +187,7 @@ async function load() {
     "<table><tr><th>Exchange</th><th>Buy</th><th>Sell</th></tr>" + names.map(row).join("") + "</table>" +
     '<div class="ft"><span>' + gapTxt + "</span><span>pricecheckng.com.ng</span></div>";
   const lu = src.luno;
-  $("inst").innerHTML = lu && lu.buy && lu.sell ? '<h2>Instant buy: Luno (Naira exchange)</h2><div class="box"><table><tr><th>Exchange</th><th>You pay</th><th>You receive</th></tr><tr><td class="nm"><span class="av" style="background:#2a6df4">L' + logo("luno") + '</span><b class="xn">Luno</b></td><td><b class="bp">' + N(lu.buy.typical) + '</b></td><td><b class="sp">' + N(lu.sell.typical) + '</b></td></tr></table><p class="note">Luno is not peer to peer. It quotes one price to buy or sell USDT directly, usually a little wider than the best P2P advert but without waiting for a trader.</p></div>' : "";
+  $("inst").innerHTML = lu && lu.buy && lu.sell ? '<h2>Instant buy: Luno (Naira exchange)</h2><div class="snap"><table><tr><th>Exchange</th><th>You pay</th><th>You receive</th></tr><tr><td class="nm"><span class="av" style="background:#2a6df4">L' + logo("luno") + '</span><b class="xn">Luno</b></td><td><b class="bp">' + N(lu.buy.typical) + '</b></td><td><b class="sp">' + N(lu.sell.typical) + '</b></td></tr></table><p class="note">Luno is not peer to peer. It quotes one price to buy or sell USDT directly, usually a little wider than the best P2P advert but without waiting for a trader.</p></div>' : "";
   $("upd").textContent = "Prices are for trades of about ₦100,000. Buy = Naira you pay per USDT, Sell = Naira you receive. Each price is the middle of the top 5 adverts. Refreshes about every 5 minutes.";
 
   // share

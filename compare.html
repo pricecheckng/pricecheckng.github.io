@@ -6,6 +6,7 @@
 <link rel="canonical" href="https://pricecheckng.com.ng/compare.html">
 <style>
 :root{--bg:#fff;--card:#f6f7f8;--ink:#0f1a14;--mu:#5d6b64;--g:#16a34a;--gd:#0a7a3a;--line:#e3e8e5;--red:#d93b3b}
+@media (prefers-color-scheme:dark){:root{--wh:#16201a;--bg:#0e1511;--card:#16201a;--ink:#e9f1ec;--mu:#9db0a5;--line:#26332c;--red:#ff6b6b}details{background:var(--card)!important}divdiv.note{background:#16261d!important;border-color:#26332c!important}pre,code{color:#7ee2a8!important}.warn{background:#2b2410!important;border-color:#4a3c14!important;color:#f0d9a0!important}.chip,.pg button,.nx2{background:var(--card)}.fee.top{background:#14301f;border-color:#26523a}.b-n{background:#33270f;color:#f0b44c}.b-b{background:#331818;color:#ff8a8a}.bar{background:#26332c}main a:not([class]),p a:not([class]),li a:not([class]){color:#3ddc97}input,select,textarea{background:var(--card);color:var(--ink);border-color:var(--line)}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 header{background:#0a7a3a;color:#fff;padding:14px 16px;font-weight:800}
@@ -16,23 +17,23 @@ h2{font-size:18px;margin:26px 0 8px}
 p{color:var(--mu);margin:0 0 12px}
 a{color:var(--gd)}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
-.chip{display:flex;align-items:center;gap:6px;padding:5px 6px 5px 8px;border-radius:99px;border:1.5px solid var(--line);background:#fff;font-weight:700;font-size:14px}
+.chip{display:flex;align-items:center;gap:6px;padding:5px 6px 5px 8px;border-radius:99px;border:1.5px solid var(--line);background:var(--wh,#fff);font-weight:700;font-size:14px}
 .chip img{width:20px;height:20px;border-radius:50%}
 .chip button{border:0;background:none;color:var(--mu);font-size:18px;line-height:1;padding:2px 6px;cursor:pointer}
 .dot{width:10px;height:10px;border-radius:50%;flex:none}
 .search{position:relative;margin:8px 0}
-.search input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font-size:16px;background:#fff;color:var(--ink)}
-.dd{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:5;overflow:hidden}
-.dd button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-bottom:1px solid var(--line);background:#fff;text-align:left;font:inherit;color:var(--ink);cursor:pointer}
+.search input{width:100%;padding:12px 14px;border-radius:12px;border:1px solid var(--line);font-size:16px;background:var(--wh,#fff);color:var(--ink)}
+.dd{position:absolute;left:0;right:0;top:100%;margin-top:4px;background:var(--wh,#fff);border:1px solid var(--line);border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.1);z-index:5;overflow:hidden}
+.dd button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;border-bottom:1px solid var(--line);background:var(--wh,#fff);text-align:left;font:inherit;color:var(--ink);cursor:pointer}
 .dd button:last-child{border:0}
 .dd img{width:24px;height:24px;border-radius:50%}
 .dd small{color:var(--mu);margin-left:auto}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:14px 0}
 .sum{font-size:15px;color:var(--ink);line-height:1.55}
-.tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:#fff}
+.tw{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--wh,#fff)}
 table{border-collapse:collapse;width:100%;min-width:100%}
 th,td{padding:10px 12px;text-align:right;border-bottom:1px solid var(--line);font-size:14.5px;white-space:nowrap}
-th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:#fff;color:var(--mu);font-weight:600;min-width:112px;z-index:1}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--wh,#fff);color:var(--mu);font-weight:600;min-width:112px;z-index:1}
 thead th{font-weight:800;background:#fafbfa;vertical-align:bottom}
 thead th:first-child{background:#fafbfa}
 tbody tr:last-child td{border-bottom:0}
@@ -42,13 +43,13 @@ tbody tr:last-child td{border-bottom:0}
 .th small{color:var(--mu);font-weight:600}
 .up{color:var(--gd);font-weight:700}.dn{color:var(--red);font-weight:700}
 .best{background:#eaf6ee}
-.chart{background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px}
+.chart{background:var(--wh,#fff);border:1px solid var(--line);border-radius:14px;padding:10px}
 .chart svg{display:block;width:100%;height:auto}
 .leg{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;margin-top:6px}
 .leg span{display:flex;align-items:center;gap:6px;font-weight:600}
 .pop{display:flex;gap:8px;flex-wrap:wrap}
-.pop a{padding:7px 12px;border:1px solid var(--g);border-radius:99px;background:#fff;text-decoration:none;font-size:14px;font-weight:600}
-button.share{padding:10px 16px;border:1px solid var(--g);border-radius:12px;background:#fff;color:var(--gd);font-weight:700;font-size:15px}
+.pop a{padding:7px 12px;border:1px solid var(--g);border-radius:99px;background:var(--wh,#fff);text-decoration:none;font-size:14px;font-weight:600}
+button.share{padding:10px 16px;border:1px solid var(--g);border-radius:12px;background:var(--wh,#fff);color:var(--gd);font-weight:700;font-size:15px}
 .note{font-size:13px;color:var(--mu)}
 #msg{min-height:20px;font-size:14px;color:var(--mu)}
 </style></head><body>
@@ -64,7 +65,7 @@ button.share{padding:10px 16px;border:1px solid var(--g);border-radius:12px;back
 <div class="pop" id="pop"></div>
 <p class="note" style="margin-top:22px">Prices and figures come from PriceCheck NG's own exchange data and other public sources and can be a few minutes old. A higher price per coin does not mean a bigger or better coin: compare market cap instead. This is information only and not financial advice.</p>
 </main>
-<footer style="border-top:1px solid #e3e8e5;padding:18px 16px;text-align:center;color:#5d6b64;font-size:.9rem"><a href="privacy.html" style="color:#5d6b64">Privacy Policy</a> · <a href="terms.html" style="color:#5d6b64">Terms of Service</a><div style="margin-top:8px">© <span class="yr">2026</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></div><script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script></footer>
+<footer style="border-top:1px solid #e3e8e5;padding:18px 16px;text-align:center;color:var(--mu,#5d6b64);font-size:.9rem"><a href="privacy.html" style="color:var(--mu,#5d6b64)">Privacy Policy</a> · <a href="terms.html" style="color:var(--mu,#5d6b64)">Terms of Service</a><div style="margin-top:8px">© <span class="yr">2026</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></div><script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script></footer>
 <script type="module">
 const $ = (id) => document.getElementById(id);
 const COLORS = ["#16a34a", "#2563eb", "#d97706", "#9333ea"];

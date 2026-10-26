@@ -6,6 +6,7 @@
 <link rel="canonical" href="https://pricecheckng.com.ng/track-token.html">
 <style>
 :root{--bg:#fff;--card:#f6f7f8;--ink:#0f1a14;--mu:#5d6b64;--g:#16a34a;--gd:#0a7a3a;--line:#e3e8e5;--red:#d93b3b;--amb:#b7791f;--ambbg:#fff6e0;--redbg:#fdecec}
+@media (prefers-color-scheme:dark){:root{--wh:#16201a;--bg:#0e1511;--card:#16201a;--ink:#e9f1ec;--mu:#9db0a5;--line:#26332c;--red:#ff6b6b;--amb:#f0b44c;--ambbg:#2b2410;--redbg:#2d1717}details{background:var(--card)!important}divdiv.note{background:#16261d!important;border-color:#26332c!important}pre,code{color:#7ee2a8!important}.warn{background:#2b2410!important;border-color:#4a3c14!important;color:#f0d9a0!important}.chip,.pg button,.nx2{background:var(--card)}.fee.top{background:#14301f;border-color:#26523a}.b-n{background:#33270f;color:#f0b44c}.b-b{background:#331818;color:#ff8a8a}.bar{background:#26332c}main a:not([class]),p a:not([class]),li a:not([class]){color:#3ddc97}input,select,textarea{background:var(--card);color:var(--ink);border-color:var(--line)}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
 header{background:#0a7a3a;color:#fff;padding:14px 16px;font-weight:800}
@@ -14,19 +15,19 @@ main{max-width:640px;margin:0 auto;padding:16px 16px 56px}
 h1{font-size:24px;line-height:1.2;margin:8px 0 6px}
 p{color:var(--mu);margin:0 0 12px}
 .box{display:flex;gap:8px;margin:12px 0}
-input{flex:1;min-width:0;padding:13px;border-radius:12px;border:1px solid var(--line);font-size:16px;background:#fff;color:var(--ink)}
+input{flex:1;min-width:0;padding:13px;border-radius:12px;border:1px solid var(--line);font-size:16px;background:var(--wh,#fff);color:var(--ink)}
 button{padding:13px 18px;border:0;border-radius:12px;background:var(--g);color:#fff;font-weight:700;font-size:16px}
-button.sec{background:#fff;color:var(--gd);border:1px solid var(--g)}
+button.sec{background:var(--wh,#fff);color:var(--gd);border:1px solid var(--g)}
 button.sm{padding:8px 12px;font-size:14px;border-radius:10px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px 16px;margin:14px 0}
 .top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
 .name{font-weight:800;font-size:20px;overflow-wrap:anywhere}
-.chain{font-size:12px;color:var(--mu);border:1px solid var(--line);border-radius:99px;padding:2px 10px;background:#fff;white-space:nowrap}
+.chain{font-size:12px;color:var(--mu);border:1px solid var(--line);border-radius:99px;padding:2px 10px;background:var(--wh,#fff);white-space:nowrap}
 .price{font-size:26px;font-weight:800;margin:6px 0 0}
 .ngn{color:var(--mu);margin:0 0 8px}
 .up{color:var(--gd)}.dn{color:var(--red)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0}
-.t{background:#fff;border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+.t{background:var(--wh,#fff);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
 .t small{display:block;color:var(--mu);font-size:12px}.t b{font-size:15px}
 .warn{border-radius:12px;padding:10px 12px;margin:8px 0;font-size:14px}
 .warn.r{background:var(--redbg);color:#8a1f1f}.warn.a{background:var(--ambbg);color:#7a4d0a}.warn.ok{background:#e9f8ee;color:#145c33}
@@ -34,14 +35,14 @@ button.sm{padding:8px 12px;font-size:14px;border-radius:10px}
 .btns{display:flex;gap:6px;flex-shrink:0}.row:last-child{border:0}.row b{display:block}.row small{color:var(--mu)}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 .note{font-size:13px;color:var(--mu)}
-.chartbox{margin-top:12px}.tb{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.tfb{padding:7px 11px;font-size:13px;border-radius:9px;background:#fff;color:var(--ink);border:1px solid var(--line);font-weight:600}.tfb.on{background:var(--g);color:#fff;border-color:var(--g)}.cwrap{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}.cwrap canvas{display:block;width:100%}.chartbox iframe{width:100%;height:420px;border:1px solid var(--line);border-radius:12px;background:#fff}
-select{padding:10px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);font-size:15px;max-width:100%}
+.chartbox{margin-top:12px}.tb{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}.tfb{padding:7px 11px;font-size:13px;border-radius:9px;background:var(--wh,#fff);color:var(--ink);border:1px solid var(--line);font-weight:600}.tfb.on{background:var(--g);color:#fff;border-color:var(--g)}.cwrap{background:var(--wh,#fff);border:1px solid var(--line);border-radius:12px;overflow:hidden}.cwrap canvas{display:block;width:100%}.chartbox iframe{width:100%;height:420px;border:1px solid var(--line);border-radius:12px;background:var(--wh,#fff)}
+select{padding:10px;border-radius:10px;border:1px solid var(--line);background:var(--wh,#fff);color:var(--ink);font-size:15px;max-width:100%}
 .cur{display:flex;align-items:center;gap:8px;margin:0 0 6px}
 a{color:var(--gd)}
 .apanel{margin-top:12px;border-top:1px solid var(--line);padding-top:12px}
 .apanel .frm{display:flex;gap:8px;margin:8px 0}.apanel select{flex:0 0 auto}
 .apanel .chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
-.chipb{padding:6px 11px;font-size:13px;border-radius:99px;background:#fff;color:var(--gd);border:1px solid var(--g);font-weight:600}
+.chipb{padding:6px 11px;font-size:13px;border-radius:99px;background:var(--wh,#fff);color:var(--gd);border:1px solid var(--g);font-weight:600}
 .arow .btns{align-items:center}
 </style></head><body>
 <header><a href="/">PriceCheck NG</a></header>
@@ -58,7 +59,7 @@ a{color:var(--gd)}
 <div id="malerts" hidden><h2 style="font-size:18px;margin:26px 0 0">My token alerts</h2><div id="almine" class="card"></div></div>
 <p class="note">Prices come from one trading pool on a decentralised exchange, so they can differ from other sources and can be very unreliable. Market cap is an estimate. Many new meme coins lose all their value, and some are scams. This is not financial advice. Never invest money you cannot afford to lose.</p>
 </main>
-<footer style="border-top:1px solid #e3e8e5;padding:18px 16px;text-align:center;color:#5d6b64;font-size:.9rem"><a href="privacy.html" style="color:#5d6b64">Privacy Policy</a> · <a href="terms.html" style="color:#5d6b64">Terms of Service</a><div style="margin-top:8px">© <span class="yr">2026</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></div><script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script></footer>
+<footer style="border-top:1px solid #e3e8e5;padding:18px 16px;text-align:center;color:var(--mu,#5d6b64);font-size:.9rem"><a href="privacy.html" style="color:var(--mu,#5d6b64)">Privacy Policy</a> · <a href="terms.html" style="color:var(--mu,#5d6b64)">Terms of Service</a><div style="margin-top:8px">© <span class="yr">2026</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></div><script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script></footer>
 <script type="module">
 const CUR = {
   NGN: ["🇳🇬", "₦", "Nigerian naira"], GBP: ["🇬🇧", "£", "British pound"], EUR: ["🇪🇺", "€", "Euro"],
