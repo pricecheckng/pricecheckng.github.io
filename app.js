@@ -166,6 +166,8 @@ const gate = (text) =>
 /* ---------- router ---------- */
 const routes = { market: renderMarket, alerts: renderAlerts, account: renderAccount, portfolio: renderPortfolio, admin: renderAdmin };
 function route() {
+  Live.clearPage();
+  setTimeout(() => Live.scan(), 60);
   const h = (location.hash || "#market").slice(1).split("?")[0];
   if (h.startsWith("coin/")) {
     document.querySelectorAll(".tabs a").forEach((a) => a.classList.toggle("on", a.dataset.tab === "market"));
@@ -253,6 +255,7 @@ async function renderMarket() {
     <p class="note" id="staleNote" hidden style="background:#fff7e6;border-radius:12px;padding:10px 12px"></p>
     <div id="popBox"></div>
     <div id="toolBox"></div>
+    <div id="liveTag"><i></i>Live prices</div>
     <div id="list" class="list" aria-label="Coins"></div>
     <div class="more"><button id="moreBtn" class="ac-btn" type="button" hidden>Show more coins</button></div>
     <div id="pager" aria-label="Pages"></div>
@@ -272,7 +275,7 @@ async function renderMarket() {
       localStorage.setItem("pc_cur", state.cur);
     } catch (_) {}
     const list = $("#list");
-    if (list && state.coins.length) list.innerHTML = state.coins.map(coinRow).join("");
+    if (list && state.coins.length) list.innerHTML = rowsHtml(state.coins);
     $("#fxNote").textContent = fxNoteText();
   };
   $("#moreBtn").onclick = () => loadCoins(false);
@@ -490,7 +493,7 @@ async function loadCoins(reset, pg) {
     }
     for (const c of wd) state.coinMap.set(c.id, c);
     state.coins = wd;
-    list.innerHTML = wd.map(coinRow).join("");
+    list.innerHTML = rowsHtml(wd);
     return;
   }
   const plainFirstPage = reset && !state.page && !state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
@@ -500,7 +503,7 @@ async function loadCoins(reset, pg) {
     if (cached) {
       for (const c of cached.rows) state.coinMap.set(c.id, c);
       state.coins = cached.rows.slice();
-      list.innerHTML = state.coins.map(coinRow).join("");
+      list.innerHTML = rowsHtml(state.coins);
       shownFromCache = true;
       setStaleNote(navigator.onLine === false ? `You're offline. Showing prices saved ${ageText(cached.t)}.` : `Showing saved prices from ${ageText(cached.t)}. Updating…`);
       state.coins = [];
@@ -554,7 +557,7 @@ async function loadCoins(reset, pg) {
   state.total = typeof count === "number" ? count : data.length;
   state.page += 1;
   list.innerHTML = state.coins.length
-    ? state.coins.map(coinRow).join("")
+    ? rowsHtml(state.coins)
     : emptyBox("No coins found", term ? `Nothing matches “${term}”. Try another name or symbol.` : "Prices are still loading. Check back in a few minutes.") + (term ? `<div style="text-align:center;margin:14px 16px 4px"><p class="muted" style="margin:0 0 10px">Can't find it? Paste its contract address or link and we'll look it up.</p><a href="track-token.html" style="display:inline-block;background:#16a34a;color:#fff;font-weight:700;text-decoration:none;padding:13px 22px;border-radius:12px;font-size:1rem">Track any token &rarr;</a></div>` : "");
   $("#moreBtn").hidden = true;
   renderPager();
@@ -564,6 +567,291 @@ async function loadCoins(reset, pg) {
     requestAnimationFrame(() => window.scrollTo(0, y));
   }
 }
+
+
+/* ---------- live prices: browser connects to public exchange streams (Binance, with Bybit as backup) ---------- */
+const NOLIVE = new Set(["USDT", "USDC", "DAI", "USDE", "USDS", "FDUSD", "TUSD", "USDD", "USD1", "PYUSD", "BUSD", "USDG", "RLUSD", "USDF", "USDU", "USDX", "USDP", "GUSD", "FRAX"]);
+const Live = (() => {
+  const MAXSUB = 24;
+  const vis = new Set(); // coin ids on screen
+  const subbed = new Set(); // symbols we are subscribed to
+  const lastOk = new Map(); // SYM -> last accepted price
+  let pageCoin = null; // coin shown on a coin page
+  let ws = null, kind = "binance", open = false, fails = 0, retry = null, syncT = null, io = null, idleAt = Date.now(), pingT = null, gotTick = false, seq = 1, started = false;
+  const pend = new Map(); // coin id -> direction, painted in the next animation frame
+  let raf = 0;
+
+  const css = document.createElement("style");
+  css.textContent = `@keyframes lfu{0%{color:#12a150;background:rgba(18,161,80,.22)}100%{background:transparent}}@keyframes lfd{0%{color:#e5484d;background:rgba(229,72,77,.2)}100%{background:transparent}}.lf-u{animation:lfu 1s ease-out}.lf-d{animation:lfd 1s ease-out}#liveTag{display:none;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--muted);margin:2px 0 8px}#liveTag.on{display:flex}#liveTag i{width:8px;height:8px;border-radius:50%;background:#12a150;box-shadow:0 0 0 0 rgba(18,161,80,.6);animation:lfp 1.6s infinite}@keyframes lfp{70%{box-shadow:0 0 0 7px rgba(18,161,80,0)}100%{box-shadow:0 0 0 0 rgba(18,161,80,0)}}`;
+  document.head.appendChild(css);
+
+  const eligible = (c) => c && c.symbol && !NOLIVE.has(String(c.symbol).toUpperCase()) && c.kind !== "tokenized" && /^[A-Za-z0-9]{2,12}$/.test(c.symbol) && Number(c.market_cap_rank) > 0 && Number(c.market_cap_rank) <= 400;
+  const symOf = (c) => String(c.symbol).toUpperCase();
+  const saveData = () => !!(navigator.connection && navigator.connection.saveData);
+  const wantSyms = () => {
+    const m = new Map(); // SYM -> Set(coin ids)
+    const add = (c) => {
+      if (!eligible(c)) return;
+      const s = symOf(c);
+      if (!m.has(s)) m.set(s, new Set());
+      m.get(s).add(c.id);
+    };
+    if (pageCoin) add(pageCoin);
+    for (const id of vis) {
+      if (m.size >= MAXSUB) break;
+      add(state.coinMap.get(id));
+    }
+    return m;
+  };
+  const tag = (on) => {
+    const t = document.getElementById("liveTag");
+    if (t) t.classList.toggle("on", !!on);
+  };
+  const url = () => (kind === "binance" ? "wss://stream.binance.com:9443/stream" : "wss://stream.bybit.com/v5/public/spot");
+  const send = (obj) => {
+    try {
+      if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj));
+    } catch (_) {}
+  };
+  const subMsg = (list, on) => {
+    if (!list.length) return;
+    if (kind === "binance") send({ method: on ? "SUBSCRIBE" : "UNSUBSCRIBE", params: list.map((s) => s.toLowerCase() + "usdt@miniTicker"), id: seq++ });
+    else for (let i = 0; i < list.length; i += 10) send({ op: on ? "subscribe" : "unsubscribe", args: list.slice(i, i + 10).map((s) => "tickers." + s + "USDT") });
+  };
+
+  function close(why) {
+    clearTimeout(retry);
+    clearInterval(pingT);
+    const w = ws;
+    ws = null;
+    open = false;
+    subbed.clear();
+    gotTick = false;
+    tag(false);
+    if (w) {
+      w.onclose = w.onerror = w.onmessage = w.onopen = null;
+      try {
+        w.close();
+      } catch (_) {}
+    }
+  }
+  function connect() {
+    if (ws || document.hidden || saveData() || navigator.onLine === false) return;
+    if (!wantSyms().size) return;
+    let w;
+    try {
+      w = new WebSocket(url());
+    } catch (_) {
+      return fail();
+    }
+    ws = w;
+    const guardT = setTimeout(() => {
+      if (ws === w && !open) {
+        close();
+        fail();
+      }
+    }, 6000);
+    w.onopen = () => {
+      clearTimeout(guardT);
+      open = true;
+      fails = 0;
+      if (kind === "bybit") pingT = setInterval(() => send({ op: "ping" }), 20000);
+      sync();
+    };
+    w.onmessage = (e) => {
+      let m;
+      try {
+        m = JSON.parse(e.data);
+      } catch (_) {
+        return;
+      }
+      if (kind === "binance") {
+        const d = m && m.data;
+        if (d && d.s && d.c) tick(d.s.replace(/USDT$/, ""), Number(d.c), Number(d.o) > 0 ? ((Number(d.c) - Number(d.o)) / Number(d.o)) * 100 : null);
+      } else if (m && m.data && m.data.symbol && m.data.lastPrice) {
+        const p24 = Number(m.data.price24hPcnt);
+        tick(String(m.data.symbol).replace(/USDT$/, ""), Number(m.data.lastPrice), isFinite(p24) ? p24 * 100 : null);
+      }
+    };
+    w.onclose = () => {
+      clearTimeout(guardT);
+      if (ws === w) {
+        close();
+        fail();
+      }
+    };
+    w.onerror = () => {
+      try {
+        w.close();
+      } catch (_) {}
+    };
+  }
+  function fail() {
+    fails++;
+    if (fails >= 3 && kind === "binance") {
+      kind = "bybit";
+      fails = 0;
+    } else if (fails >= 4 && kind === "bybit") {
+      return; // give up quietly; the page keeps its one-minute prices
+    }
+    clearTimeout(retry);
+    retry = setTimeout(connect, Math.min(30000, 1500 * 2 ** fails));
+  }
+  function sync() {
+    clearTimeout(syncT);
+    syncT = setTimeout(() => {
+      const want = wantSyms();
+      if (!want.size) {
+        retry = null;
+        if (ws) setTimeout(() => !wantSyms().size && close(), 15000);
+        return;
+      }
+      if (!ws) return connect();
+      if (!open) return;
+      const add = [...want.keys()].filter((s) => !subbed.has(s));
+      const del = [...subbed].filter((s) => !want.has(s));
+      subMsg(del, false);
+      subMsg(add, true);
+      del.forEach((s) => subbed.delete(s));
+      add.forEach((s) => subbed.add(s));
+    }, 300);
+  }
+
+  function tick(sym, price, pct) {
+    if (!(price > 0)) return;
+    const ids = wantSyms().get(sym);
+    if (!ids) return;
+    for (const id of ids) {
+      const c = state.coinMap.get(id);
+      if (!c) continue;
+      const old = Number(c.price_usd);
+      const ref = lastOk.get(sym) || old;
+      let tol = 0.03;
+      if (!lastOk.has(sym)) {
+        const age = c.last_updated ? Math.max(0, (Date.now() - new Date(c.last_updated).getTime()) / 60000) : 10;
+        tol = 0.02 + Math.min(0.03, age * 0.002);
+      }
+      if (ref > 0 && Math.abs(price / ref - 1) > tol) continue; // looks wrong: ignore this tick
+      lastOk.set(sym, price);
+      if (price === old) continue;
+      const dir = price > old ? "u" : "d";
+      if (c.price_ngn != null && old > 0) c.price_ngn = Number(c.price_ngn) * (price / old);
+      c.price_usd = price;
+      if (pct != null && isFinite(pct)) c.change_24h_pct = pct;
+      pend.set(id, dir);
+    }
+    if (pend.size && !raf) raf = requestAnimationFrame(paint);
+    if (!gotTick) {
+      gotTick = true;
+      tag(true);
+    }
+  }
+  function flash(el, dir) {
+    if (!el) return;
+    el.classList.remove("lf-u", "lf-d");
+    void el.offsetWidth;
+    el.classList.add(dir === "u" ? "lf-u" : "lf-d");
+  }
+  function paint() {
+    raf = 0;
+    for (const [id, dir] of pend) {
+      const c = state.coinMap.get(id);
+      if (!c) continue;
+      const d = chg(c.change_24h_pct);
+      const btn = [...document.querySelectorAll("#list [data-id]")].find((b) => b.dataset.id === id);
+      if (btn) {
+        const px = btn.querySelector(".px b");
+        const sp = btn.querySelector(".px span");
+        const ch = btn.querySelector(".chg");
+        if (px) {
+          px.textContent = fmtUsd(c.price_usd);
+          flash(px, dir);
+        }
+        if (sp) sp.textContent = fmtLocal(secondPrice(c), state.cur);
+        if (ch) {
+          ch.textContent = d.t;
+          ch.className = "chg " + d.c;
+        }
+      }
+      if (pageCoin && pageCoin.id === id) {
+        const big = document.querySelector(".cp-price .big");
+        const sub = document.querySelector(".cp-price .sub");
+        if (big) {
+          big.textContent = fmtUsd(c.price_usd);
+          flash(big, dir);
+        }
+        if (sub) {
+          const m = CURRENCIES[state.cur];
+          const pill = sub.querySelector(".cp-pill");
+          const first = sub.firstChild;
+          if (first && first.nodeType === 3) first.nodeValue = `${m.flag} ${fmtLocal(secondPrice(c), state.cur)} `;
+          if (pill) {
+            pill.textContent = d.t;
+            pill.className = "cp-pill " + d.c;
+          }
+        }
+      }
+    }
+    pend.clear();
+  }
+
+  function scan() {
+    if (!io) {
+      if (!("IntersectionObserver" in window)) return;
+      io = new IntersectionObserver(
+        (es) => {
+          let ch = false;
+          for (const e of es) {
+            const id = e.target.dataset.id;
+            if (!id) continue;
+            if (e.isIntersecting) {
+              if (!vis.has(id)) ch = true;
+              vis.add(id);
+            } else if (vis.delete(id)) ch = true;
+          }
+          if (ch) sync();
+        },
+        { rootMargin: "120px 0px" }
+      );
+    }
+    io.disconnect();
+    vis.clear();
+    document.querySelectorAll("#list [data-id]").forEach((b) => io.observe(b));
+    if (!started) start();
+  }
+  function start() {
+    started = true;
+    const act = () => {
+      idleAt = Date.now();
+      if (!ws && !document.hidden) sync();
+    };
+    ["touchstart", "scroll", "click", "keydown"].forEach((ev) => window.addEventListener(ev, act, { passive: true }));
+    document.addEventListener("visibilitychange", () => (document.hidden ? close() : (idleAt = Date.now(), sync())));
+    window.addEventListener("online", () => sync());
+    setInterval(() => {
+      if (ws && Date.now() - idleAt > 5 * 60000) close(); // nobody is touching the screen: stop using data
+    }, 30000);
+  }
+  return {
+    scan,
+    page(c) {
+      pageCoin = c || null;
+      if (pageCoin && !started) start();
+      sync();
+    },
+    clearPage() {
+      if (pageCoin) {
+        pageCoin = null;
+        sync();
+      }
+    },
+    _state: () => ({ kind, open, subbed: [...subbed], vis: vis.size }),
+  };
+})();
+const rowsHtml = (arr) => {
+  queueMicrotask(() => Live.scan());
+  return arr.map(coinRow).join("");
+};
 
 /* ---------- saved prices (low-data / offline) ---------- */
 const CACHE_KEY = "pc_coins_v1";
@@ -641,6 +929,7 @@ async function renderCoin(id) {
   state.coinMap.set(data.id, data);
   track("coin_view", data.id);
   paintCoin(data);
+  Live.page(state.coinMap.get(data.id) || data);
   // Coming from a coin page on Google: "?alert=1" opens the alert form straight away
   if (/[?&]alert=1/.test(location.hash)) {
     history.replaceState(null, "", location.pathname + "#coin/" + encodeURIComponent(data.id));
