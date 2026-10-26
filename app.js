@@ -42,7 +42,7 @@ function loadCur() {
   }
 }
 
-const state = { tab: "all", watch: new Set(), watchFor: null, user: null, coins: [], coinMap: new Map(), q: "", page: 0, more: false, req: 0, pushOn: false, installEvt: null, cur: loadCur(), fx: {}, fxReady: null };
+const state = { tab: "all", watch: new Set(), watchFor: null, user: null, coins: [], coinMap: new Map(), q: "", page: 0, pg: 0, total: 0, restoreY: null, more: false, req: 0, pushOn: false, installEvt: null, cur: loadCur(), fx: {}, fxReady: null };
 
 const styleTag = document.createElement("style");
 styleTag.textContent = `.cw{position:relative}.cw+.cw{border-top:1px solid rgba(128,128,128,.2)}.cw .coin{width:100%;padding-left:50px;border:0!important}.cw .star{position:absolute;left:0;top:0;bottom:0;width:48px;display:flex;align-items:center;justify-content:center;background:none;border:0;padding:0;font-size:1.5rem;line-height:1;color:#b6bcc6;cursor:pointer;-webkit-tap-highlight-color:transparent}.cw .star.on{color:#f5a623}.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}.cp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cp-head h1{margin:0;font-size:1.4rem}.cp-head p{margin:2px 0 0;opacity:.65}.cp-price{background:#effcf3;border-radius:20px;padding:18px;margin-bottom:14px}.cp-price small{display:block;letter-spacing:.04em;opacity:.7;font-size:.78rem;font-weight:600}.cp-price .big{font-size:2rem;font-weight:800;line-height:1.15;margin:4px 0}.cp-price .sub{font-weight:600}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border:1px solid rgba(128,128,128,.25);border-radius:20px;padding:16px;margin-bottom:14px}.cp-card h3{margin:0 0 8px;font-size:1rem}.cp-read{min-height:48px;margin-top:8px}.cp-read b{font-size:1.4rem;display:block}.cp-read span{opacity:.65;font-size:.9rem}.cp-svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}details[open]>summary .exArrow{transform:rotate(180deg)}summary::-webkit-details-marker{display:none}.cp-lh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.cp-lh div,.cp-stat{background:#f6f7f9;border-radius:14px;padding:12px}.cp-lh small,.cp-stat small{display:block;opacity:.65;font-size:.8rem}.cp-lh b,.cp-stat b{display:block;font-size:1rem;margin:2px 0}.cp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.cp-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem}.cp-pill.up{background:#dcf5e5;color:#15803d}.cp-pill.down{background:#fdecec;color:#dc2626}.adm-user{border:1px solid rgba(128,128,128,.25);border-radius:16px;padding:14px;margin-bottom:10px}.adm-user b{word-break:break-all}.adm-chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;margin-left:6px;background:#eef2f7;color:#334155}.adm-chip.red{background:#fdecec;color:#dc2626}.adm-chip.amber{background:#fff4dc;color:#b45309}.adm-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.adm-btn{font:inherit;font-weight:600;padding:8px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111}.adm-btn.danger{border-color:#dc2626;color:#dc2626}.adm-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.adm-sum div{background:#f6f7f9;border-radius:14px;padding:10px;text-align:center}.adm-sum b{display:block;font-size:1.2rem}.adm-sum small{opacity:.65}.pf-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid rgba(128,128,128,.2)}.pf-mid{flex:1;min-width:0}.pf-mid a{color:inherit;text-decoration:none}.pf-mid .muted{display:block;font-size:.9rem}.pf-acts{margin-top:6px;display:flex;gap:16px}.pf-val{text-align:right}.pf-val b{display:block}.pf-val span{opacity:.65;font-size:.9rem}.pf-pills{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}.pf-pick{display:flex;align-items:center;gap:12px;margin-bottom:14px}.pf-res{display:flex;align-items:center;gap:10px;width:100%;padding:10px 4px;background:none;border:0;border-bottom:1px solid rgba(128,128,128,.2);font:inherit;text-align:left;color:inherit}.pf-alloc{display:flex;align-items:center;gap:16px}.pf-alloc svg{width:120px;height:120px;flex:none}.pf-leg{flex:1;min-width:0}.pf-leg div{display:flex;align-items:center;gap:8px;font-size:.92rem;padding:4px 0}.pf-leg i{width:10px;height:10px;border-radius:50%;flex:none}.pf-leg span{margin-left:auto;font-weight:600}.pf-lots{margin-top:10px;border-top:1px dashed rgba(128,128,128,.35)}.pf-lot{padding:10px 0;border-bottom:1px solid rgba(128,128,128,.15)}.pf-lot .pf-acts{margin-top:4px}`;
@@ -254,6 +254,7 @@ async function renderMarket() {
     <div id="popBox"></div>
     <div id="list" class="list" aria-label="Coins"></div>
     <div class="more"><button id="moreBtn" class="ac-btn" type="button" hidden>Show more coins</button></div>
+    <div id="pager" aria-label="Pages"></div>
     ${footer()}`;
   loadPopular();
   tgHomeTip();
@@ -274,6 +275,14 @@ async function renderMarket() {
     $("#fxNote").textContent = fxNoteText();
   };
   $("#moreBtn").onclick = () => loadCoins(false);
+  $("#pager").addEventListener("click", (e) => {
+    const b = e.target.closest("[data-pg]");
+    if (!b || b.disabled) return;
+    state.restoreY = null;
+    loadCoins(true, Number(b.dataset.pg));
+    const top = $("#list");
+    if (top) window.scrollTo(0, Math.max(0, top.getBoundingClientRect().top + window.scrollY - 70));
+  });
   $("#tabs").addEventListener("click", (e) => {
     const t = e.target.closest("[data-tab]");
     if (!t || t.dataset.tab === state.tab) return;
@@ -309,9 +318,12 @@ async function renderMarket() {
       return;
     }
     const b = e.target.closest("[data-id]");
-    if (b) location.hash = "#coin/" + encodeURIComponent(b.dataset.id);
+    if (b) {
+      state.restoreY = window.scrollY;
+      location.hash = "#coin/" + encodeURIComponent(b.dataset.id);
+    }
   });
-  loadCoins(true);
+  loadCoins(true, state.pg);
 }
 
 function coinRow(c) {
@@ -325,15 +337,42 @@ function coinRow(c) {
   </button></div>`;
 }
 
-async function loadCoins(reset) {
+function renderPager() {
+  const el = $("#pager");
+  if (!el) return;
+  const pages = Math.ceil((state.total || 0) / PAGE);
+  if (state.tab === "watch" || pages < 2) {
+    el.innerHTML = "";
+    return;
+  }
+  const cur = state.pg;
+  const set = new Set([0, pages - 1, cur - 1, cur, cur + 1]);
+  if (cur < 2) { set.add(1); set.add(2); }
+  if (cur > pages - 3) { set.add(pages - 2); set.add(pages - 3); }
+  const list = [...set].filter((n) => n >= 0 && n < pages).sort((a, b) => a - b);
+  const bs = "min-width:40px;height:40px;padding:0 8px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-weight:700;cursor:pointer";
+  const on = "min-width:40px;height:40px;padding:0 8px;border-radius:12px;border:1px solid var(--green);background:var(--green);color:#fff;font:inherit;font-weight:700";
+  let out = `<button type="button" data-pg="${cur - 1}" ${cur === 0 ? "disabled" : ""} aria-label="Previous page" style="${bs};${cur === 0 ? "opacity:.4" : ""}">‹</button>`;
+  let prev = -1;
+  for (const n of list) {
+    if (prev >= 0 && n - prev > 1) out += `<span style="align-self:center;color:var(--muted)">…</span>`;
+    out += n === cur ? `<button type="button" aria-current="page" style="${on}">${n + 1}</button>` : `<button type="button" data-pg="${n}" aria-label="Page ${n + 1}" style="${bs}">${n + 1}</button>`;
+    prev = n;
+  }
+  out += `<button type="button" data-pg="${cur + 1}" ${cur >= pages - 1 ? "disabled" : ""} aria-label="Next page" style="${bs};${cur >= pages - 1 ? "opacity:.4" : ""}">›</button>`;
+  el.innerHTML = `<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:16px 0 6px">${out}</div><p style="text-align:center;color:var(--muted);font-size:.8rem;margin:0 0 8px">Page ${cur + 1} of ${pages}</p>`;
+}
+
+async function loadCoins(reset, pg) {
   const list = $("#list");
   if (!list) return;
   const id = ++state.req;
   if (reset) {
-    state.page = 0;
+    state.page = pg || 0;
     state.coins = [];
     list.innerHTML = skeleton();
     $("#moreBtn").hidden = true;
+    if ($("#pager")) $("#pager").innerHTML = "";
   }
   if (state.tab === "watch") {
     $("#moreBtn").hidden = true;
@@ -359,7 +398,7 @@ async function loadCoins(reset) {
     list.innerHTML = wd.map(coinRow).join("");
     return;
   }
-  const plainFirstPage = reset && !state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
+  const plainFirstPage = reset && !state.page && !state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
   let shownFromCache = false;
   if (plainFirstPage) {
     const cached = readCoinCache();
@@ -373,7 +412,7 @@ async function loadCoins(reset) {
     } else setStaleNote("");
   } else if (reset) setStaleNote("");
   const from = state.page * PAGE;
-  let q = sb.from("coins").select(COLS).order("market_cap_rank", { ascending: true, nullsFirst: false }).range(from, from + PAGE - 1);
+  let q = sb.from("coins").select(COLS, { count: "exact" }).order("market_cap_rank", { ascending: true, nullsFirst: false }).range(from, from + PAGE - 1);
   const term = state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
   if (term) q = q.or(`name.ilike.%${term}%,symbol.ilike.%${term}%`);
   else {
@@ -382,7 +421,7 @@ async function loadCoins(reset) {
     for (const w of HIDE_NAMES) q = q.not("name", "ilike", `%${w}%`);
     for (const sy of HIDE_SYMBOLS) q = q.not("symbol", "ilike", sy);
   }
-  const { data, error } = await q;
+  const { data, error, count } = await q;
   if (id !== state.req || !$("#list")) return;
   if (error) {
     if (shownFromCache) {
@@ -404,12 +443,20 @@ async function loadCoins(reset) {
   }
   await loadWatch();
   if (id !== state.req || !$("#list")) return;
-  state.more = data.length === PAGE;
+  state.more = false;
+  state.pg = state.page;
+  state.total = typeof count === "number" ? count : data.length;
   state.page += 1;
   list.innerHTML = state.coins.length
     ? state.coins.map(coinRow).join("")
     : emptyBox("No coins found", term ? `Nothing matches “${term}”. Try another name or symbol.` : "Prices are still loading. Check back in a few minutes.") + (term ? `<div style="text-align:center;margin:14px 16px 4px"><p class="muted" style="margin:0 0 10px">Can't find it? Paste its contract address or link and we'll look it up.</p><a href="track-token.html" style="display:inline-block;background:#16a34a;color:#fff;font-weight:700;text-decoration:none;padding:13px 22px;border-radius:12px;font-size:1rem">Track any token &rarr;</a></div>` : "");
-  $("#moreBtn").hidden = !state.more;
+  $("#moreBtn").hidden = true;
+  renderPager();
+  if (state.restoreY != null) {
+    const y = state.restoreY;
+    state.restoreY = null;
+    requestAnimationFrame(() => window.scrollTo(0, y));
+  }
 }
 
 /* ---------- saved prices (low-data / offline) ---------- */
