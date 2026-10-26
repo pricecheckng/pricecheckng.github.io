@@ -252,6 +252,7 @@ async function renderMarket() {
     <p class="note" id="fxNote">${fxNoteText()}</p>
     <p class="note" id="staleNote" hidden style="background:#fff7e6;border-radius:12px;padding:10px 12px"></p>
     <div id="popBox"></div>
+    <div id="toolBox"></div>
     <div id="list" class="list" aria-label="Coins"></div>
     <div class="more"><button id="moreBtn" class="ac-btn" type="button" hidden>Show more coins</button></div>
     <div id="pager" aria-label="Pages"></div>
@@ -363,6 +364,99 @@ function renderPager() {
   el.innerHTML = `<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:16px 0 6px">${out}</div><p style="text-align:center;color:var(--muted);font-size:.8rem;margin:0 0 8px">Page ${cur + 1} of ${pages}</p>`;
 }
 
+/* ---------- search also finds our tools and pages ---------- */
+const TOOLS = [
+  ["📉", "Top gainers and losers", "Biggest price moves in the last 24 hours", "movers.html", "top loser losers gainer gainers mover movers pump dump biggest drop rise falling rising winners worst best performers"],
+  ["😨", "Fear & Greed index", "Is the market scared or greedy today?", "fear-greed.html", "fear greed green greedy index sentiment mood scared fear and greed"],
+  ["💵", "USDT to Naira P2P rate", "Dollar rate in Naira from Bybit, OKX, Bitget and MEXC", "p2p.html", "p2p naira dollar rate usdt black market parallel buy sell naira exchange rate"],
+  ["📊", "Market chart", "Total market cap, Bitcoin dominance and Fear & Greed over time", "market-chart.html", "market cap chart total dominance bitcoin dominance history graph"],
+  ["🗺️", "Heatmap", "See which coins are up and down at a glance", "heatmap.html", "heatmap heat map colours overview"],
+  ["📰", "Crypto news", "Latest crypto headlines", "news.html", "news headlines latest articles updates"],
+  ["📝", "Market summary", "Today's market in plain words", "pulse.html", "market summary today pulse overview report daily brief"],
+  ["🔁", "Crypto converter", "Convert coins to Naira, dollars and more", "converter.html", "converter convert calculator exchange naira dollar"],
+  ["⚖️", "Compare coins", "Put up to four coins side by side", "compare.html", "compare comparison versus vs side by side"],
+  ["🧮", "Profit calculator", "Work out your profit or loss on a trade", "profit-calculator.html", "profit loss calculator pnl gain trade roi"],
+  ["⛽", "Ethereum gas fees", "What it costs to send Ether or USDT right now", "gas.html", "gas fees ethereum gwei transaction cost eth fee"],
+  ["₿", "Bitcoin network", "Bitcoin fees, mempool and blocks", "network.html", "bitcoin network fees mempool blocks sat difficulty halving transaction fee confirm"],
+  ["🪙", "Stablecoin health", "Are stablecoins holding their $1 price?", "stablecoins.html", "stablecoin stablecoins usdt usdc depeg peg dollar stable health"],
+  ["🏦", "Exchanges compared", "Prices and volume across exchanges", "exchanges.html", "exchanges exchange binance bybit okx coinbase kucoin compare volume where to buy cheapest"],
+  ["🏢", "Crypto treasuries", "Companies holding Bitcoin and other coins", "treasuries.html", "treasuries treasury companies holding bitcoin strategy microstrategy mstr metaplanet"],
+  ["🛡️", "Coin risk check", "Check a coin before you buy", "coin-risk.html", "risk check scam safe rug pull legit safety"],
+  ["🔎", "Track any token", "Paste a contract address to track a token", "track-token.html", "track token contract address dexscreener pump meme shib pepe custom"],
+  ["🎯", "Daily price contest", "Predict the price and win", "predict.html", "contest predict prediction win game prize daily"],
+  ["🕯️", "Learn: candlesticks", "How to read a price chart", "learn-candlesticks.html", "learn candlestick candlesticks chart read guide beginner"],
+  ["📚", "Learn: market cap", "What market cap really means", "learn-market-cap.html", "learn market cap capitalisation guide beginner explain"],
+  ["⚠️", "Learn: avoid scams", "How to spot crypto scams", "learn-scams.html", "learn scam scams avoid fraud safety ponzi guide"],
+  ["💡", "Learn: stablecoins", "What a stablecoin is", "learn-stablecoins.html", "learn stablecoin stablecoins usdt usdc guide beginner explain"],
+  ["🔌", "Free price API", "Crypto price API for developers", "api.html", "api developer developers free key data json"],
+];
+function toolsHtml(term) {
+  const t = String(term || "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").trim();
+  if (t.length < 2) return "";
+  const words = t.split(/\s+/).filter((w) => w.length > 1);
+  const hits = TOOLS.map((x) => {
+    const hay = (x[1] + " " + x[4]).toLowerCase();
+    let sc = 0;
+    if (hay.includes(t)) sc += 10;
+    for (const w of words) {
+      if (hay.split(/\s+/).some((k) => k === w)) sc += 4;
+      else if (hay.split(/\s+/).some((k) => k.startsWith(w) && w.length >= 3)) sc += 3;
+      else if (hay.includes(w) && w.length >= 4) sc += 1;
+    }
+    return [sc, x];
+  }).filter((h) => h[0] >= 3).sort((a, b) => b[0] - a[0]).slice(0, 4);
+  if (!hits.length) return "";
+  return `<div style="margin:6px 0 14px"><p style="margin:0 0 6px;font-size:.78rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted)">Pages and tools</p>${hits.map((h) => `<a href="${h[1][3]}" style="display:flex;align-items:center;gap:12px;padding:11px 12px;margin-bottom:6px;border:1px solid var(--line);border-radius:14px;background:var(--surface);color:var(--ink);text-decoration:none"><span style="font-size:22px;width:30px;text-align:center">${h[1][0]}</span><span style="min-width:0"><b style="display:block">${esc(h[1][1])}</b><small style="color:var(--muted)">${esc(h[1][2])}</small></span></a>`).join("")}</div>`;
+}
+
+/* ---------- smarter search: exact symbol and name first, then prefixes, then the rest by market-cap rank ---------- */
+const normS = (x) => String(x || "").toLowerCase().replace(/[^\p{L}\p{N}]+/gu, "");
+function lev(a, b) {
+  const m = a.length, n = b.length;
+  if (!m) return n;
+  if (!n) return m;
+  let prev = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    for (let j = 1; j <= n; j++) cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    prev = cur;
+  }
+  return prev[n];
+}
+function scoreCoin(c, t, fuzzy) {
+  const sym = normS(c.symbol), name = normS(c.name), id = normS(c.id);
+  let sc = 0;
+  if (sym === t) sc = 100;
+  else if (name === t || id === t) sc = 96;
+  else if (name.startsWith(t)) sc = 80;
+  else if (sym.startsWith(t)) sc = 76;
+  else if (String(c.name || "").toLowerCase().split(/[^\p{L}\p{N}]+/u).some((w) => w.startsWith(t))) sc = 60;
+  else if (name.includes(t) || sym.includes(t)) sc = 40;
+  else if (fuzzy) {
+    const d = Math.min(lev(t, name.slice(0, t.length + 1)), lev(t, sym));
+    if (d <= Math.max(1, Math.floor(t.length / 3))) sc = 30 - d;
+  }
+  if (!sc) return 0;
+  if (c.kind === "tokenized") sc -= 25;
+  const r = Number(c.market_cap_rank);
+  return sc * 1000 - (r > 0 ? Math.min(r, 999) : 999);
+}
+async function smartRank(rows, term) {
+  const t = normS(term);
+  if (!t) return rows;
+  let pool = rows;
+  let fuzzy = false;
+  if (!pool.some((c) => scoreCoin(c, t, false))) {
+    fuzzy = true;
+    const head = term.replace(/[^\p{L}\p{N}]/gu, "").slice(0, 2);
+    if (head.length >= 2) {
+      const { data } = await sb.from("coins").select(COLS).or(`name.ilike.${head}%,symbol.ilike.${head}%`).order("market_cap_rank", { ascending: true, nullsFirst: false }).range(0, 399);
+      pool = data || [];
+    }
+  }
+  return pool.map((c) => [scoreCoin(c, t, fuzzy), c]).filter((x) => x[0] > 0).sort((a, b) => b[0] - a[0]).map((x) => x[1]).slice(0, PAGE);
+}
+
 async function loadCoins(reset, pg) {
   const list = $("#list");
   if (!list) return;
@@ -375,6 +469,7 @@ async function loadCoins(reset, pg) {
     if ($("#pager")) $("#pager").innerHTML = "";
   }
   if (state.tab === "watch") {
+    if ($("#toolBox")) $("#toolBox").innerHTML = "";
     $("#moreBtn").hidden = true;
     if (!state.user) {
       list.innerHTML = emptyBox("Sign in to use your watchlist", "Tap the star on any coin to keep it here.") + '<div class="more"><button class="btn" type="button" id="wlSignIn">Sign in</button></div>';
@@ -411,8 +506,11 @@ async function loadCoins(reset, pg) {
       state.coins = [];
     } else setStaleNote("");
   } else if (reset) setStaleNote("");
-  const from = state.page * PAGE;
-  let q = sb.from("coins").select(COLS, { count: "exact" }).order("market_cap_rank", { ascending: true, nullsFirst: false }).range(from, from + PAGE - 1);
+  const termNow = state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
+  const tbx = $("#toolBox");
+  if (tbx) tbx.innerHTML = "";
+  const from = termNow ? 0 : state.page * PAGE;
+  let q = sb.from("coins").select(COLS, { count: "exact" }).order("market_cap_rank", { ascending: true, nullsFirst: false }).range(from, termNow ? 299 : from + PAGE - 1);
   const term = state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
   if (term) q = q.or(`name.ilike.%${term}%,symbol.ilike.%${term}%`);
   else {
@@ -421,7 +519,7 @@ async function loadCoins(reset, pg) {
     for (const w of HIDE_NAMES) q = q.not("name", "ilike", `%${w}%`);
     for (const sy of HIDE_SYMBOLS) q = q.not("symbol", "ilike", sy);
   }
-  const { data, error, count } = await q;
+  let { data, error, count } = await q;
   if (id !== state.req || !$("#list")) return;
   if (error) {
     if (shownFromCache) {
@@ -432,6 +530,14 @@ async function loadCoins(reset, pg) {
     }
     list.innerHTML = emptyBox("Could not load prices", "Check your connection and try again.");
     return;
+  }
+  if (term) {
+    data = await smartRank(data, term);
+    if (id !== state.req || !$("#list")) return;
+    count = data.length;
+    const exact = data[0] && scoreCoin(data[0], normS(term), false) >= 90000;
+    const tb2 = $("#toolBox");
+    if (tb2) tb2.innerHTML = exact ? "" : toolsHtml(term);
   }
   if (plainFirstPage) {
     setStaleNote("");
