@@ -29,3 +29,32 @@ html.dk [style*="color:#111"]{color:#e9f1ec!important}
 html.dk [style*="border-color:#cfe6d7"],html.dk [style*="#e3ece6"]{border-color:#26332c!important}
 html.dk svg line[stroke="#e1e9e4"],html.dk svg line[stroke="#e3e9e5"],html.dk svg line[stroke="#eee"]{stroke:#26332c}
 html.dk svg text{fill:#9db0a5}
+/* ---- round 2: percent changes like CoinMarketCap: plain coloured text, no pill ---- */
+html.dk .coin .meta .chg.up,html.dk .cp-pill.up{background:transparent!important;color:#3ddc97!important}
+html.dk .coin .meta .chg.down,html.dk .cp-pill.down{background:transparent!important;color:#ff6b6b!important}
+html.dk .coin .meta .chg{padding-left:4px!important;padding-right:0!important}
+html.dk .chg.up::before,html.dk .cp-pill.up::before{content:"▲ ";font-size:.7em}
+html.dk .chg.down::before,html.dk .cp-pill.down::before{content:"▼ ";font-size:.7em}
+html.dk .up{color:#3ddc97}html.dk .down{color:#ff6b6b}
+/* cards on the coin and portfolio pages */
+html.dk .cp-price{background:#14301f!important}
+html.dk .cp-price small,html.dk .cp-price .sub,html.dk .cp-price .muted{color:#9db0a5!important}
+html.dk .cp-price .big{color:#e9f1ec!important}
+html.dk .cp-lh div,html.dk .cp-stat,html.dk .adm-sum div,html.dk .pbox{background:#16201a!important;color:#e9f1ec}
+html.dk .adm-chip.red{background:#331818!important;color:#ff8a8a!important}
+html.dk .adm-chip.amber{background:#33270f!important;color:#f0b44c!important}
+html.dk .curbar select,html.dk .adm-btn{background:#16201a!important;color:#e9f1ec!important}
+html.dk .ac-btn{background:transparent!important;color:#3ddc97!important;border-color:#2f6b4c!important}
+html.dk .hero h1 span,html.dk .doc a{color:#3ddc97}
+/* menu sheet */
+html.dk #mnu .m-sh{background:#121a15;color:#e9f1ec;box-shadow:0 -10px 40px rgba(0,0,0,.6)}
+html.dk #mnu .m-r,html.dk #mnu .m-g{background:rgba(255,255,255,.06)}
+html.dk #mnu .m-gb .m-r{background:none}
+/* PCN AI chat */
+html.dk .pcn-chat-box{background:#121a15}
+html.dk .pcn-chat-body{background:#0e1511}
+html.dk .pcn-msg.ai,html.dk .pcn-chip{background:#16201a;border-color:#26332c;color:#e9f1ec}
+html.dk .pcn-chip:hover,html.dk .pcn-chip:active{background:#1b2a22;color:#3ddc97}
+html.dk .pcn-prompts-title{color:#9db0a5}
+html.dk .pcn-chat-form{background:#121a15;border-color:#26332c}
+html.dk .pcn-chat-form input{background:#16201a;color:#e9f1ec;border-color:#26332c}
