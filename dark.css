@@ -63,3 +63,5 @@ html.dk .card.ok,html.dk .card.ok *{color:#3ddc97!important}
 html.dk .chip.active{background:#14301f!important;color:#3ddc97!important}
 html.dk .chip{background:#1b2a22;color:#9db0a5}
 html.dk .chip.triggered{background:#33270f!important;color:#f0b44c!important}
+/* round 4: logos with transparent black artwork (e.g. Ondo) sit on a light disc */
+html.dk .logo{background:#e9f1ec}
