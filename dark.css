@@ -1,0 +1,31 @@
+/* Dark mode for the main app. Active only when <html> has class "dk". */
+html.dk{color-scheme:dark;--ink:#e9f1ec;--muted:#9db0a5;--line:#26332c;--surface:#16201a;--mint:#14301f;--up:#3ddc97;--down:#ff6b6b;background:#0e1511}
+html.dk body{background:#0e1511;color:var(--ink)}
+html.dk .search,html.dk .list,html.dk .list button,html.dk .btn.ghost,html.dk .btn.google,html.dk .seg button[aria-pressed="true"],html.dk .sheet,html.dk input,html.dk select,html.dk textarea{background:#16201a!important;color:var(--ink)}
+html.dk .search:focus-within{background:#16201a;box-shadow:0 0 0 4px #14301f}
+html.dk input::placeholder,html.dk textarea::placeholder{color:#6f8378}
+html.dk .btn.ghost,html.dk .bellbtn+*,html.dk .open{color:#3ddc97}
+html.dk .btn.ghost{border-color:#2f6b4c}
+html.dk .card.ok{background:#14301f;border-color:#26523a}
+html.dk .chip.triggered{background:#33270f;color:#f0b44c}
+html.dk .sk i{background:linear-gradient(90deg,#16201a 25%,#1d2b23 50%,#16201a 75%);background-size:200% 100%}
+html.dk .doc p,html.dk .doc li{color:#cdd9d2}
+html.dk .list button:active,html.dk .list button:hover{background:#1b2a22!important}
+html.dk .tabs{background:rgba(14,21,17,.96)}html.dk .tabs a.on{color:#3ddc97}
+html.dk .scrim{background:rgba(0,0,0,.6)}
+html.dk #toast{background:#e9f1ec;color:#0e1a13}html.dk .sheet-wrap .sheet{background:#16201a}
+/* inline colours written by app.js */
+html.dk [style*="background:#fff;"],html.dk [style*="background:#fff\""],html.dk [style*="background:#ffffff"]{background:#16201a!important;color:#e9f1ec!important}
+html.dk [style*="background:#f7fbf8"],html.dk [style*="background:#f1f5f2"],html.dk [style*="background:#f6f7f9"]{background:#16201a!important;border-color:#26332c!important}
+html.dk [style*="background:#effcf3"],html.dk [style*="background:#eaf6ee"],html.dk [style*="background:#e8f7ee"],html.dk [style*="background:#dcf5e5"]{background:#14301f!important}
+html.dk [style*="background:#fff4dc"],html.dk [style*="background:#fff7e6"]{background:#33270f!important;color:#f0d9a0!important}
+html.dk [style*="background:#fdecec"],html.dk [style*="background:#fbeeee"]{background:#331818!important}
+html.dk [style*="background:#e5ebe7"]{background:#26332c!important}
+html.dk [style*="color:#15803d"],html.dk [style*="color:#0b7d4d"],html.dk [style*="color:#0b7a3e"],html.dk [style*="color:#0b7a4b"],html.dk [style*="color:#16a34a"]{color:#3ddc97!important}
+html.dk [style*="color:#b91c1c"],html.dk [style*="color:#dc2626"],html.dk [style*="color:#d93b3b"],html.dk [style*="color:#e53935"]{color:#ff6b6b!important}
+html.dk [style*="color:#6b7c72"],html.dk [style*="color:#51615a"],html.dk [style*="color:#374151"],html.dk [style*="color:#94a3b8"]{color:#9db0a5!important}
+html.dk [style*="color:#7a4b06"],html.dk [style*="color:#b45309"],html.dk [style*="color:#8a5a00"]{color:#f0b44c!important}
+html.dk [style*="color:#111"]{color:#e9f1ec!important}
+html.dk [style*="border-color:#cfe6d7"],html.dk [style*="#e3ece6"]{border-color:#26332c!important}
+html.dk svg line[stroke="#e1e9e4"],html.dk svg line[stroke="#e3e9e5"],html.dk svg line[stroke="#eee"]{stroke:#26332c}
+html.dk svg text{fill:#9db0a5}
