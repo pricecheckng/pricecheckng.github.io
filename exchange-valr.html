@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>VALR exchange: top coins, prices and trading volume | PriceCheck NG</title>
+<meta name="description" content="Live prices and 24 hour trading volume for the most traded coins on VALR, compared with the market price. Collected by PriceCheck NG.">
+<link rel="canonical" href="https://pricecheckng.com.ng/exchange-valr.html">
+<meta name="robots" content="index,follow,max-image-preview:large">
+<meta name="theme-color" content="#0b7a4b">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="PriceCheck NG">
+<meta property="og:title" content="VALR exchange: top coins, prices and trading volume | PriceCheck NG">
+<meta property="og:description" content="Live prices and 24 hour trading volume for the most traded coins on VALR, compared with the market price. Collected by PriceCheck NG.">
+<meta property="og:url" content="https://pricecheckng.com.ng/exchange-valr.html">
+<meta property="og:image" content="https://pricecheckng.com.ng/icon-512.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--g:#0b7d4d;--ink:#0f1a14;--mut:#55635a;--line:#e3e9e5;--bg:#fff;--card:#f6f8f7}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1511;--card:#16201a;--ink:#e9f1ec;--mut:#9db0a5;--line:#26332c}div.note{background:#16261d;border-color:#26332c}main a:not([class]),p a:not([class]),li a:not([class]){color:#3ddc97}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--g);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+header a{color:#fff;text-decoration:none}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600;font-size:1.05rem}.brand b{font-weight:800;color:#9be3bd}.mark{display:flex}
+.open{background:#fff;color:var(--g)!important;font-weight:800;font-size:.85rem;border-radius:999px;padding:7px 14px}
+main{max-width:720px;margin:0 auto;padding:24px 20px 48px}
+h1{font-size:1.6rem;line-height:1.25;margin:0 0 6px}
+h2{font-size:1.15rem;margin:28px 0 8px}
+.coinrow{display:flex;gap:12px;align-items:flex-start}.badge{flex:none;width:44px;height:44px;border-radius:50%;background:var(--g);color:#fff;font-weight:800;font-size:.72rem;display:flex;align-items:center;justify-content:center;margin-top:2px;overflow:hidden}.badge.s{font-size:.58rem}
+.sub{color:var(--mut);margin:0 0 18px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 20px}
+#tbl{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:4px 16px;border-collapse:separate;border-spacing:0}#tbl td{padding:12px 0}#tbl tr:first-child td{border-top:0}
+.big{font-size:2rem;font-weight:800;margin:0}
+.chg.up{color:#0b7d4d}.chg.down{color:#c62828}
+table{width:100%;border-collapse:collapse;margin-top:6px}
+td,th{text-align:left;padding:10px 4px;border-top:1px solid var(--line);font-size:.95rem}
+td:last-child,th:last-child{text-align:right;font-weight:700}
+.btn{display:block;box-shadow:0 6px 18px rgba(11,125,77,.3);text-align:center;background:var(--g);color:#fff;font-weight:800;text-decoration:none;border-radius:14px;padding:14px;margin-top:16px}
+.nhead{display:flex;align-items:baseline;justify-content:space-between}.nhead a{color:var(--g);font-weight:700;font-size:.9rem;text-decoration:none}.ni{display:block;padding:12px 0;border-top:1px solid var(--line);color:var(--ink);text-decoration:none}.ni b{display:block;line-height:1.35}.ni span{display:block;color:var(--mut);font-size:.8rem;margin-top:3px}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.links a{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--ink);text-decoration:none;font-size:.9rem}
+.wa{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:#25d366;color:#fff!important;font-weight:800;font-size:.9rem;text-decoration:none;border-radius:999px;padding:9px 16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.stats[hidden]{display:none}.stats div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}.stats small{display:block;color:var(--mut);font-size:.72rem}.stats b{font-size:.95rem}
+h3{font-size:1rem;margin:16px 0 4px}
+table.mk{margin:10px 0 0;font-size:.88rem}table.mk th{font-size:.75rem;color:var(--mut);font-weight:700;padding:6px 4px}table.mk td,table.mk th{text-align:right}table.mk td:first-child,table.mk th:first-child{text-align:left}table.mk td{font-weight:500}table.mk td:last-child,table.mk th:last-child{font-weight:500}
+.note{color:var(--mut);font-size:.85rem;margin-top:14px}
+footer{border-top:1px solid var(--line);padding:18px 20px;text-align:center;color:var(--mut);font-size:.9rem}
+footer a{color:var(--mut)}
+.exb{flex:none;width:44px;height:44px;border-radius:12px;background:#eef3f0;overflow:hidden}
+.exl a{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid var(--line);color:var(--ink);text-decoration:none}.exl a:first-child{border-top:0}.exl small{color:var(--mut)}
+</style>
+</head>
+<body>
+<header><a class="brand" href="./"><span class="mark"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" fill="#fff" fill-opacity=".14" stroke="#fff" stroke-width="1.6"/><rect x="7" y="17" width="4.5" height="8" rx="1.5" fill="#fff"/><rect x="13.75" y="12" width="4.5" height="13" rx="1.5" fill="#fff"/><rect x="20.5" y="7" width="4.5" height="18" rx="1.5" fill="#9be3bd"/></svg></span><span>PriceCheck <b>NG</b></span></a><a class="open" href="./">Open app</a></header>
+<main>
+<div class="coinrow"><span class="exb" style="background:url(exchanges.png) no-repeat;background-size:264px 308px;background-position:-0px -132px"></span><div><h1>VALR: coins, prices and trading volume</h1></div></div>
+<p class="sub">Live prices and 24 hour trading volume for coins on VALR, collected by PriceCheck NG.</p>
+<section id="ex"><p>VALR ranks #32 of 33 exchanges we track by 24 hour trading volume, with under 0.1% of the total. PriceCheck NG tracks 5 coins on VALR, with about $1.1 million traded across them in the last 24 hours. The most traded coin is USDT (Tether), with $735 thousand in 24 hours at $1.00. Across its busiest coins, VALR prices are on average 0.19% above the middle price of all exchanges. Its tightest spread (the gap between best buy and sell price) is on XRP at 0.054%. VALR trades in ZAR, so the dollar prices here are converted and include local market differences. </p><table class="mk"><thead><tr><th>Coin</th><th>Price</th><th>24h volume</th><th>vs market</th></tr></thead><tbody><tr><td>1. <a href="tether-price.html">USDT</a> <small>Tether</small></td><td>$1.00</td><td>$735 thousand</td><td>0.00%</td></tr><tr><td>2. <a href="bitcoin-price.html">BTC</a> <small>Bitcoin</small></td><td>$79,912</td><td>$147 thousand</td><td>+0.20%</td></tr><tr><td>3. <a href="usd-coin-price.html">USDC</a> <small>USDC</small></td><td>$1.00</td><td>$101 thousand</td><td>+0.25%</td></tr><tr><td>4. <a href="ripple-price.html">XRP</a> <small>XRP</small></td><td>$1.29</td><td>$91 thousand</td><td>+0.16%</td></tr><tr><td>5. <a href="ethereum-price.html">ETH</a> <small>Ethereum</small></td><td>$2,319</td><td>$54 thousand</td><td>+0.32%</td></tr></tbody></table><p class="note">Snapshot from 26 October 2026. Volume counts only the coins we track on this exchange (at least $50 thousand a day each), so it is smaller than the headline figure other sites publish. “vs market” is how far this exchange's price is from the middle price across all exchanges we track. Prices are collected from the exchange directly. PriceCheck NG does not run, own or recommend any exchange. Before you deposit money, check that the exchange is allowed to serve customers in your country. Not financial advice.</p></section>
+<h2>Compare with other exchanges</h2>
+<div class="links"><a href="exchange-binance.html">Binance</a><a href="exchange-upbit.html">Upbit</a><a href="exchange-pionex.html">Pionex</a><a href="exchange-coinbase.html">Coinbase</a><a href="exchange-lbank.html">LBank</a><a href="exchange-bybit.html">Bybit</a><a href="exchange-gate.html">Gate</a><a href="exchange-kucoin.html">KuCoin</a><a href="exchange-htx.html">HTX</a><a href="exchange-okx.html">OKX</a><a href="exchange-whitebit.html">WhiteBIT</a><a href="exchange-xt.html">XT</a><a href="exchanges.html">All exchanges</a></div>
+<p class="note">Prices come from the exchange and may be delayed. This is information only, not financial advice.</p>
+</main>
+<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="api.html">API</a> · <a href="data-sources.html">Data sources</a> · <a href="compare.html">Compare coins</a> · <a href="treasuries.html">Treasuries</a> · <a href="network.html">Bitcoin network</a> · <a href="gas.html">Ethereum gas</a> · <a href="stablecoins.html">Stablecoins</a> · <a href="exchanges.html">Exchanges</a> · <a href="contact.html">Contact</a><br>© <span class="yr">2026</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></footer>
+<script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script>
+<script type="module">
+import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
+const KEY = "valr", NAME = "VALR", LOCALQ = "ZAR", LINKS = ["bitcoin","ethereum","tether","binancecoin","ripple","usd-coin","solana","tron","zcash","hyperliquid","dogecoin","monero","usds","whitebit","chainlink","leo-token","cardano","rain","stellar","near","bitcoin-cash","ethena-usde","litecoin","uniswap","canton-network","usd1-wlfi","avalanche-2","sui","the-open-network","hedera-hashgraph","global-dollar","paypal-usd","shiba-inu","bittensor","quant-network","crypto-com-chain","ethena","bitway","ripple-usd","okb","memecore","aave","ondo-finance","pump-fun","falcon-finance","pepe","usdd","aster-2","polkadot","mantle","worldcoin-wld","world-liberty-financial","united-stables","sky","internet-computer","htx-dao","morpho","bfusd","usdgo","bitget-token","venice-token","ethereum-classic","arbitrum","just","gatechain-token","kaspa","polygon-ecosystem-token","algorand","jupiter-exchange-solana","render-token","cosmos","pi-network","nexo","lighter","filecoin","injective-protocol","akedo","gho","layerzero","pancakeswap-token","dash","pearl-2","aptos","xdce-crowd-sale","ether-fi","midnight-3","pyth-network","beldex","vechain","blockstack","aerodrome-finance","usual-usd","curve-dao-token","flare-networks","celestia","true-usd","raydium","grass","euro-coin","stable-2","pudgy-penguins","official-trump","virtual-protocol","fetch-ai","bittorrent","re-protocol-reusd","sei-network","derive","sofiusd","plasma","bitcoin-cash-sv","starknet","pendle","falcon-finance-ff","spx6900","sun-token","tezos","first-digital-usd","lido-dao","unibase","gnosis","pieverse","kite-2","usdai","bonk","collector-crypt","quack-ai","optimism","monad","decred","backpack","ape-and-pepe","conflux-token","the-graph","terra-luna","kamino","alchemix-usd","apenft","shuffle-2","jito-governance-token","convex-finance","kaia","basic-attention-token","arweave","ethereum-name-service","floki","zebec-network","frax","bnb48-club-token","jasmycoin","compound-governance-token","thorchain","syrup","usx","iota","eigenlayer","akash-network","sonic-3","theta-token","cap-4","dogwifcoin","instadapp","trust-wallet-token","zama","btse-token","funfair","meteora","chain-2","axie-infinity","useless-3","origintrail","pons","apyusd","beam-2","swissborg","coco-2","decentraland","anvil","gmt-token","gusd","neo","doublezero","vision-3","celium","railgun","vaulta","sentient","mx-token","bedrock-token","the-sandbox","ecash","non-playable-coin","jpycoin","chiliz","zksync","build-on","dgrid-ai","aioz-network","ozone-chain","immutable-x","fartcoin","1inch","zero-gravity","apecoin","safepal","kinetiq","stp-network","bc-token","superfarm","geodnet","rollbit-coin","edgex","meta-2-2","havven","aethir","humanity","astherus-usdf","saturn-dollar","plume","hastra-auto","golem","debridge","zencash","orca","ultima","seeker","genius-3","3jane-usd3","frax-usd","elrond-erd-2","reserve-rights-token","quantum-resistant-ledger","sosovalue","prometeus","stonk-3","stronghold-token","bitget-wrapped-btc","peaq-2","cash-cat","soon-2","dog-go-to-the-moon-rune","cheems-token","dydx-chain","walrus-2","gala","gmx","wemix-token","chip-2","qtum","arkham","0x","pharos-network","four","usda-3","melania-meme","targon","mina-protocol","redstone-oracles","safe","irys","wormhole","f-x-protocol-fxusd","ore","gas","helium","adi-token","kava","yearn-finance","felix-feusd","numa-x","dola-usd","ordinals","livepeer","tori-trusd","cow-protocol","kusama","ecomi","noxo","numeraire","crown-brlv","rif-token","dusk-network","nervos-network","diem","babylon","axis-usd","velo","unipoly","magma-finance","mindwavedao","moolah","theta-fuel","escoin-token","zetachain","marscoin-4","amp-token","o1-exchange","baby-doge-coin","flying-tulip","zano","royal-euro","espresso","linea","digibyte","spark-2","marscat-token","holotoken","unifai-network","vethor-token","io","axelar","kaito","dai-on-pulsechain","banana-for-scale-2","wink","zignaly","comedian","sushi","re","purr-2","ai-rig-complex","qubic-network","threshold-network-token","yellow","dexe","turbo","artificial-inu-3","aelf","cross-2","oasis-network","astar","janction","dappos","nusd-2","tagger","proton","newton-project","berachain-bera","mubarak","usdu","nexpace","resupply-usd","fonq","creditcoin-2","story-2","megaeth","token-pocket","brz","score","aleo","usdkg","goplus-security","venus","aria-chain","ontology","jelly-my-jelly","edu-coin","enjincoin","acurast","holoworld","sharex-2","aztec","tellor","novachargex-coin","snek","bio-protocol","space-id","iexec-rlc","celo","altlayer","ai-analysis-token","allora","nillion","memetoon","based-brett","lcx","efficientfrontier","polymesh","axis-robotics","metronome-synth-usd","chainopera-ai","flow","impossible-cloud-network-token","nosana","anonymous-cat","nockchain","cortex-2","xyo-network","nexus-4","toshi","lombard-protocol","arcium","folks","nano","proprietary-trading-network","jupusd","abey","hydradx","renzo","frankencoin","fastx-network-token","book-of-meme","gekko","bas","nkyc-token","fractal-bitcoin","ethgas-2","pha","keeta","ronin","ankr","popcat","request-network","peanut-the-squirrel","swarm-network","deep","bitkub-coin","avantis","gohome","cat-in-a-dogs-world","verge","siacoin","aurora-near","mask-network","centrifuge-2","concordium","electroneum","huma-finance","liquity-bold-2","mog-coin","space-and-time","merlin-chain","moo-deng","constitutiondao","pay-coin","dolphin-2","casper-network","band-protocol","magic-eden","osmosis","pirate-chain","eurite","bulla-3","pathusd","api3","ravedao","mocaverse","notcoin","alchemist-ai","zilliqa","ong","gemini-dollar","reallink","mbg-by-multibank-group","gm-3","ssv-network","lisk","succinct","synapse-2","okzoo","status","binance-usd","palladium-network","straitsx-xusd","apex-token-2","lista","ark","mcoin1","meme-horse","nesa","asset","skyai","rocket-pool","universal-high-income-2","iotex","coindepo","sahara-ai","uma","metamask-usd","orbs","templar","degen-base","bankercoin-2","movement","wiki-cat","tornado-cash","antfun","iota-2","tcy","fuzzybear","cargox","ocean-protocol","openledger-2","frenpet","monerium-eur-money-2","coti","hashkey-ecopoints","initia","catizen","troll-2"];
+const H = { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY, "Content-Type": "application/json" };
+const rpc = (fn, b) => fetch(SUPABASE_URL + "/rest/v1/rpc/" + fn, { method: "POST", headers: H, body: JSON.stringify(b || {}) }).then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
+const exHtml = function exHtml(rows, name, key, meta, when, links, local) {
+  const e = (x) => String(x == null ? "" : x).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const list = (rows || []).filter((r) => Number(r.price_usd) > 0 && Number(r.volume_usd) > 0);
+  if (list.length < 3) return "";
+  const px = (n) => { n = Number(n); const o = n >= 1000 ? { maximumFractionDigits: 0 } : n >= 1 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { maximumSignificantDigits: 4 }; return "$" + n.toLocaleString("en-US", o); };
+  const big = (n) => { n = Number(n); return n >= 1e9 ? "$" + (n / 1e9).toFixed(2) + " billion" : n >= 1e6 ? "$" + (n / 1e6).toFixed(1) + " million" : n >= 1e3 ? "$" + Math.round(n / 1e3) + " thousand" : "$" + Math.round(n); };
+  const pct = (n) => (n == null ? "-" : (Number(n) > 0 ? "+" : "") + Number(n).toFixed(2) + "%");
+  const d = when ? new Date(when).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" }) : "";
+  const top = list[0];
+  const cmp = list.filter((r) => r.diff_pct != null);
+  const avg = cmp.length >= 5 ? cmp.reduce((t, r) => t + Number(r.diff_pct), 0) / cmp.length : null;
+  const sp = list.filter((r) => r.spread_pct != null && Number(r.spread_pct) >= 0);
+  const tight = sp.length >= 3 ? sp.reduce((m, r) => (Number(r.spread_pct) < Number(m.spread_pct) ? r : m), sp[0]) : null;
+  let t = `<p>${meta && meta.rank ? e(name) + " ranks #" + meta.rank + " of " + meta.of + " exchanges we track by 24 hour trading volume, with " + meta.share + "% of the total. " : ""}PriceCheck NG tracks ${meta && meta.coins ? meta.coins : list.length} coins on ${e(name)}, with about ${big(meta && meta.volume ? meta.volume : list.reduce((x, r) => x + Number(r.volume_usd), 0))} traded across them in the last 24 hours. `;
+  t += `The most traded coin is ${e(top.symbol)} (${e(top.name)}), with ${big(top.volume_usd)} in 24 hours at ${px(top.price_usd)}. `;
+  if (avg != null) t += `Across its busiest coins, ${e(name)} prices are on average ${Math.abs(avg) < 0.005 ? "in line with" : Math.abs(avg).toFixed(2) + "% " + (avg > 0 ? "above" : "below")} the middle price of all exchanges. `;
+  if (tight) t += `Its tightest spread (the gap between best buy and sell price) is on ${e(tight.symbol)} at ${Number(tight.spread_pct) < 0.001 ? "under 0.001" : Number(tight.spread_pct).toFixed(Number(tight.spread_pct) < 0.1 ? 3 : 2)}%. `;
+  if (local) t += `${e(name)} trades in ${e(local)}, so the dollar prices here are converted and include local market differences. `;
+  t += `</p>`;
+  const lk = new Set(links || []);
+  const tr = list.slice(0, 40).map((r, i) => `<tr><td>${i + 1}. ${lk.has(r.coin_id) ? `<a href="${e(r.coin_id)}-price.html">${e(r.symbol)}</a>` : e(r.symbol)} <small>${e(r.name)}</small></td><td>${px(r.price_usd)}</td><td>${big(r.volume_usd)}</td><td>${pct(r.diff_pct)}</td></tr>`).join("");
+  t += `<table class="mk"><thead><tr><th>Coin</th><th>Price</th><th>24h volume</th><th>vs market</th></tr></thead><tbody>${tr}</tbody></table>`;
+  t += `<p class="note">${d ? "Snapshot from " + d + ". " : ""}Volume counts only the coins we track on this exchange (at least $50 thousand a day each), so it is smaller than the headline figure other sites publish. “vs market” is how far this exchange's price is from the middle price across all exchanges we track. Prices are collected from the exchange directly. PriceCheck NG does not run, own or recommend any exchange. Before you deposit money, check that the exchange is allowed to serve customers in your country. Not financial advice.</p>`;
+  return t;
+};
+Promise.all([rpc("exchange_markets", { p_ex: KEY }), rpc("exchange_list")]).then(([rows, lst]) => {
+  const m = (lst || []).find((z) => z.exchange === KEY);
+  const ok = (lst || []).filter((z) => Number(z.coins) >= 5 && /^[a-z0-9]{2,20}$/.test(z.exchange));
+  const tot = ok.reduce((t, z) => t + Number(z.volume_usd), 0);
+  const ix = ok.findIndex((z) => z.exchange === KEY);
+  const meta = m ? { coins: m.coins, volume: m.volume_usd } : null;
+  if (meta && ix >= 0 && tot > 0) { meta.rank = ix + 1; meta.of = ok.length; const sh = 100 * Number(m.volume_usd) / tot; meta.share = sh < 0.1 ? "under 0.1" : sh < 1 ? sh.toFixed(1) : sh.toFixed(0); }
+  const h = exHtml(rows, NAME, KEY, meta, new Date().toISOString(), LINKS, LOCALQ);
+  if (h) document.getElementById("ex").innerHTML = h;
+}).catch(() => {});
+</script>
+</body>
+</html>
