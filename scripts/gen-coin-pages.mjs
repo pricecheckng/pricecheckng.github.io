@@ -106,6 +106,7 @@ const WHEN = new Date().toISOString();
 
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const css = `:root{--g:#0b7d4d;--ink:#0f1a14;--mut:#55635a;--line:#e3e9e5;--bg:#fff;--card:#f6f8f7}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1511;--card:#16201a;--ink:#e9f1ec;--mut:#9db0a5;--line:#26332c}div.note{background:#16261d;border-color:#26332c}main a:not([class]),p a:not([class]),li a:not([class]){color:#3ddc97}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
 header{background:var(--g);padding:12px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
