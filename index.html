@@ -78,6 +78,8 @@
       <span>Account</span>
     </a>
   </nav>
+  <style>.tabs:not(.rdy){opacity:0}.tabs{transition:opacity .15s}</style>
+  <script>(function(){var n=document.querySelector(".tabs");if(!n)return;function ok(){if(n.querySelectorAll("a").length>=5){n.classList.add("rdy");return true}}if(ok())return;var o=new MutationObserver(function(){if(ok())o.disconnect()});o.observe(n,{childList:true});setTimeout(function(){n.classList.add("rdy");o.disconnect()},3000)})();</script>
 
   <div id="sheetWrap" class="sheet-wrap" hidden>
     <div class="scrim" data-close></div>
