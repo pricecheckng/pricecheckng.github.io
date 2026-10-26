@@ -58,3 +58,8 @@ html.dk .pcn-chip:hover,html.dk .pcn-chip:active{background:#1b2a22;color:#3ddc9
 html.dk .pcn-prompts-title{color:#9db0a5}
 html.dk .pcn-chat-form{background:#121a15;border-color:#26332c}
 html.dk .pcn-chat-form input{background:#16201a;color:#e9f1ec;border-color:#26332c}
+/* round 3: Alerts screen */
+html.dk .card.ok,html.dk .card.ok *{color:#3ddc97!important}
+html.dk .chip.active{background:#14301f!important;color:#3ddc97!important}
+html.dk .chip{background:#1b2a22;color:#9db0a5}
+html.dk .chip.triggered{background:#33270f!important;color:#f0b44c!important}
