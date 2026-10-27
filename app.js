@@ -721,6 +721,15 @@ const Live = (() => {
         return d && d.symbol && d.last ? [String(d.symbol).replace(/\/USD$/, ""), num(d.last), isFinite(num(d.change_pct)) ? num(d.change_pct) : null] : null;
       },
     },
+    bitget: {
+      eps: ["wss://ws.bitget.com/v2/ws/public"],
+      sub: (l, on) => chunk(l, 20).map((g) => ({ op: on ? "subscribe" : "unsubscribe", args: g.map((s) => ({ instType: "SPOT", channel: "ticker", instId: s + "USDT" })) })),
+      parse: (m) => {
+        const d = m && Array.isArray(m.data) && m.data[0];
+        return d && d.instId && d.lastPr ? [String(d.instId).replace(/USDT$/, ""), num(d.lastPr), pctOf(d.lastPr, d.open24h)] : null;
+      },
+      ping: () => "ping",
+    },
     gate: {
       eps: ["wss://api.gateio.ws/ws/v4/"],
       sub: (l, on) => [{ time: Math.floor(Date.now() / 1000), channel: "spot.tickers", event: on ? "subscribe" : "unsubscribe", payload: l.map((s) => s + "_USDT") }],
