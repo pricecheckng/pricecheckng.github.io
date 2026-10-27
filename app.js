@@ -632,7 +632,7 @@ const Live = (() => {
     if (ex === "binance" && isBlocked("binance")) ex = "bybit"; // Binance blocked on this network: Bybit lists almost the same coins
     return ex || null;
   };
-  const eligible = (c) => c && c.symbol && c.kind !== "tokenized" && /^[A-Za-z0-9]{2,12}$/.test(c.symbol) && !(NOLIVE.has(String(c.symbol).toUpperCase()) && !SRC.has(c.id)) && !!srcOf(c);
+  const eligible = (c) => c && c.symbol && c.kind !== "tokenized" && /^[A-Za-z0-9]{1,12}$/.test(c.symbol) && !(NOLIVE.has(String(c.symbol).toUpperCase()) && !SRC.has(c.id)) && !!srcOf(c);
   const symOf = (c) => String(c.symbol).toUpperCase();
   const saveData = () => !!(navigator.connection && navigator.connection.saveData);
   // exchange key -> Map(SYM -> Set(coin ids)) for what is on screen right now
