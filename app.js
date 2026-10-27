@@ -594,12 +594,11 @@ async function loadCoins(reset, pg) {
 /* ---------- live prices: browser connects to public exchange streams (Binance, with Bybit as backup) ---------- */
 const NOLIVE = new Set(["USDT", "USDC", "DAI", "USDE", "USDS", "FDUSD", "TUSD", "USDD", "USD1", "PYUSD", "BUSD", "USDG", "RLUSD", "USDF", "USDU", "USDX", "USDP", "GUSD", "FRAX"]);
 const Live = (() => {
-  const MAXSUB = 24;
+  const MAXSUB = 60;
   const vis = new Set(); // coin ids on screen
-  const subbed = new Set(); // symbols we are subscribed to
   const lastOk = new Map(); // SYM -> last accepted price
   let pageCoin = null; // coin shown on a coin page
-  let ws = null, kind = "binance", epi = 0, open = false, fails = 0, retry = null, syncT = null, io = null, idleAt = Date.now(), pingT = null, gotTick = false, seq = 1, started = false;
+  let syncT = null, io = null, idleAt = Date.now(), gotTick = false, seq = 1, started = false, srcTried = false;
   const pend = new Map(); // coin id -> direction, painted in the next animation frame
   const GAP = 5000; // the screen refreshes together every 5 seconds, like CoinMarketCap
   const painted = new Map(); // coin id -> price currently shown
@@ -609,63 +608,146 @@ const Live = (() => {
   css.textContent = `@keyframes lfu{0%,55%{color:#16c784}100%{color:inherit}}@keyframes lfd{0%,55%{color:#ea3943}100%{color:inherit}}.lf-u{animation:lfu 1.1s ease-out}.lf-d{animation:lfd 1.1s ease-out}#liveTag{display:none;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--muted);margin:2px 0 8px}#liveTag.on{display:flex}#liveTag i{width:8px;height:8px;border-radius:50%;background:#12a150;box-shadow:0 0 0 0 rgba(18,161,80,.6);animation:lfp 1.6s infinite}@keyframes lfp{70%{box-shadow:0 0 0 7px rgba(18,161,80,0)}100%{box-shadow:0 0 0 0 rgba(18,161,80,0)}}`;
   document.head.appendChild(css);
 
-  const eligible = (c) => c && c.symbol && !NOLIVE.has(String(c.symbol).toUpperCase()) && c.kind !== "tokenized" && /^[A-Za-z0-9]{2,12}$/.test(c.symbol) && Number(c.market_cap_rank) > 0 && Number(c.market_cap_rank) <= 400;
+  /* Which exchange streams each coin: chosen by the database (live_sources) from the exchanges that really list it. */
+  const SRC = new Map(); // coin id -> exchange key
+  let srcReady = false, wantCache = null;
+  const blocked = new Map(); // exchange key -> time until we stop trying it (network blocks it)
+  const isBlocked = (ex) => (blocked.get(ex) || 0) > Date.now();
+  async function loadSources() {
+    try {
+      const { data, error } = await sb.rpc("live_sources");
+      if (error || !Array.isArray(data) || !data.length) throw new Error("no sources");
+      for (const r of data) SRC.set(r.coin_id, r.ex);
+      srcReady = true;
+    } catch (_) {
+      srcReady = false; // the old rule applies: top 40 coins on Binance
+    }
+    wantCache = null;
+    sync();
+  }
+  const srcOf = (c) => {
+    let ex = SRC.get(c.id);
+    if (!ex && !srcReady && Number(c.market_cap_rank) > 0 && Number(c.market_cap_rank) <= 40) ex = "binance";
+    if (ex === "binance" && isBlocked("binance")) ex = "bybit"; // Binance blocked on this network: Bybit lists almost the same coins
+    return ex || null;
+  };
+  const eligible = (c) => c && c.symbol && c.kind !== "tokenized" && /^[A-Za-z0-9]{2,12}$/.test(c.symbol) && !(NOLIVE.has(String(c.symbol).toUpperCase()) && !SRC.has(c.id)) && !!srcOf(c);
   const symOf = (c) => String(c.symbol).toUpperCase();
   const saveData = () => !!(navigator.connection && navigator.connection.saveData);
-  const wantSyms = () => {
-    const m = new Map(); // SYM -> Set(coin ids)
+  // exchange key -> Map(SYM -> Set(coin ids)) for what is on screen right now
+  const wantAll = () => {
+    if (wantCache) return wantCache;
+    const m = new Map();
+    let n = 0;
     const add = (c) => {
       if (!eligible(c)) return;
-      const s = symOf(c);
-      if (!m.has(s)) m.set(s, new Set());
-      m.get(s).add(c.id);
+      const ex = srcOf(c), s = symOf(c);
+      if (!m.has(ex)) m.set(ex, new Map());
+      const mm = m.get(ex);
+      if (!mm.has(s)) {
+        if (n >= MAXSUB) return;
+        mm.set(s, new Set());
+        n++;
+      }
+      mm.get(s).add(c.id);
     };
     if (pageCoin) add(pageCoin);
-    for (const id of vis) {
-      if (m.size >= MAXSUB) break;
-      add(state.coinMap.get(id));
-    }
+    for (const id of vis) add(state.coinMap.get(id));
+    wantCache = m;
     return m;
+  };
+  const wantSize = () => {
+    let n = 0;
+    for (const mm of wantAll().values()) n += mm.size;
+    return n;
   };
   const tag = (on) => {
     const t = document.getElementById("liveTag");
     if (t) t.classList.toggle("on", !!on);
   };
-  // port 443 first (mobile networks often block 9443), then Binance's data-only mirror, then Bybit
-  const EPS = [
-    { k: "binance", u: "wss://stream.binance.com:443/stream" },
-    { k: "binance", u: "wss://data-stream.binance.vision/stream" },
-    { k: "bybit", u: "wss://stream.bybit.com/v5/public/spot" },
-  ];
-  const url = () => EPS[epi].u;
-  const dbg = (m) => {
+  const dbg = (ex, m) => {
     if (!/[?&]live=debug/.test(location.search)) return;
     const t = document.getElementById("liveTag");
     if (t) {
       t.classList.add("on");
-      t.lastChild.textContent = " [" + EPS[epi].k + " " + EPS[epi].u.replace("wss://", "").split("/")[0] + "] " + m;
+      t.lastChild.textContent = " [" + ex + "] " + m;
     }
   };
-  const send = (obj) => {
-    try {
-      if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj));
-    } catch (_) {}
+  const num = (v) => (v === null || v === undefined || v === "" ? NaN : Number(v));
+  const pctOf = (c, o) => (num(o) > 0 ? ((num(c) - num(o)) / num(o)) * 100 : null);
+  const chunk = (l, n) => {
+    const o = [];
+    for (let i = 0; i < l.length; i += n) o.push(l.slice(i, i + n));
+    return o;
   };
-  const subMsg = (list, on) => {
-    if (!list.length) return;
-    if (kind === "binance") send({ method: on ? "SUBSCRIBE" : "UNSUBSCRIBE", params: list.map((s) => s.toLowerCase() + "usdt@miniTicker"), id: seq++ });
-    else for (let i = 0; i < list.length; i += 10) send({ op: on ? "subscribe" : "unsubscribe", args: list.slice(i, i + 10).map((s) => "tickers." + s + "USDT") });
+  // how to talk to each exchange's public price stream
+  const EXS = {
+    binance: {
+      eps: ["wss://stream.binance.com:443/stream", "wss://data-stream.binance.vision/stream"], // port 443 first: mobile networks often block 9443
+      sub: (l, on) => [{ method: on ? "SUBSCRIBE" : "UNSUBSCRIBE", params: l.map((s) => s.toLowerCase() + "usdt@miniTicker"), id: seq++ }],
+      parse: (m) => {
+        const d = m && m.data;
+        return d && d.s && d.c ? [String(d.s).replace(/USDT$/, ""), num(d.c), pctOf(d.c, d.o)] : null;
+      },
+    },
+    bybit: {
+      eps: ["wss://stream.bybit.com/v5/public/spot"],
+      sub: (l, on) => chunk(l, 10).map((g) => ({ op: on ? "subscribe" : "unsubscribe", args: g.map((s) => "tickers." + s + "USDT") })),
+      parse: (m) => {
+        const d = m && m.data;
+        return d && d.symbol && d.lastPrice ? [String(d.symbol).replace(/USDT$/, ""), num(d.lastPrice), isFinite(num(d.price24hPcnt)) ? num(d.price24hPcnt) * 100 : null] : null;
+      },
+      ping: () => JSON.stringify({ op: "ping" }),
+    },
+    okx: {
+      eps: ["wss://ws.okx.com:8443/ws/v5/public"],
+      sub: (l, on) => [{ op: on ? "subscribe" : "unsubscribe", args: l.map((s) => ({ channel: "tickers", instId: s + "-USDT" })) }],
+      parse: (m) => {
+        const d = m && Array.isArray(m.data) && m.data[0];
+        return d && d.instId && d.last ? [String(d.instId).replace(/-USDT$/, ""), num(d.last), pctOf(d.last, d.open24h)] : null;
+      },
+      ping: () => "ping",
+    },
+    coinbase: {
+      eps: ["wss://ws-feed.exchange.coinbase.com"],
+      sub: (l, on) => [{ type: on ? "subscribe" : "unsubscribe", product_ids: l.map((s) => s + "-USD"), channels: ["ticker"] }],
+      parse: (m) => (m && m.type === "ticker" && m.price && m.product_id ? [String(m.product_id).replace(/-USD$/, ""), num(m.price), pctOf(m.price, m.open_24h)] : null),
+    },
+    kraken: {
+      eps: ["wss://ws.kraken.com/v2"],
+      sub: (l, on) => [{ method: on ? "subscribe" : "unsubscribe", params: { channel: "ticker", symbol: l.map((s) => s + "/USD") } }],
+      parse: (m) => {
+        const d = m && m.channel === "ticker" && Array.isArray(m.data) && m.data[0];
+        return d && d.symbol && d.last ? [String(d.symbol).replace(/\/USD$/, ""), num(d.last), isFinite(num(d.change_pct)) ? num(d.change_pct) : null] : null;
+      },
+    },
+    gate: {
+      eps: ["wss://api.gateio.ws/ws/v4/"],
+      sub: (l, on) => [{ time: Math.floor(Date.now() / 1000), channel: "spot.tickers", event: on ? "subscribe" : "unsubscribe", payload: l.map((s) => s + "_USDT") }],
+      parse: (m) => {
+        const r = m && m.channel === "spot.tickers" && m.event === "update" && m.result;
+        return r && r.currency_pair && r.last ? [String(r.currency_pair).replace(/_USDT$/, ""), num(r.last), isFinite(num(r.change_percentage)) ? num(r.change_percentage) : null] : null;
+      },
+      ping: () => JSON.stringify({ time: Math.floor(Date.now() / 1000), channel: "spot.ping" }),
+    },
   };
-
-  function close(why) {
-    clearTimeout(retry);
-    clearInterval(pingT);
-    const w = ws;
-    ws = null;
-    open = false;
-    subbed.clear();
-    gotTick = false;
-    tag(false);
+  const conns = new Map();
+  const conn = (ex) => {
+    let c = conns.get(ex);
+    if (!c) {
+      c = { ex, ws: null, open: false, subbed: new Set(), epi: 0, fails: 0, retry: null, pingT: null };
+      conns.set(ex, c);
+    }
+    return c;
+  };
+  const anyWs = () => [...conns.values()].some((c) => c.ws);
+  function closeConn(c) {
+    clearTimeout(c.retry);
+    clearInterval(c.pingT);
+    const w = c.ws;
+    c.ws = null;
+    c.open = false;
+    c.subbed.clear();
     if (w) {
       w.onclose = w.onerror = w.onmessage = w.onopen = null;
       try {
@@ -673,29 +755,40 @@ const Live = (() => {
       } catch (_) {}
     }
   }
-  function connect() {
-    if (ws || document.hidden || saveData() || navigator.onLine === false) return;
-    if (!wantSyms().size) return;
+  function closeAll() {
+    for (const c of conns.values()) closeConn(c);
+    gotTick = false;
+    tag(false);
+  }
+  const sendTo = (c, obj) => {
+    try {
+      if (c.ws && c.ws.readyState === 1) c.ws.send(typeof obj === "string" ? obj : JSON.stringify(obj));
+    } catch (_) {}
+  };
+  function connectConn(c) {
+    if (c.ws || document.hidden || saveData() || navigator.onLine === false) return;
+    const spec = EXS[c.ex];
+    if (!spec || !(wantAll().get(c.ex) || new Map()).size) return;
     let w;
     try {
-      w = new WebSocket(url());
+      w = new WebSocket(spec.eps[c.epi % spec.eps.length]);
     } catch (_) {
-      return fail();
+      return failConn(c);
     }
-    ws = w;
-    dbg("connecting");
+    c.ws = w;
+    dbg(c.ex, "connecting");
     const guardT = setTimeout(() => {
-      if (ws === w && !open) {
-        close();
-        fail();
+      if (c.ws === w && !c.open) {
+        closeConn(c);
+        failConn(c);
       }
     }, 6000);
     w.onopen = () => {
       clearTimeout(guardT);
-      open = true;
-      fails = 0;
-      dbg("connected");
-      if (kind === "bybit") pingT = setInterval(() => send({ op: "ping" }), 20000);
+      c.open = true;
+      c.fails = 0;
+      dbg(c.ex, "connected");
+      if (spec.ping) c.pingT = setInterval(() => sendTo(c, spec.ping()), 20000);
       sync();
     };
     w.onmessage = (e) => {
@@ -705,19 +798,14 @@ const Live = (() => {
       } catch (_) {
         return;
       }
-      if (kind === "binance") {
-        const d = m && m.data;
-        if (d && d.s && d.c) tick(d.s.replace(/USDT$/, ""), Number(d.c), Number(d.o) > 0 ? ((Number(d.c) - Number(d.o)) / Number(d.o)) * 100 : null);
-      } else if (m && m.data && m.data.symbol && m.data.lastPrice) {
-        const p24 = Number(m.data.price24hPcnt);
-        tick(String(m.data.symbol).replace(/USDT$/, ""), Number(m.data.lastPrice), isFinite(p24) ? p24 * 100 : null);
-      }
+      const r = spec.parse(m);
+      if (r && r[0]) tick(c.ex, r[0], r[1], r[2]);
     };
     w.onclose = () => {
       clearTimeout(guardT);
-      if (ws === w) {
-        close();
-        fail();
+      if (c.ws === w) {
+        closeConn(c);
+        failConn(c);
       }
     };
     w.onerror = () => {
@@ -726,45 +814,57 @@ const Live = (() => {
       } catch (_) {}
     };
   }
-  function fail() {
-    fails++;
-    dbg("failed (" + fails + ")");
-    let wait = Math.min(30000, 1500 * 2 ** fails);
-    if (fails >= 2) {
-      fails = 0;
-      epi++;
-      if (epi >= EPS.length) {
-        epi = 0;
-        wait = 120000; // everything failed: try again in 2 minutes; prices keep their one-minute refresh meanwhile
+  function failConn(c) {
+    c.fails++;
+    dbg(c.ex, "failed (" + c.fails + ")");
+    const spec = EXS[c.ex];
+    let wait = Math.min(30000, 1500 * 2 ** c.fails);
+    if (c.fails >= 2) {
+      c.fails = 0;
+      c.epi++;
+      if (c.epi >= spec.eps.length) {
+        c.epi = 0;
+        wait = 120000; // all addresses failed: try again in 2 minutes
+        blocked.set(c.ex, Date.now() + 120000); // meanwhile the coins use another exchange where possible
+        wantCache = null;
+        setTimeout(sync, 50);
       } else wait = 1500;
-      kind = EPS[epi].k;
     }
-    clearTimeout(retry);
-    retry = setTimeout(connect, wait);
+    clearTimeout(c.retry);
+    c.retry = setTimeout(() => connectConn(c), wait);
   }
   function sync() {
     clearTimeout(syncT);
     syncT = setTimeout(() => {
-      const want = wantSyms();
-      if (!want.size) {
-        retry = null;
-        if (ws) setTimeout(() => !wantSyms().size && close(), 15000);
-        return;
+      wantCache = null;
+      const want = wantAll();
+      for (const ex of new Set([...want.keys(), ...conns.keys()])) {
+        const c = conn(ex);
+        const syms = want.get(ex) || new Map();
+        if (!syms.size) {
+          if (c.ws) setTimeout(() => !(wantAll().get(ex) || new Map()).size && closeConn(c), 15000);
+          continue;
+        }
+        if (isBlocked(ex) && !c.ws) continue;
+        if (!c.ws) {
+          connectConn(c);
+          continue;
+        }
+        if (!c.open) continue;
+        const spec = EXS[ex];
+        const add = [...syms.keys()].filter((s) => !c.subbed.has(s));
+        const del = [...c.subbed].filter((s) => !syms.has(s));
+        if (del.length) spec.sub(del, false).forEach((msg) => sendTo(c, msg));
+        if (add.length) spec.sub(add, true).forEach((msg) => sendTo(c, msg));
+        del.forEach((s) => c.subbed.delete(s));
+        add.forEach((s) => c.subbed.add(s));
       }
-      if (!ws) return connect();
-      if (!open) return;
-      const add = [...want.keys()].filter((s) => !subbed.has(s));
-      const del = [...subbed].filter((s) => !want.has(s));
-      subMsg(del, false);
-      subMsg(add, true);
-      del.forEach((s) => subbed.delete(s));
-      add.forEach((s) => subbed.add(s));
     }, 300);
   }
 
-  function tick(sym, price, pct) {
+  function tick(ex, sym, price, pct) {
     if (!(price > 0)) return;
-    const ids = wantSyms().get(sym);
+    const ids = (wantAll().get(ex) || new Map()).get(sym);
     if (!ids) return;
     for (const id of ids) {
       const c = state.coinMap.get(id);
@@ -882,19 +982,23 @@ const Live = (() => {
     io.disconnect();
     vis.clear();
     document.querySelectorAll("#list [data-id]").forEach((b) => io.observe(b));
+    if (!srcTried) {
+      srcTried = true;
+      loadSources();
+    }
     if (!started) start();
   }
   function start() {
     started = true;
     const act = () => {
       idleAt = Date.now();
-      if (!ws && !document.hidden) sync();
+      if (!anyWs() && !document.hidden) sync();
     };
     ["touchstart", "scroll", "click", "keydown"].forEach((ev) => window.addEventListener(ev, act, { passive: true }));
-    document.addEventListener("visibilitychange", () => (document.hidden ? close() : (idleAt = Date.now(), sync())));
+    document.addEventListener("visibilitychange", () => (document.hidden ? closeAll() : (idleAt = Date.now(), sync())));
     window.addEventListener("online", () => sync());
     setInterval(() => {
-      if (ws && Date.now() - idleAt > 5 * 60000) close(); // nobody is touching the screen: stop using data
+      if (anyWs() && Date.now() - idleAt > 5 * 60000) closeAll(); // nobody is touching the screen: stop using data
     }, 30000);
   }
   return {
@@ -910,7 +1014,7 @@ const Live = (() => {
         sync();
       }
     },
-    _state: () => ({ kind, open, subbed: [...subbed], vis: vis.size }),
+    _state: () => ({ conns: [...conns.values()].map((c) => ({ ex: c.ex, open: c.open, subbed: [...c.subbed] })), vis: vis.size, src: SRC.size }),
   };
 })();
 const rowsHtml = (arr) => {
