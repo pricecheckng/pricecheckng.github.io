@@ -46,7 +46,7 @@ function loadCur() {
 const state = { tab: "all", watch: new Set(), watchFor: null, user: null, coins: [], coinMap: new Map(), q: "", page: 0, pg: 0, total: 0, restoreY: null, more: false, req: 0, pushOn: false, installEvt: null, cur: loadCur(), fx: {}, fxReady: null };
 
 const styleTag = document.createElement("style");
-styleTag.textContent = `.cw{position:relative}.cw+.cw{border-top:1px solid rgba(128,128,128,.2)}.cw .coin{width:100%;padding-left:50px;border:0!important}.cw .star{position:absolute;left:0;top:0;bottom:0;width:48px;display:flex;align-items:center;justify-content:center;background:none;border:0;padding:0;font-size:1.5rem;line-height:1;color:#b6bcc6;cursor:pointer;-webkit-tap-highlight-color:transparent}.cw .star.on{color:#f5a623}.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}.cp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cp-head h1{margin:0;font-size:1.4rem}.cp-head p{margin:2px 0 0;opacity:.65}.cp-price{background:#effcf3;border-radius:20px;padding:18px;margin-bottom:14px}.cp-price small{display:block;letter-spacing:.04em;opacity:.7;font-size:.78rem;font-weight:600}.cp-price .big{font-size:2rem;font-weight:800;line-height:1.15;margin:4px 0}.cp-price .sub{font-weight:600}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border:1px solid rgba(128,128,128,.25);border-radius:20px;padding:16px;margin-bottom:14px}.cp-card h3{margin:0 0 8px;font-size:1rem}.cp-read{min-height:48px;margin-top:8px}.cp-read b{font-size:1.4rem;display:block}.cp-read span{opacity:.65;font-size:.9rem}.cp-svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}details[open]>summary .exArrow{transform:rotate(180deg)}summary::-webkit-details-marker{display:none}.cp-lh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.cp-lh div,.cp-stat{background:#f6f7f9;border-radius:14px;padding:12px}.cp-lh small,.cp-stat small{display:block;opacity:.65;font-size:.8rem}.cp-lh b,.cp-stat b{display:block;font-size:1rem;margin:2px 0}.cp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.cp-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem}.cp-pill.up{background:#dcf5e5;color:#15803d}.cp-pill.down{background:#fdecec;color:#dc2626}.adm-user{border:1px solid rgba(128,128,128,.25);border-radius:16px;padding:14px;margin-bottom:10px}.adm-user b{word-break:break-all}.adm-chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;margin-left:6px;background:#eef2f7;color:#334155}.adm-chip.red{background:#fdecec;color:#dc2626}.adm-chip.amber{background:#fff4dc;color:#b45309}.adm-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.adm-btn{font:inherit;font-weight:600;padding:8px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111}.adm-btn.danger{border-color:#dc2626;color:#dc2626}.adm-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.adm-sum div{background:#f6f7f9;border-radius:14px;padding:10px;text-align:center}.adm-sum b{display:block;font-size:1.2rem}.adm-sum small{opacity:.65}.pf-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid rgba(128,128,128,.2)}.pf-mid{flex:1;min-width:0}.pf-mid a{color:inherit;text-decoration:none}.pf-mid .muted{display:block;font-size:.9rem}.pf-acts{margin-top:6px;display:flex;gap:16px}.pf-val{text-align:right}.pf-val b{display:block}.pf-val span{opacity:.65;font-size:.9rem}.pf-pills{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}.pf-pick{display:flex;align-items:center;gap:12px;margin-bottom:14px}.pf-res{display:flex;align-items:center;gap:10px;width:100%;padding:10px 4px;background:none;border:0;border-bottom:1px solid rgba(128,128,128,.2);font:inherit;text-align:left;color:inherit}.pf-alloc{display:flex;align-items:center;gap:16px}.pf-alloc svg{width:120px;height:120px;flex:none}.pf-leg{flex:1;min-width:0}.pf-leg div{display:flex;align-items:center;gap:8px;font-size:.92rem;padding:4px 0}.pf-leg i{width:10px;height:10px;border-radius:50%;flex:none}.pf-leg span{margin-left:auto;font-weight:600}.pf-lots{margin-top:10px;border-top:1px dashed rgba(128,128,128,.35)}.pf-lot{padding:10px 0;border-bottom:1px solid rgba(128,128,128,.15)}.pf-lot .pf-acts{margin-top:4px}`;
+styleTag.textContent = `.cw{position:relative}.cw+.cw{border-top:1px solid rgba(128,128,128,.2)}.cw .coin{width:100%;padding-left:50px;border:0!important}.cw .star{position:absolute;left:0;top:0;bottom:0;width:48px;display:flex;align-items:center;justify-content:center;background:none;border:0;padding:0;font-size:1.5rem;line-height:1;color:#b6bcc6;cursor:pointer;-webkit-tap-highlight-color:transparent}.cw .star.on{color:#f5a623}.cw .coin{display:flex!important;align-items:center;gap:10px;padding:12px 8px 12px 44px!important}.cw .rk{flex:none;width:22px;text-align:center;font-size:.8rem;opacity:.6}.cw .logo{width:32px;height:32px;flex:none}.cw .meta{flex:1;min-width:46px}.cw .meta b{font-size:.98rem}.cw .meta span{font-size:.78rem;opacity:.65}.cw .px{margin-left:auto;text-align:right;font-weight:600}.cw .px b{font-size:.98rem}.cw .chg{flex:none;min-width:62px;text-align:right;font-weight:600;font-size:.9rem}.cw .chg.up{color:#15803d}.cw .chg.down{color:#dc2626}.cw .chg.up::before{content:"\\25B2";font-size:.65em;margin-right:3px}.cw .chg.down::before{content:"\\25BC";font-size:.65em;margin-right:3px}.cw .star{width:40px!important;font-size:1.2rem!important}.lhd{display:flex;align-items:center;padding:8px 8px 8px 44px;font-size:.78rem;font-weight:700;opacity:.65;border-bottom:1px solid rgba(128,128,128,.25)}.lhd span:nth-child(1){width:32px}.lhd span:nth-child(2){flex:1}.lhd span:nth-child(3){text-align:right;margin-right:14px}.lhd span:nth-child(4){min-width:62px;text-align:right}#tabs{display:inline-grid!important;grid-template-columns:repeat(2,auto)!important;margin:8px 0!important;border-radius:999px!important}#tabs button{padding:6px 16px!important;font-size:.85rem!important}.curbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 4px}.curbar label{font-size:.9rem;opacity:.75}.curbar select{font:inherit;padding:10px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111;max-width:62%}.coin .meta .chg{display:inline-block;padding:2px 8px;border-radius:999px;font-weight:600;font-size:.85em;line-height:1.4}.coin .meta .chg.up{background:#e8f7ee!important;color:#15803d!important}.coin .meta .chg.down{background:#fdecec!important;color:#dc2626!important}.stats dd.up{color:#15803d!important}.stats dd.down{color:#dc2626!important}.cp-head{display:flex;align-items:center;gap:12px;margin-bottom:14px}.cp-head h1{margin:0;font-size:1.4rem}.cp-head p{margin:2px 0 0;opacity:.65}.cp-price{background:#effcf3;border-radius:20px;padding:18px;margin-bottom:14px}.cp-price small{display:block;letter-spacing:.04em;opacity:.7;font-size:.78rem;font-weight:600}.cp-price .big{font-size:2rem;font-weight:800;line-height:1.15;margin:4px 0}.cp-price .sub{font-weight:600}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;border:1px solid rgba(128,128,128,.25);border-radius:20px;padding:16px;margin-bottom:14px}.cp-card h3{margin:0 0 8px;font-size:1rem}.cp-read{min-height:48px;margin-top:8px}.cp-read b{font-size:1.4rem;display:block}.cp-read span{opacity:.65;font-size:.9rem}.cp-svg{width:100%;height:auto;display:block;touch-action:pan-y;cursor:crosshair;-webkit-tap-highlight-color:transparent}.cp-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}details[open]>summary .exArrow{transform:rotate(180deg)}summary::-webkit-details-marker{display:none}.cp-lh{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}.cp-lh div,.cp-stat{background:#f6f7f9;border-radius:14px;padding:12px}.cp-lh small,.cp-stat small{display:block;opacity:.65;font-size:.8rem}.cp-lh b,.cp-stat b{display:block;font-size:1rem;margin:2px 0}.cp-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}.cp-pill{display:inline-block;padding:2px 10px;border-radius:999px;font-weight:700;font-size:.85rem}.cp-pill.up{background:#dcf5e5;color:#15803d}.cp-pill.down{background:#fdecec;color:#dc2626}.adm-user{border:1px solid rgba(128,128,128,.25);border-radius:16px;padding:14px;margin-bottom:10px}.adm-user b{word-break:break-all}.adm-chip{display:inline-block;padding:1px 8px;border-radius:999px;font-size:.75rem;font-weight:700;margin-left:6px;background:#eef2f7;color:#334155}.adm-chip.red{background:#fdecec;color:#dc2626}.adm-chip.amber{background:#fff4dc;color:#b45309}.adm-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.adm-btn{font:inherit;font-weight:600;padding:8px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.35);background:#fff;color:#111}.adm-btn.danger{border-color:#dc2626;color:#dc2626}.adm-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}.adm-sum div{background:#f6f7f9;border-radius:14px;padding:10px;text-align:center}.adm-sum b{display:block;font-size:1.2rem}.adm-sum small{opacity:.65}.pf-row{display:flex;align-items:flex-start;gap:12px;padding:14px 0;border-bottom:1px solid rgba(128,128,128,.2)}.pf-mid{flex:1;min-width:0}.pf-mid a{color:inherit;text-decoration:none}.pf-mid .muted{display:block;font-size:.9rem}.pf-acts{margin-top:6px;display:flex;gap:16px}.pf-val{text-align:right}.pf-val b{display:block}.pf-val span{opacity:.65;font-size:.9rem}.pf-pills{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center}.pf-pick{display:flex;align-items:center;gap:12px;margin-bottom:14px}.pf-res{display:flex;align-items:center;gap:10px;width:100%;padding:10px 4px;background:none;border:0;border-bottom:1px solid rgba(128,128,128,.2);font:inherit;text-align:left;color:inherit}.pf-alloc{display:flex;align-items:center;gap:16px}.pf-alloc svg{width:120px;height:120px;flex:none}.pf-leg{flex:1;min-width:0}.pf-leg div{display:flex;align-items:center;gap:8px;font-size:.92rem;padding:4px 0}.pf-leg i{width:10px;height:10px;border-radius:50%;flex:none}.pf-leg span{margin-left:auto;font-weight:600}.pf-lots{margin-top:10px;border-top:1px dashed rgba(128,128,128,.35)}.pf-lot{padding:10px 0;border-bottom:1px solid rgba(128,128,128,.15)}.pf-lot .pf-acts{margin-top:4px}`;
 document.head.appendChild(styleTag);
 
 async function loadFx() {
@@ -117,6 +117,23 @@ function secondPrice(c, code = state.cur) {
   const r = state.fx[code];
   return c.price_usd != null && r ? Number(c.price_usd) * r : null;
 }
+// Everything is shown in ONE currency: the one chosen in the Menu (USD by default)
+function mny(usd) {
+  if (usd == null) return "–";
+  const r = state.fx[state.cur];
+  return state.cur === "USD" || !r ? fmtUsd(usd) : fmtLocal(Number(usd) * r, state.cur);
+}
+function mainPx(c) {
+  if (state.cur === "USD") return fmtUsd(c.price_usd);
+  const v = secondPrice(c);
+  return v != null ? fmtLocal(v, state.cur) : fmtUsd(c.price_usd);
+}
+function mnyBig(usd) {
+  if (usd == null) return "–";
+  const r = state.fx[state.cur];
+  return state.cur === "USD" || !r ? fmtBig(usd, "$") : fmtBig(Number(usd) * r, CURRENCIES[state.cur].sym.trim());
+}
+const chgTxt = (d) => d.t.replace(/^[+-]/, "");
 const fmtBig = (n, pre) => (n == null ? "–" : pre + Number(n).toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 2 }));
 function chg(v) {
   if (v == null) return { t: "–", c: "" };
@@ -240,8 +257,6 @@ async function renderMarket() {
   acctCss();
   view.innerHTML = `
     <section class="hero">
-      <h1>Check the price <span>before you buy.</span></h1>
-      <p>Live crypto prices in <b>USD</b>. Change the currency anytime in the Menu.</p>
       <label class="search">
         <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input id="q" type="search" inputmode="search" enterkeyhint="search" placeholder="Search Bitcoin, ETH, Solana…" autocomplete="off" aria-label="Search coins" value="${esc(state.q)}">
@@ -250,21 +265,18 @@ async function renderMarket() {
     ${iosBannerHtml()}
     ${installBannerHtml()}
     <div id="tgHome"></div>
-    <div class="ac-seg mk-tabs" id="tabs" style="grid-template-columns:repeat(2,1fr);margin:12px 0">
+    <div class="ac-seg mk-tabs" id="tabs">
       <button type="button" class="${state.tab === "all" ? "on" : ""}" data-tab="all">All coins</button>
       <button type="button" class="${state.tab === "watch" ? "on" : ""}" data-tab="watch">★ Watchlist</button>
     </div>
-    <p class="note">Prices update every minute for most major coins. Other coins update less often.</p>
-    <p class="note" id="fxNote"${state.cur === "USD" ? " hidden" : ""}>${fxNoteText()}</p>
     <p class="note" id="staleNote" hidden style="background:#fff7e6;border-radius:12px;padding:10px 12px"></p>
-    <div id="popBox"></div>
     <div id="toolBox"></div>
+    <div class="lhd"><span>#</span><span>Name</span><span>Price</span><span>24h %</span></div>
     <div id="liveTag"><i></i><span>Live prices</span></div>
     <div id="list" class="list" aria-label="Coins"></div>
     <div class="more"><button id="moreBtn" class="ac-btn" type="button" hidden>Show more coins</button></div>
     <div id="pager" aria-label="Pages"></div>
     ${footer()}`;
-  loadPopular();
   tgHomeTip();
   $("#q").addEventListener(
     "input",
@@ -341,9 +353,11 @@ function coinRow(c) {
   const sym = esc(c.symbol.toUpperCase());
   const on = state.watch.has(c.id);
   return `<div class="cw"><button class="star${on ? " on" : ""}" type="button" data-star="${esc(c.id)}" aria-label="${on ? "Remove from watchlist" : "Add to watchlist"}" aria-pressed="${on}">${on ? "★" : "☆"}</button><button class="coin" type="button" data-id="${esc(c.id)}">
-    <img class="logo" src="${esc(c.image_url || "")}" alt="" loading="lazy" width="40" height="40">
-    <div class="meta"><b>${esc(c.name)}</b><span>${sym} · <span class="chg ${d.c}">${d.t}</span>${c.kind === "tokenized" ? '<em style="font-style:normal;font-size:.72rem;background:rgba(22,163,74,.14);color:#15803d;border-radius:99px;padding:1px 8px;margin-left:6px">Tokenized asset</em>' : ""}</span></div>
-    <div class="px"><b>${fmtUsd(c.price_usd)}</b>${state.cur === "USD" ? "" : `<span>${fmtLocal(secondPrice(c), state.cur)}</span>`}</div>
+    <span class="rk">${c.market_cap_rank != null ? c.market_cap_rank : ""}</span>
+    <img class="logo" src="${esc(c.image_url || "")}" alt="" loading="lazy" width="32" height="32">
+    <div class="meta"><b>${sym}</b><span>${c.market_cap_usd ? mnyBig(c.market_cap_usd) : esc(c.name)}</span></div>
+    <div class="px"><b>${mainPx(c)}</b></div>
+    <span class="chg ${d.c}">${chgTxt(d)}</span>
   </button></div>`;
 }
 
@@ -814,12 +828,12 @@ const Live = (() => {
         const sp = btn.querySelector(".px span");
         const ch = btn.querySelector(".chg");
         if (px) {
-          px.textContent = fmtUsd(c.price_usd);
+          px.textContent = mainPx(c);
           flash(px, dir);
         }
         if (sp) sp.textContent = fmtLocal(secondPrice(c), state.cur);
         if (ch) {
-          ch.textContent = d.t;
+          ch.textContent = chgTxt(d);
           ch.className = "chg " + d.c;
         }
       }
@@ -827,14 +841,13 @@ const Live = (() => {
         const big = document.querySelector(".cp-price .big");
         const sub = document.querySelector(".cp-price .sub");
         if (big) {
-          big.textContent = fmtUsd(c.price_usd);
+          big.textContent = mainPx(c);
           flash(big, dir);
         }
         if (sub) {
           const m = CURRENCIES[state.cur];
           const pill = sub.querySelector(".cp-pill");
           const first = sub.firstChild;
-          if (first && first.nodeType === 3 && state.cur !== "USD") first.nodeValue = `${m.flag} ${fmtLocal(secondPrice(c), state.cur)} `;
           if (pill) {
             pill.textContent = d.t;
             pill.className = "cp-pill " + d.c;
@@ -1100,17 +1113,15 @@ function paintCoin(c) {
       <div><h1>${esc(c.name)}</h1><p>${esc(sym)}${c.market_cap_rank && c.kind !== "tokenized" ? " · Rank #" + c.market_cap_rank : ""}${c.kind === "tokenized" ? '<em style="font-style:normal;font-size:.72rem;background:rgba(22,163,74,.14);color:#15803d;border-radius:99px;padding:1px 8px;margin-left:6px">Tokenized asset</em>' : ""}</p>${c.kind === "tokenized" ? '<p class="muted" style="font-size:.85rem;margin:6px 0 0">A tokenized asset tracks the value of a fund, bond, stock or similar. Its price does not move like normal crypto and it may trade very little.</p>' : ""}</div>
     </div>
     <div class="cp-price">
-      <small>PRICE IN USD</small>
-      <div class="big">${fmtUsd(c.price_usd)}</div>
-      <div class="sub">${state.cur === "USD" ? "" : `${m.flag} ${fmtLocal(second, state.cur)} `}<span class="cp-pill ${d.c}"${state.cur === "USD" ? "" : ' style="margin-left:6px"'}>${d.t}</span> <span class="muted">24h</span></div>
+      <small>PRICE IN ${esc(state.cur)}</small>
+      <div class="big">${mainPx(c)}</div>
+      <div class="sub"><span class="cp-pill ${d.c}">${d.t}</span> <span class="muted">24h</span></div>
     </div>
     <div class="cp-card"><h3>Price chart</h3>${chartHtml}</div>
     <div id="coinChanges"></div>
     <div class="cp-stats">
-      <div class="cp-stat"><small>Market cap ($)</small><b>${fmtBig(c.market_cap_usd, "$")}</b></div>
-      ${state.cur === "USD" ? "" : `<div class="cp-stat"><small>Market cap (${esc(state.cur)})</small><b>${secBig(c.market_cap_usd)}</b></div>`}
-      <div class="cp-stat"><small>24h volume ($)</small><b>${fmtBig(c.volume_24h_usd, "$")}</b></div>
-      ${state.cur === "USD" ? "" : `<div class="cp-stat"><small>24h volume (${esc(state.cur)})</small><b>${secBig(c.volume_24h_usd)}</b></div>`}
+      <div class="cp-stat"><small>Market cap</small><b>${mnyBig(c.market_cap_usd)}</b></div>
+      <div class="cp-stat"><small>24h volume</small><b>${mnyBig(c.volume_24h_usd)}</b></div>
       ${Number(c.circulating_supply) > 0 ? `<div class="cp-stat" style="grid-column:1/-1"><small>Circulating supply</small><b>${fmtBig(c.circulating_supply, "")} ${esc(sym)}</b></div>` : ""}
       <div id="coinExtras" style="display:contents"></div>
       <div class="cp-stat" style="grid-column:1/-1"><small>Last updated</small><b>${ago(c.last_updated)}</b></div>
@@ -1170,7 +1181,7 @@ function paintCoin(c) {
 }
 
 /* ---------- coin news ---------- */
-const EX_NAMES = { binance: "Binance", bybit: "Bybit", okx: "OKX", kucoin: "KuCoin", gate: "Gate", mexc: "MEXC", bitget: "Bitget", htx: "HTX", cryptocom: "Crypto.com", lbank: "LBank", whitebit: "WhiteBIT", bitmart: "BitMart", coinex: "CoinEx", poloniex: "Poloniex", digifinex: "DigiFinex", xt: "XT", kraken: "Kraken", bitstamp: "Bitstamp", bitfinex: "Bitfinex", bitvavo: "Bitvavo", valr: "VALR", btcturk: "BTCTurk", coinbase: "Coinbase", bingx: "BingX", phemex: "Phemex", bit2me: "Bit2Me", pionex: "Pionex", bigone: "BigONE", coindcx: "CoinDCX", hashkey: "HashKey", wazirx: "WazirX", bitopro: "BitoPro", bitso: "Bitso", luno: "Luno", upbit: "Upbit", bithumb: "Bithumb", coinone: "Coinone", korbit: "Korbit", bitkub: "Bitkub" };
+const EX_NAMES = { bitflyer: "bitFlyer", bitbank: "bitbank", btcbox: "BTCBOX", coincheck: "Coincheck", btcmarkets: "BTC Markets", independentreserve: "Independent Reserve", coinjar: "CoinJar", foxbit: "Foxbit", paribu: "Paribu", buda: "Buda.com", deribit: "Deribit", binance: "Binance", bybit: "Bybit", okx: "OKX", kucoin: "KuCoin", gate: "Gate", mexc: "MEXC", bitget: "Bitget", htx: "HTX", cryptocom: "Crypto.com", lbank: "LBank", whitebit: "WhiteBIT", bitmart: "BitMart", coinex: "CoinEx", poloniex: "Poloniex", digifinex: "DigiFinex", xt: "XT", kraken: "Kraken", bitstamp: "Bitstamp", bitfinex: "Bitfinex", bitvavo: "Bitvavo", valr: "VALR", btcturk: "BTCTurk", coinbase: "Coinbase", bingx: "BingX", phemex: "Phemex", bit2me: "Bit2Me", pionex: "Pionex", bigone: "BigONE", coindcx: "CoinDCX", hashkey: "HashKey", wazirx: "WazirX", bitopro: "BitoPro", bitso: "Bitso", luno: "Luno", upbit: "Upbit", bithumb: "Bithumb", coinone: "Coinone", korbit: "Korbit", bitkub: "Bitkub" };
 const EX_ORDER = ["binance", "bybit", "okx", "kucoin", "gate", "mexc", "bitget", "htx", "cryptocom", "lbank", "whitebit", "poloniex", "digifinex", "xt", "kraken", "bitstamp", "bitfinex", "bitvavo", "valr", "btcturk", "coinbase", "bingx", "phemex", "bitmart", "coinex", "bit2me", "pionex", "bigone", "coindcx", "hashkey", "wazirx", "bitopro", "bitso", "luno", "upbit", "bithumb", "coinone", "korbit", "bitkub"];
 function exBadge(key) {
   let h = 0;
@@ -1246,7 +1257,7 @@ async function loadCoinExtras(c) {
     const ath = Number(data.ath), px0 = Number(c.price_usd);
     if (ath > 0) {
       const below = px0 > 0 ? ((px0 / ath - 1) * 100) : null;
-      t.push(`<div class="cp-stat"><small>All-time high ($)</small><b>${fmtUsd(ath)}</b>${below != null && below < 0 ? `<small style="color:#b91c1c;font-weight:600">${below.toFixed(1)}% from the peak</small>` : ""}</div>`);
+      t.push(`<div class="cp-stat"><small>All-time high</small><b>${mny(ath)}</b>${below != null && below < 0 ? `<small style="color:#b91c1c;font-weight:600">${below.toFixed(1)}% from the peak</small>` : ""}</div>`);
     }
     if (Number(data.exchanges) > 0) t.push(tile("Listed on", `${Number(data.exchanges).toLocaleString("en-US")} exchanges`));
     if (Number(data.age_days) > 0) {
@@ -1264,7 +1275,7 @@ async function loadCoinExtras(c) {
   } catch (_) {}
 }
 // Quote currency each exchange feed uses (all others are USDT; "" = mixed, show the coin only)
-const EX_QUOTE = { coinbase: "USD", kraken: "USD", bitstamp: "USD", bitfinex: "USD", bitvavo: "EUR", valr: "", bit2me: "EUR", bitso: "", luno: "", upbit: "KRW", bithumb: "KRW", coinone: "KRW", korbit: "KRW", bitkub: "THB" };
+const EX_QUOTE = { bitflyer: "JPY", bitbank: "JPY", btcbox: "JPY", coincheck: "JPY", btcmarkets: "AUD", independentreserve: "AUD", coinjar: "AUD", foxbit: "BRL", paribu: "TRY", buda: "CLP", deribit: "USDC", coinbase: "USD", kraken: "USD", bitstamp: "USD", bitfinex: "USD", bitvavo: "EUR", valr: "", bit2me: "EUR", bitso: "", luno: "", upbit: "KRW", bithumb: "KRW", coinone: "KRW", korbit: "KRW", bitkub: "THB" };
 async function loadCoinMarkets(c) {
   try {
     const box = $("#coinMarkets");
@@ -1503,8 +1514,8 @@ function initChart(c, sp, sec) {
     $("#cpWk").innerHTML = `<span class="cp-pill ${wd.c}">${wd.t}</span> <span class="muted">over ${nm}</span>`;
     $("#cpAxis").innerHTML = `<span>${nm} ago</span><span>Latest</span>`;
     $("#cpLH").innerHTML = `
-      <div><small>${r} low</small><b>${fmtUsd(lo)}</b><small>${sec(lo)}</small></div>
-      <div><small>${r} high</small><b>${fmtUsd(hi)}</b><small>${sec(hi)}</small></div>`;
+      <div><small>${r} low</small><b>${mny(lo)}</b></div>
+      <div><small>${r} high</small><b>${mny(hi)}</b></div>`;
     mountChart(s, sec, r);
   };
   document.querySelectorAll("#cpRanges button").forEach((b) => (b.onclick = () => load(b.dataset.r)));
@@ -1540,7 +1551,7 @@ function mountChart(series, sec, range) {
     return range === "7D" || range === "30D" ? `${day}, ${dt.toLocaleTimeString([], { hour: "numeric" })}` : day;
   };
   const paint = (i, active) => {
-    read.innerHTML = `<b>${fmtUsd(sp[i])}</b><span>${state.cur === "USD" ? "" : sec(sp[i]) + " · "}${label(i)}</span>`;
+    read.innerHTML = `<b>${mny(sp[i])}</b><span>${label(i)}</span>`;
     const v = active ? "visible" : "hidden";
     line.setAttribute("visibility", v);
     dot.setAttribute("visibility", v);
@@ -1931,7 +1942,7 @@ function coinPickSheet(next) {
 /* ---------- portfolio ---------- */
 const pf = { rows: [], open: new Set(), alerts: [], total: 0 };
 const fmtAmt = (n) => Number(n).toLocaleString("en-US", { maximumFractionDigits: 8 });
-const signedUsd = (n) => (n >= 0 ? "+" : "−") + fmtUsd(Math.abs(n));
+const signedUsd = (n) => (n >= 0 ? "+" : "−") + mny(Math.abs(n));
 
 function addPortfolioTab() {
   const src = document.querySelector('.tabs a[data-tab="alerts"]');
@@ -2074,7 +2085,7 @@ function paintPortfolio() {
   }
   const lotRow = ({ r, pnl, pct }, sym) => {
     const p = pnl != null ? chg(pct) : null;
-    const bp = r.buy_price_usd != null && Number(r.buy_price_usd) > 0 ? `bought at ${fmtUsd(r.buy_price_usd)}` : "no buy price";
+    const bp = r.buy_price_usd != null && Number(r.buy_price_usd) > 0 ? `bought at ${mny(r.buy_price_usd)}` : "no buy price";
     return `<div class="pf-lot"><div><b>${fmtAmt(r.amount)} ${esc(sym)}</b> <span class="muted" style="display:inline">· ${bp}</span>${p ? ` <span class="cp-pill ${p.c}">${signedUsd(pnl)} (${p.t})</span>` : ""}</div><div class="pf-acts"><button class="link" type="button" data-pa="edit" data-id="${esc(r.id)}">Edit</button><button class="link" type="button" data-pa="del" data-id="${esc(r.id)}">Delete</button></div></div>`;
   };
   const groupHtml = [...groups.values()]
@@ -2085,7 +2096,7 @@ function paintPortfolio() {
       const sym = g.coin.symbol.toUpperCase();
       const gpnl = g.cost > 0 ? g.costVal - g.cost : null;
       const gp = gpnl != null ? chg((gpnl / g.cost) * 100) : null;
-      const avg = g.costAmt > 0 ? fmtUsd(g.cost / g.costAmt) : null;
+      const avg = g.costAmt > 0 ? mny(g.cost / g.costAmt) : null;
       const one = g.lots[0].r.id;
       return `<div class="pf-row">
         <img class="logo" src="${esc(g.coin.image_url || "")}" alt="" loading="lazy" width="40" height="40">
@@ -2101,15 +2112,14 @@ function paintPortfolio() {
           }</div>
           ${many && open ? `<div class="pf-lots">${g.lots.map((it) => lotRow(it, sym)).join("")}</div>` : ""}
         </div>
-        <div class="pf-val"><b>${fmtUsd(g.val)}</b>${state.cur === "USD" ? "" : `<span>${sec(g.val)}</span>`}</div>
+        <div class="pf-val"><b>${mny(g.val)}</b></div>
       </div>`;
     })
     .join("");
   box.innerHTML = `
     <div class="cp-price">
       <small>TOTAL VALUE</small>
-      <div class="big">${fmtUsd(total)}</div>
-      <div class="sub">${state.cur === "USD" ? "" : `${m.flag} ${sec(total)}`}</div>
+      <div class="big">${mny(total)}</div>
       <div class="pf-pills">
         ${day ? `<span><span class="cp-pill ${day.c}">${day.t}</span> <span class="muted">today</span></span>` : ""}
         ${pnlPct ? `<span><span class="cp-pill ${pnlPct.c}">${signedUsd(pnlTotal)} (${pnlPct.t})</span> <span class="muted">profit / loss</span></span>` : ""}
