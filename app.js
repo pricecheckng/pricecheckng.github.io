@@ -88,6 +88,7 @@ function fmtUsd(n) {
   if (n == null) return "–";
   n = Number(n);
   const a = Math.abs(n);
+  if (a >= 0.97 && a <= 1.03) return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 }); // coins pegged near $1 (USDT, USDC): show 4 decimals so the small moves are visible
   const max = a >= 1 ? 2 : a >= 0.01 ? 4 : a >= 0.0001 ? 6 : 8;
   return "$" + n.toLocaleString("en-US", { minimumFractionDigits: a >= 1 ? 2 : 0, maximumFractionDigits: max });
 }
