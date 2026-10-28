@@ -247,7 +247,7 @@ async function tgHomeTip() {
     let hide = 0;
     try { hide = Number(localStorage.getItem("pc_tg_hide") || 0); } catch (_) {}
     if (Date.now() - hide < 7 * 864e5) return;
-    const { data } = await sb.from("telegram_links").select("chat_id").maybeSingle();
+    const { data } = await sb.from("telegram_links").select("chat_id").eq("user_id", state.user?.id || "00000000-0000-0000-0000-000000000000").limit(1).maybeSingle();
     const t = $("#tgHome");
     if (!t || data) return;
     t.innerHTML = `<div class="ac-tip" style="position:relative;padding-right:40px"><span class="ac-tip-ic">✈</span><span><b>Never miss an alert</b><br>Telegram is the most reliable way to get them. Connect it in 10 seconds.<br><button class="ac-pill" type="button" data-tg-connect style="margin-top:8px">Connect Telegram</button></span><button type="button" id="tgHomeX" aria-label="Close" style="position:absolute;top:6px;right:8px;border:0;background:none;font-size:22px;line-height:1;color:#6b7c72;padding:6px">×</button></div>`;
@@ -1898,7 +1898,7 @@ async function renderAlerts() {
     view.innerHTML = `<section class="page"><h1>Alerts</h1><div id="pushCard"></div><div id="tgTip"></div><button class="btn" type="button" id="newAlert">+ New alert</button><div style="height:14px"></div><div id="alerts" class="list">${skeleton(3)}</div></section>${footer()}`;
     renderPushCard($("#pushCard"));
     $("#newAlert").onclick = newAlertSheet;
-    sb.from("telegram_links").select("chat_id").maybeSingle().then(({ data }) => {
+    sb.from("telegram_links").select("chat_id").eq("user_id", state.user?.id || "00000000-0000-0000-0000-000000000000").limit(1).maybeSingle().then(({ data }) => {
       const t = $("#tgTip");
       return;
       t.innerHTML = `<a href="#account" class="ac-tip"><span class="ac-tip-ic">✈</span><span><b>Don't want to miss an alert?</b><br>Connect Telegram and your alerts will arrive there too.</span><span class="ac-chev">${acIco("chev")}</span></a>`;
@@ -2925,7 +2925,7 @@ const b64ToU8 = (s) => {
 async function hasTelegram() {
   if (!state.user) return false;
   try {
-    const { data } = await sb.from("telegram_links").select("chat_id").maybeSingle();
+    const { data } = await sb.from("telegram_links").select("chat_id").eq("user_id", state.user?.id || "00000000-0000-0000-0000-000000000000").limit(1).maybeSingle();
     return !!data;
   } catch (_) {
     return false;
@@ -3510,7 +3510,7 @@ document.addEventListener("click", async (e) => {
 });
 
 async function telegramCardHtml() {
-  const { data } = await sb.from("telegram_links").select("chat_id").maybeSingle();
+  const { data } = await sb.from("telegram_links").select("chat_id").eq("user_id", state.user?.id || "00000000-0000-0000-0000-000000000000").limit(1).maybeSingle();
   const on = !!state.pushOn;
   const pushRow = acRow(
     "bell",
