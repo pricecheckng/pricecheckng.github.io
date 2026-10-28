@@ -13,7 +13,7 @@ if (!SUPABASE_KEY || SUPABASE_KEY.startsWith("PASTE_")) {
 }
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-const PAGE = 50;
+const PAGE = 100;
 const COLS = "id,symbol,name,image_url,market_cap_rank,price_usd,price_ngn,market_cap_usd,volume_24h_usd,change_24h_pct,tier,last_updated,kind";
 
 /* ---------- currencies (USD is always shown on top; one more is chosen) ---------- */
