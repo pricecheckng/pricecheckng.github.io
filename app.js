@@ -616,9 +616,18 @@ const Live = (() => {
   const isBlocked = (ex) => (blocked.get(ex) || 0) > Date.now();
   async function loadSources() {
     try {
-      const { data, error } = await sb.rpc("live_sources");
-      if (error || !Array.isArray(data) || !data.length) throw new Error("no sources");
-      for (const r of data) SRC.set(r.coin_id, r.ex);
+      // One compact answer (a map of coin -> exchange): a plain list is cut off at 1,000 rows by the API.
+      let rows = null;
+      try {
+        const m = await sb.rpc("live_sources_map");
+        if (!m.error && m.data && typeof m.data === "object" && !Array.isArray(m.data)) rows = Object.entries(m.data).map(([coin_id, ex]) => ({ coin_id, ex }));
+      } catch (_) {}
+      if (!rows || !rows.length) {
+        const { data, error } = await sb.rpc("live_sources");
+        if (error || !Array.isArray(data) || !data.length) throw new Error("no sources");
+        rows = data;
+      }
+      for (const r of rows) SRC.set(r.coin_id, r.ex);
       srcReady = true;
     } catch (_) {
       srcReady = false; // the old rule applies: top 40 coins on Binance
