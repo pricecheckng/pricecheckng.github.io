@@ -17,6 +17,15 @@
     '.mkt-c .ch{font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}' +
     '.mkt-c.on{outline:2px solid rgba(18,161,80,.55)}' +
     '.mkt-g{display:block;width:60px;height:33px;margin-top:1px}.mkt-g path{fill:none;stroke-width:5}' +
+    '.mkt-run{position:relative;height:30px;margin-top:6px;overflow:hidden;pointer-events:none}' +
+    '.mkt-rn{position:absolute;bottom:0;left:-30px;width:24px;height:30px;animation:mktgo 8s linear infinite}' +
+    '.mkt-rn svg{display:block;width:24px;height:30px;overflow:visible;animation:mktbob .28s ease-in-out infinite}' +
+    '.mkt-rn .la,.mkt-rn .lb{transform-box:fill-box;transform-origin:50% 0;animation:mktleg .28s ease-in-out infinite alternate}' +
+    '.mkt-rn .lb{animation-direction:alternate-reverse}' +
+    '@keyframes mktgo{0%{left:-30px;opacity:1}26%{left:calc(100% + 6px);opacity:1}26.1%,100%{left:-30px;opacity:0}}' +
+    '@keyframes mktbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}' +
+    '@keyframes mktleg{from{transform:rotate(38deg)}to{transform:rotate(-38deg)}}' +
+    '@media (prefers-reduced-motion:reduce){.mkt-run{display:none}}' +
     '.mkt-tip{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:13px;line-height:1.45;background:rgba(127,127,127,.09)}' +
     '.mkt-tip b{display:block;margin-bottom:2px;font-size:13px}' +
     '.mkt-up{color:#15803d}.mkt-dn{color:#dc2626}' +
@@ -59,7 +68,7 @@
     } else {
       h += card('fng', 'Fear & Greed', '-');
     }
-    h += '</div>';
+    h += '</div>' + '<div class="mkt-run" aria-hidden="true"><div class="mkt-rn"><svg viewBox="0 0 24 30"><g stroke="#f7931a" stroke-width="2.6" stroke-linecap="round"><line class="la" x1="8.5" y1="20" x2="8.5" y2="28"/><line class="lb" x1="15.5" y1="20" x2="15.5" y2="28"/></g><circle cx="12" cy="11" r="10" fill="#f7931a"/><text x="12" y="16" text-anchor="middle" font-size="14" font-weight="800" font-family="Arial,sans-serif" fill="#fff">B</text><g stroke="#fff" stroke-width="1.4"><line x1="10" y1="3.4" x2="10" y2="5.6"/><line x1="14" y1="3.4" x2="14" y2="5.6"/><line x1="10" y1="16.4" x2="10" y2="18.6"/><line x1="14" y1="16.4" x2="14" y2="18.6"/></g></svg></div></div>';
     if (openKey && TIPS[openKey]) h += '<div class="mkt-tip"><b>' + TIPS[openKey][0] + '</b>' + TIPS[openKey][1] + '</div>';
     return h;
   }
