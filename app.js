@@ -3469,15 +3469,21 @@ function renderAccount() {
     if ($("#tgCard")) $("#tgCard").innerHTML = h;
   });
   $("#signOut").onclick = signOut;
-  sb.rpc("is_admin").then(({ data }) => {
+  // Only an explicit "not admin" answer shows the delete button. If the check fails (network, session not ready), try once more and otherwise show nothing.
+  const adminCheck = (again) => sb.rpc("is_admin").then(({ data, error }) => {
     if (!$("#signOut")) return;
-    if (data) {
+    if (error || data === null || data === undefined) {
+      if (again) setTimeout(() => adminCheck(false), 1500);
+      return;
+    }
+    if (data === true) {
       $("#adminSlot").innerHTML = `<a class="ac-quiet" href="#admin">Admin dashboard</a>`;
     } else {
       $("#delSlot").innerHTML = `<button class="ac-del" type="button" id="delAcct">Delete my account</button>`;
       $("#delAcct").onclick = deleteAccountSheet;
     }
   });
+  adminCheck(true);
 }
 
 function renderAcctPush(el) {
