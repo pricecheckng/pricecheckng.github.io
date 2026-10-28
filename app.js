@@ -748,6 +748,29 @@ const Live = (() => {
         return t && m.pair && t.latest ? [String(m.pair).replace(/_usdt$/i, "").toUpperCase(), num(t.latest), isFinite(num(t.change)) ? num(t.change) : null] : null;
       },
     },
+    xt: {
+      eps: ["wss://stream.xt.com/public"],
+      sub: (l, on) => [{ method: on ? "SUBSCRIBE" : "UNSUBSCRIBE", params: l.map((x) => "ticker@" + x.toLowerCase() + "_usdt"), id: "pcn" + seq++ }],
+      parse: (m) => {
+        const d = m && m.topic === "ticker" && m.data;
+        return d && d.s && d.c ? [String(d.s).replace(/_usdt$/i, "").toUpperCase(), num(d.c), null] : null;
+      },
+      ping: () => "ping",
+    },
+    poloniex: {
+      eps: ["wss://ws.poloniex.com/ws/public"],
+      sub: (l, on) => chunk(l, 40).map((g) => ({ event: on ? "subscribe" : "unsubscribe", channel: ["ticker"], symbols: g.map((x) => x + "_USDT") })),
+      parse: (m) => {
+        if (!(m && m.channel === "ticker" && Array.isArray(m.data))) return null;
+        const out = [];
+        for (const d of m.data) {
+          const px = num(d && (d.close !== undefined ? d.close : d.price));
+          if (d && d.symbol && px > 0) out.push([String(d.symbol).replace(/_USDT$/i, "").toUpperCase(), px, null]);
+        }
+        return out.length ? out : null;
+      },
+      ping: () => JSON.stringify({ event: "ping" }),
+    },
   };
   const conns = new Map();
   const conn = (ex) => {
@@ -821,7 +844,8 @@ const Live = (() => {
         return;
       }
       const r = spec.parse(m);
-      if (r && r[0]) tick(c.ex, r[0], r[1], r[2]);
+      if (r && Array.isArray(r[0])) r.forEach((x) => tick(c.ex, x[0], x[1], x[2])); // several coins in one message
+      else if (r && r[0]) tick(c.ex, r[0], r[1], r[2]);
     };
     w.onclose = () => {
       clearTimeout(guardT);
