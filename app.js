@@ -740,6 +740,14 @@ const Live = (() => {
       },
       ping: () => JSON.stringify({ time: Math.floor(Date.now() / 1000), channel: "spot.ping" }),
     },
+    lbank: {
+      eps: ["wss://api.lbank.info/ws/V2/", "wss://www.lbkex.net/ws/V2/"],
+      sub: (l, on) => l.map((s) => ({ action: on ? "subscribe" : "unsubscribe", subscribe: "tick", pair: s.toLowerCase() + "_usdt" })),
+      parse: (m) => {
+        const t = m && m.type === "tick" && m.tick;
+        return t && m.pair && t.latest ? [String(m.pair).replace(/_usdt$/i, "").toUpperCase(), num(t.latest), isFinite(num(t.change)) ? num(t.change) : null] : null;
+      },
+    },
   };
   const conns = new Map();
   const conn = (ex) => {
@@ -806,6 +814,10 @@ const Live = (() => {
       try {
         m = JSON.parse(e.data);
       } catch (_) {
+        return;
+      }
+      if (m && m.action === "ping" && m.ping) { // LBank checks that we are still there: answer its ping
+        sendTo(c, { action: "pong", pong: m.ping });
         return;
       }
       const r = spec.parse(m);
