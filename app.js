@@ -2421,7 +2421,7 @@ function holdingSheet(row) {
   let cur = "usd";
   const second = state.cur;
   const sm = CURRENCIES[second];
-  const hasSecond = !!state.fx[second];
+  const hasSecond = second !== "USD" && !!state.fx[second];
   let mode = "coins";
   const moneyCodes = ["USD", ...Object.keys(CURRENCIES).filter((c) => state.fx[c])];
   let moneyCur = moneyCodes.includes(second) ? second : "USD";
@@ -2468,10 +2468,10 @@ function holdingSheet(row) {
       <button type="button" data-pm="money" aria-pressed="false">Money value</button>
     </div>
     <div id="pfAmtBox"></div>
-    <div class="seg" role="group" aria-label="Buy price currency">
+    ${hasSecond ? `<div class="seg" role="group" aria-label="Buy price currency">
       <button type="button" data-pc="usd" aria-pressed="true">🇺🇸 USD</button>
-      ${hasSecond ? `<button type="button" data-pc="${second}" aria-pressed="false">${sm.flag} ${second}</button>` : ""}
-    </div>
+      <button type="button" data-pc="${second}" aria-pressed="false">${sm.flag} ${second}</button>
+    </div>` : ""}
     <label class="field"><span>Buy price per coin (optional)</span><input id="pfBuy" inputmode="decimal" autocomplete="off" placeholder="Leave empty to skip"></label>
     <p class="hint">Add a buy price to see your profit or loss.</p>
     <p class="err" id="err" hidden></p>
@@ -2599,16 +2599,16 @@ async function loadPlan() {
 function portfolioAlertSheet() {
   const second = state.cur;
   const sm = CURRENCIES[second];
-  const hasSecond = !!state.fx[second];
-  let cur = "USD";
+  const hasSecond = second !== "USD" && !!state.fx[second];
+  let cur = hasSecond ? second : "USD"; // follow the app currency
   const totalIn = () => (cur === "USD" ? pf.total : pf.total * state.fx[cur]);
   const money = (n) => fmtCur(n, cur.toLowerCase());
   openSheet(`
     <div class="sheet-head"><span></span><div><h2 id="sheetTitle">Portfolio alert</h2><p class="muted" id="paNow"></p></div><button class="x" type="button" data-close aria-label="Close">×</button></div>
-    <div class="seg" role="group" aria-label="Currency">
-      <button type="button" data-pac="USD" aria-pressed="true">🇺🇸 USD</button>
-      ${hasSecond ? `<button type="button" data-pac="${second}" aria-pressed="false">${sm.flag} ${second}</button>` : ""}
-    </div>
+    ${hasSecond ? `<div class="seg" role="group" aria-label="Currency">
+      <button type="button" data-pac="USD" aria-pressed="false">🇺🇸 USD</button>
+      <button type="button" data-pac="${second}" aria-pressed="true">${sm.flag} ${second}</button>
+    </div>` : ""}
     <label class="field"><span>Alert me when my total reaches</span><input id="paTarget" inputmode="decimal" autocomplete="off" placeholder="Enter an amount"></label>
     <p class="hint" id="paHint">Enter the total value you want to be alerted at.</p>
     ${state.pushOn ? "" : `<p class="hint">Alerts are sent through Telegram. Connect it first in the Alerts tab.</p>`}
