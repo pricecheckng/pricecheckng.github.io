@@ -666,14 +666,16 @@ const Live = (() => {
     const t = document.getElementById("liveTag");
     if (t) t.classList.toggle("on", !!on);
   };
-  const dbg = (ex, m) => {
-    if (!/[?&]live=debug/.test(location.search)) return;
-    const t = document.getElementById("liveTag");
-    if (t) {
+  const DEBUG = /[?&]live=debug/.test(location.search);
+  const dbg = () => {};
+  if (DEBUG)
+    setInterval(() => {
+      const t = document.getElementById("liveTag");
+      if (!t) return;
       t.classList.add("on");
-      t.lastChild.textContent = " [" + ex + "] " + m;
-    }
-  };
+      const parts = [...conns.values()].map((c) => c.ex + (c.open ? " ok " : c.ws ? " wait " : isBlocked(c.ex) ? " blocked " : " off ") + (exTicks[c.ex] || 0));
+      t.lastChild.textContent = " " + (parts.length ? parts.join(" | ") : "no connection yet") + " | on screen " + vis.size;
+    }, 1000);
   const num = (v) => (v === null || v === undefined || v === "" ? NaN : Number(v));
   const pctOf = (c, o) => (num(o) > 0 ? ((num(c) - num(o)) / num(o)) * 100 : null);
   const chunk = (l, n) => {
@@ -909,9 +911,11 @@ const Live = (() => {
   }
 
   let lastTickAt = 0;
+  const exTicks = {};
   function tick(ex, sym, price, pct) {
     if (!(price > 0)) return;
     lastTickAt = Date.now();
+    exTicks[ex] = (exTicks[ex] || 0) + 1;
     const ids = (wantAll().get(ex) || new Map()).get(sym);
     if (!ids) return;
     for (const id of ids) {
