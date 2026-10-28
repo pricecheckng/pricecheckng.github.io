@@ -872,8 +872,10 @@ const Live = (() => {
     }, 300);
   }
 
+  let lastTickAt = 0;
   function tick(ex, sym, price, pct) {
     if (!(price > 0)) return;
+    lastTickAt = Date.now();
     const ids = (wantAll().get(ex) || new Map()).get(sym);
     if (!ids) return;
     for (const id of ids) {
@@ -898,7 +900,7 @@ const Live = (() => {
     if (!gotTick) {
       gotTick = true;
       tag(true);
-      dbg("live, first price received");
+      dbg("live", "first price received");
     }
   }
   // CoinMarketCap updates the whole screen together about every 5 seconds, and only the prices that changed flash.
@@ -998,8 +1000,36 @@ const Live = (() => {
     }
     if (!started) start();
   }
+  // Backup for phones or networks where the live stream cannot connect (blocked, data saver): every 15 seconds, while no
+  // live price has arrived, read the screen's prices from our own database and flash the ones that changed.
+  let pollBusy = false;
+  async function pollPrices() {
+    if (pollBusy || document.hidden || Date.now() - lastTickAt < 25000 || !vis.size) return;
+    pollBusy = true;
+    try {
+      const ids = [...vis].slice(0, 120);
+      const { data, error } = await sb.from("coins").select("id,price_usd,change_24h_pct").in("id", ids);
+      if (error || !Array.isArray(data)) return;
+      for (const r of data) {
+        const c = state.coinMap.get(r.id);
+        const p = Number(r.price_usd);
+        if (!c || !(p > 0)) continue;
+        const old = Number(c.price_usd);
+        if (p === old) continue;
+        if (!painted.has(r.id)) painted.set(r.id, old);
+        if (c.price_ngn != null && old > 0) c.price_ngn = Number(c.price_ngn) * (p / old);
+        c.price_usd = p;
+        if (r.change_24h_pct != null && isFinite(Number(r.change_24h_pct))) c.change_24h_pct = Number(r.change_24h_pct);
+        queue(r.id);
+      }
+    } catch (_) {
+    } finally {
+      pollBusy = false;
+    }
+  }
   function start() {
     started = true;
+    setInterval(pollPrices, 15000);
     const act = () => {
       idleAt = Date.now();
       if (!anyWs() && !document.hidden) sync();
