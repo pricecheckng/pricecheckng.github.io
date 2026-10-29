@@ -72,11 +72,13 @@ const $ = (id) => document.getElementById(id);
 const COLORS = ["#16a34a", "#2563eb", "#d97706", "#9333ea"];
 const COLS = "id,symbol,name,image_url,market_cap_rank,price_usd,price_ngn,market_cap_usd,volume_24h_usd,change_24h_pct,circulating_supply,sparkline,kind";
 const POPULAR = [["bitcoin", "ethereum"], ["bitcoin", "solana"], ["ethereum", "solana"], ["bitcoin", "ripple"], ["ethereum", "binancecoin"], ["dogecoin", "shiba-inu"], ["solana", "cardano"], ["bitcoin", "ethereum", "solana"]];
-let sb, coins = [], fx = {}, cur = "NGN";
-const CUR = { NGN: "₦", GBP: "£", EUR: "€", GHS: "GH₵", ZAR: "R", CAD: "CA$", AUD: "A$", AED: "AED ", CNY: "CN¥", KES: "KSh ", TZS: "TSh ", UGX: "USh ", INR: "₹", JPY: "¥" };
-try { const sc = localStorage.getItem("pc_cur"); if (CUR[sc]) cur = sc; } catch (_) {}
-const localPx = (c) => (cur === "NGN" ? Number(c.price_ngn) : fx[cur] ? Number(c.price_usd) * fx[cur] : NaN);
-const loc = (n) => { n = Number(n); return isFinite(n) && n > 0 ? CUR[cur] + n.toLocaleString("en-US", { maximumFractionDigits: n >= 1000 ? 0 : n >= 1 ? 2 : n >= 0.01 ? 4 : n >= 0.0001 ? 6 : 9 }) : "–"; };
+let sb, coins = [], fx = {}, cur = "USD";
+try { const sc = localStorage.getItem("pc_cur"); if (sc) cur = sc; } catch (_) {}
+const SYMS = { NGN: "₦", GBP: "£", EUR: "€", GHS: "GH₵", ZAR: "R", CAD: "CA$", AUD: "A$", AED: "AED ", CNY: "CN¥", KES: "KSh ", TZS: "TSh ", UGX: "USh ", INR: "₹", JPY: "¥", BRL: "R$", CHF: "CHF ", CLP: "CLP$", CZK: "Kč ", DKK: "kr ", HKD: "HK$", HUF: "Ft ", IDR: "Rp ", ILS: "₪", KRW: "₩", MXN: "MX$", MYR: "RM ", NOK: "kr ", NZD: "NZ$", PHP: "₱", PKR: "₨ ", PLN: "zł ", RUB: "₽", SEK: "kr ", SGD: "S$", THB: "฿", TRY: "₺", TWD: "NT$", VND: "₫", MAD: "MAD ", IRR: "IRR ", ARS: "ARS$", RON: "RON ", UAH: "₴", COP: "COP$", EGP: "E£", SAR: "SAR ", BDT: "৳", BGN: "лв ", VES: "Bs. " };
+const sym = () => (cur === "USD" ? "$" : SYMS[cur] || cur + " ");
+const rate = () => (cur === "USD" ? 1 : fx[cur] || 1);
+const localPx = (c) => (cur === "NGN" && c.price_ngn != null ? Number(c.price_ngn) : Number(c.price_usd) * rate());
+const loc = (n) => { n = Number(n); return isFinite(n) && n > 0 ? sym() + n.toLocaleString("en-US", { minimumFractionDigits: Math.min(2, n >= 1000 ? 0 : n >= 1 ? 2 : n >= 0.01 ? 4 : n >= 0.0001 ? 6 : 9), maximumFractionDigits: n >= 1000 ? 0 : n >= 1 ? 2 : n >= 0.01 ? 4 : n >= 0.0001 ? 6 : 9 }) : "–"; };
 
 const el = (t, a, ...kids) => {
   const n = document.createElement(t);
@@ -91,6 +93,7 @@ const usd = (n) => {
 };
 const ngn = (n) => { n = Number(n); return isFinite(n) && n > 0 ? "₦" + n.toLocaleString("en-US", { maximumFractionDigits: n >= 100 ? 0 : 4 }) : "–"; };
 const big = (n, pre) => { n = Number(n); return isFinite(n) && n > 0 ? pre + n.toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 2 }) : "–"; };
+const money = (c) => (cur === "USD" ? usd(c.price_usd) : loc(localPx(c)));
 const pctN = (v) => (v == null || !isFinite(v) ? null : v);
 const pctEl = (v) => { v = pctN(v); return v == null ? el("span", { text: "–" }) : el("span", { class: v >= 0 ? "up" : "dn", text: (v > 0 ? "+" : "") + v.toFixed(2) + "%" }); };
 const spark = (c) => (Array.isArray(c.sparkline) ? c.sparkline.map(Number).filter((v) => isFinite(v) && v > 0) : []);
@@ -131,7 +134,7 @@ function summary() {
   const ratio = Number(a.market_cap_usd) / Number(b.market_cap_usd);
   const big1 = ratio >= 1 ? a : b, small1 = ratio >= 1 ? b : a, r = ratio >= 1 ? ratio : 1 / ratio;
   const parts = [];
-  parts.push(`${a.name} (${String(a.symbol).toUpperCase()}) is ${usd(a.price_usd)} and ${b.name} (${String(b.symbol).toUpperCase()}) is ${usd(b.price_usd)} right now.`);
+  parts.push(`${a.name} (${String(a.symbol).toUpperCase()}) is ${money(a)} and ${b.name} (${String(b.symbol).toUpperCase()}) is ${money(b)} right now.`);
   if (isFinite(r) && r > 0) parts.push(`${big1.name} has a market cap about ${r >= 10 ? Math.round(r) : r.toFixed(1)} times that of ${small1.name}.`);
   const ca = pctN(Number(a.change_24h_pct)), cb = pctN(Number(b.change_24h_pct));
   if (ca != null && cb != null) parts.push(`In the last 24 hours ${a.name} moved ${ca > 0 ? "+" : ""}${ca.toFixed(2)}% and ${b.name} ${cb > 0 ? "+" : ""}${cb.toFixed(2)}%.`);
@@ -140,12 +143,11 @@ function summary() {
 }
 function table() {
   const rows = [
-    ["Price (USD)", (c) => usd(c.price_usd), null],
-    ["Price (" + cur + ")", (c) => loc(localPx(c)), null],
+    ["Price (" + cur + ")", (c) => money(c), null],
     ["24h change", (c) => pctEl(Number(c.change_24h_pct)), (c) => Number(c.change_24h_pct), "max"],
     ["7d change", (c) => pctEl(chg7(c)), (c) => chg7(c), "max"],
-    ["Market cap", (c) => big(c.market_cap_usd, "$"), (c) => Number(c.market_cap_usd), "max"],
-    ["24h volume", (c) => big(c.volume_24h_usd, "$"), (c) => Number(c.volume_24h_usd), "max"],
+    ["Market cap", (c) => big(Number(c.market_cap_usd) * rate(), sym()), (c) => Number(c.market_cap_usd), "max"],
+    ["24h volume", (c) => big(Number(c.volume_24h_usd) * rate(), sym()), (c) => Number(c.volume_24h_usd), "max"],
     ["Volume / market cap", (c) => { const v = Number(c.volume_24h_usd) / Number(c.market_cap_usd); return isFinite(v) && v > 0 ? (v * 100).toFixed(1) + "%" : "–"; }, null],
     ["Rank", (c) => (c.market_cap_rank && c.kind !== "tokenized" ? "#" + c.market_cap_rank : "–"), null],
     ["Circulating supply", (c) => (Number(c.circulating_supply) > 0 ? big(c.circulating_supply, "") + " " + String(c.symbol).toUpperCase() : "–"), null],
@@ -239,7 +241,7 @@ document.addEventListener("click", (e) => { if (!e.target.closest(".search")) $(
     const { SUPABASE_URL, SUPABASE_KEY } = await import("./config.js");
     sb = createClient(SUPABASE_URL, SUPABASE_KEY);
     try { const { data: f } = await sb.from("fx_rates").select("currency,per_usd"); (f || []).forEach((r) => { fx[r.currency] = Number(r.per_usd); }); } catch (_) {}
-    if (cur !== "NGN" && !fx[cur]) cur = "NGN";
+    if (cur !== "USD" && !fx[cur]) cur = "USD";
     const param = new URLSearchParams(location.search).get("c");
     const want = (param ? param.split(",") : ["bitcoin", "ethereum"]).map((x) => x.trim().toLowerCase());
     coins = await fetchCoins(want);
