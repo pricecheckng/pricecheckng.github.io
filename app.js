@@ -676,13 +676,14 @@ const Live = (() => {
     if (t) t.classList.toggle("on", !!on);
   };
   const DEBUG = /[?&]live=debug/.test(location.search);
+  const exRaw = {}; // debug only: first message seen from each exchange
   const dbg = () => {};
   if (DEBUG)
     setInterval(() => {
       const t = document.getElementById("liveTag");
       if (!t) return;
       t.classList.add("on");
-      const parts = [...conns.values()].map((c) => c.ex + (c.open ? " ok " : c.ws ? " wait " : isBlocked(c.ex) ? " blocked " : " off ") + (exTicks[c.ex] || 0));
+      const parts = [...conns.values()].map((c) => c.ex + (c.open ? " ok " : c.ws ? " wait " : isBlocked(c.ex) ? " blocked " : " off ") + (exTicks[c.ex] || 0) + (!exTicks[c.ex] && exRaw[c.ex] ? " «" + exRaw[c.ex] + "»" : ""));
       t.lastChild.textContent = " " + (parts.length ? parts.join(" | ") : "no connection yet") + " | on screen " + vis.size;
     }, 1000);
   const num = (v) => (v === null || v === undefined || v === "" ? NaN : Number(v));
@@ -761,7 +762,7 @@ const Live = (() => {
     },
     xt: {
       eps: ["wss://stream.xt.com/public"],
-      sub: (l, on) => [{ method: on ? "SUBSCRIBE" : "UNSUBSCRIBE", params: l.map((x) => "ticker@" + x.toLowerCase() + "_usdt"), id: "pcn" + seq++ }],
+      sub: (l, on) => [{ method: on ? "subscribe" : "unsubscribe", params: l.map((x) => "ticker@" + x.toLowerCase() + "_usdt"), id: "pcn" + seq++ }],
       parse: (m) => {
         const d = m && m.topic === "ticker" && m.data;
         return d && d.s && d.c ? [String(d.s).replace(/_usdt$/i, "").toUpperCase(), num(d.c), null] : null;
@@ -845,6 +846,7 @@ const Live = (() => {
     };
     w.onmessage = (e) => {
       let m;
+      if (DEBUG && !exRaw[c.ex] && typeof e.data === "string") exRaw[c.ex] = e.data.slice(0, 90);
       try {
         m = JSON.parse(e.data);
       } catch (_) {
