@@ -65,13 +65,15 @@ details p{margin:0 0 10px}
 <footer style="border-top:1px solid #e3e8e5;padding:18px 16px;text-align:center;color:var(--mu,#5d6b64);font-size:.9rem"><a href="privacy.html" style="color:var(--mu,#5d6b64)">Privacy Policy</a> · <a href="terms.html" style="color:var(--mu,#5d6b64)">Terms of Service</a><div style="margin-top:8px">© <span class="yr">2026</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></div><script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script></footer>
 <script type="module">
 const $ = (id) => document.getElementById(id);
-const CUR = { NGN: "₦", GBP: "£", EUR: "€", GHS: "GH₵", ZAR: "R", CAD: "CA$", AUD: "A$", AED: "AED ", CNY: "CN¥", KES: "KSh ", TZS: "TSh ", UGX: "USh ", INR: "₹", JPY: "¥" };
-let sb, fx = {}, cur = "NGN", coins = [], rows = [], sel = "bitcoin", pg = 0;
+const CUR = { NGN: "₦", GBP: "£", EUR: "€", GHS: "GH₵", ZAR: "R", CAD: "CA$", AUD: "A$", AED: "AED ", CNY: "CN¥", KES: "KSh ", TZS: "TSh ", UGX: "USh ", INR: "₹", JPY: "¥", BRL: "R$", CHF: "CHF ", CLP: "CLP$", CZK: "Kč ", DKK: "kr ", HKD: "HK$", HUF: "Ft ", IDR: "Rp ", ILS: "₪", KRW: "₩", MXN: "MX$", MYR: "RM ", NOK: "kr ", NZD: "NZ$", PHP: "₱", PKR: "₨ ", PLN: "zł ", RUB: "₽", SEK: "kr ", SGD: "S$", THB: "฿", TRY: "₺", TWD: "NT$", VND: "₫", MAD: "MAD ", IRR: "IRR ", ARS: "ARS$", RON: "RON ", UAH: "₴", COP: "COP$", EGP: "E£", SAR: "SAR ", BDT: "৳", BGN: "лв ", VES: "Bs. " };
+const csym = () => (cur === "USD" ? "$" : CUR[cur] || cur + " ");
+let sb, fx = {}, cur = "USD", coins = [], rows = [], sel = "bitcoin", pg = 0;
 const PER = 15;
-try { const sc = localStorage.getItem("pc_cur"); if (CUR[sc]) cur = sc; } catch (_) {}
+try { const sc = localStorage.getItem("pc_cur"); if (sc) cur = sc; } catch (_) {}
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const compact = (n, pre) => { n = Number(n); return isFinite(n) && n > 0 ? (pre || "") + n.toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 2 }) : "–"; };
 const num = (n) => { n = Number(n); return isFinite(n) ? n.toLocaleString("en-US", { maximumFractionDigits: n >= 100 ? 0 : 2 }) : "–"; };
+const val = (usd) => compact(Number(usd) * (cur === "USD" ? 1 : fx[cur] || 1), csym());
 const loc = (usd) => { const r = cur === "USD" ? 1 : fx[cur]; return r && Number(usd) > 0 ? CUR[cur] + (Number(usd) * r).toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 2 }) : ""; };
 const flag = (cc) => (/^[A-Za-z]{2}$/.test(cc || "") ? String.fromCodePoint(...cc.toUpperCase().split("").map((c) => 127397 + c.charCodeAt(0))) : "");
 const ago = (t) => { const m = Math.max(1, Math.round((Date.now() - new Date(t)) / 6e4)); return m < 60 ? m + " min ago" : m < 1440 ? Math.round(m / 60) + " h ago" : Math.round(m / 1440) + " d ago"; };
@@ -85,12 +87,12 @@ function summary() {
   if (!c) return;
   const sym = String(c.symbol || "").toUpperCase();
   const top = rows[0];
-  $("lead").textContent = top ? `${top.name} holds the most ${c.name}: about ${num(top.holdings)} ${sym}. In total ${c.companies} companies hold ${compact(c.total_holdings)} ${sym}, worth about ${compact(c.value_usd, "$")} today.` : "Some companies keep Bitcoin and other coins on their books, the way others keep gold or cash.";
+  $("lead").textContent = top ? `${top.name} holds the most ${c.name}: about ${num(top.holdings)} ${sym}. In total ${c.companies} companies hold ${compact(c.total_holdings)} ${sym}, worth about ${val(c.value_usd)} today.` : "Some companies keep Bitcoin and other coins on their books, the way others keep gold or cash.";
   document.title = `${c.name} treasuries: which companies hold ${c.name} | PriceCheck NG`;
   $("sum").hidden = false;
   $("sum").innerHTML = `<div class="st"><small>Companies holding</small><b>${num(c.companies)}</b></div>
   <div class="st"><small>Total ${esc(sym)} held</small><b>${compact(c.total_holdings)} ${esc(sym)}</b></div>
-  <div class="st"><small>Value now</small><b>${compact(c.value_usd, "$")}</b>${loc(c.value_usd) ? `<small>${loc(c.value_usd)}</small>` : ""}</div>
+  <div class="st"><small>Value now</small><b>${val(c.value_usd)}</b></div>
   <div class="st"><small>Share of all ${esc(c.name)}</small><b>${c.dominance_pct != null ? Number(c.dominance_pct).toFixed(2) + "%" : "–"}</b><small>updated ${ago(c.updated_at)}</small></div>`;
 }
 function paint() {
@@ -100,7 +102,7 @@ function paint() {
   $("list").innerHTML = `<div class="card" style="padding:4px 16px">${slice.map((r) => {
     const p = r.pnl_pct == null ? "" : `<span class="${r.pnl_pct >= 0 ? "up" : "dn"}">${r.pnl_pct > 0 ? "+" : ""}${Number(r.pnl_pct).toFixed(1)}%</span>`;
     return `<div class="row"><span class="rk">${r.rank_no}</span><div class="nm"><b>${esc(r.name)}</b><span>${flag(r.country)} ${esc(r.ticker || "")}${r.pct_supply ? ` · ${Number(r.pct_supply).toFixed(r.pct_supply < 0.1 ? 3 : 2)}% of supply` : ""}</span></div>
-      <div class="rt"><b>${num(r.holdings)} ${esc(sym)}</b><span>${compact(r.value_usd, "$")}${loc(r.value_usd) ? " · " + loc(r.value_usd) : ""}</span>${p ? `<br>${p}` : ""}</div></div>`;
+      <div class="rt"><b>${num(r.holdings)} ${esc(sym)}</b><span>${val(r.value_usd)}</span>${p ? `<br>${p}` : ""}</div></div>`;
   }).join("")}</div>`;
   const pages = Math.ceil(rows.length / PER);
   if (pages < 2) { $("pager").innerHTML = ""; return; }
@@ -126,7 +128,7 @@ async function pick(id) {
     const { SUPABASE_URL, SUPABASE_KEY } = await import("./config.js");
     sb = createClient(SUPABASE_URL, SUPABASE_KEY);
     try { const { data: f } = await sb.from("fx_rates").select("currency,per_usd"); (f || []).forEach((r) => { fx[r.currency] = Number(r.per_usd); }); } catch (_) {}
-    if (cur !== "USD" && !fx[cur]) cur = "NGN";
+    if (cur !== "USD" && !fx[cur]) cur = "USD";
     const { data, error } = await sb.rpc("treasury_coins");
     coins = error || !data ? [] : data;
     if (!coins.length) { $("msg").textContent = "The list is being collected. Please check back in a little while."; return; }

@@ -90,13 +90,14 @@ details p{margin:0 0 10px}
 <footer style="border-top:1px solid #e3e8e5;padding:18px 16px;text-align:center;color:var(--mu,#5d6b64);font-size:.9rem"><a href="privacy.html" style="color:var(--mu,#5d6b64)">Privacy Policy</a> · <a href="terms.html" style="color:var(--mu,#5d6b64)">Terms of Service</a><div style="margin-top:8px">© <span class="yr">2026</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></div><script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script></footer>
 <script type="module">
 const $ = (id) => document.getElementById(id);
-const CUR = { NGN: "₦", GBP: "£", EUR: "€", GHS: "GH₵", ZAR: "R", CAD: "CA$", AUD: "A$", AED: "AED ", CNY: "CN¥", KES: "KSh ", TZS: "TSh ", UGX: "USh ", INR: "₹", JPY: "¥" };
+const CUR = { NGN: "₦", GBP: "£", EUR: "€", GHS: "GH₵", ZAR: "R", CAD: "CA$", AUD: "A$", AED: "AED ", CNY: "CN¥", KES: "KSh ", TZS: "TSh ", UGX: "USh ", INR: "₹", JPY: "¥", BRL: "R$", CHF: "CHF ", CLP: "CLP$", CZK: "Kč ", DKK: "kr ", HKD: "HK$", HUF: "Ft ", IDR: "Rp ", ILS: "₪", KRW: "₩", MXN: "MX$", MYR: "RM ", NOK: "kr ", NZD: "NZ$", PHP: "₱", PKR: "₨ ", PLN: "zł ", RUB: "₽", SEK: "kr ", SGD: "S$", THB: "฿", TRY: "₺", TWD: "NT$", VND: "₫", MAD: "MAD ", IRR: "IRR ", ARS: "ARS$", RON: "RON ", UAH: "₴", COP: "COP$", EGP: "E£", SAR: "SAR ", BDT: "৳", BGN: "лв ", VES: "Bs. " };
+const csym = () => (cur === "USD" ? "$" : CUR[cur] || cur + " ");
 const TX_VB = 140, HALVING = 1050000;
-let sb, fx = {}, cur = "NGN", btc = 0;
-try { const sc = localStorage.getItem("pc_cur"); if (CUR[sc]) cur = sc; } catch (_) {}
+let sb, fx = {}, cur = "USD", btc = 0;
+try { const sc = localStorage.getItem("pc_cur"); if (sc) cur = sc; } catch (_) {}
 const num = (n, d) => (isFinite(n) ? Number(n).toLocaleString("en-US", { maximumFractionDigits: d == null ? 0 : d }) : "–");
-const money = (usd) => !(btc > 0) ? "" : usd < 0.01 ? "under $0.01" : "$" + usd.toLocaleString("en-US", { maximumFractionDigits: usd >= 100 ? 0 : 2, minimumFractionDigits: usd >= 100 ? 0 : 2 });
-const locm = (usd) => { const r = fx[cur]; return r && usd > 0 ? CUR[cur] + (usd * r).toLocaleString("en-US", { maximumFractionDigits: usd * r >= 100 ? 0 : 2 }) : ""; };
+const money = (usd) => { if (!(btc > 0)) return ""; const r = cur === "USD" ? 1 : fx[cur] || 1, v = usd * r, d = v >= 100 ? 0 : 2; return usd < 0.01 ? "under " + csym() + (0.01 * r).toFixed(0.01 * r >= 1 ? 0 : 2) : csym() + v.toLocaleString("en-US", { maximumFractionDigits: d, minimumFractionDigits: d }); };
+const locm = () => ""; // one currency only: the one chosen in the Menu
 const ago = (ts) => { const s = Math.max(0, Math.round(Date.now() / 1000 - ts)); return s < 90 ? s + " sec ago" : s < 5400 ? Math.round(s / 60) + " min ago" : Math.round(s / 3600) + " h ago"; };
 const span = (s) => { const d = Math.floor(s / 86400); if (d >= 60) return "about " + Math.round(d / 30.4) + " months"; if (d >= 2) return "about " + d + " days"; const h = Math.round(s / 3600); return "about " + h + " hours"; };
 const dateTxt = (ms) => new Date(ms).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
@@ -145,7 +146,7 @@ async function load() {
     sb = createClient(SUPABASE_URL, SUPABASE_KEY);
     try { const { data: f } = await sb.from("fx_rates").select("currency,per_usd"); (f || []).forEach((r) => { fx[r.currency] = Number(r.per_usd); }); } catch (_) {}
     try { const { data: c } = await sb.from("coins").select("price_usd").eq("id", "bitcoin").limit(1); if (c && c[0]) btc = Number(c[0].price_usd); } catch (_) {}
-    if (!fx[cur]) cur = "NGN";
+    if (cur !== "USD" && !fx[cur]) cur = "USD";
   } catch (_) {}
   await load();
   setInterval(load, 60000);

@@ -100,6 +100,13 @@ const H = { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY };
 const get = (p) => fetch(SUPABASE_URL + "/rest/v1/" + p, { headers: H }).then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
 const $ = (id) => document.getElementById(id);
 let gainers = [], losers = [], mode = "g", ngn = 0, newest = null;
+let cur = "USD", rate = 1; // one currency: the one chosen in the Menu
+try { const sc = localStorage.getItem("pc_cur"); if (sc) cur = sc; } catch (e) {}
+const money = (usdv) => {
+  const v = usdv * rate, d = v >= 1000 ? 0 : v >= 1 ? 2 : v >= 0.01 ? 4 : 8;
+  try { return new Intl.NumberFormat("en", { style: "currency", currency: cur, currencyDisplay: "narrowSymbol", maximumFractionDigits: d, minimumFractionDigits: Math.min(2, d) }).format(v); }
+  catch (e) { return cur + " " + v.toFixed(2); }
+};
 
 const usd = (n) => {
   const d = n >= 1000 ? 0 : n >= 1 ? 2 : n >= 0.01 ? 4 : 8;
@@ -126,8 +133,7 @@ function render() {
       '<span class="rk">' + (i + 1) + "</span>" +
       '<span class="badge">' + esc(sym.slice(0, 5)) + "</span>" +
       '<span class="nm"><b>' + esc(sym) + "</b><span>" + esc(c.name || c.id) + "</span></span>" +
-      '<span class="pr"><b>' + usd(p) + "</b>" +
-      (ngn ? '<span style="color:var(--mut);font-size:.8rem;display:block">' + naira(p * ngn) + "</span>" : "") +
+      '<span class="pr"><b>' + money(p) + "</b>" +
       '<span class="pill ' + (ch >= 0 ? "up" : "down") + '">' + (ch >= 0 ? "+" : "") + ch.toFixed(2) + "%</span></span>";
     l.appendChild(a);
   });
@@ -144,8 +150,10 @@ async function loadMovers() {
   try { cs = await get("coins?select=*&price_usd=gt.0&change_24h_pct=not.is.null&order=market_cap_rank.asc.nullslast&limit=250"); }
   catch (e) { cs = await get("coins?select=*&price_usd=gt.0&change_24h_pct=not.is.null&limit=250"); }
   try {
-    const fx = await get("fx_rates?select=currency,per_usd&currency=eq.NGN");
-    if (fx && fx[0]) ngn = Number(fx[0].per_usd);
+    if (cur !== "USD") {
+      const fx = await get("fx_rates?select=currency,per_usd&currency=eq." + encodeURIComponent(cur));
+      if (fx && fx[0] && Number(fx[0].per_usd) > 0) rate = Number(fx[0].per_usd); else cur = "USD";
+    }
   } catch (e) {}
   const ok = (cs || []).filter((c) => Number.isFinite(Number(c.change_24h_pct)) && Number(c.price_usd) > 0);
   gainers = ok.slice().sort((a, b) => b.change_24h_pct - a.change_24h_pct).slice(0, 10);
