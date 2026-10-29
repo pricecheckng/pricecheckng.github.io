@@ -21,13 +21,20 @@
 
   var dict = null, lower = {}, orig = new WeakMap(), SKIP = { SCRIPT: 1, STYLE: 1, TEXTAREA: 1, CODE: 1, PRE: 1, NOSCRIPT: 1, INPUT: 0 };
   var ATTRS = ['placeholder', 'aria-label', 'title'];
-  var RE = /^([^\p{L}\p{N}]*)([\s\S]*?)([\s→›»↗:]*)$/u;
+  var RE = /^([^\p{L}\p{N}]*)([\s\S]*?)([\s→›»↗:·]*)$/u, pats = [];
 
   function tr(s) {
     var t = s.trim();
     if (!t) return null;
     var hit = dict[t];
     if (hit) return s.replace(t, hit);
+    for (var i = 0; i < pats.length; i++) {
+      var p = pats[i];
+      if (t.length > p.pre.length + p.post.length && t.indexOf(p.pre) === 0 && t.slice(t.length - p.post.length) === p.post)
+        return s.replace(t, p.val.replace('{}', t.slice(p.pre.length, t.length - p.post.length)));
+    }
+    var pm = /^(.*?)\s*(\([^)]*\))$/.exec(t);
+    if (pm && pm[1] && dict[pm[1]]) return s.replace(t, dict[pm[1]] + ' ' + pm[2]);
     var m = RE.exec(t); if (!m || !m[2]) return null;
     var core = m[2];
     hit = dict[core];
@@ -63,7 +70,11 @@
   }
   var busy = false;
   function start() {
-    Object.keys(dict).forEach(function (k) { lower[k.toLowerCase()] = dict[k]; });
+    Object.keys(dict).forEach(function (k) {
+      var i = k.indexOf('{}');
+      if (i > -1) pats.push({ pre: k.slice(0, i), post: k.slice(i + 2), val: dict[k] }); else lower[k.toLowerCase()] = dict[k];
+    });
+    var tt = tr(document.title); if (tt) document.title = tt;
     walk(document.body);
     new MutationObserver(function (ms) {
       if (busy) return; busy = true;
@@ -76,8 +87,10 @@
       } finally { busy = false; }
     }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
   }
-  fetch('i18n/' + cur + '.json', { cache: 'default' }).then(function (r) { return r.ok ? r.json() : {}; }).then(function (d) {
-    dict = d || {};
+  var page = (location.pathname.split('/').pop() || 'index').replace(/\.html$/, '') || 'index';
+  function load(u) { return fetch(u, { cache: 'default' }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }); }
+  Promise.all([load('/i18n/' + cur + '.json'), page === 'index' ? {} : load('/i18n/pages/' + page + '.' + cur + '.json')]).then(function (a) {
+    dict = Object.assign({}, a[0], a[1]);
     if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
   }).catch(function () {});
 })();
