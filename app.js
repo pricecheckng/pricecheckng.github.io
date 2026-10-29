@@ -147,7 +147,7 @@ function fmtLocal(n, code) {
   if (n == null || isNaN(n)) return "–";
   n = Number(n);
   const max = code === "NGN" ? (n >= 100 ? 0 : n >= 1 ? 2 : 4) : n >= 1000 ? 0 : n >= 1 ? 2 : n >= 0.01 ? 4 : 8;
-  return (CURRENCIES[code]?.sym ?? code + " ") + n.toLocaleString("en-US", { maximumFractionDigits: max });
+  return (CURRENCIES[code]?.sym ?? code + " ") + n.toLocaleString("en-US", { minimumFractionDigits: Math.min(2, max), maximumFractionDigits: max });
 }
 // Price in the chosen second currency. NGN uses CoinGecko's own Naira price; others convert from USD.
 function secondPrice(c, code = state.cur) {
