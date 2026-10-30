@@ -235,9 +235,7 @@
       }
       var el = document.getElementById(loadingId);
       if (el) el.innerHTML = html;
-      // show the questions again so people can keep going
-      if (prompts) { prompts.style.display = ''; msgs.appendChild(prompts); }
-      if (promptTitle) { promptTitle.style.display = ''; msgs.insertBefore(promptTitle, prompts); }
+      // the suggestion chips stay hidden once the conversation has started
       msgs.scrollTop = msgs.scrollHeight;
       busy = false;
     }
