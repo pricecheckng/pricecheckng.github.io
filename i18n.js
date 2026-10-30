@@ -88,6 +88,8 @@
     }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
   }
   var page = (location.pathname.split('/').pop() || 'index').replace(/\.html$/, '') || 'index';
+  var GROUPS = { market: 'news pulse market-chart heatmap fear-greed movers network gas stablecoins treasuries'.split(' ') };
+  Object.keys(GROUPS).forEach(function (g) { if (GROUPS[g].indexOf(page) > -1) page = g; });
   function load(u) { return fetch(u, { cache: 'default' }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }); }
   Promise.all([load('/i18n/' + cur + '.json'), page === 'index' ? {} : load('/i18n/pages/' + page + '.' + cur + '.json')]).then(function (a) {
     dict = Object.assign({}, a[0], a[1]);
