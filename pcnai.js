@@ -287,6 +287,16 @@
       t.addEventListener('click', function (e) {
         e.preventDefault();
         injectChatUI();
+        // opening PCN AI fresh: clear the last chat and show the suggestions again
+        var m = document.getElementById('pcnMsgs');
+        if (m) {
+          var msgsAll = m.querySelectorAll('.pcn-msg');
+          for (var i = 1; i < msgsAll.length; i++) msgsAll[i].remove();
+          var pr = document.getElementById('pcnPrompts'), pt = document.getElementById('pcnPromptTitle');
+          if (pr) pr.style.display = '';
+          if (pt) pt.style.display = '';
+          m.scrollTop = 0;
+        }
         document.getElementById('pcn-chat-modal').classList.add('open');
       });
 
