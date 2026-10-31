@@ -83,6 +83,7 @@
     '#cps .c-r b,#lps .c-r b{font-size:15px}#cps .c-r small,#lps .c-r small{opacity:.6;font-size:13px;margin-left:6px}' +
     '#cps .c-r em,#lps .c-r em{margin-left:auto;color:#12a150;font-style:normal;font-weight:800}' +
     '#cps .c-n,#lps .c-n{opacity:.6;text-align:center;padding:24px 0}' +
+    '#mnu .m-pair{display:flex;gap:8px;margin:14px 0 8px}#mnu .m-pair .m-cu{flex:1;min-width:0;margin:0}#mnu .m-pair .m-cu[hidden]{display:none}#mnu .m-pair .m-cu span{display:none}#mnu .m-pair .m-cb{width:100%;min-width:0;padding:12px 10px}' +
     '#mnu .m-th{margin:14px 0 4px;padding:12px;border-radius:12px;background:rgba(127,127,127,.07)}' +
     '#mnu .m-th>span{display:block;font-weight:600;font-size:15px;margin-bottom:10px}' +
     '#mnu .m-ts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:4px;padding:4px;border-radius:12px;background:rgba(127,127,127,.14)}' +
@@ -101,13 +102,12 @@
   function row(r) {
     return '<a class="m-r" href="' + r[2] + '"><div><span>' + esc(r[0]) + (r[3] ? '<em class="m-d"></em>' : '') + '</span>' + (r[1] ? '<small>' + esc(r[1]) + '</small>' : '') + '</div>' + chev + '</a>';
   }
-  html += '<div class="m-cu" id="mLu"><span>Language</span><button type="button" class="m-cb" id="mLb" aria-haspopup="dialog"></button></div>';
-  html += '<div class="m-cu" id="mCu" hidden><span>Currency</span><button type="button" class="m-cb" id="mCb" aria-haspopup="dialog"></button></div>';
   TOP.forEach(function (r) { html += row(r); });
   html += '<div style="height:6px"></div>';
   GROUPS.forEach(function (g) {
     html += '<div class="m-g"><button type="button" class="m-gh" aria-expanded="false"><span>' + esc(g.t) + (g.rows.some(function (r) { return r[3]; }) ? '<em class="m-d"></em>' : '') + '</span><i>+</i></button><div class="m-gb">' + g.rows.map(row).join('') + '</div></div>';
   });
+  html += '<div class="m-pair"><div class="m-cu" id="mLu"><span>Language</span><button type="button" class="m-cb" id="mLb" aria-haspopup="dialog" aria-label="Language"></button></div><div class="m-cu" id="mCu" hidden><span>Currency</span><button type="button" class="m-cb" id="mCb" aria-haspopup="dialog" aria-label="Currency"></button></div></div>';
   html += '<div class="m-th"><span>Theme</span><div class="m-ts" id="mTs" role="group" aria-label="Theme"><button type="button" data-th="light" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg> Light</button><button type="button" data-th="dark" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg> Dark</button><button type="button" data-th="system" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg> System</button></div></div>';
   html += '<div class="m-ft"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="about.html">About</a></div>';
   html += '</div>';

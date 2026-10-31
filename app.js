@@ -309,13 +309,17 @@ async function renderMarket() {
     </div>
     <p class="note" id="staleNote" hidden style="background:#fff7e6;border-radius:12px;padding:10px 12px"></p>
     <div id="toolBox"></div>
-    <div class="lhd"><span>#</span><span>Name</span><span>Price</span><span>24h %</span></div>
+    <div class="mk-tools"><button type="button" id="fltBtn">Filters<b class="mk-b" id="fltBadge" hidden></b></button><button type="button" id="colBtn">Columns</button></div>
+    <div id="lwrap"><div id="lin">
+    <div class="lhd" id="lhdr"></div>
     <div id="liveTag"><i></i><span>Live prices</span></div>
     <div id="list" class="list" aria-label="Coins"></div>
+    </div></div>
     <div class="more"><button id="moreBtn" class="ac-btn" type="button" hidden>Show more coins</button></div>
     <div id="pager" aria-label="Pages"></div>
     ${footer()}`;
   tgHomeTip();
+  mkTools();
   $("#q").addEventListener(
     "input",
     debounce((e) => {
@@ -386,6 +390,107 @@ async function renderMarket() {
   loadCoins(true, state.pg);
 }
 
+/* ---------- market list: Filters and Columns (like CoinMarketCap) ---------- */
+const FLT_MAP = [["mcMin", "market_cap_usd", "gte"], ["mcMax", "market_cap_usd", "lte"], ["chMin", "change_24h_pct", "gte"], ["chMax", "change_24h_pct", "lte"], ["vMin", "volume_24h_usd", "gte"], ["vMax", "volume_24h_usd", "lte"]];
+function lsJson(k, d) { try { const j = JSON.parse(localStorage.getItem(k) || "null"); return j && typeof j === "object" ? j : d; } catch (_) { return d; } }
+function lsSave(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} }
+state.flt = lsJson("pcn_flt", {});
+state.cols = Object.assign({ chg: true, mcap: false, vol: false }, lsJson("pcn_cols", {}));
+const fltNum = (k) => { const v = parseFloat(String((state.flt || {})[k] ?? "").replace(/,/g, "")); return isFinite(v) ? v : null; };
+const fltCount = () => FLT_MAP.filter((m) => fltNum(m[0]) !== null).length;
+function applyFlt(q) {
+  for (const [k, col, op] of FLT_MAP) { const v = fltNum(k); if (v !== null) q = q[op](col, v); }
+  return q;
+}
+function mkLayout() {
+  const lin = $("#lin"), h = $("#lhdr");
+  if (!lin || !h) return;
+  const c = state.cols, ex = (c.mcap ? 1 : 0) + (c.vol ? 1 : 0);
+  lin.classList.toggle("xw", ex > 0);
+  lin.style.minWidth = ex ? 44 + 22 + 8 + 32 + 8 + 72 + 92 + (c.chg ? 66 : 0) + ex * 74 + 6 + "px" : "";
+  h.innerHTML = "<span>#</span><span>Name</span>" + (c.mcap ? '<span class="hc m">Market cap</span>' : "") + '<span class="hc p">Price</span>' + (c.chg ? '<span class="hc c">24h %</span>' : "") + (c.vol ? '<span class="hc m">Volume (24h)</span>' : "");
+  const b = $("#fltBadge"), n = fltCount();
+  if (b) { b.hidden = !n; b.textContent = n; }
+}
+function mkSheet(title, bodyHtml, footHtml) {
+  let el = document.getElementById("mkSh");
+  if (el) el.remove();
+  el = document.createElement("div");
+  el.id = "mkSh";
+  el.innerHTML = `<div class="mk-sc" data-mx></div><div class="mk-sh" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="mk-h"><b>${esc(title)}</b><button type="button" class="mk-x" data-mx aria-label="Close">×</button></div><div class="mk-body">${bodyHtml}</div><div class="mk-ft">${footHtml}</div></div>`;
+  document.body.appendChild(el);
+  const close = () => { el.classList.remove("on"); setTimeout(() => el.remove(), 220); };
+  el.addEventListener("click", (e) => { if (e.target.closest("[data-mx]")) close(); });
+  requestAnimationFrame(() => el.classList.add("on"));
+  return { el, close };
+}
+function mkTools() {
+  if (!document.getElementById("mkCss")) {
+    const st = document.createElement("style");
+    st.id = "mkCss";
+    st.textContent = `#lwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}#lwrap::-webkit-scrollbar{display:none}#lin.xw .px{min-width:84px}
+.lhd .hc{flex:none;margin:0 0 0 8px!important;text-align:right!important;white-space:nowrap}.lhd .hc.p{min-width:70px}.lhd .hc.c{min-width:58px}.lhd .hc.m{min-width:66px}.lhd{padding-right:6px!important}#lin.xw .lhd .hc.p{min-width:84px}
+.cw .xc{flex:none;min-width:66px;text-align:right;font-size:.85rem;font-weight:600;white-space:nowrap}
+.mk-tools{display:flex;gap:8px;margin:6px 0 10px}.mk-tools button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:700;font-size:.92rem;padding:11px 10px;border:0;border-radius:12px;background:rgba(127,127,127,.14);color:inherit;cursor:pointer}
+.mk-b{background:var(--green);color:#fff;border-radius:99px;font-size:.72rem;min-width:18px;height:18px;line-height:18px;text-align:center;padding:0 5px}
+#mkSh{position:fixed;inset:0;z-index:10001;visibility:hidden}#mkSh.on{visibility:visible}
+.mk-sc{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .2s}#mkSh.on .mk-sc{opacity:1}
+.mk-sh{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;max-height:90vh;display:flex;flex-direction:column;background:#fff;color:#10201a;border-radius:20px 20px 0 0;transform:translateY(100%);transition:transform .22s}#mkSh.on .mk-sh{transform:none}
+html.dk .mk-sh{background:#16201a;color:#e9f1ec}
+.mk-h{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 8px}.mk-h b{font-size:1.15rem}.mk-x{border:0;background:rgba(127,127,127,.15);color:inherit;width:32px;height:32px;border-radius:50%;font-size:18px;cursor:pointer}
+.mk-body{overflow-y:auto;padding:4px 18px 12px}.mk-body label.f{display:block;font-size:.9rem;opacity:.7;margin:14px 0 6px}
+.mk-rg{display:flex;align-items:center;gap:8px}.mk-rg input{flex:1;min-width:0;font:inherit;font-size:16px;padding:12px;border-radius:12px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);color:inherit}.mk-rg i{font-style:normal;opacity:.5}
+.mk-note{font-size:.8rem;opacity:.6;margin:14px 0 0}
+.mk-ft{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px calc(14px + env(safe-area-inset-bottom));border-top:1px solid rgba(127,127,127,.2)}
+.mk-ft .rs{border:0;background:none;color:var(--green);font:inherit;font-weight:700;cursor:pointer;padding:10px 4px}.mk-ft .ap{border:0;background:var(--green);color:#fff;font:inherit;font-weight:700;padding:12px 28px;border-radius:12px;cursor:pointer}
+.mk-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid rgba(127,127,127,.18);font-weight:600}.mk-row:last-child{border-bottom:0}
+.mk-sw{width:46px;height:26px;border-radius:99px;border:0;background:rgba(127,127,127,.35);position:relative;cursor:pointer;flex:none}.mk-sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s}.mk-sw[aria-checked="true"]{background:var(--green)}.mk-sw[aria-checked="true"]::after{transform:translateX(20px)}.mk-sw:disabled{opacity:.5}`;
+    document.head.appendChild(st);
+  }
+  mkLayout();
+  const fb = $("#fltBtn"), cb = $("#colBtn");
+  if (fb) fb.onclick = openFilters;
+  if (cb) cb.onclick = openColumns;
+}
+function openFilters() {
+  const v = (k) => { const n = fltNum(k); return n === null ? "" : n; };
+  const rg = (label, a, b, unit) => `<label class="f">${label}</label><div class="mk-rg"><input data-k="${a}" inputmode="decimal" placeholder="Min" value="${v(a)}" aria-label="${label} minimum"><i>${unit}</i><span>-</span><input data-k="${b}" inputmode="decimal" placeholder="Max" value="${v(b)}" aria-label="${label} maximum"><i>${unit}</i></div>`;
+  const { el, close } = mkSheet("Filters", rg("Market cap", "mcMin", "mcMax", "$") + rg("Price change (24h)", "chMin", "chMax", "%") + rg("Volume (24h)", "vMin", "vMax", "$") + '<p class="mk-note">Filters work on the All coins list. Amounts are in US dollars.</p>', '<button type="button" class="rs">Reset</button><button type="button" class="ap">Apply</button>');
+  const run = (clear) => {
+    const f = {};
+    el.querySelectorAll("input[data-k]").forEach((i) => { if (!clear && i.value.trim() !== "") f[i.dataset.k] = i.value.trim(); });
+    state.flt = f;
+    lsSave("pcn_flt", f);
+    close();
+    state.tab = "all";
+    document.querySelectorAll("#tabs [data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === "all"));
+    mkLayout();
+    loadCoins(true);
+  };
+  el.querySelector(".rs").onclick = () => run(true);
+  el.querySelector(".ap").onclick = () => run(false);
+}
+function openColumns() {
+  const rows = [["Price", "price"], ["24h %", "chg"], ["Market cap", "mcap"], ["Volume (24h)", "vol"]];
+  const body = rows.map(([t, k]) => `<div class="mk-row"><span>${t}</span><button type="button" class="mk-sw" data-c="${k}" role="switch" aria-checked="${k === "price" ? "true" : !!state.cols[k]}" ${k === "price" ? "disabled" : ""} aria-label="${t}"></button></div>`).join("");
+  const { el, close } = mkSheet("Columns", body, '<button type="button" class="rs">Reset</button><button type="button" class="ap">Done</button>');
+  const redraw = () => {
+    lsSave("pcn_cols", state.cols);
+    mkLayout();
+    const l = $("#list");
+    if (l && state.coins.length) l.innerHTML = rowsHtml(state.coins);
+    el.querySelectorAll("[data-c]").forEach((b) => { if (b.dataset.c !== "price") b.setAttribute("aria-checked", String(!!state.cols[b.dataset.c])); });
+  };
+  el.addEventListener("click", (e) => {
+    const b = e.target.closest("[data-c]");
+    if (!b || b.disabled) return;
+    state.cols[b.dataset.c] = !state.cols[b.dataset.c];
+    redraw();
+  });
+  el.querySelector(".rs").onclick = () => { state.cols = { chg: true, mcap: false, vol: false }; redraw(); };
+  el.querySelector(".ap").onclick = close;
+}
+
 function coinRow(c) {
   const d = chg(c.change_24h_pct);
   const sym = esc(c.symbol.toUpperCase());
@@ -393,9 +498,11 @@ function coinRow(c) {
   return `<div class="cw"><button class="star${on ? " on" : ""}" type="button" data-star="${esc(c.id)}" aria-label="${on ? "Remove from watchlist" : "Add to watchlist"}" aria-pressed="${on}">${on ? "★" : "☆"}</button><button class="coin" type="button" data-id="${esc(c.id)}">
     <span class="rk">${c.market_cap_rank != null ? c.market_cap_rank : ""}</span>
     <img class="logo" src="${esc(c.image_url || "")}" alt="" loading="lazy" width="32" height="32">
-    <div class="meta"><b>${sym}</b><span>${c.market_cap_usd ? mnyBig(c.market_cap_usd) : esc(c.name)}</span></div>
+    <div class="meta"><b>${sym}</b><span>${state.cols.mcap ? esc(c.name) : c.market_cap_usd ? mnyBig(c.market_cap_usd) : esc(c.name)}</span></div>
+    ${state.cols.mcap ? `<span class="xc">${c.market_cap_usd ? mnyBig(c.market_cap_usd) : "–"}</span>` : ""}
     <div class="px"><b>${mainPx(c)}</b></div>
-    <span class="chg ${d.c}">${chgTxt(d)}</span>
+    ${state.cols.chg ? `<span class="chg ${d.c}">${chgTxt(d)}</span>` : ""}
+    ${state.cols.vol ? `<span class="xc">${c.volume_24h_usd ? mnyBig(c.volume_24h_usd) : "–"}</span>` : ""}
   </button></div>`;
 }
 
@@ -554,7 +661,7 @@ async function loadCoins(reset, pg) {
     list.innerHTML = rowsHtml(wd);
     return;
   }
-  const plainFirstPage = reset && !state.page && !state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
+  const plainFirstPage = reset && !state.page && !state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim() && !fltCount();
   let shownFromCache = false;
   if (plainFirstPage) {
     const cached = readCoinCache();
@@ -577,6 +684,7 @@ async function loadCoins(reset, pg) {
   else {
     // Hide tokenized funds and similar products from the main list (they still show when searched).
     q = q.or("kind.is.null,kind.neq.tokenized");
+    q = applyFlt(q);
     for (const w of HIDE_NAMES) q = q.not("name", "ilike", `%${w}%`);
     for (const sy of HIDE_SYMBOLS) q = q.not("symbol", "ilike", sy);
   }
