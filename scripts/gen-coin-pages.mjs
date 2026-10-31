@@ -294,6 +294,7 @@ top.forEach((c, i) => fs.writeFileSync(c.id + "-price.html", page(c, i)));
 
 
 // ---- Exchange pages: one page per exchange, plus an index (exchanges.html). Needs public.exchange_list() and public.exchange_markets(). ----
+const EX_ORDER2 = ["bitflyer", "bitbank", "btcbox", "coincheck", "btcmarkets", "independentreserve", "coinjar", "foxbit", "paribu", "buda", "deribit"];
 const EX_ORDER = ["binance", "bybit", "okx", "kucoin", "gate", "mexc", "bitget", "htx", "cryptocom", "lbank", "whitebit", "poloniex", "digifinex", "xt", "kraken", "bitstamp", "bitfinex", "bitvavo", "valr", "btcturk", "coinbase", "bingx", "phemex", "bitmart", "coinex", "bit2me", "pionex", "bigone", "coindcx", "hashkey", "wazirx", "bitopro", "bitso", "luno", "upbit", "bithumb", "coinone", "korbit", "bitkub"];
 const exName = (k) => EX_NAMES[k] || (k.charAt(0).toUpperCase() + k.slice(1));
 const rpc = async (fn, body) => {
@@ -384,7 +385,8 @@ ${extraJs || ""}
     const body0 = exHtml(rows, name, x.exchange, exMeta(x), WHEN, coinIds, LOCAL[x.exchange]);
     if (!body0) continue;
     const k = EX_ORDER.indexOf(x.exchange);
-    const logoHtml = k < 0 ? `<span class="exb" style="display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--g)">${esc(name.charAt(0))}</span>` : `<span class="exb" style="background:url(exchanges.png) no-repeat;background-size:264px 308px;background-position:-${(k % 6) * 44}px -${Math.floor(k / 6) * 44}px"></span>`;
+    const k2 = EX_ORDER2.indexOf(x.exchange);
+    const logoHtml = k < 0 && k2 >= 0 ? `<span class="exb" style="background:url(exchanges2.png) no-repeat;background-size:264px 88px;background-position:-${(k2 % 6) * 44}px -${Math.floor(k2 / 6) * 44}px"></span>` : k < 0 ? `<span class="exb" style="display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--g)">${esc(name.charAt(0))}</span>` : `<span class="exb" style="background:url(exchanges.png) no-repeat;background-size:264px 308px;background-position:-${(k % 6) * 44}px -${Math.floor(k / 6) * 44}px"></span>`;
     const others = EXLIST.filter((o) => o.exchange !== x.exchange).slice(0, 12).map((o) => `<a href="exchange-${o.exchange}.html">${esc(exName(o.exchange))}</a>`).join("");
     const file = `exchange-${x.exchange}.html`;
     const body = `<div class="coinrow">${logoHtml}<div><h1>${esc(name)}: coins, prices and trading volume</h1></div></div>

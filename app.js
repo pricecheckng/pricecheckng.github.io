@@ -1523,12 +1523,14 @@ function paintCoin(c) {
 /* ---------- coin news ---------- */
 const EX_NAMES = { bitflyer: "bitFlyer", bitbank: "bitbank", btcbox: "BTCBOX", coincheck: "Coincheck", btcmarkets: "BTC Markets", independentreserve: "Independent Reserve", coinjar: "CoinJar", foxbit: "Foxbit", paribu: "Paribu", buda: "Buda.com", deribit: "Deribit", binance: "Binance", bybit: "Bybit", okx: "OKX", kucoin: "KuCoin", gate: "Gate", mexc: "MEXC", bitget: "Bitget", htx: "HTX", cryptocom: "Crypto.com", lbank: "LBank", whitebit: "WhiteBIT", bitmart: "BitMart", coinex: "CoinEx", poloniex: "Poloniex", digifinex: "DigiFinex", xt: "XT", kraken: "Kraken", bitstamp: "Bitstamp", bitfinex: "Bitfinex", bitvavo: "Bitvavo", valr: "VALR", btcturk: "BTCTurk", coinbase: "Coinbase", bingx: "BingX", phemex: "Phemex", bit2me: "Bit2Me", pionex: "Pionex", bigone: "BigONE", coindcx: "CoinDCX", hashkey: "HashKey", wazirx: "WazirX", bitopro: "BitoPro", bitso: "Bitso", luno: "Luno", upbit: "Upbit", bithumb: "Bithumb", coinone: "Coinone", korbit: "Korbit", bitkub: "Bitkub" };
 const EX_ORDER = ["binance", "bybit", "okx", "kucoin", "gate", "mexc", "bitget", "htx", "cryptocom", "lbank", "whitebit", "poloniex", "digifinex", "xt", "kraken", "bitstamp", "bitfinex", "bitvavo", "valr", "btcturk", "coinbase", "bingx", "phemex", "bitmart", "coinex", "bit2me", "pionex", "bigone", "coindcx", "hashkey", "wazirx", "bitopro", "bitso", "luno", "upbit", "bithumb", "coinone", "korbit", "bitkub"];
+const EX_ORDER2 = ["bitflyer", "bitbank", "btcbox", "coincheck", "btcmarkets", "independentreserve", "coinjar", "foxbit", "paribu", "buda", "deribit"];
 function exBadge(key) {
   let h = 0;
   for (const ch of String(key)) h = (h * 31 + ch.charCodeAt(0)) % 360;
   const name = EX_NAMES[key] || String(key);
   const k = EX_ORDER.indexOf(key);
-  const logo = k < 0 ? "" : `<span style="position:absolute;inset:0;background:url(exchanges.png) no-repeat;background-size:180px 210px;background-position:-${(k % 6) * 30}px -${Math.floor(k / 6) * 30}px"></span>`;
+  const k2 = EX_ORDER2.indexOf(key);
+  const logo = k >= 0 ? `<span style="position:absolute;inset:0;background:url(exchanges.png) no-repeat;background-size:180px 210px;background-position:-${(k % 6) * 30}px -${Math.floor(k / 6) * 30}px"></span>` : k2 >= 0 ? `<span style="position:absolute;inset:0;background:url(exchanges2.png) no-repeat;background-size:180px 60px;background-position:-${(k2 % 6) * 30}px -${Math.floor(k2 / 6) * 30}px"></span>` : "";
   return `<span style="position:relative;flex:none;width:30px;height:30px;border-radius:8px;background:hsl(${h},45%,40%);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;overflow:hidden">${esc(name.charAt(0).toUpperCase())}${logo}</span>`;
 }
 function paintConverter(c) {
