@@ -20,7 +20,10 @@
     '.mkt-tip{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:13px;line-height:1.45;background:rgba(127,127,127,.09)}' +
     '.mkt-tip b{display:block;margin-bottom:2px;font-size:13px}' +
     '.mkt-up{color:#15803d}.mkt-dn{color:#dc2626}' +
-    'html.dk .mkt-up{color:#3ddc97}html.dk .mkt-dn{color:#ff6b6b}';
+    'html.dk .mkt-up{color:#3ddc97}html.dk .mkt-dn{color:#ff6b6b}' +
+    '.mkt-tk{height:26px;overflow:hidden;margin:0 0 6px;font-size:12.5px}.mkt-tkin{transition:transform .45s ease}' +
+    '.mkt-ti{display:block;height:26px;line-height:26px;white-space:nowrap;color:inherit;text-decoration:none;opacity:.85}.mkt-ti b{color:#0b7a4b;font-weight:700}.mkt-ti span{font-weight:600}' +
+    'html.dk .mkt-ti b{color:#3ddc97}@media(prefers-reduced-motion:reduce){.mkt-tkin{transition:none}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   function cur() { return window.PCN_CUR || null; }
@@ -45,6 +48,42 @@
   function card(k, label, val, extra) {
     return '<button type="button" class="mkt-c' + (openKey === k ? ' on' : '') + '" data-k="' + k + '" aria-expanded="' + (openKey === k) + '"><small>' + label + '</small><b>' + val + '</b>' + (extra || '') + '</button>';
   }
+  /* rolling ticker above the search box (like CoinMarketCap): coins, exchanges, market cap, volume, dominance, Fear & Greed */
+  var counts = { coins: null, ex: null }, tickI = 0;
+  function tickItems() {
+    var d = data, a = [];
+    if (counts.coins) a.push(['Coins', counts.coins.toLocaleString('en-US'), '']);
+    if (counts.ex) a.push(['Exchanges', String(counts.ex), '']);
+    if (d) {
+      var ch = Number(d.cap_change_24h);
+      if (Number(d.market_cap) > 0) a.push(['Market cap', money(d.market_cap), isFinite(ch) ? '<span class="' + (ch >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (ch >= 0 ? '\u25B2 ' : '\u25BC ') + Math.abs(ch).toFixed(2) + '%</span>' : '']);
+      if (Number(d.volume_24h) > 0) a.push(['24h volume', money(d.volume_24h), '']);
+      if (isFinite(Number(d.btc_dom)) && Number(d.btc_dom) > 0) a.push(['BTC dominance', Number(d.btc_dom).toFixed(1) + '%', '']);
+      if (d.fng_value != null) a.push(['Fear &amp; Greed', String(d.fng_value), '<span>' + String(d.fng_label || '').replace(/</g, '&lt;') + '</span>', 'fear-greed.html']);
+    }
+    return a;
+  }
+  function tickHtml() {
+    var a = tickItems(); if (a.length < 2) return '';
+    return '<div class="mkt-tk" aria-live="off"><div class="mkt-tkin">' + a.concat([a[0]]).map(function (r) {
+      var inner = r[0] + ': <b>' + r[1] + '</b> ' + (r[2] || '');
+      return r[3] ? '<a class="mkt-ti" href="' + r[3] + '">' + inner + '</a>' : '<div class="mkt-ti">' + inner + '</div>';
+    }).join('') + '</div></div>';
+  }
+  function reTick() { var o = document.getElementById('mktTick'); if (o) o.remove(); injectTick(); }
+  function injectTick() {
+    var view = document.getElementById('view'); if (!view || !view.querySelector('#tabs')) return;
+    if (document.getElementById('mktTick')) return;
+    var h = tickHtml(); if (!h) return;
+    var tk = document.createElement('div'); tk.id = 'mktTick'; tk.innerHTML = h; tickI = 0;
+    view.insertBefore(tk, view.firstChild);
+  }
+  setInterval(function () {
+    var inn = document.querySelector('#mktTick .mkt-tkin'); if (!inn || document.hidden) return;
+    var n = inn.children.length; tickI++;
+    inn.style.transition = ''; inn.style.transform = 'translateY(-' + tickI * 26 + 'px)';
+    if (tickI >= n - 1) setTimeout(function () { inn.style.transition = 'none'; inn.style.transform = 'translateY(0)'; tickI = 0; }, 500);
+  }, 3500);
   function build() {
     var d = data; if (!d) return null;
     var ch = Number(d.cap_change_24h), chTxt = '';
@@ -87,12 +126,20 @@
       if (r0.updated_at && Date.now() - new Date(r0.updated_at).getTime() > 6 * 3600e3) return; /* too old: hide */
       data = r0;
       var old = document.getElementById('mkt'); if (old) old.remove();
-      inject();
+      var ot = document.getElementById('mktTick'); if (ot) ot.remove();
+      inject(); injectTick();
     }).catch(function () {});
   }
   import('./config.js').then(function (cfg) {
     refresh(cfg);
     setInterval(function () { refresh(cfg); }, 5 * 60 * 1000);
-    new MutationObserver(function () { inject(); }).observe(document.body, { childList: true, subtree: true });
+    var H = { apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_KEY };
+    fetch(cfg.SUPABASE_URL + '/rest/v1/coins?select=id&limit=1', { headers: Object.assign({ Prefer: 'count=exact' }, H) }).then(function (r) {
+      var m = /\/(\d+)$/.exec(r.headers.get('content-range') || ''); if (m) { counts.coins = Number(m[1]); reTick(); }
+    }).catch(function () {});
+    fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/exchange_list', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H), body: '{}' }).then(function (r) { return r.json(); }).then(function (l) {
+      if (Array.isArray(l) && l.length) { counts.ex = l.length; reTick(); }
+    }).catch(function () {});
+    new MutationObserver(function () { inject(); injectTick(); }).observe(document.body, { childList: true, subtree: true });
   }).catch(function () {});
 })();
