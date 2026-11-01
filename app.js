@@ -493,13 +493,16 @@ function openColumns() {
   el.querySelector(".ap").onclick = close;
 }
 
+// Bitcoin logo drawn as SVG so the white B can turn by itself when the price ticks (like CoinMarketCap)
+const btcLogo = (cls) => `<svg class="${cls}" viewBox="0 0 64 64" width="32" height="32" role="img" aria-label="Bitcoin" style="display:block"><circle cx="32" cy="32" r="32" fill="#f7931a"/><g class="btcb"><path fill="#fff" d="M46.103,27.444c0.637-4.258-2.605-6.547-7.038-8.074l1.438-5.768l-3.511-0.875l-1.4,5.616c-0.923-0.23-1.871-0.447-2.813-0.662l1.41-5.653l-3.509-0.875l-1.439,5.766c-0.764-0.174-1.514-0.346-2.242-0.527l0.004-0.018l-4.842-1.209l-0.934,3.75c0,0,2.605,0.597,2.55,0.634c1.422,0.355,1.679,1.296,1.636,2.042l-1.638,6.571c0.098,0.025,0.225,0.061,0.365,0.117c-0.117-0.029-0.242-0.061-0.371-0.092l-2.296,9.205c-0.174,0.432-0.615,1.08-1.609,0.834c0.035,0.051-2.552-0.637-2.552-0.637l-1.743,4.019l4.569,1.139c0.85,0.213,1.683,0.436,2.503,0.646l-1.453,5.834l3.507,0.875l1.439-5.772c0.958,0.26,1.888,0.5,2.798,0.726l-1.434,5.745l3.511,0.875l1.453-5.823c5.987,1.133,10.489,0.676,12.384-4.739c1.527-4.36-0.076-6.875-3.226-8.515C42.819,32.676,45.526,31.746,46.103,27.444L46.103,27.444z M38.079,38.696c-1.085,4.36-8.426,2.003-10.806,1.412l1.928-7.729C31.581,32.972,39.211,34.147,38.079,38.696z M39.164,27.381c-0.99,3.966-7.1,1.951-9.082,1.457l1.748-7.01C33.812,22.322,40.176,23.254,39.164,27.381z"/></g></svg>`;
+
 function coinRow(c) {
   const d = chg(c.change_24h_pct);
   const sym = esc(c.symbol.toUpperCase());
   const on = state.watch.has(c.id);
   return `<div class="cw"><button class="star${on ? " on" : ""}" type="button" data-star="${esc(c.id)}" aria-label="${on ? "Remove from watchlist" : "Add to watchlist"}" aria-pressed="${on}">${on ? "★" : "☆"}</button><button class="coin" type="button" data-id="${esc(c.id)}">
     <span class="rk">${c.market_cap_rank != null ? c.market_cap_rank : ""}</span>
-    <img class="logo" src="${esc(c.image_url || "")}" alt="" loading="lazy" width="32" height="32">
+    ${c.id === "bitcoin" ? btcLogo("logo") : `<img class="logo" src="${esc(c.image_url || "")}" alt="" loading="lazy" width="32" height="32">`}
     <div class="meta"><b>${sym}</b><span>${state.cols.mcap ? esc(c.name) : c.market_cap_usd ? mnyBig(c.market_cap_usd) : esc(c.name)}</span></div>
     ${state.cols.mcap ? `<span class="xc">${c.market_cap_usd ? mnyBig(c.market_cap_usd) : "–"}</span>` : ""}
     <div class="px"><b>${mainPx(c)}</b></div>
@@ -751,7 +754,7 @@ const Live = (() => {
   let raf = 0;
 
   const css = document.createElement("style");
-  css.textContent = `@keyframes lfs{0%{transform:perspective(220px) rotateY(0)}100%{transform:perspective(220px) rotateY(360deg)}}.lf-spin{animation:lfs .75s ease-in-out}@keyframes lfu{0%,55%{color:#16c784}100%{color:inherit}}@keyframes lfd{0%,55%{color:#ea3943}100%{color:inherit}}.lf-u{animation:lfu 1.1s ease-out}.lf-d{animation:lfd 1.1s ease-out}#liveTag{display:none;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--muted);margin:2px 0 8px}#liveTag.on{display:flex}#liveTag i{width:8px;height:8px;border-radius:50%;background:#12a150;box-shadow:0 0 0 0 rgba(18,161,80,.6);animation:lfp 1.6s infinite}@keyframes lfp{70%{box-shadow:0 0 0 7px rgba(18,161,80,0)}100%{box-shadow:0 0 0 0 rgba(18,161,80,0)}}`;
+  css.textContent = `@keyframes lfs{0%{transform:rotate(0)}100%{transform:rotate(720deg)}}.btcb{transform-box:fill-box;transform-origin:center}.lf-spin{animation:lfs .9s cubic-bezier(.45,0,.25,1)}@keyframes lfu{0%,55%{color:#16c784}100%{color:inherit}}@keyframes lfd{0%,55%{color:#ea3943}100%{color:inherit}}.lf-u{animation:lfu 1.1s ease-out}.lf-d{animation:lfd 1.1s ease-out}#liveTag{display:none;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--muted);margin:2px 0 8px}#liveTag.on{display:flex}#liveTag i{width:8px;height:8px;border-radius:50%;background:#12a150;box-shadow:0 0 0 0 rgba(18,161,80,.6);animation:lfp 1.6s infinite}@keyframes lfp{70%{box-shadow:0 0 0 7px rgba(18,161,80,0)}100%{box-shadow:0 0 0 0 rgba(18,161,80,0)}}`;
   document.head.appendChild(css);
 
   /* Which exchange streams each coin: chosen by the database (live_sources) from the exchanges that really list it. */
@@ -1147,7 +1150,7 @@ const Live = (() => {
         if (px) {
           px.textContent = mainPx(c);
           flash(px, dir);
-          spin(btn.querySelector(".logo"));
+          if (id === "bitcoin") spin(btn.querySelector(".btcb"));
         }
         if (sp) sp.textContent = fmtLocal(secondPrice(c), state.cur);
         if (ch) {
@@ -1161,7 +1164,7 @@ const Live = (() => {
         if (big) {
           big.textContent = mainPx(c);
           flash(big, dir);
-          spin(document.querySelector(".cp-head .logo"));
+          spin(document.querySelector(".cp-head .btcb"));
         }
         if (sub) {
           const m = CURRENCIES[state.cur];
@@ -1460,7 +1463,7 @@ function paintCoin(c) {
     <p class="muted" id="cpNote" style="margin:10px 0 0;font-size:.85rem">Touch the chart to see the price at any moment.</p>`;
   $("#coinBody").innerHTML = `
     <div class="cp-head">
-      <img class="logo lg" src="${esc(c.image_url || "")}" alt="" width="48" height="48">
+      ${c.id === "bitcoin" ? btcLogo("logo lg").replace('width="32" height="32"', 'width="48" height="48"') : `<img class="logo lg" src="${esc(c.image_url || "")}" alt="" width="48" height="48">`}
       <div><h1>${esc(c.name)}</h1><p>${esc(sym)}${c.market_cap_rank && c.kind !== "tokenized" ? " · Rank #" + c.market_cap_rank : ""}${c.kind === "tokenized" ? '<em style="font-style:normal;font-size:.72rem;background:rgba(22,163,74,.14);color:#15803d;border-radius:99px;padding:1px 8px;margin-left:6px">Tokenized asset</em>' : ""}</p>${c.kind === "tokenized" ? '<p class="muted" style="font-size:.85rem;margin:6px 0 0">A tokenized asset tracks the value of a fund, bond, stock or similar. Its price does not move like normal crypto and it may trade very little.</p>' : ""}</div>
     </div>
     <div class="cp-price">
