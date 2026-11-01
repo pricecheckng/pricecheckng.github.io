@@ -19,6 +19,7 @@ input[type=search]{width:100%;font:inherit;font-size:16px;padding:12px;border-ra
 .chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:6px 12px;font:inherit;font-size:.85rem;font-weight:700;cursor:pointer}
 .chip.on{background:var(--g);border-color:var(--g);color:#fff}
 .sug{border:1px solid var(--line);border-radius:12px;margin-top:6px;overflow:hidden;background:var(--bg)}.sug button{display:block;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:inherit;padding:10px 12px;cursor:pointer}.sug button:first-child{border-top:0}
+select{width:100%;font:inherit;font-size:16px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
 .seg{display:flex;gap:6px}.seg button{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:10px;font:inherit;font-weight:700;cursor:pointer}.seg button.on{background:var(--g);border-color:var(--g);color:#fff}
 textarea{width:100%;min-height:92px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
 .copy{display:block;width:100%;margin-top:8px;border:0;background:var(--g);color:#fff;font:inherit;font-weight:800;padding:13px;border-radius:12px;cursor:pointer}
@@ -39,8 +40,8 @@ footer{border-top:1px solid var(--line);padding:18px 16px;text-align:center;colo
 <div class="chips" id="chips"></div>
 <label>Theme</label>
 <div class="seg" id="th"><button data-v="light" class="on">Light</button><button data-v="dark">Dark</button><button data-v="auto">Auto</button></div>
-<label>Price in</label>
-<div class="seg" id="cu"><button data-v="usd" class="on">US dollars</button><button data-v="ngn">Naira (₦)</button></div>
+<label for="cu">Currency</label>
+<select id="cu"></select>
 </div>
 
 <h2>Preview</h2>
@@ -61,7 +62,8 @@ import { SUPABASE_URL, SUPABASE_KEY } from "/config.js";
 const H = { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY };
 const $ = (i) => document.getElementById(i);
 const POP = [["bitcoin", "BTC"], ["ethereum", "ETH"], ["tether", "USDT"], ["solana", "SOL"], ["ripple", "XRP"], ["binancecoin", "BNB"], ["dogecoin", "DOGE"], ["cardano", "ADA"]];
-let sel = ["bitcoin", "ethereum", "solana"], names = {}, theme = "light", cur = "usd";
+const CUR = {"USD":["🇺🇸","$","United States dollar"],"NGN":["🇳🇬","₦","Nigerian naira"],"GBP":["🇬🇧","£","British pound"],"EUR":["🇪🇺","€","Euro"],"GHS":["🇬🇭","GH₵","Ghanaian cedi"],"ZAR":["🇿🇦","R","South African rand"],"CAD":["🇨🇦","CA$","Canadian dollar"],"AUD":["🇦🇺","A$","Australian dollar"],"AED":["🇦🇪","AED ","UAE dirham"],"CNY":["🇨🇳","CN¥","Chinese yuan"],"KES":["🇰🇪","KSh ","Kenyan shilling"],"TZS":["🇹🇿","TSh ","Tanzanian shilling"],"UGX":["🇺🇬","USh ","Ugandan shilling"],"INR":["🇮🇳","₹","Indian rupee"],"JPY":["🇯🇵","¥","Japanese yen"],"BRL":["🇧🇷","R$","Brazilian real"],"CHF":["🇨🇭","CHF ","Swiss franc"],"CLP":["🇨🇱","CLP$","Chilean peso"],"CZK":["🇨🇿","Kč ","Czech koruna"],"DKK":["🇩🇰","kr ","Danish krone"],"HKD":["🇭🇰","HK$","Hong Kong dollar"],"HUF":["🇭🇺","Ft ","Hungarian forint"],"IDR":["🇮🇩","Rp ","Indonesian rupiah"],"ILS":["🇮🇱","₪","Israeli new shekel"],"KRW":["🇰🇷","₩","South Korean won"],"MXN":["🇲🇽","MX$","Mexican peso"],"MYR":["🇲🇾","RM ","Malaysian ringgit"],"NOK":["🇳🇴","kr ","Norwegian krone"],"NZD":["🇳🇿","NZ$","New Zealand dollar"],"PHP":["🇵🇭","₱","Philippine peso"],"PKR":["🇵🇰","₨ ","Pakistani rupee"],"PLN":["🇵🇱","zł ","Polish złoty"],"RUB":["🇷🇺","₽","Russian ruble"],"SEK":["🇸🇪","kr ","Swedish krona"],"SGD":["🇸🇬","S$","Singapore dollar"],"THB":["🇹🇭","฿","Thai baht"],"TRY":["🇹🇷","₺","Turkish lira"],"TWD":["🇹🇼","NT$","New Taiwan dollar"],"VND":["🇻🇳","₫","Vietnamese dong"],"MAD":["🇲🇦","MAD ","Moroccan dirham"],"IRR":["🇮🇷","IRR ","Iranian rial"],"ARS":["🇦🇷","ARS$","Argentine peso"],"RON":["🇷🇴","RON ","Romanian leu"],"UAH":["🇺🇦","₴","Ukrainian hryvnia"],"COP":["🇨🇴","COP$","Colombian peso"],"EGP":["🇪🇬","E£","Egyptian pound"],"SAR":["🇸🇦","SAR ","Saudi riyal"],"BDT":["🇧🇩","৳","Bangladeshi taka"],"BGN":["🇧🇬","лв ","Bulgarian lev"],"VES":["🇻🇪","Bs. ","Venezuelan bolívar"]};
+let sel = ["bitcoin", "ethereum", "solana"], names = {}, theme = "light", cur = "USD";
 POP.forEach((p) => (names[p[0]] = p[1]));
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 function render() {
@@ -80,7 +82,9 @@ function render() {
   $("pv").height = h; if ($("pv").getAttribute("src") !== src) $("pv").src = src;
 }
 function seg(id, set) { $(id).querySelectorAll("button").forEach((b) => (b.onclick = () => { $(id).querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); set(b.dataset.v); render(); })); }
-seg("th", (v) => (theme = v)); seg("cu", (v) => (cur = v));
+seg("th", (v) => (theme = v));
+$("cu").innerHTML = Object.keys(CUR).map((k) => '<option value="' + k + '">' + CUR[k][0] + " " + k + " - " + CUR[k][2] + "</option>").join("");
+$("cu").onchange = () => { cur = $("cu").value; render(); };
 let t;
 $("s").oninput = () => {
   clearTimeout(t); const v = $("s").value.trim().replace(/[^A-Za-z0-9 ._-]/g, "");

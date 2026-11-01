@@ -24,25 +24,28 @@ body.dark{--bg:#0e1511;--ink:#e9f1ec;--mu:#9db0a5;--line:#26332c;--up:#34d399;--
 import { SUPABASE_URL, SUPABASE_KEY } from "/config.js";
 const q = new URLSearchParams(location.search);
 const ids = (q.get("coins") || "bitcoin,ethereum,solana").toLowerCase().split(",").map((s) => s.trim().replace(/[^a-z0-9._-]/g, "")).filter(Boolean).slice(0, 10);
-const cur = (q.get("cur") || "usd").toLowerCase() === "ngn" ? "ngn" : "usd";
+const CUR = {"USD":["🇺🇸","$","United States dollar"],"NGN":["🇳🇬","₦","Nigerian naira"],"GBP":["🇬🇧","£","British pound"],"EUR":["🇪🇺","€","Euro"],"GHS":["🇬🇭","GH₵","Ghanaian cedi"],"ZAR":["🇿🇦","R","South African rand"],"CAD":["🇨🇦","CA$","Canadian dollar"],"AUD":["🇦🇺","A$","Australian dollar"],"AED":["🇦🇪","AED ","UAE dirham"],"CNY":["🇨🇳","CN¥","Chinese yuan"],"KES":["🇰🇪","KSh ","Kenyan shilling"],"TZS":["🇹🇿","TSh ","Tanzanian shilling"],"UGX":["🇺🇬","USh ","Ugandan shilling"],"INR":["🇮🇳","₹","Indian rupee"],"JPY":["🇯🇵","¥","Japanese yen"],"BRL":["🇧🇷","R$","Brazilian real"],"CHF":["🇨🇭","CHF ","Swiss franc"],"CLP":["🇨🇱","CLP$","Chilean peso"],"CZK":["🇨🇿","Kč ","Czech koruna"],"DKK":["🇩🇰","kr ","Danish krone"],"HKD":["🇭🇰","HK$","Hong Kong dollar"],"HUF":["🇭🇺","Ft ","Hungarian forint"],"IDR":["🇮🇩","Rp ","Indonesian rupiah"],"ILS":["🇮🇱","₪","Israeli new shekel"],"KRW":["🇰🇷","₩","South Korean won"],"MXN":["🇲🇽","MX$","Mexican peso"],"MYR":["🇲🇾","RM ","Malaysian ringgit"],"NOK":["🇳🇴","kr ","Norwegian krone"],"NZD":["🇳🇿","NZ$","New Zealand dollar"],"PHP":["🇵🇭","₱","Philippine peso"],"PKR":["🇵🇰","₨ ","Pakistani rupee"],"PLN":["🇵🇱","zł ","Polish złoty"],"RUB":["🇷🇺","₽","Russian ruble"],"SEK":["🇸🇪","kr ","Swedish krona"],"SGD":["🇸🇬","S$","Singapore dollar"],"THB":["🇹🇭","฿","Thai baht"],"TRY":["🇹🇷","₺","Turkish lira"],"TWD":["🇹🇼","NT$","New Taiwan dollar"],"VND":["🇻🇳","₫","Vietnamese dong"],"MAD":["🇲🇦","MAD ","Moroccan dirham"],"IRR":["🇮🇷","IRR ","Iranian rial"],"ARS":["🇦🇷","ARS$","Argentine peso"],"RON":["🇷🇴","RON ","Romanian leu"],"UAH":["🇺🇦","₴","Ukrainian hryvnia"],"COP":["🇨🇴","COP$","Colombian peso"],"EGP":["🇪🇬","E£","Egyptian pound"],"SAR":["🇸🇦","SAR ","Saudi riyal"],"BDT":["🇧🇩","৳","Bangladeshi taka"],"BGN":["🇧🇬","лв ","Bulgarian lev"],"VES":["🇻🇪","Bs. ","Venezuelan bolívar"]};
+const cur = CUR[(q.get("cur") || "usd").toUpperCase()] ? (q.get("cur") || "usd").toUpperCase() : "USD";
+let fx = {};
 const th = q.get("theme") || "light";
 if (th === "dark" || (th === "auto" && matchMedia("(prefers-color-scheme:dark)").matches)) document.body.classList.add("dark");
-document.getElementById("cur").textContent = cur === "ngn" ? "Prices in ₦ NGN" : "Prices in USD";
+document.getElementById("cur").textContent = "Prices in " + cur;
 const H = { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY };
 const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 function fmt(v) {
   v = Number(v); if (!(v > 0)) return "–";
-  const sym = cur === "ngn" ? "₦" : "$";
+  const sym = CUR[cur][1];
   const d = v >= 1000 ? 0 : v >= 1 ? 2 : v >= 0.01 ? 4 : 6;
   return sym + v.toLocaleString("en-US", { minimumFractionDigits: v >= 1 && v < 1000 ? 2 : 0, maximumFractionDigits: d });
 }
 async function load() {
   try {
+    if (cur !== "USD" && !fx[cur]) { const f = await (await fetch(SUPABASE_URL + "/rest/v1/fx_rates?select=currency,per_usd&currency=eq." + cur, { headers: H })).json(); if (f && f[0]) fx[cur] = Number(f[0].per_usd); }
     const r = await fetch(SUPABASE_URL + "/rest/v1/coins?select=id,symbol,name,image_url,price_usd,price_ngn,change_24h_pct&id=in.(" + ids.map(encodeURIComponent).join(",") + ")", { headers: H });
     const rows = await r.json();
     const by = {}; rows.forEach((c) => (by[c.id] = c));
     document.getElementById("rows").innerHTML = ids.filter((i) => by[i]).map((i) => {
-      const c = by[i], ch = Number(c.change_24h_pct), px = cur === "ngn" ? c.price_ngn : c.price_usd;
+      const c = by[i], ch = Number(c.change_24h_pct), px = cur === "USD" ? c.price_usd : cur === "NGN" && c.price_ngn != null ? c.price_ngn : fx[cur] ? Number(c.price_usd) * fx[cur] : null;
       return '<a class="r" target="_blank" rel="noopener" href="https://pricecheckng.com.ng/' + encodeURIComponent(c.id) + '-price.html?utm_source=widget&utm_medium=embed"><img alt="" src="' + esc(c.image_url) + '"><span class="n"><b>' + esc(String(c.symbol).toUpperCase()) + "</b><small>" + esc(c.name) + '</small></span><span class="p">' + fmt(px) + '</span><span class="c ' + (ch >= 0 ? "u" : "d") + '">' + (isFinite(ch) ? (ch >= 0 ? "+" : "") + ch.toFixed(2) + "%" : "–") + "</span></a>";
     }).join("") || '<div class="e">No coins found</div>';
   } catch (e) { document.getElementById("rows").innerHTML = '<div class="e">Prices unavailable</div>'; }
