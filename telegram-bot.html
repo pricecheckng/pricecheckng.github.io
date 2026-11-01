@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Crypto Telegram Bot – Live Prices, Naira P2P Rates & Alerts | PriceCheck NG</title>
+<meta name="description" content="Check live Bitcoin, Ethereum and crypto prices inside Telegram, see USDT/Naira P2P rates and get price alerts. Free PriceCheck NG bot that works in groups too.">
+<link rel="canonical" href="https://pricecheckng.com.ng/telegram-bot.html">
+<meta property="og:type" content="website"><meta property="og:title" content="PriceCheck NG Telegram Bot – live crypto prices and alerts"><meta property="og:description" content="Ask the bot any coin price, see Naira P2P rates and get price alerts in Telegram. Free, and works in groups."><meta property="og:url" content="https://pricecheckng.com.ng/telegram-bot.html">
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebApplication","name":"PriceCheck NG Telegram Bot","url":"https://t.me/pricecheck_ng_alerts_bot","applicationCategory":"FinanceApplication","operatingSystem":"Telegram","description":"A free Telegram bot that shows live crypto prices, USDT/Naira P2P rates and sends price alerts.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"publisher":{"@type":"Organization","name":"PriceCheck NG","url":"https://pricecheckng.com.ng"}},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is the PriceCheck NG Telegram bot free?","acceptedAnswer":{"@type":"Answer","text":"Yes. The bot, the price lookups and the price alerts are free to use."}},{"@type":"Question","name":"Can I add the bot to my Telegram crypto group?","acceptedAnswer":{"@type":"Answer","text":"Yes. Add @pricecheck_ng_alerts_bot to your group. When a member types something like how much is BTC, or /price btc, the bot replies with the live price."}},{"@type":"Question","name":"How accurate are the price updates?","acceptedAnswer":{"@type":"Answer","text":"For major coins the bot reads the price straight from a live exchange feed (Binance, Bybit, OKX and others) at the moment you ask, and the card says which exchange it used. If no live feed is available it shows the price we saved a few minutes ago and says so."}},{"@type":"Question","name":"How do I set a price alert?","acceptedAnswer":{"@type":"Answer","text":"Open pricecheckng.com.ng, set an alert on any coin, then connect Telegram from your Account page. Your alerts then arrive in the bot as a message."}},{"@type":"Question","name":"Does the bot show Naira prices?","acceptedAnswer":{"@type":"Answer","text":"Coin prices are shown in US dollars. For Naira, send /usdt to see the USDT/Naira P2P buy and sell rates from several exchanges."}}]}]}</script>
+<style>
+:root{--bg:#fff;--card:#f6f7f8;--ink:#0f1a14;--mu:#5d6b64;--g:#16a34a;--gd:#0a7a3a;--line:#e3e8e5;--tg:#229ed9}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1511;--card:#16201a;--ink:#e9f1ec;--mu:#9db0a5;--line:#26332c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:#0a7a3a;color:#fff;padding:14px 16px;font-weight:800}header a{color:#fff;text-decoration:none}
+main{max-width:680px;margin:0 auto;padding:18px 16px 40px}
+h1{font-size:28px;line-height:1.2;margin:8px 0 10px}h2{font-size:20px;margin:30px 0 10px}h3{font-size:1rem;margin:0 0 4px}p{color:var(--mu);margin:0 0 12px}a{color:var(--gd)}
+.lead{font-size:1.05rem}
+.cta{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--tg);color:#fff!important;text-decoration:none;font-weight:800;font-size:1.05rem;padding:15px 18px;border-radius:14px;margin:18px 0 8px;text-align:center}
+.cta svg{flex:none}.sub{font-size:.85rem;text-align:center;margin:0 0 18px}
+.sec{display:block;text-align:center;font-weight:700;text-decoration:none;border:1px solid var(--line);border-radius:14px;padding:12px;color:var(--ink)}
+.demo{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:18px 0}
+.msg{background:#fff;color:#10201a;border-radius:14px;padding:11px 13px;max-width:330px;font-size:.93rem;line-height:1.5;box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.msg b{display:block}.msg .btns{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:9px}.msg .btns span{background:#e8f1f8;color:#1b6ea0;text-align:center;border-radius:8px;padding:6px 2px;font-size:.82rem;font-weight:600}
+.q{background:#d9f7c7;color:#10201a;border-radius:14px;padding:8px 12px;max-width:200px;margin:0 0 8px auto;font-size:.93rem}
+.ex{font-size:.78rem;color:var(--mu);margin:8px 0 0}
+.grid{display:grid;grid-template-columns:1fr;gap:10px}
+.grid div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:13px 15px}.grid p{margin:0;font-size:.95rem}
+table{width:100%;border-collapse:collapse;font-size:.95rem}td,th{text-align:left;padding:10px 8px;border-bottom:1px solid var(--line);vertical-align:top}th{color:var(--mu);font-size:.8rem;font-weight:600}
+code{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:1px 6px;font-size:.9em;white-space:nowrap;color:var(--ink)}
+ol{color:var(--mu);padding-left:20px}li{margin:8px 0}
+details{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:8px 0;background:var(--card)}summary{font-weight:700;cursor:pointer}details p{margin:8px 0 0}
+footer{border-top:1px solid var(--line);padding:18px 16px;text-align:center;color:var(--mu);font-size:.9rem}footer a{color:var(--mu)}
+@media(min-width:560px){.grid{grid-template-columns:1fr 1fr}}
+</style><script src="/theme.js"></script><script src="/i18n.js" defer></script>
+</head><body>
+<header><a href="/">PriceCheck NG</a></header>
+<main>
+<h1>PriceCheck NG Telegram Bot: live crypto prices and price alerts</h1>
+<p class="lead">Ask for any coin price right inside Telegram, check USDT/Naira P2P rates, and get a message when your price alert is hit. Free, and it works in groups too.</p>
+<a class="cta" href="https://t.me/pricecheck_ng_alerts_bot" rel="noopener"><svg width="22" height="22" viewBox="0 0 24 24" fill="#fff" aria-hidden="true"><path d="M9.8 15.3l-.4 4.2c.6 0 .9-.3 1.2-.6l2.9-2.7 6 4.4c1.1.6 1.9.3 2.2-1L23.9 4c.4-1.6-.6-2.2-1.7-1.8L1.3 10.3c-1.5.6-1.5 1.5-.3 1.9l5.4 1.7L19 6.1c.6-.4 1.1-.2.7.2z"/></svg>Open the bot in Telegram</a>
+<p class="sub">@pricecheck_ng_alerts_bot · free · no sign-up needed to check prices</p>
+<a class="sec" href="https://t.me/pricecheckNG" rel="noopener">Join our Telegram channel @pricecheckNG</a>
+
+<div class="demo" aria-label="Example of a bot reply">
+<div class="q">how much is BTC</div>
+<div class="msg"><b>Bitcoin (BTC) #1</b>💵 $00,000.00<br>24h 🟢 +0.0% · 7d 🔴 -0.0%<br>Cap $0.0T · Vol $0.0B<br>⚡ Live · Binance<div class="btns"><span>📊 Chart</span><span>📰 News</span><span>🔔 Alert</span><span>🌐 PriceCheck</span></div></div>
+<p class="ex">Example layout. Real replies show the live price and a price chart on top.</p>
+</div>
+
+<h2>What the bot does</h2>
+<div class="grid">
+<div><h3>Instant price lookup</h3><p>Type a coin name or symbol and get the live price, 24h and 7d change, market cap and volume.</p></div>
+<div><h3>Naira P2P rates</h3><p>Send /usdt to see the USDT/Naira buy and sell rates from several exchanges next to the official rate.</p></div>
+<div><h3>Price alerts in Telegram</h3><p>Set an alert on the website and receive it here as a message, with a button to open it.</p></div>
+<div><h3>Works in groups</h3><p>Add the bot to your crypto group. Members ask for a price and everyone sees the same live answer.</p></div>
+</div>
+
+<h2>Bot commands</h2>
+<table>
+<tr><th>Type this</th><th>What you get</th></tr>
+<tr><td><code>how much is BTC</code><br><code>eth price</code></td><td>Live price of the coin in plain language, no command needed</td></tr>
+<tr><td><code>/price sol</code> or <code>/btc</code></td><td>Price card for any coin, with a 7-day chart</td></tr>
+<tr><td><code>/usdt</code></td><td>USDT/Naira P2P rates (Bybit, OKX, Bitget)</td></tr>
+<tr><td><code>/top</code></td><td>Biggest gainers and losers today</td></tr>
+<tr><td><code>/fear</code></td><td>Fear &amp; Greed index</td></tr>
+<tr><td><code>/help</code></td><td>Shows all of the above</td></tr>
+</table>
+
+<h2>How to get price alerts in Telegram</h2>
+<ol>
+<li>Open <a href="/">PriceCheck NG</a> and set an alert on a coin (the 🔔 button).</li>
+<li>Go to Account and tap the Telegram connect button. It opens the bot and links your account.</li>
+<li>When the price hits your target, the bot sends you a message.</li>
+</ol>
+
+<h2>Add the bot to your Telegram group</h2>
+<ol>
+<li>Open the group, tap its name, then Add member.</li>
+<li>Search <b>@pricecheck_ng_alerts_bot</b> and add it.</li>
+<li>Type a coin name such as <code>how much is ETH</code>. The bot replies in the group.</li>
+</ol>
+
+<h2>Frequently asked questions</h2>
+<details><summary>Is the PriceCheck NG Telegram bot free?</summary><p>Yes. The bot, the price lookups and the price alerts are free to use.</p></details>
+<details><summary>Can I add the bot to my Telegram crypto group?</summary><p>Yes. Add @pricecheck_ng_alerts_bot to your group. When a member types something like "how much is BTC" or /price btc, the bot replies with the live price.</p></details>
+<details><summary>How accurate are the price updates?</summary><p>For major coins the bot reads the price straight from a live exchange feed (Binance, Bybit, OKX and others) at the moment you ask, and the card says which exchange it used. If no live feed is available it shows the price we saved a few minutes ago and says so.</p></details>
+<details><summary>How do I set a price alert?</summary><p>Set the alert on <a href="/">pricecheckng.com.ng</a>, then connect Telegram from your Account page. Your alerts arrive in the bot as a message.</p></details>
+<details><summary>Does the bot show Naira prices?</summary><p>Coin prices are shown in US dollars. For Naira, send /usdt to see USDT/Naira P2P buy and sell rates from several exchanges.</p></details>
+<p style="font-size:.85rem;margin-top:22px">Prices are for information only and are not financial advice. See our <a href="data-sources.html">data sources</a> and <a href="privacy.html">privacy policy</a>.</p>
+</main>
+<footer><a href="about.html">About</a> · <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="api.html">API</a> · <a href="contact.html">Contact</a></footer>
+</body></html>
