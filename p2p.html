@@ -159,12 +159,24 @@ function spark(h) {
   leg.innerHTML = lg + '<span style="margin-left:auto">' + N(lo) + " – " + N(hi) + "</span>";
 }
 
+function dropOutliers(rows) {
+  const out = rows.slice();
+  ["buy", "sell"].forEach((side) => {
+    const v = rows.filter((r) => r.side === side && Number(r.typical) > 0).map((r) => Number(r.typical)).sort((a, b) => a - b);
+    if (v.length < 3) return;
+    const mid = v[Math.floor(v.length / 2)];
+    for (let i = out.length - 1; i >= 0; i--) if (out[i].side === side && Math.abs(Number(out[i].typical) / mid - 1) > 0.02) out.splice(i, 1);
+  });
+  return out;
+}
+
 async function load() {
   let rows = [], fx = 0, hist = [];
   try { rows = await get("p2p_rates?select=*"); } catch (e) {}
   try { const f = await get("fx_rates?select=per_usd&currency=eq.NGN"); if (f && f[0]) fx = Number(f[0].per_usd); } catch (e) {}
   const now = Date.now();
   rows = (rows || []).filter((r) => now - new Date(r.updated_at).getTime() < STALE_MIN * 60000);
+  rows = dropOutliers(rows); // hide stray offers more than 2% from the middle
   if (!rows.length) { $("empty").hidden = false; return; }
   $("main").hidden = false;
 

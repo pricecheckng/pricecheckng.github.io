@@ -136,11 +136,22 @@ document.querySelectorAll("#seg button").forEach((b) => b.addEventListener("clic
 }));
 $("rate").addEventListener("input", render); $("amt").addEventListener("input", render);
 $("wa").href = "https://wa.me/?text=" + encodeURIComponent("Check if your USDT to naira P2P rate is fair before you trade: https://pricecheckng.com.ng/p2p-check.html");
+function dropOutliers(rows) {
+  const out = rows.slice();
+  ["buy", "sell"].forEach((side) => {
+    const v = rows.filter((r) => r.side === side && Number(r.typical) > 0).map((r) => Number(r.typical)).sort((a, b) => a - b);
+    if (v.length < 3) return;
+    const mid = v[Math.floor(v.length / 2)];
+    for (let i = out.length - 1; i >= 0; i--) if (out[i].side === side && Math.abs(Number(out[i].typical) / mid - 1) > 0.02) out.splice(i, 1);
+  });
+  return out;
+}
 (async () => {
   try {
     let rows = await get("p2p_rates?select=*");
     const now = Date.now();
     rows = (rows || []).filter((r) => now - new Date(r.updated_at).getTime() < 3 * 3600000);
+    rows = dropOutliers(rows);
     ["buy", "sell"].forEach((s) => {
       const v = rows.filter((r) => r.side === s).map((r) => Number(r.typical)).filter((x) => x > 0);
       mkt[s] = v.length ? v.reduce((a, c) => a + c, 0) / v.length : 0;
