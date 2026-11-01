@@ -104,6 +104,8 @@ async function loadFx() {
   if (state.cur !== "NGN" && !state.fx[state.cur]) state.cur = "USD";
 }
 state.fxReady = loadFx();
+// Used by the Menu's Log out button (menu.js)
+window.PCN_AUTH = { signedIn: () => !!state.user, signOut: () => signOut() };
 // Used by the Menu's currency picker (menu.js)
 window.PCN_CUR = {
   get: () => state.cur,
@@ -749,7 +751,7 @@ const Live = (() => {
   let raf = 0;
 
   const css = document.createElement("style");
-  css.textContent = `@keyframes lfu{0%,55%{color:#16c784}100%{color:inherit}}@keyframes lfd{0%,55%{color:#ea3943}100%{color:inherit}}.lf-u{animation:lfu 1.1s ease-out}.lf-d{animation:lfd 1.1s ease-out}#liveTag{display:none;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--muted);margin:2px 0 8px}#liveTag.on{display:flex}#liveTag i{width:8px;height:8px;border-radius:50%;background:#12a150;box-shadow:0 0 0 0 rgba(18,161,80,.6);animation:lfp 1.6s infinite}@keyframes lfp{70%{box-shadow:0 0 0 7px rgba(18,161,80,0)}100%{box-shadow:0 0 0 0 rgba(18,161,80,0)}}`;
+  css.textContent = `@keyframes lfs{0%{transform:perspective(220px) rotateY(0)}100%{transform:perspective(220px) rotateY(360deg)}}.lf-spin{animation:lfs .75s ease-in-out}@keyframes lfu{0%,55%{color:#16c784}100%{color:inherit}}@keyframes lfd{0%,55%{color:#ea3943}100%{color:inherit}}.lf-u{animation:lfu 1.1s ease-out}.lf-d{animation:lfd 1.1s ease-out}#liveTag{display:none;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--muted);margin:2px 0 8px}#liveTag.on{display:flex}#liveTag i{width:8px;height:8px;border-radius:50%;background:#12a150;box-shadow:0 0 0 0 rgba(18,161,80,.6);animation:lfp 1.6s infinite}@keyframes lfp{70%{box-shadow:0 0 0 7px rgba(18,161,80,0)}100%{box-shadow:0 0 0 0 rgba(18,161,80,0)}}`;
   document.head.appendChild(css);
 
   /* Which exchange streams each coin: chosen by the database (live_sources) from the exchanges that really list it. */
@@ -1118,6 +1120,13 @@ const Live = (() => {
         if (pend.size && !raf) raf = requestAnimationFrame(paint);
       }, GAP);
   }
+  // The coin logo spins like a rolling coin each time its price ticks (like CoinMarketCap)
+  function spin(el) {
+    if (!el || (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) return;
+    el.classList.remove("lf-spin");
+    void el.offsetWidth;
+    el.classList.add("lf-spin");
+  }
   function flash(el, dir) {
     if (!el) return;
     el.classList.remove("lf-u", "lf-d");
@@ -1138,6 +1147,7 @@ const Live = (() => {
         if (px) {
           px.textContent = mainPx(c);
           flash(px, dir);
+          spin(btn.querySelector(".logo"));
         }
         if (sp) sp.textContent = fmtLocal(secondPrice(c), state.cur);
         if (ch) {
@@ -1151,6 +1161,7 @@ const Live = (() => {
         if (big) {
           big.textContent = mainPx(c);
           flash(big, dir);
+          spin(document.querySelector(".cp-head .logo"));
         }
         if (sub) {
           const m = CURRENCIES[state.cur];
