@@ -24,7 +24,8 @@
       ['USDT P2P rates', 'Naira prices on Bybit, OKX and Bitget', 'p2p.html'],
       ['Is my P2P rate fair?', 'Check an agent\'s USDT rate', 'p2p-check.html'],
       ['Converter', 'Naira to crypto and back', 'converter.html'],
-      ['Profit calculator', 'Work out your gain or loss', 'profit-calculator.html']
+      ['Profit calculator', 'Work out your gain or loss', 'profit-calculator.html'],
+      ['Price widget for your website', 'Free live prices for your blog', 'widget.html']
     ]},
     { t: 'Safety tools', rows: [
       ['Crypto network checker', 'Avoid sending on the wrong network', 'network-check.html'],

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Free Live Crypto Price Widget for Your Website or Blog | PriceCheck NG</title>
+<meta name="description" content="Add live Bitcoin, Ethereum and other crypto prices to your blog or website with one line of code. Free, light, dark mode, USD or Naira. Pick your coins and copy the code.">
+<link rel="canonical" href="https://pricecheckng.com.ng/widget.html">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Free live crypto price widget","url":"https://pricecheckng.com.ng/widget.html","description":"Embed live crypto prices on any website or blog with one line of code."}</script>
+<style>
+:root{--bg:#fff;--card:#f6f7f8;--ink:#0f1a14;--mu:#5d6b64;--g:#16a34a;--gd:#0a7a3a;--line:#e3e8e5}
+@media (prefers-color-scheme:dark){:root{--bg:#0e1511;--card:#16201a;--ink:#e9f1ec;--mu:#9db0a5;--line:#26332c}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{background:#0a7a3a;color:#fff;padding:14px 16px;font-weight:800}header a{color:#fff;text-decoration:none}
+main{max-width:680px;margin:0 auto;padding:18px 16px 40px}
+h1{font-size:26px;line-height:1.2;margin:8px 0 10px}h2{font-size:19px;margin:26px 0 8px}p{color:var(--mu);margin:0 0 12px}a{color:var(--gd)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin:12px 0}
+label{display:block;font-weight:700;font-size:.9rem;margin:12px 0 6px}
+input[type=search]{width:100%;font:inherit;font-size:16px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 0}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:99px;padding:6px 12px;font:inherit;font-size:.85rem;font-weight:700;cursor:pointer}
+.chip.on{background:var(--g);border-color:var(--g);color:#fff}
+.sug{border:1px solid var(--line);border-radius:12px;margin-top:6px;overflow:hidden;background:var(--bg)}.sug button{display:block;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:inherit;padding:10px 12px;cursor:pointer}.sug button:first-child{border-top:0}
+.seg{display:flex;gap:6px}.seg button{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:10px;font:inherit;font-weight:700;cursor:pointer}.seg button.on{background:var(--g);border-color:var(--g);color:#fff}
+textarea{width:100%;min-height:92px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
+.copy{display:block;width:100%;margin-top:8px;border:0;background:var(--g);color:#fff;font:inherit;font-weight:800;padding:13px;border-radius:12px;cursor:pointer}
+.prev{display:flex;justify-content:center}.prev iframe{border:0;width:100%;max-width:360px}
+details{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0}summary{font-weight:700;cursor:pointer}
+footer{border-top:1px solid var(--line);padding:18px 16px;text-align:center;color:var(--mu);font-size:.9rem}footer a{color:var(--mu)}
+</style><script src="/theme.js"></script>
+</head><body>
+<header><a href="/">PriceCheck NG</a></header>
+<main>
+<h1>Free live crypto price widget for your website or blog</h1>
+<p>Show live Bitcoin, Ethereum and other coin prices on your own page. Pick your coins, copy one line of code, paste it into your blog. It is free and it refreshes by itself.</p>
+
+<div class="card">
+<label for="s">Coins (up to 10)</label>
+<input id="s" type="search" placeholder="Search a coin, e.g. Solana" autocomplete="off">
+<div id="sug"></div>
+<div class="chips" id="chips"></div>
+<label>Theme</label>
+<div class="seg" id="th"><button data-v="light" class="on">Light</button><button data-v="dark">Dark</button><button data-v="auto">Auto</button></div>
+<label>Price in</label>
+<div class="seg" id="cu"><button data-v="usd" class="on">US dollars</button><button data-v="ngn">Naira (₦)</button></div>
+</div>
+
+<h2>Preview</h2>
+<div class="card prev"><iframe id="pv" title="Widget preview" height="200"></iframe></div>
+
+<h2>Your code</h2>
+<p>Paste this where you want the prices to show (in WordPress use a "Custom HTML" block).</p>
+<textarea id="code" readonly></textarea>
+<button class="copy" id="cp" type="button">Copy code</button>
+<details><summary>Your site does not allow scripts? Use this instead</summary><p>Some blog builders (like Blogger or WordPress.com free plans) block scripts. Paste this frame code instead:</p><textarea id="code2" readonly></textarea><button class="copy" id="cp2" type="button">Copy frame code</button></details>
+
+<h2>Good to know</h2>
+<p>The widget shows a small "Live prices by PriceCheck NG" link at the bottom. Please keep it, that is how we keep the widget free. Prices are for information only and are not financial advice.</p>
+</main>
+<footer><a href="about.html">About</a> · <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="api.html">API</a> · <a href="contact.html">Contact</a></footer>
+<script type="module">
+import { SUPABASE_URL, SUPABASE_KEY } from "/config.js";
+const H = { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY };
+const $ = (i) => document.getElementById(i);
+const POP = [["bitcoin", "BTC"], ["ethereum", "ETH"], ["tether", "USDT"], ["solana", "SOL"], ["ripple", "XRP"], ["binancecoin", "BNB"], ["dogecoin", "DOGE"], ["cardano", "ADA"]];
+let sel = ["bitcoin", "ethereum", "solana"], names = {}, theme = "light", cur = "usd";
+POP.forEach((p) => (names[p[0]] = p[1]));
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+function render() {
+  const chips = $("chips"), all = POP.map((p) => p[0]).concat(sel.filter((x) => !POP.some((p) => p[0] === x)));
+  chips.innerHTML = all.map((id) => '<button type="button" class="chip' + (sel.includes(id) ? " on" : "") + '" data-id="' + esc(id) + '">' + esc(names[id] || id) + "</button>").join("");
+  chips.querySelectorAll(".chip").forEach((b) => (b.onclick = () => {
+    const id = b.dataset.id;
+    if (sel.includes(id)) sel = sel.filter((x) => x !== id); else if (sel.length < 10) sel.push(id);
+    render();
+  }));
+  const list = sel.length ? sel : ["bitcoin"];
+  const src = "https://pricecheckng.com.ng/w.html?coins=" + list.join(",") + "&theme=" + theme + "&cur=" + cur;
+  const h = 36 + list.length * 44 + 32;
+  $("code").value = '<script src="https://pricecheckng.com.ng/widget.js" data-coins="' + list.join(",") + '" data-theme="' + theme + '" data-currency="' + cur + '" async><\/script>';
+  $("code2").value = '<iframe src="' + src + '" title="Live crypto prices by PriceCheck NG" width="100%" height="' + h + '" style="border:0;max-width:360px" loading="lazy"></iframe>';
+  $("pv").height = h; if ($("pv").getAttribute("src") !== src) $("pv").src = src;
+}
+function seg(id, set) { $(id).querySelectorAll("button").forEach((b) => (b.onclick = () => { $(id).querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); set(b.dataset.v); render(); })); }
+seg("th", (v) => (theme = v)); seg("cu", (v) => (cur = v));
+let t;
+$("s").oninput = () => {
+  clearTimeout(t); const v = $("s").value.trim().replace(/[^A-Za-z0-9 ._-]/g, "");
+  if (v.length < 2) { $("sug").innerHTML = ""; return; }
+  t = setTimeout(async () => {
+    try {
+      const r = await fetch(SUPABASE_URL + "/rest/v1/coins?select=id,symbol,name&or=(symbol.ilike." + encodeURIComponent(v + "*") + ",name.ilike." + encodeURIComponent(v + "*") + ")&order=market_cap_rank.asc.nullslast&limit=6", { headers: H });
+      const d = await r.json();
+      $("sug").innerHTML = '<div class="sug">' + d.map((c) => '<button type="button" data-id="' + esc(c.id) + '" data-s="' + esc(String(c.symbol).toUpperCase()) + '">' + esc(c.name) + " (" + esc(String(c.symbol).toUpperCase()) + ")</button>").join("") + "</div>";
+      $("sug").querySelectorAll("button").forEach((b) => (b.onclick = () => { names[b.dataset.id] = b.dataset.s; if (!sel.includes(b.dataset.id) && sel.length < 10) sel.push(b.dataset.id); $("s").value = ""; $("sug").innerHTML = ""; render(); }));
+    } catch (e) {}
+  }, 250);
+};
+function copy(id, btn) { const el = $(id); el.select(); try { navigator.clipboard.writeText(el.value); } catch (e) { document.execCommand("copy"); } const o = btn.textContent; btn.textContent = "Copied"; setTimeout(() => (btn.textContent = o), 1500); }
+$("cp").onclick = () => copy("code", $("cp")); $("cp2").onclick = () => copy("code2", $("cp2"));
+render();
+</script>
+</body></html>
