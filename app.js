@@ -1583,7 +1583,7 @@ function explainerHtml(c, sym) {
     ["All-time high (ATH)", `The highest price ${sym} has ever reached. The percentage shows how far today's price is below that peak.`],
     ["Highest and lowest price", `The same coin can cost a little more on one exchange and a little less on another. We show both so you can see the gap and pick the cheaper place to buy.`],
     ["Spread", `The small gap between the price buyers will pay and the price sellers ask on one exchange. A smaller spread is better, because you lose less when you buy and sell. "<0.001%" means almost nothing.`],
-    [`Pair (for example ${sym}/USD)`, `The two things being swapped. ${sym}/USD means ${sym} is priced in US dollars. Some exchanges use other currencies, so the pair tells you which one.`]
+    [`Pair (for example ${sym}/USD)`, `The two things being swapped. ${sym}/USD means the coin is priced in US dollars. Some exchanges use other currencies, so the pair tells you which one.`]
   ];
   const row = (t, d) => `<div style="padding:10px 0;border-top:1px solid var(--line,#e3ece6)"><b style="display:block;font-size:.95rem">${t}</b><span style="font-size:.9rem;line-height:1.5;color:#51615a">${d}</span></div>`;
   return `<details class="cp-card" style="padding:0;overflow:hidden;margin-bottom:10px;border-radius:14px;background:#f7fbf8;border-color:#cfe6d7">
