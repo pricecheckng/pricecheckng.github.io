@@ -49,18 +49,30 @@
     return '<button type="button" class="mkt-c' + (openKey === k ? ' on' : '') + '" data-k="' + k + '" aria-expanded="' + (openKey === k) + '"><small>' + label + '</small><b>' + val + '</b>' + (extra || '') + '</button>';
   }
   /* rolling ticker above the search box (like CoinMarketCap): coins, exchanges, market cap, volume, dominance, Fear & Greed */
-  var counts = { coins: null, ex: null }, tickI = 0;
+  var counts = { coins: null, ex: null, ethCap: null, gas: null }, tickI = 0;
+  function money2(n) {
+    n = Number(n); if (!isFinite(n)) return '-';
+    var c = cur(), v = n * (c ? c.rate() : 1), sym = c ? c.sym() : '$';
+    if (v >= 1e12) return sym + (v / 1e12).toFixed(2) + 'T';
+    if (v >= 1e9) return sym + (v / 1e9).toFixed(2) + 'B';
+    return sym + (v / 1e6).toFixed(0) + 'M';
+  }
   function tickItems() {
     var d = data, a = [];
     if (counts.coins) a.push(['Coins', counts.coins.toLocaleString('en-US'), '']);
-    if (counts.ex) a.push(['Exchanges', String(counts.ex), '']);
+    if (counts.ex) a.push(['Exchanges', String(counts.ex), '', 'exchanges.html']);
     if (d) {
       var ch = Number(d.cap_change_24h);
-      if (Number(d.market_cap) > 0) a.push(['Market cap', money(d.market_cap), isFinite(ch) ? '<span class="' + (ch >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (ch >= 0 ? '\u25B2 ' : '\u25BC ') + Math.abs(ch).toFixed(2) + '%</span>' : '']);
-      if (Number(d.volume_24h) > 0) a.push(['24h volume', money(d.volume_24h), '']);
-      if (isFinite(Number(d.btc_dom)) && Number(d.btc_dom) > 0) a.push(['BTC dominance', Number(d.btc_dom).toFixed(1) + '%', '']);
-      if (d.fng_value != null) a.push(['Fear &amp; Greed', String(d.fng_value), '<span>' + String(d.fng_label || '').replace(/</g, '&lt;') + '</span>', 'fear-greed.html']);
+      if (Number(d.market_cap) > 0) a.push(['Market Cap', money2(d.market_cap), isFinite(ch) ? '<span class="' + (ch >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (ch >= 0 ? '\u25B2 ' : '\u25BC ') + Math.abs(ch).toFixed(2) + '%</span>' : '', 'market-chart.html']);
+      if (Number(d.volume_24h) > 0) a.push(['24h Vol', money2(d.volume_24h), '', 'market-chart.html']);
+      var bd = Number(d.btc_dom);
+      if (isFinite(bd) && bd > 0) {
+        var ed = counts.ethCap > 0 && Number(d.market_cap) > 0 ? counts.ethCap / Number(d.market_cap) * 100 : NaN;
+        a.push(['Dominance', 'BTC: ' + bd.toFixed(1) + '%' + (isFinite(ed) && ed > 0 && ed < 60 ? ' ETH: ' + ed.toFixed(1) + '%' : ''), '', 'market-chart.html']);
+      }
+      if (d.fng_value != null) a.push(['Fear &amp; Greed', d.fng_value + '/100', '<span>' + String(d.fng_label || '').replace(/</g, '&lt;') + '</span>', 'fear-greed.html']);
     }
+    if (counts.gas > 0) a.push(['\u26FD ETH Gas', String(parseFloat(counts.gas >= 10 ? counts.gas.toFixed(1) : counts.gas >= 1 ? counts.gas.toFixed(2) : counts.gas.toFixed(3))) + ' Gwei', '', 'gas.html']);
     return a;
   }
   function tickHtml() {
@@ -139,6 +151,12 @@
     }).catch(function () {});
     fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/exchange_list', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H), body: '{}' }).then(function (r) { return r.json(); }).then(function (l) {
       if (Array.isArray(l) && l.length) { counts.ex = l.length; reTick(); }
+    }).catch(function () {});
+    fetch(cfg.SUPABASE_URL + '/rest/v1/coins?select=market_cap_usd&id=eq.ethereum', { headers: H }).then(function (r) { return r.json(); }).then(function (l) {
+      if (l && l[0] && Number(l[0].market_cap_usd) > 0) { counts.ethCap = Number(l[0].market_cap_usd); reTick(); }
+    }).catch(function () {});
+    fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/eth_status', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H), body: '{}' }).then(function (r) { return r.json(); }).then(function (g) {
+      if (g && Number(g.gas_wei) > 0) { counts.gas = Number(g.gas_wei) / 1e9; reTick(); }
     }).catch(function () {});
     new MutationObserver(function () { inject(); injectTick(); }).observe(document.body, { childList: true, subtree: true });
   }).catch(function () {});
