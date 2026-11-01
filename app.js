@@ -749,12 +749,12 @@ const Live = (() => {
   let pageCoin = null; // coin shown on a coin page
   let syncT = null, io = null, idleAt = Date.now(), gotTick = false, seq = 1, started = false, srcTried = false;
   const pend = new Map(); // coin id -> direction, painted in the next animation frame
-  const GAP = 5000; // the screen refreshes together every 5 seconds, like CoinMarketCap
+  const GAP = 3200; // the screen refreshes together every ~3 seconds, measured from CoinMarketCap
   const painted = new Map(); // coin id -> price currently shown
   let raf = 0;
 
   const css = document.createElement("style");
-  css.textContent = `@keyframes lfs{0%{transform:rotate(0)}100%{transform:rotate(720deg)}}.btcb{transform-box:fill-box;transform-origin:center}.lf-spin{animation:lfs .9s cubic-bezier(.45,0,.25,1)}@keyframes lfu{0%,55%{color:#16c784}100%{color:inherit}}@keyframes lfd{0%,55%{color:#ea3943}100%{color:inherit}}.lf-u{animation:lfu 1.1s ease-out}.lf-d{animation:lfd 1.1s ease-out}#liveTag{display:none;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--muted);margin:2px 0 8px}#liveTag.on{display:flex}#liveTag i{width:8px;height:8px;border-radius:50%;background:#12a150;box-shadow:0 0 0 0 rgba(18,161,80,.6);animation:lfp 1.6s infinite}@keyframes lfp{70%{box-shadow:0 0 0 7px rgba(18,161,80,0)}100%{box-shadow:0 0 0 0 rgba(18,161,80,0)}}`;
+  css.textContent = `@keyframes lfs{0%{transform:rotate(0) scale(1)}40%{transform:rotate(300deg) scale(1.22)}75%{transform:rotate(600deg) scale(.8)}100%{transform:rotate(720deg) scale(1)}}.btcb{transform-box:fill-box;transform-origin:center}.lf-spin{animation:lfs .6s ease-in-out}@keyframes lfu{0%,55%{color:#16c784}100%{color:inherit}}@keyframes lfd{0%,55%{color:#ea3943}100%{color:inherit}}.lf-u{animation:lfu 1.1s ease-out}.lf-d{animation:lfd 1.1s ease-out}#liveTag{display:none;align-items:center;gap:6px;font-size:.78rem;font-weight:700;color:var(--muted);margin:2px 0 8px}#liveTag.on{display:flex}#liveTag i{width:8px;height:8px;border-radius:50%;background:#12a150;box-shadow:0 0 0 0 rgba(18,161,80,.6);animation:lfp 1.6s infinite}@keyframes lfp{70%{box-shadow:0 0 0 7px rgba(18,161,80,0)}100%{box-shadow:0 0 0 0 rgba(18,161,80,0)}}`;
   document.head.appendChild(css);
 
   /* Which exchange streams each coin: chosen by the database (live_sources) from the exchanges that really list it. */
@@ -1102,7 +1102,7 @@ const Live = (() => {
       dbg("live", "first price received");
     }
   }
-  // CoinMarketCap updates the whole screen together about every 5 seconds, and only the prices that changed flash.
+  // CoinMarketCap updates the whole screen together about every 3 seconds, and only the prices that changed flash.
   const dirty = new Set();
   let flushT = null;
   function queue(id) {
