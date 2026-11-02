@@ -100,11 +100,12 @@
     var d = data; if (!d) return null;
     var ch = Number(d.cap_change_24h), chTxt = '';
     if (isFinite(ch)) chTxt = '<span class="ch ' + (ch >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (ch >= 0 ? '▲ ' : '▼ ') + Math.abs(ch).toFixed(2) + '%</span>';
-    var dom = Number(d.btc_dom);
+    var dom = Number(d.btc_dom), domTxt = '';
+    if (isFinite(dom) && domPrev != null && isFinite(domPrev)) { var dd = dom - domPrev; if (Math.abs(dd) >= 0.005) domTxt = '<span class="ch ' + (dd >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (dd >= 0 ? '▲ ' : '▼ ') + Math.abs(dd).toFixed(2) + '%</span>'; }
     var h = '<div class="mkt-row">' +
       card('cap', 'Market cap', money(d.market_cap), chTxt) +
       card('vol', '24h volume', money(d.volume_24h)) +
-      card('dom', 'BTC dom.', isFinite(dom) ? dom.toFixed(1) + '%' : '-');
+      card('dom', 'BTC dom.', isFinite(dom) ? dom.toFixed(1) + '%' : '-', domTxt);
     if (d.fng_value != null) {
       h += '<a class="mkt-c" href="fear-greed.html" aria-label="Fear and Greed index ' + d.fng_value + '"><small>Fear &amp; Greed</small>' + gauge(Number(d.fng_value)) + '<b>' + d.fng_value + '</b></a>';
     } else {
@@ -129,7 +130,10 @@
     });
     tabs.parentNode.insertBefore(box, tabs);
   }
+  var domPrev = null;
   function refresh(cfg) {
+    var Hh = { apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_KEY };
+    fetch(cfg.SUPABASE_URL + '/rest/v1/market_history?select=btc_dom&at=lte.' + encodeURIComponent(new Date(Date.now() - 24 * 3600e3).toISOString()) + '&order=at.desc&limit=1', { headers: Hh }).then(function (r) { return r.json(); }).then(function (l) { if (l && l[0] && l[0].btc_dom != null) domPrev = Number(l[0].btc_dom); }).catch(function () {}).then(function () {
     fetch(cfg.SUPABASE_URL + '/rest/v1/market_global?select=*&id=eq.1', {
       headers: { apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_KEY }
     }).then(function (r) { return r.json(); }).then(function (rows) {
@@ -141,6 +145,7 @@
       var ot = document.getElementById('mktTick'); if (ot) ot.remove();
       inject(); injectTick();
     }).catch(function () {});
+    });
   }
   import('./config.js').then(function (cfg) {
     refresh(cfg);
