@@ -64,7 +64,7 @@
     if (d) {
       var ch = Number(d.cap_change_24h);
       if (Number(d.market_cap) > 0) a.push(['Market Cap', money2(d.market_cap), isFinite(ch) ? '<span class="' + (ch >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (ch >= 0 ? '\u25B2 ' : '\u25BC ') + Math.abs(ch).toFixed(2) + '%</span>' : '', 'market-chart.html']);
-      if (Number(d.volume_24h) > 0) a.push(['24h Vol', money2(d.volume_24h), '', 'market-chart.html']);
+      if (Number(d.volume_24h) > 0) { var vcT = volPrev > 0 ? (Number(d.volume_24h) / volPrev - 1) * 100 : NaN; a.push(['24h Vol', money2(d.volume_24h), isFinite(vcT) && Math.abs(vcT) >= 0.005 ? '<span class="' + (vcT >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (vcT >= 0 ? '\u25B2 ' : '\u25BC ') + Math.abs(vcT).toFixed(2) + '%</span>' : '', 'market-chart.html']); }
       var bd = Number(d.btc_dom);
       if (isFinite(bd) && bd > 0) {
         var ed = counts.ethCap > 0 && Number(d.market_cap) > 0 ? counts.ethCap / Number(d.market_cap) * 100 : NaN;
@@ -102,9 +102,11 @@
     if (isFinite(ch)) chTxt = '<span class="ch ' + (ch >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (ch >= 0 ? '▲ ' : '▼ ') + Math.abs(ch).toFixed(2) + '%</span>';
     var dom = Number(d.btc_dom), domTxt = '';
     if (isFinite(dom) && domPrev != null && isFinite(domPrev)) { var dd = dom - domPrev; if (Math.abs(dd) >= 0.005) domTxt = '<span class="ch ' + (dd >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (dd >= 0 ? '▲ ' : '▼ ') + Math.abs(dd).toFixed(2) + '%</span>'; }
+    var vol = Number(d.volume_24h), volTxt = '';
+    if (vol > 0 && volPrev > 0) { var vc = (vol / volPrev - 1) * 100; if (isFinite(vc) && Math.abs(vc) >= 0.005) volTxt = '<span class="ch ' + (vc >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (vc >= 0 ? '▲ ' : '▼ ') + Math.abs(vc).toFixed(2) + '%</span>'; }
     var h = '<div class="mkt-row">' +
       card('cap', 'Market cap', money(d.market_cap), chTxt) +
-      card('vol', '24h volume', money(d.volume_24h)) +
+      card('vol', '24h volume', money(d.volume_24h), volTxt) +
       card('dom', 'BTC dom.', isFinite(dom) ? dom.toFixed(1) + '%' : '-', domTxt);
     if (d.fng_value != null) {
       h += '<a class="mkt-c" href="fear-greed.html" aria-label="Fear and Greed index ' + d.fng_value + '"><small>Fear &amp; Greed</small>' + gauge(Number(d.fng_value)) + '<b>' + d.fng_value + '</b></a>';
@@ -130,10 +132,10 @@
     });
     tabs.parentNode.insertBefore(box, tabs);
   }
-  var domPrev = null;
+  var domPrev = null, volPrev = null;
   function refresh(cfg) {
     var Hh = { apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_KEY };
-    fetch(cfg.SUPABASE_URL + '/rest/v1/market_history?select=btc_dom&at=lte.' + encodeURIComponent(new Date(Date.now() - 24 * 3600e3).toISOString()) + '&order=at.desc&limit=1', { headers: Hh }).then(function (r) { return r.json(); }).then(function (l) { if (l && l[0] && l[0].btc_dom != null) domPrev = Number(l[0].btc_dom); }).catch(function () {}).then(function () {
+    fetch(cfg.SUPABASE_URL + '/rest/v1/market_history?select=btc_dom,volume_24h&at=lte.' + encodeURIComponent(new Date(Date.now() - 24 * 3600e3).toISOString()) + '&order=at.desc&limit=1', { headers: Hh }).then(function (r) { return r.json(); }).then(function (l) { if (l && l[0]) { if (l[0].btc_dom != null) domPrev = Number(l[0].btc_dom); if (l[0].volume_24h != null) volPrev = Number(l[0].volume_24h); } }).catch(function () {}).then(function () {
     fetch(cfg.SUPABASE_URL + '/rest/v1/market_global?select=*&id=eq.1', {
       headers: { apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_KEY }
     }).then(function (r) { return r.json(); }).then(function (rows) {
