@@ -34,7 +34,7 @@ select{width:100%;font:inherit;font-size:16px;padding:12px;border-radius:12px;bo
 .seg{display:flex;gap:6px}.seg button{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:10px;font:inherit;font-weight:700;cursor:pointer}.seg button.on{background:var(--g);border-color:var(--g);color:#fff}
 textarea{width:100%;min-height:92px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
 .copy{display:block;width:100%;margin-top:8px;border:0;background:var(--g);color:#fff;font:inherit;font-weight:800;padding:13px;border-radius:12px;cursor:pointer}
-.prev{display:flex;justify-content:center}.prev iframe{border:0;width:100%;max-width:360px}
+.prev{display:flex;justify-content:center}.prev iframe{border:0;width:100%}
 ul{color:var(--mu);padding-left:20px}li{margin:8px 0}details{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0}summary{font-weight:700;cursor:pointer}
 footer{border-top:1px solid var(--line);padding:18px 16px;text-align:center;color:var(--mu);font-size:.9rem}footer a{color:var(--mu)}
 </style><script src="/theme.js"></script><script src="/i18n.js" defer></script>
@@ -51,12 +51,14 @@ footer{border-top:1px solid var(--line);padding:18px 16px;text-align:center;colo
 <div class="chips" id="chips"></div>
 <label>Theme</label>
 <div class="seg" id="th"><button data-v="light" class="on">Light</button><button data-v="dark">Dark</button><button data-v="auto">Auto</button></div>
+<label>Width</label>
+<div class="seg" id="wd"><button data-v="320">Compact</button><button data-v="480" class="on">Standard</button><button data-v="full">Full width</button></div>
 <label>Currency</label>
 <button type="button" id="cb" class="cb" aria-haspopup="dialog"></button>
 </div>
 
 <h2>Preview</h2>
-<div class="card prev"><iframe id="pv" title="Widget preview" height="200"></iframe></div>
+<div class="card prev"><iframe id="pv" title="Widget preview" height="200" style="max-width:480px"></iframe></div>
 
 <h2>Your code</h2>
 <p>Paste this where you want the prices to show (in WordPress use a "Custom HTML" block).</p>
@@ -91,7 +93,7 @@ const H = { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY };
 const $ = (i) => document.getElementById(i);
 const POP = [["bitcoin", "BTC"], ["ethereum", "ETH"], ["tether", "USDT"], ["solana", "SOL"], ["ripple", "XRP"], ["binancecoin", "BNB"], ["dogecoin", "DOGE"], ["cardano", "ADA"]];
 const CUR = {"USD":["🇺🇸","$","United States dollar"],"NGN":["🇳🇬","₦","Nigerian naira"],"GBP":["🇬🇧","£","British pound"],"EUR":["🇪🇺","€","Euro"],"GHS":["🇬🇭","GH₵","Ghanaian cedi"],"ZAR":["🇿🇦","R","South African rand"],"CAD":["🇨🇦","CA$","Canadian dollar"],"AUD":["🇦🇺","A$","Australian dollar"],"AED":["🇦🇪","AED ","UAE dirham"],"CNY":["🇨🇳","CN¥","Chinese yuan"],"KES":["🇰🇪","KSh ","Kenyan shilling"],"TZS":["🇹🇿","TSh ","Tanzanian shilling"],"UGX":["🇺🇬","USh ","Ugandan shilling"],"INR":["🇮🇳","₹","Indian rupee"],"JPY":["🇯🇵","¥","Japanese yen"],"BRL":["🇧🇷","R$","Brazilian real"],"CHF":["🇨🇭","CHF ","Swiss franc"],"CLP":["🇨🇱","CLP$","Chilean peso"],"CZK":["🇨🇿","Kč ","Czech koruna"],"DKK":["🇩🇰","kr ","Danish krone"],"HKD":["🇭🇰","HK$","Hong Kong dollar"],"HUF":["🇭🇺","Ft ","Hungarian forint"],"IDR":["🇮🇩","Rp ","Indonesian rupiah"],"ILS":["🇮🇱","₪","Israeli new shekel"],"KRW":["🇰🇷","₩","South Korean won"],"MXN":["🇲🇽","MX$","Mexican peso"],"MYR":["🇲🇾","RM ","Malaysian ringgit"],"NOK":["🇳🇴","kr ","Norwegian krone"],"NZD":["🇳🇿","NZ$","New Zealand dollar"],"PHP":["🇵🇭","₱","Philippine peso"],"PKR":["🇵🇰","₨ ","Pakistani rupee"],"PLN":["🇵🇱","zł ","Polish złoty"],"RUB":["🇷🇺","₽","Russian ruble"],"SEK":["🇸🇪","kr ","Swedish krona"],"SGD":["🇸🇬","S$","Singapore dollar"],"THB":["🇹🇭","฿","Thai baht"],"TRY":["🇹🇷","₺","Turkish lira"],"TWD":["🇹🇼","NT$","New Taiwan dollar"],"VND":["🇻🇳","₫","Vietnamese dong"],"MAD":["🇲🇦","MAD ","Moroccan dirham"],"IRR":["🇮🇷","IRR ","Iranian rial"],"ARS":["🇦🇷","ARS$","Argentine peso"],"RON":["🇷🇴","RON ","Romanian leu"],"UAH":["🇺🇦","₴","Ukrainian hryvnia"],"COP":["🇨🇴","COP$","Colombian peso"],"EGP":["🇪🇬","E£","Egyptian pound"],"SAR":["🇸🇦","SAR ","Saudi riyal"],"BDT":["🇧🇩","৳","Bangladeshi taka"],"BGN":["🇧🇬","лв ","Bulgarian lev"],"VES":["🇻🇪","Bs. ","Venezuelan bolívar"]};
-let sel = ["bitcoin", "ethereum", "solana"], names = {}, theme = "light", cur = "USD";
+let sel = ["bitcoin", "ethereum", "solana"], names = {}, theme = "light", cur = "USD", wid = "480";
 POP.forEach((p) => (names[p[0]] = p[1]));
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 function render() {
@@ -105,12 +107,13 @@ function render() {
   const list = sel.length ? sel : ["bitcoin"];
   const src = "https://pricecheckng.com.ng/w.html?coins=" + list.join(",") + "&theme=" + theme + "&cur=" + cur;
   const h = 36 + list.length * 44 + 32;
-  $("code").value = '<script src="https://pricecheckng.com.ng/widget.js" data-coins="' + list.join(",") + '" data-theme="' + theme + '" data-currency="' + cur + '" async><\/script>';
-  $("code2").value = '<iframe src="' + src + '" title="Live crypto prices by PriceCheck NG" width="100%" height="' + h + '" style="border:0;max-width:360px" loading="lazy"></iframe>';
-  $("pv").height = h; if ($("pv").getAttribute("src") !== src) $("pv").src = src;
+  $("code").value = '<script src="https://pricecheckng.com.ng/widget.js" data-coins="' + list.join(",") + '" data-theme="' + theme + '" data-currency="' + cur + '"' + (wid !== "480" ? ' data-width="' + wid + '"' : "") + ' async><\/script>';
+  $("code2").value = '<iframe src="' + src + '" title="Live crypto prices by PriceCheck NG" width="100%" height="' + h + '" style="border:0;max-width:' + (wid === "full" ? "none" : wid + "px") + '" loading="lazy"></iframe>';
+  $("pv").height = h; $("pv").style.maxWidth = wid === "full" ? "none" : wid + "px"; if ($("pv").getAttribute("src") !== src) $("pv").src = src;
 }
 function seg(id, set) { $(id).querySelectorAll("button").forEach((b) => (b.onclick = () => { $(id).querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); set(b.dataset.v); render(); })); }
 seg("th", (v) => (theme = v));
+seg("wd", (v) => (wid = v));
 function paintCb() { const c = CUR[cur]; $("cb").innerHTML = "<i>" + c[0] + "</i><span>" + cur + " <small>" + esc(c[2]) + '</small></span><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M4 8l8 9 8-9z"/></svg>'; }
 function paintCl(qs) {
   qs = (qs || "").toLowerCase().trim();

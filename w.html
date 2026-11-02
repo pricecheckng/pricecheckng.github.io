@@ -50,5 +50,6 @@ async function load() {
     }).join("") || '<div class="e">No coins found</div>';
   } catch (e) { document.getElementById("rows").innerHTML = '<div class="e">Prices unavailable</div>'; }
 }
-load(); setInterval(load, 30000);
+const post = () => { try { parent.postMessage({ pcnH: document.getElementById("w").offsetHeight + 2 }, "*"); } catch (e) {} };
+load().then(post); setInterval(() => load().then(post), 30000);
 </script></body></html>
