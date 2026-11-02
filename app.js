@@ -292,6 +292,27 @@ async function tgHomeTip() {
     if (x) x.onclick = () => { try { localStorage.setItem("pc_tg_hide", String(Date.now())); } catch (_) {} t.innerHTML = ""; };
   } catch (_) {}
 }
+const MK_TABS = [["all", "Top"], ["trend", "Trending"], ["watch", "★ Watchlist"], ["gain", "Gainers"], ["lose", "Losers"], ["stable", "Stablecoins"], ["rwa", "Tokenized assets"]];
+const MK_NOTES = { trend: "Most traded coins in the last 24 hours.", gain: "Biggest price rises in 24 hours. Tiny coins are left out.", lose: "Biggest price falls in 24 hours. Tiny coins are left out.", stable: "Coins designed to stay at one US dollar.", rwa: "Tokens that track funds, bonds, stocks or similar. They trade very little." };
+const STABLE_SYMS = ["usdt", "usdc", "dai", "usde", "usds", "fdusd", "tusd", "usdd", "usd1", "pyusd", "usdg", "rlusd", "gusd", "frax", "usdp"];
+function tabQuery(tab) {
+  let q = sb.from("coins").select(COLS, { count: "exact" });
+  const real = (x) => x.or("kind.is.null,kind.neq.tokenized");
+  if (tab === "trend") return real(q).lte("market_cap_rank", 300).gt("volume_24h_usd", 0).order("volume_24h_usd", { ascending: false }).limit(50);
+  if (tab === "gain" || tab === "lose") return real(q).gte("market_cap_usd", 5e6).gte("volume_24h_usd", 5e5).not("change_24h_pct", "is", null).order("change_24h_pct", { ascending: tab === "lose" }).limit(100);
+  if (tab === "stable") return real(q).lte("market_cap_rank", 400).or(STABLE_SYMS.map((s) => "symbol.ilike." + s).join(",")).order("market_cap_rank", { ascending: true, nullsFirst: false }).limit(60);
+  if (tab === "rwa") return q.eq("kind", "tokenized").order("market_cap_usd", { ascending: false, nullsFirst: false }).limit(100);
+  return null;
+}
+function syncTabs() {
+  document.querySelectorAll("#mkTabs [data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === state.tab));
+  const n = $("#tabNote");
+  if (n) { n.textContent = MK_NOTES[state.tab] || ""; n.hidden = !MK_NOTES[state.tab]; }
+  const tl = document.querySelector(".mk-tools");
+  if (tl) tl.style.display = state.tab === "all" ? "" : "none";
+  const on = document.querySelector("#mkTabs .on");
+  if (on && on.scrollIntoView) on.scrollIntoView({ block: "nearest", inline: "center" });
+}
 async function renderMarket() {
   await state.fxReady;
   acctCss();
@@ -305,10 +326,8 @@ async function renderMarket() {
     ${iosBannerHtml()}
     ${installBannerHtml()}
     <div id="tgHome"></div>
-    <div class="ac-seg mk-tabs" id="tabs">
-      <button type="button" class="${state.tab === "all" ? "on" : ""}" data-tab="all">All coins</button>
-      <button type="button" class="${state.tab === "watch" ? "on" : ""}" data-tab="watch">★ Watchlist</button>
-    </div>
+    <div class="mk-ts"><div class="mk-tsc" id="mkTabs" role="tablist">${MK_TABS.map((t) => `<button type="button" role="tab" class="${state.tab === t[0] ? "on" : ""}" data-tab="${t[0]}">${t[1]}</button>`).join("")}</div><button type="button" class="mk-tsn" id="tabNext" aria-label="More tabs">›</button></div>
+    <p class="mk-tnote" id="tabNote" hidden></p>
     <p class="note" id="staleNote" hidden style="background:#fff7e6;border-radius:12px;padding:10px 12px"></p>
     <div id="toolBox"></div>
     <div class="mk-tools"><button type="button" id="fltBtn">Filters<b class="mk-b" id="fltBadge" hidden></b></button><button type="button" id="colBtn">Columns</button></div>
@@ -349,13 +368,16 @@ async function renderMarket() {
     const top = $("#list");
     if (top) window.scrollTo(0, Math.max(0, top.getBoundingClientRect().top + window.scrollY - 70));
   });
-  $("#tabs").addEventListener("click", (e) => {
+  $("#mkTabs").addEventListener("click", (e) => {
     const t = e.target.closest("[data-tab]");
     if (!t || t.dataset.tab === state.tab) return;
     state.tab = t.dataset.tab;
-    document.querySelectorAll("#tabs [data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === state.tab));
+    syncTabs();
     loadCoins(true);
   });
+  const tn = $("#tabNext");
+  if (tn) tn.onclick = () => { const c = $("#mkTabs"); if (c) c.scrollBy({ left: Math.max(140, c.clientWidth * 0.6), behavior: "smooth" }); };
+  syncTabs();
   const iosBox = $("#iosBanner");
   if (iosBox) {
     $("#iosClose").onclick = () => {
@@ -433,6 +455,10 @@ function mkTools() {
     st.textContent = `#lwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none}#lwrap::-webkit-scrollbar{display:none}#lin.xw .px{min-width:84px}
 .lhd .hc{flex:none;margin:0 0 0 8px!important;text-align:right!important;white-space:nowrap}.lhd .hc.p{min-width:70px}.lhd .hc.c{min-width:58px}.lhd .hc.m{min-width:66px}.lhd{padding-right:6px!important}#lin.xw .lhd .hc.p{min-width:84px}
 .cw .xc{flex:none;min-width:66px;text-align:right;font-size:.85rem;font-weight:600;white-space:nowrap}
+.mk-ts{position:relative;display:flex;align-items:center;border-bottom:1px solid var(--line);margin:4px 0 10px}.mk-tsc{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex:1;min-width:0}.mk-tsc::-webkit-scrollbar{display:none}
+.mk-tsc button{flex:none;border:0;background:none;color:var(--muted);font:inherit;font-weight:700;font-size:1.02rem;padding:12px 14px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}.mk-tsc button.on{color:var(--ink);border-bottom-color:var(--green)}
+.mk-tsn{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:1.2rem;line-height:1;cursor:pointer;margin:0 0 0 4px}
+.mk-tnote{margin:-2px 2px 8px;font-size:.82rem;color:var(--muted)}
 .mk-tools{display:flex;gap:8px;margin:6px 0 10px}.mk-tools button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:700;font-size:.92rem;padding:11px 10px;border:0;border-radius:12px;background:rgba(127,127,127,.14);color:inherit;cursor:pointer}
 .mk-b{background:var(--green);color:#fff;border-radius:99px;font-size:.72rem;min-width:18px;height:18px;line-height:18px;text-align:center;padding:0 5px}
 #mkSh{position:fixed;inset:0;z-index:10001;visibility:hidden}#mkSh.on{visibility:visible}
@@ -465,7 +491,7 @@ function openFilters() {
     lsSave("pcn_flt", f);
     close();
     state.tab = "all";
-    document.querySelectorAll("#tabs [data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === "all"));
+    syncTabs();
     mkLayout();
     loadCoins(true);
   };
@@ -664,6 +690,23 @@ async function loadCoins(reset, pg) {
     for (const c of wd) state.coinMap.set(c.id, c);
     state.coins = wd;
     list.innerHTML = rowsHtml(wd);
+    return;
+  }
+  const termTab = state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
+  if (!termTab && state.tab !== "all") {
+    if ($("#toolBox")) $("#toolBox").innerHTML = "";
+    setStaleNote("");
+    $("#moreBtn").hidden = true;
+    const { data: td, error: te } = await tabQuery(state.tab);
+    if (id !== state.req || !$("#list")) return;
+    if (te) { list.innerHTML = emptyBox("Could not load this list", "Check your connection and try again."); return; }
+    for (const c of td) state.coinMap.set(c.id, c);
+    state.coins = td;
+    await loadWatch();
+    if (id !== state.req || !$("#list")) return;
+    state.pg = 0; state.page = 1; state.total = td.length;
+    list.innerHTML = td.length ? rowsHtml(td) : emptyBox("Nothing here yet", "Check back in a few minutes.");
+    renderPager();
     return;
   }
   const plainFirstPage = reset && !state.page && !state.q.replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim() && !fltCount();
