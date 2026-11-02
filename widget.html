@@ -33,7 +33,7 @@ select{width:100%;font:inherit;font-size:16px;padding:12px;border-radius:12px;bo
 #cps .no{opacity:.6;text-align:center;padding:24px 0}
 .seg{display:flex;gap:6px}.seg button{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:10px;font:inherit;font-weight:700;cursor:pointer}.seg button.on{background:var(--g);border-color:var(--g);color:#fff}
 textarea{width:100%;min-height:118px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
-.copy{display:block;width:100%;margin:0 0 8px;border:0;background:var(--g);color:#fff;font:inherit;font-weight:800;padding:13px;border-radius:12px;cursor:pointer}
+.copy{display:block;width:100%;margin-top:8px;border:0;background:var(--g);color:#fff;font:inherit;font-weight:800;padding:13px;border-radius:12px;cursor:pointer}
 .prev{display:flex;justify-content:center}.prev iframe{border:0;width:100%}
 ul{color:var(--mu);padding-left:20px}li{margin:8px 0}details{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0}summary{font-weight:700;cursor:pointer}
 footer{border-top:1px solid var(--line);padding:18px 16px;text-align:center;color:var(--mu);font-size:.9rem}footer a{color:var(--mu)}
@@ -61,9 +61,9 @@ footer{border-top:1px solid var(--line);padding:18px 16px;text-align:center;colo
 <div class="card prev"><iframe id="pv" title="Widget preview" height="200" style="max-width:480px"></iframe></div>
 
 <h2>Your code</h2>
-<p>Tap Copy code, then paste it where you want the prices to show (in WordPress use a "Custom HTML" block).</p>
+<p>Paste this where you want the prices to show (in WordPress use a "Custom HTML" block).</p>
+<textarea id="code" readonly></textarea>
 <button class="copy" id="cp" type="button">Copy code</button>
-<details><summary>Show the code</summary><textarea id="code" readonly></textarea></details>
 <details><summary>Your site does not allow scripts? Use this instead</summary><p>Some blog builders (like Blogger or WordPress.com free plans) block scripts. Paste this frame code instead:</p><textarea id="code2" readonly></textarea><button class="copy" id="cp2" type="button">Copy frame code</button></details>
 
 <h2>How to add it to your site</h2>
