@@ -9,14 +9,14 @@
   };
   var css = '.mkt{position:relative;margin:20px 0 18px}' +
     '.mkt-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}' +
-    '.mkt-c{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:74px;padding:9px 3px;border-radius:12px;' +
+    '.mkt-c{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-height:0;padding:6px 4px;border-radius:12px;' +
     'background:rgba(127,127,127,.09);color:inherit;text-decoration:none;min-width:0;text-align:center;border:0;font:inherit;-webkit-tap-highlight-color:transparent}' +
     'button.mkt-c{cursor:pointer}' +
     '.mkt-c small{font-size:10.5px;opacity:.65;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}' +
-    '.mkt-c b{font-size:15px;line-height:1.15;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}' +
-    '.mkt-c .ch{font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}' +
+    '.mkt-c b{font-size:15px;line-height:17px;font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}' +
+    '.mkt-c .ch{display:block;min-height:14px;line-height:14px;font-size:11.5px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}' +
     '.mkt-c.on{outline:2px solid rgba(18,161,80,.55)}' +
-    '.mkt-g{display:block;width:60px;height:33px;margin-top:1px}.mkt-g path{fill:none;stroke-width:5}' +
+    '.mkt-gw{position:relative;width:58px;height:32px}.mkt-g{display:block;width:58px;height:32px}.mkt-g path{fill:none;stroke-width:5}.mkt-gw b{position:absolute;left:0;right:0;bottom:0;text-align:center;font-size:15px;line-height:15px}' +
     '.mkt-tip{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:13px;line-height:1.45;background:rgba(127,127,127,.09)}' +
     '.mkt-tip b{display:block;margin-bottom:2px;font-size:13px}' +
     '.mkt-up{color:#15803d}.mkt-dn{color:#dc2626}' +
@@ -46,7 +46,7 @@
     return o + '<circle cx="' + d[0].toFixed(2) + '" cy="' + d[1].toFixed(2) + '" r="3.6" fill="#fff" stroke="#667" stroke-width="1"/></svg>';
   }
   function card(k, label, val, extra) {
-    return '<button type="button" class="mkt-c' + (openKey === k ? ' on' : '') + '" data-k="' + k + '" aria-expanded="' + (openKey === k) + '"><small>' + label + '</small><b>' + val + '</b>' + (extra || '') + '</button>';
+    return '<button type="button" class="mkt-c' + (openKey === k ? ' on' : '') + '" data-k="' + k + '" aria-expanded="' + (openKey === k) + '"><small>' + label + '</small><b>' + val + '</b>' + (extra || '<span class="ch">&nbsp;</span>') + '</button>';
   }
   /* rolling ticker above the search box (like CoinMarketCap): coins, exchanges, market cap, volume, dominance, Fear & Greed */
   var counts = { coins: null, ex: null, ethCap: null, gas: null }, tickI = 0;
@@ -109,7 +109,7 @@
       card('vol', '24h volume', money(d.volume_24h), volTxt) +
       card('dom', 'BTC dom.', isFinite(dom) ? dom.toFixed(1) + '%' : '-', domTxt);
     if (d.fng_value != null) {
-      h += '<a class="mkt-c" href="fear-greed.html" aria-label="Fear and Greed index ' + d.fng_value + '"><small>Fear &amp; Greed</small>' + gauge(Number(d.fng_value)) + '<b>' + d.fng_value + '</b></a>';
+      h += '<a class="mkt-c" href="fear-greed.html" aria-label="Fear and Greed index ' + d.fng_value + '"><small>Fear &amp; Greed</small><span class="mkt-gw">' + gauge(Number(d.fng_value)) + '<b>' + d.fng_value + '</b></span></a>';
     } else {
       h += card('fng', 'Fear & Greed', '-');
     }
