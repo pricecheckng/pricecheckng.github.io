@@ -333,7 +333,7 @@ async function renderMarket() {
     <p class="mk-tnote" id="tabNote" hidden></p>
     <p class="note" id="staleNote" hidden style="background:#fff7e6;border-radius:12px;padding:10px 12px"></p>
     <div id="toolBox"></div>
-    <div class="mk-net"><button type="button" id="netBtn"></button></div>
+    <div class="mk-net" id="mkNet"></div>
     <div class="mk-tools"><button type="button" id="fltBtn">Filters<b class="mk-b" id="fltBadge" hidden></b></button><button type="button" id="colBtn">Columns</button></div>
     <div id="lwrap"><div id="lin">
     <div class="lhd" id="lhdr"></div>
@@ -470,8 +470,9 @@ function mkTools() {
 .mk-ts{position:relative;display:flex;align-items:center;border-bottom:1px solid var(--line);margin:4px 0 10px}.mk-tsc{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex:1;min-width:0}.mk-tsc::-webkit-scrollbar{display:none}
 .mk-tsc button{flex:none;border:0;background:none;color:var(--muted);font:inherit;font-weight:700;font-size:1.02rem;padding:12px 14px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-1px;white-space:nowrap}.mk-tsc button.on{color:var(--ink);border-bottom-color:var(--green)}
 .mk-tsn[hidden]{display:none}.mk-tsp{margin:0 4px 0 0}.mk-tsn{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:1.2rem;line-height:1;cursor:pointer;margin:0 0 0 4px}
-.mk-net{margin:6px 0 0}.mk-net button{display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:700;font-size:.92rem;padding:10px 14px;border:0;border-radius:12px;background:rgba(18,161,80,.14);color:#14b866;cursor:pointer}.mk-net svg{flex:none}
-.mk-nr{width:100%;display:flex;align-items:center;justify-content:space-between;gap:10px;font:inherit;font-weight:600;font-size:1rem;color:inherit;background:none;border:0;border-bottom:1px solid var(--line);padding:14px 4px;cursor:pointer;text-align:left}.mk-nr[aria-checked="true"]{color:var(--green);font-weight:800}
+.mk-net{display:flex;align-items:center;gap:4px;margin:6px 0 0}.mk-nsc{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch;flex:1;min-width:0}.mk-nsc::-webkit-scrollbar{display:none}
+.mk-nc{flex:none;display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:700;font-size:.95rem;padding:9px 13px;border:0;border-radius:12px;background:none;color:inherit;cursor:pointer;white-space:nowrap}.mk-nc.on{background:rgba(18,161,80,.16);color:#14b866}.mk-nc img,.mk-nc svg{flex:none;width:22px;height:22px;border-radius:50%}
+.mk-na{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:1.2rem;line-height:1;cursor:pointer}.mk-na[hidden]{display:none}
 .mk-tnote{margin:-2px 2px 8px;font-size:.82rem;color:var(--muted)}
 .mk-tools{display:flex;gap:8px;margin:6px 0 10px}.mk-tools button{flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:700;font-size:.92rem;padding:11px 10px;border:0;border-radius:12px;background:rgba(127,127,127,.14);color:inherit;cursor:pointer}
 .mk-b{background:var(--green);color:#fff;border-radius:99px;font-size:.72rem;min-width:18px;height:18px;line-height:18px;text-align:center;padding:0 5px}
@@ -491,38 +492,62 @@ html.dk .mk-sh{background:#16201a;color:#e9f1ec}
   }
   mkLayout();
   const fb = $("#fltBtn"), cb = $("#colBtn");
-  netLabel();
+  netRender();
   const nt0 = document.querySelector(".mk-net");
   if (nt0) nt0.style.display = "none";
   if (state.netOk === undefined) {
     state.netOk = false;
     sb.from("coins").select("id").not("networks", "is", null).limit(1).then((r) => { state.netOk = !!(r && !r.error && r.data && r.data.length); syncTabs(); }, () => {});
   } else syncTabs();
-  const nb = $("#netBtn");
-  if (nb) nb.onclick = openNets;
   if (fb) fb.onclick = openFilters;
   if (cb) cb.onclick = openColumns;
 }
-function netLabel() {
-  const b = $("#netBtn");
-  if (!b) return;
-  const n = NETS.find((x) => x[0] === state.net);
-  b.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z"/></svg>' + esc(n ? n[1] : "All Networks");
+const NET_COIN = { ethereum: ["ethereum"], bsc: ["binancecoin"], solana: ["solana"], tron: ["tron"], polygon: ["matic-network", "polygon-ecosystem-token"], arbitrum: ["arbitrum"], avalanche: ["avalanche-2"], optimism: ["optimism"], ton: ["the-open-network"], sui: ["sui"] };
+function netIcon(k) {
+  if (k === "") return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z"/></svg>';
+  if (k === "base") return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#0052ff"/></svg>';
+  const u = (state.netImgs || {})[k];
+  return u ? `<img src="${esc(u)}" alt="" width="22" height="22" loading="lazy">` : "";
 }
-function openNets() {
-  const rows = [["", "All Networks"]].concat(NETS).map(([k, t]) => `<button type="button" class="mk-nr" role="radio" data-n="${k}" aria-checked="${state.net === k}"><span>${esc(t)}</span>${state.net === k ? "<span>✓</span>" : ""}</button>`).join("");
-  const { el, close } = mkSheet("Networks", rows + '<p class="mk-note">Shows coins and tokens that run on the network you pick. Works on the All coins list.</p>', '<button type="button" class="ap" data-mx>Close</button>');
-  el.addEventListener("click", (e) => {
+function netArrows() {
+  const sc = $("#mkNsc"), pv = $("#netPrev"), nx = $("#netNext");
+  if (!sc || !pv || !nx) return;
+  pv.hidden = sc.scrollLeft < 8;
+  nx.hidden = sc.scrollLeft + sc.clientWidth >= sc.scrollWidth - 8;
+}
+function netRender() {
+  const box = $("#mkNet");
+  if (!box) return;
+  if (!state.netImgs) {
+    state.netImgs = {};
+    const ids = [].concat(...Object.values(NET_COIN));
+    sb.from("coins").select("id,image_url").in("id", ids).then((r) => {
+      for (const c of (r && r.data) || []) for (const k in NET_COIN) if (!state.netImgs[k] && NET_COIN[k].includes(c.id) && c.image_url) state.netImgs[k] = c.image_url;
+      netRender();
+    }, () => {});
+  }
+  const keep = $("#mkNsc") ? $("#mkNsc").scrollLeft : 0;
+  box.innerHTML = '<button type="button" class="mk-na" id="netPrev" aria-label="Previous networks" hidden>‹</button><div class="mk-nsc" id="mkNsc" role="radiogroup" aria-label="Networks">' +
+    [["", "All Networks"]].concat(NETS).map(([k, t]) => `<button type="button" class="mk-nc${state.net === k ? " on" : ""}" role="radio" aria-checked="${state.net === k}" data-n="${k}">${netIcon(k)}${esc(t)}</button>`).join("") +
+    '</div><button type="button" class="mk-na" id="netNext" aria-label="More networks">›</button>';
+  const sc = $("#mkNsc");
+  sc.scrollLeft = keep;
+  sc.addEventListener("scroll", netArrows, { passive: true });
+  $("#netPrev").onclick = () => sc.scrollBy({ left: -sc.clientWidth * 0.7, behavior: "smooth" });
+  $("#netNext").onclick = () => sc.scrollBy({ left: sc.clientWidth * 0.7, behavior: "smooth" });
+  sc.addEventListener("click", (e) => {
     const b = e.target.closest("[data-n]");
     if (!b) return;
     state.net = b.dataset.n;
     try { localStorage.setItem("pcn_net", state.net); } catch (_) {}
-    close();
     state.tab = "all";
     syncTabs();
-    netLabel();
+    netRender();
     loadCoins(true);
   });
+  netArrows();
+  const on = sc.querySelector(".on");
+  if (on && !keep && state.net) on.scrollIntoView({ block: "nearest", inline: "center" });
 }
 function openFilters() {
   const v = (k) => { const n = fltNum(k); return n === null ? "" : n; };
