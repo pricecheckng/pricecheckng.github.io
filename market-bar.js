@@ -84,7 +84,7 @@
   }
   function reTick() { var o = document.getElementById('mktTick'); if (o) o.remove(); injectTick(); }
   function injectTick() {
-    var view = document.getElementById('view'); if (!view || !view.querySelector('#tabs')) return;
+    var view = document.getElementById('view'); if (!view || !view.querySelector('#mkTabs')) return;
     if (document.getElementById('mktTick')) return;
     var h = tickHtml(); if (!h) return;
     var tk = document.createElement('div'); tk.id = 'mktTick'; tk.innerHTML = h; tickI = 0;
@@ -117,7 +117,7 @@
   function inject() {
     if (!data) return;
     var view = document.getElementById('view'); if (!view) return;
-    var tabs = view.querySelector('#tabs'); if (!tabs) return;
+    var tabs = view.querySelector('#staleNote') || view.querySelector('.mk-ts'); if (!tabs) return; /* cards sit under the tab row, like CoinMarketCap */
     if (document.getElementById('mkt')) return;
     var box = document.createElement('div'); box.id = 'mkt'; box.className = 'mkt';
     box.innerHTML = build();
