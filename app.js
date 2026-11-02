@@ -505,8 +505,8 @@ html.dk .mk-sh{background:#16201a;color:#e9f1ec}
 const NET_COIN = { ethereum: ["ethereum"], bsc: ["binancecoin"], solana: ["solana"], tron: ["tron"], polygon: ["matic-network", "polygon-ecosystem-token"], arbitrum: ["arbitrum"], avalanche: ["avalanche-2"], optimism: ["optimism"], ton: ["the-open-network"], sui: ["sui"] };
 function netIcon(k) {
   if (k === "") return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z"/></svg>';
-  if (k === "base") return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#0052ff"/></svg>';
-  const u = (state.netImgs || {})[k];
+  const u = (state.netLogos || {})[k] || (state.netImgs || {})[k];
+  if (!u && k === "base") return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#0052ff"/></svg>';
   return u ? `<img src="${esc(u)}" alt="" width="22" height="22" loading="lazy">` : "";
 }
 function netArrows() {
@@ -520,6 +520,11 @@ function netRender() {
   if (!box) return;
   if (!state.netImgs) {
     state.netImgs = {};
+    state.netLogos = {};
+    sb.from("network_logos").select("net,url").then((r) => {
+      for (const x of (r && r.data) || []) if (x.url) state.netLogos[x.net] = x.url;
+      netRender();
+    }, () => {});
     const ids = [].concat(...Object.values(NET_COIN));
     sb.from("coins").select("id,image_url").in("id", ids).then((r) => {
       for (const c of (r && r.data) || []) for (const k in NET_COIN) if (!state.netImgs[k] && NET_COIN[k].includes(c.id) && c.image_url) state.netImgs[k] = c.image_url;
