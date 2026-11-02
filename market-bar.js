@@ -135,7 +135,9 @@
   var domPrev = null, volPrev = null;
   function refresh(cfg) {
     var Hh = { apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_KEY };
-    fetch(cfg.SUPABASE_URL + '/rest/v1/market_history?select=btc_dom,volume_24h&at=lte.' + encodeURIComponent(new Date(Date.now() - 24 * 3600e3).toISOString()) + '&order=at.desc&limit=1', { headers: Hh }).then(function (r) { return r.json(); }).then(function (l) { if (l && l[0]) { if (l[0].btc_dom != null) domPrev = Number(l[0].btc_dom); if (l[0].volume_24h != null) volPrev = Number(l[0].volume_24h); } }).catch(function () {}).then(function () {
+    var since = encodeURIComponent(new Date(Date.now() - 24 * 3600e3).toISOString());
+    var prev = function (col) { return fetch(cfg.SUPABASE_URL + '/rest/v1/market_history?select=' + col + '&' + col + '=not.is.null&at=lte.' + since + '&order=at.desc&limit=1', { headers: Hh }).then(function (r) { return r.ok ? r.json() : []; }).then(function (l) { return l && l[0] && l[0][col] != null ? Number(l[0][col]) : null; }).catch(function () { return null; }); };
+    Promise.all([prev('btc_dom'), prev('volume_24h')]).then(function (v) { if (v[0] != null) domPrev = v[0]; if (v[1] != null) volPrev = v[1]; }).then(function () {
     fetch(cfg.SUPABASE_URL + '/rest/v1/market_global?select=*&id=eq.1', {
       headers: { apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_KEY }
     }).then(function (r) { return r.json(); }).then(function (rows) {
