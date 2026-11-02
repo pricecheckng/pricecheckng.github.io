@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Free Live Crypto Price Widget for Your Website or Blog | PriceCheck NG</title>
-<meta name="description" content="Add live Bitcoin, Ethereum and other crypto prices to your blog or website with one line of code. Free, light, dark mode, USD or Naira. Pick your coins and copy the code.">
+<title>Free Crypto Price Widget for WordPress, Blogger and Any Website | PriceCheck NG</title>
+<meta name="description" content="Embed live Bitcoin, Ethereum and crypto prices on your blog or website with one line of code. Free widget for WordPress, Blogger, Wix and plain HTML. Choose coins, theme and currency, including Naira.">
 <link rel="canonical" href="https://pricecheckng.com.ng/widget.html">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Free live crypto price widget","url":"https://pricecheckng.com.ng/widget.html","description":"Embed live crypto prices on any website or blog with one line of code."}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","name":"Free live crypto price widget","url":"https://pricecheckng.com.ng/widget.html","description":"Embed live crypto prices on any website or blog with one line of code."},{"@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Is the crypto price widget free?","acceptedAnswer":{"@type":"Answer","text":"Yes. The widget is free for blogs and websites. It shows a small 'Live prices by PriceCheck NG' link at the bottom, and we ask you to keep it."}},{"@type":"Question","name":"How do I add a live crypto price widget to WordPress?","acceptedAnswer":{"@type":"Answer","text":"Pick your coins on this page, copy the code, then in WordPress add a Custom HTML block and paste it in. Save the page and the prices appear."}},{"@type":"Question","name":"Does the widget work on Blogger, Wix or Squarespace?","acceptedAnswer":{"@type":"Answer","text":"Yes. Use the main code where scripts are allowed. If your builder blocks scripts, use the frame code under 'Your site does not allow scripts?', which works on Blogger and most free site builders."}},{"@type":"Question","name":"Can I show prices in Naira or other currencies?","acceptedAnswer":{"@type":"Answer","text":"Yes. Choose any of 50 currencies, including Naira (NGN), US dollars, pounds, euros, Ghana cedis, Kenyan shillings and more."}},{"@type":"Question","name":"How often do the prices update?","acceptedAnswer":{"@type":"Answer","text":"The widget refreshes by itself every 30 seconds. Prices for major coins are updated about every minute on our side."}},{"@type":"Question","name":"Will the widget slow down my website?","acceptedAnswer":{"@type":"Answer","text":"No. It is a small frame that loads on its own and does not run heavy scripts on your page."}}]}]}</script>
 <style>
 :root{--bg:#fff;--card:#f6f7f8;--ink:#0f1a14;--mu:#5d6b64;--g:#16a34a;--gd:#0a7a3a;--line:#e3e8e5}
 @media (prefers-color-scheme:dark){:root{--bg:#0e1511;--card:#16201a;--ink:#e9f1ec;--mu:#9db0a5;--line:#26332c}}
@@ -20,13 +20,24 @@ input[type=search]{width:100%;font:inherit;font-size:16px;padding:12px;border-ra
 .chip.on{background:var(--g);border-color:var(--g);color:#fff}
 .sug{border:1px solid var(--line);border-radius:12px;margin-top:6px;overflow:hidden;background:var(--bg)}.sug button{display:block;width:100%;text-align:left;border:0;border-top:1px solid var(--line);background:none;color:var(--ink);font:inherit;padding:10px 12px;cursor:pointer}.sug button:first-child{border-top:0}
 select{width:100%;font:inherit;font-size:16px;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.cb{display:flex;align-items:center;gap:10px;width:100%;font:inherit;font-weight:700;padding:12px 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);cursor:pointer;text-align:left}.cb i{font-style:normal;font-size:22px}.cb span{flex:1}.cb small{color:var(--mu);font-weight:500}
+#cps{position:fixed;inset:0;z-index:50;visibility:hidden}#cps.on{visibility:visible}
+#cps .sc{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .2s}#cps.on .sc{opacity:1}
+#cps .sh{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;height:84vh;display:flex;flex-direction:column;background:var(--bg);color:var(--ink);border-radius:20px 20px 0 0;padding:14px 16px 0;transform:translateY(100%);transition:transform .25s ease}#cps.on .sh{transform:none}
+#cps .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}#cps .hd b{font-size:18px}
+#cps .x{border:0;background:rgba(127,127,127,.15);color:inherit;width:32px;height:32px;border-radius:50%;font-size:18px;line-height:1;cursor:pointer}
+#cps input{margin-bottom:8px}
+#cps .ls{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+#cps .rw{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:inherit;font:inherit;text-align:left;padding:12px 10px;border-radius:12px;cursor:pointer}#cps .rw.sel{background:rgba(18,161,80,.14)}
+#cps .rw i{font-style:normal;font-size:24px;width:30px;text-align:center}#cps .rw b{font-size:15px}#cps .rw small{display:block;opacity:.6;font-size:13px}#cps .rw em{margin-left:auto;color:#12a150;font-style:normal;font-weight:800}
+#cps .no{opacity:.6;text-align:center;padding:24px 0}
 .seg{display:flex;gap:6px}.seg button{flex:1;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:12px;padding:10px;font:inherit;font-weight:700;cursor:pointer}.seg button.on{background:var(--g);border-color:var(--g);color:#fff}
 textarea{width:100%;min-height:92px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;padding:10px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);resize:vertical}
 .copy{display:block;width:100%;margin-top:8px;border:0;background:var(--g);color:#fff;font:inherit;font-weight:800;padding:13px;border-radius:12px;cursor:pointer}
 .prev{display:flex;justify-content:center}.prev iframe{border:0;width:100%;max-width:360px}
-details{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0}summary{font-weight:700;cursor:pointer}
+ul{color:var(--mu);padding-left:20px}li{margin:8px 0}details{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:8px 0}summary{font-weight:700;cursor:pointer}
 footer{border-top:1px solid var(--line);padding:18px 16px;text-align:center;color:var(--mu);font-size:.9rem}footer a{color:var(--mu)}
-</style><script src="/theme.js"></script>
+</style><script src="/theme.js"></script><script src="/i18n.js" defer></script>
 </head><body>
 <header><a href="/">PriceCheck NG</a></header>
 <main>
@@ -40,8 +51,8 @@ footer{border-top:1px solid var(--line);padding:18px 16px;text-align:center;colo
 <div class="chips" id="chips"></div>
 <label>Theme</label>
 <div class="seg" id="th"><button data-v="light" class="on">Light</button><button data-v="dark">Dark</button><button data-v="auto">Auto</button></div>
-<label for="cu">Currency</label>
-<select id="cu"></select>
+<label>Currency</label>
+<button type="button" id="cb" class="cb" aria-haspopup="dialog"></button>
 </div>
 
 <h2>Preview</h2>
@@ -53,10 +64,27 @@ footer{border-top:1px solid var(--line);padding:18px 16px;text-align:center;colo
 <button class="copy" id="cp" type="button">Copy code</button>
 <details><summary>Your site does not allow scripts? Use this instead</summary><p>Some blog builders (like Blogger or WordPress.com free plans) block scripts. Paste this frame code instead:</p><textarea id="code2" readonly></textarea><button class="copy" id="cp2" type="button">Copy frame code</button></details>
 
+<h2>How to add it to your site</h2>
+<div class="card"><b>WordPress</b><p>Edit a page or post, add a <b>Custom HTML</b> block, paste the code, then Update. In the widget area, add a Custom HTML widget in the same way.</p></div>
+<div class="card"><b>Blogger</b><p>Layout, Add a Gadget, <b>HTML/JavaScript</b>. Paste the <b>frame code</b> (the one under "Your site does not allow scripts?") and save.</p></div>
+<div class="card"><b>Wix, Squarespace, Shopify</b><p>Add an <b>Embed code</b> or <b>Custom HTML</b> element and paste the code. If it does not show, use the frame code.</p></div>
+<div class="card"><b>Plain HTML website</b><p>Paste the code in your page where the prices should appear, for example in the sidebar or under a heading.</p></div>
+
+<h2>Why bloggers use it</h2>
+<ul><li><b>Free and simple.</b> One line of code, no account, no sign-up.</li><li><b>Live prices.</b> Refreshes by itself, so your readers always see current rates.</li><li><b>Your readers' currency.</b> 50 currencies, including Naira, with light or dark theme.</li><li><b>Light.</b> It loads in its own small frame and does not slow your page.</li></ul>
+
+<h2>Frequently asked questions</h2>
+<details><summary>Is the crypto price widget free?</summary><p>Yes. The widget is free for blogs and websites. It shows a small 'Live prices by PriceCheck NG' link at the bottom, and we ask you to keep it.</p></details>
+<details><summary>How do I add a live crypto price widget to WordPress?</summary><p>Pick your coins on this page, copy the code, then in WordPress add a Custom HTML block and paste it in. Save the page and the prices appear.</p></details>
+<details><summary>Does the widget work on Blogger, Wix or Squarespace?</summary><p>Yes. Use the main code where scripts are allowed. If your builder blocks scripts, use the frame code under 'Your site does not allow scripts?', which works on Blogger and most free site builders.</p></details>
+<details><summary>Can I show prices in Naira or other currencies?</summary><p>Yes. Choose any of 50 currencies, including Naira (NGN), US dollars, pounds, euros, Ghana cedis, Kenyan shillings and more.</p></details>
+<details><summary>How often do the prices update?</summary><p>The widget refreshes by itself every 30 seconds. Prices for major coins are updated about every minute on our side.</p></details>
+<details><summary>Will the widget slow down my website?</summary><p>No. It is a small frame that loads on its own and does not run heavy scripts on your page.</p></details>
 <h2>Good to know</h2>
 <p>The widget shows a small "Live prices by PriceCheck NG" link at the bottom. Please keep it, that is how we keep the widget free. Prices are for information only and are not financial advice.</p>
 </main>
 <footer><a href="about.html">About</a> · <a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="api.html">API</a> · <a href="contact.html">Contact</a></footer>
+<div id="cps"><div class="sc" data-x></div><div class="sh" role="dialog" aria-modal="true" aria-label="Choose currency"><div class="hd"><b>Currency</b><button type="button" class="x" data-x aria-label="Close">×</button></div><input id="cq" type="search" enterkeyhint="search" placeholder="Search currency" autocomplete="off" aria-label="Search currency"><div class="ls" id="cl"></div></div></div>
 <script type="module">
 import { SUPABASE_URL, SUPABASE_KEY } from "/config.js";
 const H = { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY };
@@ -83,8 +111,18 @@ function render() {
 }
 function seg(id, set) { $(id).querySelectorAll("button").forEach((b) => (b.onclick = () => { $(id).querySelectorAll("button").forEach((x) => x.classList.toggle("on", x === b)); set(b.dataset.v); render(); })); }
 seg("th", (v) => (theme = v));
-$("cu").innerHTML = Object.keys(CUR).map((k) => '<option value="' + k + '">' + CUR[k][0] + " " + k + " - " + CUR[k][2] + "</option>").join("");
-$("cu").onchange = () => { cur = $("cu").value; render(); };
+function paintCb() { const c = CUR[cur]; $("cb").innerHTML = "<i>" + c[0] + "</i><span>" + cur + " <small>" + esc(c[2]) + '</small></span><svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M4 8l8 9 8-9z"/></svg>'; }
+function paintCl(qs) {
+  qs = (qs || "").toLowerCase().trim();
+  const rows = Object.keys(CUR).filter((k) => !qs || (k + " " + CUR[k][2] + " " + CUR[k][1]).toLowerCase().includes(qs));
+  $("cl").innerHTML = rows.length ? rows.map((k) => '<button type="button" class="rw' + (k === cur ? " sel" : "") + '" data-c="' + k + '"><i>' + CUR[k][0] + "</i><span><b>" + esc(CUR[k][2]) + "</b><small>" + k + " - " + esc(CUR[k][1]) + "</small></span>" + (k === cur ? "<em>✓</em>" : "") + "</button>").join("") : '<div class="no">No currency found</div>';
+}
+const sh = (on) => $("cps").classList.toggle("on", on);
+$("cb").onclick = () => { $("cq").value = ""; paintCl(""); sh(true); };
+$("cq").oninput = (e) => paintCl(e.target.value);
+$("cq").onkeydown = (e) => { if (e.key === "Enter") { e.preventDefault(); e.target.blur(); } };
+$("cps").onclick = (e) => { const t = e.target.closest("[data-c]"); if (t) { cur = t.dataset.c; sh(false); paintCb(); render(); return; } if (e.target.closest("[data-x]")) sh(false); };
+paintCb();
 let t;
 $("s").oninput = () => {
   clearTimeout(t); const v = $("s").value.trim().replace(/[^A-Za-z0-9 ._-]/g, "");
