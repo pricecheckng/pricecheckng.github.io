@@ -426,9 +426,7 @@ async function renderMarket() {
 const FLT_MAP = [["mcMin", "market_cap_usd", "gte"], ["mcMax", "market_cap_usd", "lte"], ["chMin", "change_24h_pct", "gte"], ["chMax", "change_24h_pct", "lte"], ["vMin", "volume_24h_usd", "gte"], ["vMax", "volume_24h_usd", "lte"]];
 function lsJson(k, d) { try { const j = JSON.parse(localStorage.getItem(k) || "null"); return j && typeof j === "object" ? j : d; } catch (_) { return d; } }
 function lsSave(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} }
-const NETS = [["ethereum", "Ethereum"], ["bsc", "BNB Chain"], ["solana", "Solana"], ["base", "Base"], ["tron", "TRON"], ["polygon", "Polygon"], ["arbitrum", "Arbitrum"], ["avalanche", "Avalanche"], ["optimism", "Optimism"], ["ton", "TON"], ["sui", "Sui"]];
 try { state.net = localStorage.getItem("pcn_net") || ""; } catch (_) { state.net = ""; }
-if (!NETS.some((n) => n[0] === state.net)) state.net = "";
 state.flt = lsJson("pcn_flt", {});
 state.cols = Object.assign({ chg: true, mcap: false, vol: false }, lsJson("pcn_cols", {}));
 const fltNum = (k) => { const v = parseFloat(String((state.flt || {})[k] ?? "").replace(/,/g, "")); return isFinite(v) ? v : null; };
@@ -502,11 +500,8 @@ html.dk .mk-sh{background:#16201a;color:#e9f1ec}
   if (fb) fb.onclick = openFilters;
   if (cb) cb.onclick = openColumns;
 }
-const NET_COIN = { ethereum: ["ethereum"], bsc: ["binancecoin"], solana: ["solana"], tron: ["tron"], polygon: ["matic-network", "polygon-ecosystem-token"], arbitrum: ["arbitrum"], avalanche: ["avalanche-2"], optimism: ["optimism"], ton: ["the-open-network"], sui: ["sui"] };
-function netIcon(k) {
+function netIcon(k, u) {
   if (k === "") return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.7 3.9 5.7 3.9 9s-1.3 6.3-3.9 9c-2.6-2.7-3.9-5.7-3.9-9S9.4 5.7 12 3z"/></svg>';
-  const u = (state.netLogos || {})[k] || (state.netImgs || {})[k];
-  if (!u && k === "base") return '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="12" fill="#0052ff"/></svg>';
   return u ? `<img src="${esc(u)}" alt="" width="22" height="22" loading="lazy">` : "";
 }
 function netArrows() {
@@ -518,22 +513,21 @@ function netArrows() {
 function netRender() {
   const box = $("#mkNet");
   if (!box) return;
-  if (!state.netImgs) {
-    state.netImgs = {};
-    state.netLogos = {};
-    sb.from("network_logos").select("net,url").then((r) => {
-      for (const x of (r && r.data) || []) if (x.url) state.netLogos[x.net] = x.url;
-      netRender();
-    }, () => {});
-    const ids = [].concat(...Object.values(NET_COIN));
-    sb.from("coins").select("id,image_url").in("id", ids).then((r) => {
-      for (const c of (r && r.data) || []) for (const k in NET_COIN) if (!state.netImgs[k] && NET_COIN[k].includes(c.id) && c.image_url) state.netImgs[k] = c.image_url;
+  if (!state.netList) {
+    state.netList = [];
+    sb.from("network_logos").select("net,name,url").order("sort", { ascending: true }).order("n", { ascending: false }).limit(80).then((r) => {
+      state.netList = ((r && r.data) || []).filter((x) => x.net && x.url);
+      if (state.net && !state.netList.some((x) => x.net === state.net)) {
+        state.net = "";
+        try { localStorage.removeItem("pcn_net"); } catch (_) {}
+        if (state.tab === "all" && $("#list")) loadCoins(true);
+      }
       netRender();
     }, () => {});
   }
   const keep = $("#mkNsc") ? $("#mkNsc").scrollLeft : 0;
   box.innerHTML = '<button type="button" class="mk-na" id="netPrev" aria-label="Previous networks" hidden>‹</button><div class="mk-nsc" id="mkNsc" role="radiogroup" aria-label="Networks">' +
-    [["", "All Networks"]].concat(NETS).map(([k, t]) => `<button type="button" class="mk-nc${state.net === k ? " on" : ""}" role="radio" aria-checked="${state.net === k}" data-n="${k}">${netIcon(k)}${esc(t)}</button>`).join("") +
+    [{ net: "", name: "All Networks", url: "" }].concat(state.netList || []).map((x) => `<button type="button" class="mk-nc${state.net === x.net ? " on" : ""}" role="radio" aria-checked="${state.net === x.net}" data-n="${esc(x.net)}">${netIcon(x.net, x.url)}${esc(x.name || x.net)}</button>`).join("") +
     '</div><button type="button" class="mk-na" id="netNext" aria-label="More networks">›</button>';
   const sc = $("#mkNsc");
   sc.scrollLeft = keep;
