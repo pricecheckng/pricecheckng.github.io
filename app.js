@@ -234,7 +234,7 @@ const gate = (text) =>
   `<section class="page"><h1>Sign in</h1><div class="card"><p>${esc(text)}</p><button class="btn" data-auth>Continue with Google</button></div></section>`;
 
 /* ---------- router ---------- */
-const routes = { market: renderMarket, alerts: renderAlerts, account: renderAccount, settings: renderSettings, portfolio: renderPortfolio, admin: renderAdmin };
+const routes = { market: renderMarket, alerts: renderAlerts, account: renderAccount, portfolio: renderPortfolio, admin: renderAdmin };
 function route() {
   Live.clearPage();
   setTimeout(() => Live.scan(), 60);
@@ -3744,6 +3744,7 @@ function acctCss() {
 .ac-pill.soft{background:rgba(11,125,77,.15);color:#0b7d4d}
 .ac-pill.off{background:rgba(127,127,127,.2);color:inherit}
 .ac-chev{width:18px;height:18px;opacity:.5;flex:none}
+.ac-card [data-tg-disconnect]{display:inline-flex;width:auto;margin-top:10px;padding:8px 14px;font-size:.88rem;border-radius:10px}
 .ac-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;box-sizing:border-box;margin-top:8px;padding:12px;border-radius:12px;border:1px solid rgba(11,125,77,.3);background:rgba(11,125,77,.07);color:#0b7d4d;font:inherit;font-weight:600}
 .ac-btn svg{width:18px;height:18px}
 .ac-sw{position:relative;width:52px;height:30px;border-radius:999px;border:0;background:rgba(127,127,127,.35);flex:none;padding:0;transition:background .2s}
@@ -3813,16 +3814,14 @@ function renderAccount() {
     <div id="pushCard" data-full="1"></div>
     <div id="tgCard"></div>
     <div id="adminSlot"></div>
-    <button class="btn ghost" type="button" id="signOut">Sign out</button>
     <div id="delSlot"></div></section>${footer()}`;
   renderPushCard($("#pushCard"));
   telegramCardHtml().then((h) => {
     if ($("#tgCard")) $("#tgCard").innerHTML = h;
   });
-  $("#signOut").onclick = signOut;
   // Only an explicit "not admin" answer shows the delete button. If the check fails (network, session not ready), try once more and otherwise show nothing.
   const adminCheck = (again) => sb.rpc("is_admin").then(({ data, error }) => {
-    if (!$("#signOut")) return;
+    if (!$("#adminSlot")) return;
     if (error || data === null || data === undefined) {
       if (again) setTimeout(() => adminCheck(false), 1500);
       return;
@@ -3835,36 +3834,6 @@ function renderAccount() {
     }
   });
   adminCheck(true);
-}
-
-function renderSettings() {
-  if (!state.user) {
-    view.innerHTML = gate("Sign in to manage your notifications and alert settings.");
-    return;
-  }
-  acctCss();
-  const chev = `<span class="ac-chev">${acIco("chev")}</span>`;
-  const hd = (t) => `<h3 style="margin:20px 4px 8px;font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;opacity:.6">${t}</h3>`;
-  view.innerHTML = `<section class="page acct"><h1>Settings</h1><p class="acct-sub">Choose how and when PriceCheck NG notifies you.</p>
-    ${hd("Notifications")}
-    <div id="tgCard"><div class="ac-card"><p class="ac-note" style="margin:0">Loading your settings…</p></div></div>
-    ${hd("More")}
-    <div class="ac-card">
-      ${acRow("bell", "Price alerts", "See and manage your alerts", chev, "a", 'href="#alerts"')}
-      ${acRow("user", "Account", "Profile, sign out and delete account", chev, "a", 'href="#account"')}
-      ${acRow("shield", "Privacy Policy", "How we use your data", chev, "a", 'href="privacy.html"')}
-    </div></section>${footer()}`;
-  telegramCardHtml().then((h) => {
-    if (!$("#tgCard")) return;
-    if (!h.includes("data-ds-toggle")) {
-      const opts = Array.from({ length: 24 }, (_, i) => `<option value="${i}"${i === 8 ? " selected" : ""}>${hourLabel(i)}</option>`).join("");
-      h += `<div class="ac-card">
-        ${acRow("clock", "Daily summary", "A short Telegram message each day with your watchlist prices.", `<button type="button" class="ac-sw" role="switch" aria-checked="false" aria-label="Daily summary" disabled style="opacity:.5"><i></i></button>`)}
-        ${acRow("clock", "Send at", "", `<select class="ac-sel" aria-label="Send at" disabled style="opacity:.5">${opts}</select>`)}
-        <p class="ac-note">Connect Telegram above to turn this on and choose the time.</p></div>`;
-    }
-    $("#tgCard").innerHTML = h;
-  });
 }
 
 function renderAcctPush(el) {
