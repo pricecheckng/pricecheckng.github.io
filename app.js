@@ -234,7 +234,7 @@ const gate = (text) =>
   `<section class="page"><h1>Sign in</h1><div class="card"><p>${esc(text)}</p><button class="btn" data-auth>Continue with Google</button></div></section>`;
 
 /* ---------- router ---------- */
-const routes = { market: renderMarket, alerts: renderAlerts, account: renderAccount, portfolio: renderPortfolio, admin: renderAdmin };
+const routes = { market: renderMarket, alerts: renderAlerts, account: renderAccount, settings: renderSettings, portfolio: renderPortfolio, admin: renderAdmin };
 function route() {
   Live.clearPage();
   setTimeout(() => Live.scan(), 60);
@@ -3835,6 +3835,36 @@ function renderAccount() {
     }
   });
   adminCheck(true);
+}
+
+function renderSettings() {
+  if (!state.user) {
+    view.innerHTML = gate("Sign in to manage your notifications and alert settings.");
+    return;
+  }
+  acctCss();
+  const chev = `<span class="ac-chev">${acIco("chev")}</span>`;
+  const hd = (t) => `<h3 style="margin:20px 4px 8px;font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;opacity:.6">${t}</h3>`;
+  view.innerHTML = `<section class="page acct"><h1>Settings</h1><p class="acct-sub">Choose how and when PriceCheck NG notifies you.</p>
+    ${hd("Notifications")}
+    <div id="tgCard"><div class="ac-card"><p class="ac-note" style="margin:0">Loading your settings…</p></div></div>
+    ${hd("More")}
+    <div class="ac-card">
+      ${acRow("bell", "Price alerts", "See and manage your alerts", chev, "a", 'href="#alerts"')}
+      ${acRow("user", "Account", "Profile, sign out and delete account", chev, "a", 'href="#account"')}
+      ${acRow("shield", "Privacy Policy", "How we use your data", chev, "a", 'href="privacy.html"')}
+    </div></section>${footer()}`;
+  telegramCardHtml().then((h) => {
+    if (!$("#tgCard")) return;
+    if (!h.includes("data-ds-toggle")) {
+      const opts = Array.from({ length: 24 }, (_, i) => `<option value="${i}"${i === 8 ? " selected" : ""}>${hourLabel(i)}</option>`).join("");
+      h += `<div class="ac-card">
+        ${acRow("clock", "Daily summary", "A short Telegram message each day with your watchlist prices.", `<button type="button" class="ac-sw" role="switch" aria-checked="false" aria-label="Daily summary" disabled style="opacity:.5"><i></i></button>`)}
+        ${acRow("clock", "Send at", "", `<select class="ac-sel" aria-label="Send at" disabled style="opacity:.5">${opts}</select>`)}
+        <p class="ac-note">Connect Telegram above to turn this on and choose the time.</p></div>`;
+    }
+    $("#tgCard").innerHTML = h;
+  });
 }
 
 function renderAcctPush(el) {
