@@ -3807,6 +3807,17 @@ function acctCss() {
 .pl-chev{transition:transform .2s}
 .pl-card[open] .pl-chev{transform:rotate(90deg)}
 .ac-del{display:block;margin:6px auto 0;background:none;border:0;color:#dc2626;font:inherit;font-size:.9rem;padding:10px}
+.acct .ac-card{padding:6px 14px;margin:0 0 10px}
+.acct .ac-card h3{margin:8px 0 0}
+.acct .ac-card>p{margin:0 0 2px}
+.acct .ac-row{padding:6px 0}
+.acct .ac-ic{width:34px;height:34px}.acct .ac-ic.tg svg{width:34px;height:34px}.acct .ac-ic svg{width:20px;height:20px}
+.acct .ac-rt small{line-height:1.25}
+.acct .ac-prof{padding:8px 14px;gap:12px}.acct .ac-av{width:44px;height:44px}.acct .ac-av svg{width:26px;height:26px}
+.acct .ac-note{margin:0 0 6px}
+.acct .ac-sel{padding:6px 10px}
+.acct .ac-card [data-tg-disconnect]{margin:4px 0 6px}
+.acct .ac-quiet{margin:0 0 8px}
 `;
   document.head.appendChild(s);
 }
