@@ -3837,34 +3837,32 @@ function renderAccount() {
   adminCheck(true);
 }
 
-function renderSettings() {
+async function renderSettings() {
   if (!state.user) {
-    view.innerHTML = gate("Sign in to manage your notifications and alert settings.");
+    view.innerHTML = gate("Sign in to manage your notifications.");
     return;
   }
   acctCss();
-  const chev = `<span class="ac-chev">${acIco("chev")}</span>`;
-  const hd = (t) => `<h3 style="margin:20px 4px 8px;font-size:.78rem;letter-spacing:.07em;text-transform:uppercase;opacity:.6">${t}</h3>`;
-  view.innerHTML = `<section class="page acct"><h1>Settings</h1><p class="acct-sub">Choose how and when PriceCheck NG notifies you.</p>
-    ${hd("Notifications")}
-    <div id="tgCard"><div class="ac-card"><p class="ac-note" style="margin:0">Loading your settings…</p></div></div>
-    ${hd("More")}
-    <div class="ac-card">
-      ${acRow("bell", "Price alerts", "See and manage your alerts", chev, "a", 'href="#alerts"')}
-      ${acRow("user", "Account", "Profile, sign out and delete account", chev, "a", 'href="#account"')}
-      ${acRow("shield", "Privacy Policy", "How we use your data", chev, "a", 'href="privacy.html"')}
-    </div></section>${footer()}`;
-  telegramCardHtml().then((h) => {
-    if (!$("#tgCard")) return;
-    if (!h.includes("data-ds-toggle")) {
-      const opts = Array.from({ length: 24 }, (_, i) => `<option value="${i}"${i === 8 ? " selected" : ""}>${hourLabel(i)}</option>`).join("");
-      h += `<div class="ac-card">
-        ${acRow("clock", "Daily summary", "A short Telegram message each day with your watchlist prices.", `<button type="button" class="ac-sw" role="switch" aria-checked="false" aria-label="Daily summary" disabled style="opacity:.5"><i></i></button>`)}
-        ${acRow("clock", "Send at", "", `<select class="ac-sel" aria-label="Send at" disabled style="opacity:.5">${opts}</select>`)}
-        <p class="ac-note">Connect Telegram above to turn this on and choose the time.</p></div>`;
-    }
-    $("#tgCard").innerHTML = h;
-  });
+  view.innerHTML = `<section class="page acct"><h1>Notification Settings</h1><p class="acct-sub">Choose how PriceCheck NG reaches you.</p><div id="stBox"><div class="ac-card"><p class="ac-note" style="margin:0">Loading…</p></div></div></section>${footer()}`;
+  const uid = state.user.id;
+  const [{ data: tl }, { data: ds }] = await Promise.all([
+    sb.from("telegram_links").select("chat_id").eq("user_id", uid).limit(1).maybeSingle(),
+    sb.from("daily_summary").select("enabled,hour,tz").maybeSingle(),
+  ]);
+  if (!$("#stBox")) return;
+  const tg = !!tl, on = !!ds?.enabled && tg, hour = ds?.hour ?? 8, tz = browserTz();
+  const sw = (isOn, attrs, label) => `<button type="button" class="ac-sw${isOn ? " on" : ""}" role="switch" aria-checked="${isOn}" aria-label="${label}" ${attrs}><i></i></button>`;
+  const item = (t, sub, tail) => `<div class="st-i"><div class="st-t"><b>${t}</b><small>${sub}</small></div>${tail}</div>`;
+  const opts = Array.from({ length: 24 }, (_, h) => `<option value="${h}"${h === hour ? " selected" : ""}>${hourLabel(h)}</option>`).join("");
+  $("#stBox").innerHTML = `<style>.st-c{margin:0 0 14px;padding:6px 18px 8px}.st-c h3{margin:14px 0 2px;font-size:1.15rem}.st-i{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:16px 0;border-bottom:1px solid var(--line)}.st-i:last-of-type{border-bottom:0}.st-t b{display:block;font-size:1rem}.st-t small{display:block;margin-top:3px;font-size:.88rem;line-height:1.4;color:var(--muted)}.st-n{margin:0 0 12px;font-size:.82rem;color:var(--muted);line-height:1.4}</style>
+    <div class="ac-card st-c"><h3>Alerts</h3>
+      ${item("Telegram alerts", tg ? "Connected. Your price alerts arrive in Telegram." : "Get your price alerts as Telegram messages.", sw(tg, tg ? "data-tg-disconnect" : "data-tg-connect", "Telegram alerts"))}
+    </div>
+    <div class="ac-card st-c"><h3>Daily summary</h3>
+      ${item("Daily market summary", "A short Telegram message each day with your watchlist prices.", sw(on, tg ? "data-ds-toggle" : "disabled style=\"opacity:.5\"", "Daily market summary"))}
+      ${item("Send at", "The time you get it each day.", `<select class="ac-sel" id="dsHour" data-ds-hour aria-label="Send at"${on ? "" : " disabled"}${on ? "" : ' style="opacity:.5"'}>${opts}</select>`)}
+      <p class="st-n">${tg ? `Your time zone: ${esc(tz)}, found from your device.` : "Turn on Telegram alerts above to use the daily summary."}</p>
+    </div>`;
 }
 
 function renderAcctPush(el) {
