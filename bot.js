@@ -385,6 +385,7 @@ export async function handle(update, ctx) {
 }
 
 export async function setCommands(token) {
+  TR_AT = 0; await loadTR();
         const mk = (l) => ["price", "usdt", "top", "fear", "language", "help"].map((c) => ({ command: c, description: T(l, { price: "cPrice", usdt: "cUsdt", top: "cTop", fear: "cFear", language: "cLang", help: "cHelp" }[c]).slice(0, 255) }));
         await tg(token, "setMyCommands", { commands: mk("en") });
         await Promise.all(Object.keys(TGCODE).map((l) => tg(token, "setMyCommands", { commands: mk(l), language_code: TGCODE[l] })));
