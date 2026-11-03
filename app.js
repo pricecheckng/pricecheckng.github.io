@@ -3921,9 +3921,9 @@ async function dailySummaryCardHtml(channel) {
   const opts = Array.from({ length: 24 }, (_, h) => `<option value="${h}"${h === hour ? " selected" : ""}>${hourLabel(h)}</option>`).join("");
   const toggle = `<button type="button" class="ac-sw${on ? " on" : ""}" role="switch" aria-checked="${on}" aria-label="Daily summary" data-ds-toggle><i></i></button>`;
   return `<div class="ac-card">
-    ${acRow("clock", "Daily summary", "A short Telegram message each day with your watchlist prices.", toggle)}
-    ${acRow("clock", "Send at", "", `<select class="ac-sel" id="dsHour" data-ds-hour aria-label="Send at">${opts}</select>`)}
-    <p class="ac-note">Your time zone: ${esc(tz)} (found automatically from your device). Sent around that hour.</p>
+    ${acRow("clock", "Daily summary", "", toggle)}
+    ${on ? `${acRow("clock", "Send at", "", `<select class="ac-sel" id="dsHour" data-ds-hour aria-label="Send at">${opts}</select>`)}
+    <p class="ac-note">Your time zone: ${esc(tz)} (found automatically from your device). Sent around that hour.</p>` : ""}
     ${channel === "push" ? `<p class="ac-note">Your alerts are set to Push only, so the summary won't be sent. Choose Both or Telegram above.</p>` : ""}</div>`;
 }
 
