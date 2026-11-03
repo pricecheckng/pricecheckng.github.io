@@ -3676,6 +3676,18 @@ document.addEventListener("click", (e) => {
   if (e.target.closest("[data-tg-disconnect]")) disconnectTelegram();
   const ch = e.target.closest("[data-alert-channel]");
   if (ch) setAlertChannel(ch.getAttribute("data-alert-channel"));
+  const mv = e.target.closest("[data-mv]");
+  if (mv && state.user) {
+    (async () => {
+      const k = mv.getAttribute("data-mv");
+      const { data: row } = await sb.from("move_prefs").select("majors,watchlist").maybeSingle();
+      const next = { user_id: state.user.id, majors: !!row?.majors, watchlist: !!row?.watchlist, updated_at: new Date().toISOString() };
+      next[k] = !next[k];
+      const { error } = await sb.from("move_prefs").upsert(next, { onConflict: "user_id" });
+      toast(error ? "Could not save. Try again." : next[k] ? "Turned on" : "Turned off");
+      route();
+    })();
+  }
   if (e.target.closest("[data-ds-toggle]")) {
     (async () => {
       const { data: row } = await sb.from("daily_summary").select("enabled").maybeSingle();
@@ -3886,7 +3898,16 @@ async function telegramCardHtml() {
   const ch = pref?.channel || "both";
   const seg = (v, label) => `<button type="button" class="${ch === v ? "on" : ""}" data-alert-channel="${v}"><span class="rd"></span>${label}</button>`;
   const delivery = `<div class="ac-card"><h3>Alert delivery</h3><p>Choose where your alerts are sent.</p><div class="ac-seg">${seg("both", "Both")}${seg("push", "Push")}${seg("telegram", "Telegram")}</div></div>`;
-  return channels + (await dailySummaryCardHtml("telegram"));
+  return channels + (await dailySummaryCardHtml("telegram")) + (await moveAlertsCardHtml());
+}
+
+async function moveAlertsCardHtml() {
+  const { data: mp, error } = await sb.from("move_prefs").select("majors,watchlist").maybeSingle();
+  if (error) return "";
+  const sw = (on, k, label) => `<button type="button" class="ac-sw${on ? " on" : ""}" role="switch" aria-checked="${!!on}" aria-label="${label}" data-mv="${k}"><i></i></button>`;
+  return `<div class="ac-card"><h3>Big market moves</h3><p>Get a Telegram message when the market moves a lot.</p>
+    ${acRow("bell", "Bitcoin and Ethereum", "When either moves 5% or more in 24 hours.", sw(mp?.majors, "majors", "Bitcoin and Ethereum moves"))}
+    ${acRow("bell", "My watchlist", "When a coin on your watchlist moves 10% or more in 24 hours.", sw(mp?.watchlist, "watchlist", "Watchlist moves"))}</div>`;
 }
 
 async function dailySummaryCardHtml(channel) {
