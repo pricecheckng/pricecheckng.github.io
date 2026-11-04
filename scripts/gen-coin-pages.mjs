@@ -184,6 +184,7 @@ function page(c, i) {
 ${css}
 </style>
 <script src="/theme.js"></script>
+<script src="/i18n.js" defer></script>
 </head>
 <body>
 <header><a class="brand" href="./"><span class="mark">${logo}</span><span>PriceCheck <b>NG</b></span></a><a class="open" href="./#coin/${c.id}">Open app</a></header>
@@ -366,6 +367,7 @@ ${exCss}
 .exl a{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px solid var(--line);color:var(--ink);text-decoration:none}.exl a:first-child{border-top:0}.exl small{color:var(--mut)}
 </style>
 <script src="/theme.js"></script>
+<script src="/i18n.js" defer></script>
 </head>
 <body>
 <header><a class="brand" href="./"><span class="mark">${logo}</span><span>PriceCheck <b>NG</b></span></a><a class="open" href="./">Open app</a></header>

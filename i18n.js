@@ -23,15 +23,26 @@
   var ATTRS = ['placeholder', 'aria-label', 'title'];
   var RE = /^([^\p{L}\p{N}]*)([\s\S]*?)([\s→›»↗:·]*)$/u, pats = [];
 
-  function tr(s) {
+  function brk(x) { return /[.!?]\s+\S/.test(x); }
+  function tr(s, deep) {
     var t = s.trim();
     if (!t) return null;
     var hit = dict[t];
     if (hit) return s.replace(t, hit);
+    var dm = /^(\d{1,2}) (January|February|March|April|May|June|July|August|September|October|November|December) (\d{4})$/.exec(t);
+    if (dm) { try { var mo = ['January','February','March','April','May','June','July','August','September','October','November','December'].indexOf(dm[2]); var lc = ({ pcm: 'en-NG' })[cur] || cur; return s.replace(t, new Intl.DateTimeFormat(lc, { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(Date.UTC(+dm[3], mo, +dm[1])))); } catch (e) {} }
     for (var i = 0; i < pats.length; i++) {
       var p = pats[i];
-      if (t.length > p.pre.length + p.post.length && t.indexOf(p.pre) === 0 && t.slice(t.length - p.post.length) === p.post)
-        return s.replace(t, p.val.replace('{}', t.slice(p.pre.length, t.length - p.post.length)));
+      if (p.re) {
+        var mm = p.re.exec(t);
+        if (mm && !mm.slice(1).some(brk)) {
+          var g = mm.slice(1).map(function (x) { return deep === 1 ? x : (tr(x, 1) || x); });
+          return s.replace(t, p.val.replace(/\{(\d*)\}/g, function (_, n) { return g[(n ? +n : 1) - 1] || ''; }));
+        }
+        continue;
+      }
+      if (t.length > p.pre.length + p.post.length && t.indexOf(p.pre) === 0 && t.slice(t.length - p.post.length) === p.post && !brk(t.slice(p.pre.length, t.length - p.post.length)))
+        { var cap = t.slice(p.pre.length, t.length - p.post.length); return s.replace(t, p.val.replace('{}', deep === 1 ? cap : (tr(cap, 1) || cap))); }
     }
     var pm = /^(.*?)\s*(\([^)]*\))$/.exec(t);
     if (pm && pm[1] && dict[pm[1]]) return s.replace(t, dict[pm[1]] + ' ' + pm[2]);
@@ -42,7 +53,12 @@
       var lo = lower[core.toLowerCase()];
       if (lo) hit = (core === core.toUpperCase() && /\p{L}/u.test(core)) ? lo.toUpperCase() : lo;
     }
-    if (!hit) return null;
+    if (!hit) {
+      if (deep || !/[.!?]\s+\S/.test(t)) return null;
+      var parts = t.split(/(?<=[.!?])\s+/), any = false;
+      var out = parts.map(function (x) { var y = tr(x, 2); if (y !== null) { any = true; return y.trim(); } return x; });
+      return any ? s.replace(t, out.join(' ')) : null;
+    }
     return s.replace(t, m[1] + hit + m[3]);
   }
   function doText(n) {
@@ -72,8 +88,12 @@
   function start() {
     Object.keys(dict).forEach(function (k) {
       var i = k.indexOf('{}');
-      if (i > -1) pats.push({ pre: k.slice(0, i), post: k.slice(i + 2), val: dict[k] }); else lower[k.toLowerCase()] = dict[k];
+      if (i > -1 && k.indexOf('{}', i + 2) > -1) {
+        var re = k.split('{}').map(function (x) { return x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }).join('(.+?)');
+        pats.push({ re: new RegExp('^' + re + '$', 's'), val: dict[k] });
+      } else if (i > -1) pats.push({ pre: k.slice(0, i), post: k.slice(i + 2), val: dict[k].replace('{1}', '{}') }); else lower[k.toLowerCase()] = dict[k];
     });
+    pats.sort(function (a, b) { return (b.re ? 1e6 : 0) + (b.re ? b.re.source.length : b.pre.length + b.post.length) - (a.re ? 1e6 : 0) - (a.re ? a.re.source.length : a.pre.length + a.post.length); });
     var tt = tr(document.title); if (tt) document.title = tt;
     walk(document.body);
     new MutationObserver(function (ms) {
@@ -90,6 +110,7 @@
   var page = (location.pathname.split('/').pop() || 'index').replace(/\.html$/, '') || 'index';
   var GROUPS = { market: 'news pulse market-chart heatmap fear-greed movers network gas stablecoins treasuries'.split(' '), naira: 'p2p p2p-check converter profit-calculator'.split(' '), learn: 'learn-candlesticks learn-fear-greed learn-market-cap learn-scams learn-stablecoins'.split(' '), safety: 'network-check coin-risk track-token'.split(' ') };
   Object.keys(GROUPS).forEach(function (g) { if (GROUPS[g].indexOf(page) > -1) page = g; });
+  if (/-price$/.test(page) || /^exchanges?(-|$)/.test(page)) page = 'coin';
   function load(u) { return fetch(u, { cache: 'default' }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }); }
   Promise.all([load('/i18n/' + cur + '.json'), page === 'index' ? {} : load('/i18n/pages/' + page + '.' + cur + '.json')]).then(function (a) {
     dict = Object.assign({}, a[0], a[1]);
