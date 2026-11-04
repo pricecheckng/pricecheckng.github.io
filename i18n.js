@@ -108,7 +108,7 @@
     }).observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
   }
   var page = (location.pathname.split('/').pop() || 'index').replace(/\.html$/, '') || 'index';
-  var GROUPS = { market: 'news pulse market-chart heatmap fear-greed movers network gas stablecoins treasuries'.split(' '), naira: 'p2p p2p-check converter profit-calculator'.split(' '), learn: 'learn-candlesticks learn-fear-greed learn-market-cap learn-scams learn-stablecoins'.split(' '), safety: 'network-check coin-risk track-token'.split(' ') };
+  var GROUPS = { market: 'news pulse market-chart heatmap fear-greed movers network gas stablecoins treasuries'.split(' '), naira: 'p2p p2p-check converter profit-calculator'.split(' '), learn: 'learn-candlesticks learn-fear-greed learn-market-cap learn-scams learn-stablecoins'.split(' '), safety: 'network-check coin-risk track-token'.split(' '), site: 'about contact data-sources predict coins'.split(' ') };
   Object.keys(GROUPS).forEach(function (g) { if (GROUPS[g].indexOf(page) > -1) page = g; });
   if (/-price$/.test(page) || /^exchanges?(-|$)/.test(page)) page = 'coin';
   function load(u) { return fetch(u, { cache: 'default' }).then(function (r) { return r.ok ? r.json() : {}; }).catch(function () { return {}; }); }
