@@ -76,15 +76,23 @@
   function find(q) {
     var my = ++seq, t = q.toLowerCase().replace(/[^a-z0-9 .\-]/g, '').trim();
     if (!t) { home(); return; }
-    if (!cfg) { setTimeout(function () { find(q); }, 300); return; }
-    var enc = encodeURIComponent(t);
-    var url = cfg.SUPABASE_URL + '/rest/v1/coins?select=' + COLS + '&and=(' + REAL + ',or(symbol.ilike.' + enc + '*,name.ilike.*' + enc + '*))&order=market_cap_rank.asc.nullslast&limit=30';
-    fetch(url, { headers: H() }).then(function (r) { return r.json(); }).then(function (l) {
+    var done = function (l, tools) {
       if (my !== seq || !open) return;
-      if (!Array.isArray(l)) l = [];
-      l.sort(function (a, b) { var ea = String(a.symbol).toLowerCase() === t ? 0 : 1, eb = String(b.symbol).toLowerCase() === t ? 0 : 1; return ea - eb; });
-      body.innerHTML = l.length ? rows(l) : '<div class="pcs-empty">No coins found for "' + esc(q) + '"</div>';
-    }).catch(function () { if (my === seq) body.innerHTML = '<div class="pcs-empty">Could not search right now.</div>'; });
+      var h = (tools || '') + (l.length ? rows(l) : '');
+      if (!h) h = '<div class="pcs-empty">No coins found for "' + esc(q) + '"</div>';
+      body.innerHTML = h;
+    };
+    var fallback = function () {
+      if (!cfg) { setTimeout(function () { find(q); }, 300); return; }
+      var enc = encodeURIComponent(t);
+      var url = cfg.SUPABASE_URL + '/rest/v1/coins?select=' + COLS + '&and=(' + REAL + ',or(symbol.ilike.' + enc + '*,name.ilike.*' + enc + '*))&order=market_cap_rank.asc.nullslast&limit=30';
+      fetch(url, { headers: H() }).then(function (r) { return r.json(); }).then(function (l) {
+        if (!Array.isArray(l)) l = [];
+        done(l, '');
+      }).catch(function () { if (my === seq && body) body.innerHTML = '<div class="pcs-empty">Could not search right now.</div>'; });
+    };
+    if (window.PCN_SMART) window.PCN_SMART.search(q).then(function (r) { done(r.coins, r.tools); }).catch(fallback);
+    else fallback();
   }
 
   function show() {
@@ -115,7 +123,7 @@
       close(function () { location.hash = '#coin/' + encodeURIComponent(c.id); });
     });
     inp.addEventListener('keydown', function (e) {
-      if (e.key === 'Enter') { var f = body.querySelector('.pcs-row'); if (f) f.click(); inp.blur(); }
+      if (e.key === 'Enter') { var f = body.querySelector('.pcs-row') || body.querySelector('a[href]'); if (f) f.click(); inp.blur(); }
     });
   }
   function hide() {

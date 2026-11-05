@@ -724,6 +724,19 @@ async function smartRank(rows, term) {
   return pool.map((c) => [scoreCoin(c, t, fuzzy), c]).filter((x) => x[0] > 0).sort((a, b) => b[0] - a[0]).map((x) => x[1]).slice(0, PAGE);
 }
 
+// Used by the full-screen search (search.js) so it ranks and suggests exactly like the main list
+window.PCN_SMART = {
+  async search(raw) {
+    const term = String(raw || "").replace(/[^\p{L}\p{N}\s.\-]/gu, "").trim();
+    if (!term) return { coins: [], tools: "" };
+    const { data, error } = await sb.from("coins").select(COLS).or(`name.ilike.%${term}%,symbol.ilike.%${term}%`).order("market_cap_rank", { ascending: true, nullsFirst: false }).range(0, 299);
+    if (error) throw error;
+    const coins = (await smartRank(data || [], term)).slice(0, 30);
+    const exact = coins[0] && scoreCoin(coins[0], normS(term), false) >= 90000;
+    return { coins, tools: exact ? "" : toolsHtml(term) };
+  },
+};
+
 async function loadCoins(reset, pg) {
   const list = $("#list");
   if (!list) return;
