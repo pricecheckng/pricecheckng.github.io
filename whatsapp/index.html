@@ -4,15 +4,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PriceCheck NG - WhatsApp Price Bot</title>
+  <title>PriceCheck NG WhatsApp Bot</title>
   <meta name="robots" content="noindex">
-  <meta http-equiv="refresh" content="0;url=https://wa.me/2347084272516">
+
   <script>
-    window.location.replace("https://wa.me/2347084272516");
+    const phone = "2347084272516";
+    const message = "Hi, I want to check crypto prices and exchange rates.";
+
+    const whatsappLink =
+      "https://api.whatsapp.com/send?phone=" +
+      phone +
+      "&text=" +
+      encodeURIComponent(message);
+
+    window.location.replace(whatsappLink);
   </script>
 </head>
 <body>
-  <p>Redirecting to PriceCheck NG WhatsApp Price Bot...</p>
-  <a href="https://wa.me/2347084272516">Continue to WhatsApp</a>
+  <p>Opening PriceCheck NG WhatsApp Bot...</p>
+  <a href="https://api.whatsapp.com/send?phone=2347084272516&text=Hi%2C%20I%20want%20to%20check%20crypto%20prices%20and%20exchange%20rates.">
+    Open WhatsApp Bot
+  </a>
 </body>
 </html>
