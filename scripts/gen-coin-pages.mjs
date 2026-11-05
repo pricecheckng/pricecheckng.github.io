@@ -136,7 +136,7 @@ table.mk{margin:10px 0 0;font-size:.88rem}table.mk th{font-size:.75rem;color:var
 .note{color:var(--mut);font-size:.85rem;margin-top:14px}
 footer{border-top:1px solid var(--line);padding:18px 20px;text-align:center;color:var(--mut);font-size:.9rem}
 footer a{color:var(--mut)}`;
-const logo = `<svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" fill="#fff" fill-opacity=".14" stroke="#fff" stroke-width="1.6"/><rect x="7" y="17" width="4.5" height="8" rx="1.5" fill="#fff"/><rect x="13.75" y="12" width="4.5" height="13" rx="1.5" fill="#fff"/><rect x="20.5" y="7" width="4.5" height="18" rx="1.5" fill="#9be3bd"/></svg>`;
+const logo = `<img src="/icon-192.png" width="34" height="34" alt="" style="display:block">`;
 const CUR = [["NGN", "Nigerian naira"], ["GBP", "British pound"], ["EUR", "Euro"], ["GHS", "Ghanaian cedi"], ["ZAR", "South African rand"], ["KES", "Kenyan shilling"], ["TZS", "Tanzanian shilling"], ["UGX", "Ugandan shilling"], ["CAD", "Canadian dollar"], ["AUD", "Australian dollar"], ["AED", "UAE dirham"], ["CNY", "Chinese yuan"], ["INR", "Indian rupee"], ["JPY", "Japanese yen"]];
 
 function page(c, i) {
