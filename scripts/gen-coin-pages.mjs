@@ -174,8 +174,8 @@ function page(c, i) {
 <meta property="og:title" content="${esc(name)} (${sym}) price in Naira, USD, GBP, EUR and more">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:url" content="${url}">
-<meta property="og:image" content="${SITE}/icon-512.png">
-<link rel="icon" type="image/png" href="icon-192.png">
+<meta property="og:image" content="${SITE}/icon-green-512.png">
+<link rel="icon" type="image/png" href="icon-green-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -356,8 +356,8 @@ if (Array.isArray(EXLIST) && EXLIST.length) {
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
 <meta property="og:url" content="${SITE}/${canon}">
-<meta property="og:image" content="${SITE}/icon-512.png">
-<link rel="icon" type="image/png" href="icon-192.png">
+<meta property="og:image" content="${SITE}/icon-green-512.png">
+<link rel="icon" type="image/png" href="icon-green-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">

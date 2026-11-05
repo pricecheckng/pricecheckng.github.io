@@ -1,5 +1,5 @@
 const CACHE = "pricecheck-ng-v2";
-const SHELL = ["./", "index.html", "styles.css", "app.js", "config.js", "manifest.webmanifest", "icon-192.png"];
+const SHELL = ["./", "index.html", "styles.css", "app.js", "config.js", "manifest.webmanifest", "icon-green-192.png"];
 
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).catch(() => {}));
@@ -44,7 +44,7 @@ self.addEventListener("push", (e) => {
   e.waitUntil(
     self.registration.showNotification(d.title || "PriceCheck NG", {
       body: d.body || "Open PriceCheck NG to see the latest price.",
-      icon: "icon-192.png",
+      icon: "icon-green-192.png",
       badge: "badge-96.png",
       tag: d.tag || undefined,
       data: { hash },
