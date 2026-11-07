@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Methodology: How PriceCheck NG Gets Its Prices | PriceCheck NG</title>
+<meta name="description" content="How PriceCheck NG collects crypto prices, works out market cap and rank, converts to naira, and writes its daily summaries.">
+<link rel="canonical" href="https://pricecheckng.com.ng/methodology.html">
+<meta name="theme-color" content="#0b7a4b">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="PriceCheck NG">
+<meta property="og:title" content="Methodology: How PriceCheck NG Gets Its Prices | PriceCheck NG">
+<meta property="og:description" content="How PriceCheck NG collects crypto prices, works out market cap and rank, converts to naira, and writes its daily summaries.">
+<meta property="og:url" content="https://pricecheckng.com.ng/methodology.html">
+<meta property="og:image" content="https://pricecheckng.com.ng/icon-green-512.png">
+<link rel="icon" type="image/png" href="icon-green-192.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebPage", "name": "How PriceCheck NG works out its numbers", "url": "https://pricecheckng.com.ng/methodology.html", "isPartOf": {"@type": "WebSite", "name": "PriceCheck NG", "url": "https://pricecheckng.com.ng/"}, "dateModified": "2026-11-07"}</script>
+<style>
+:root{--g:#0b7a4b;--ink:#10201a;--mut:#5d6b64;--line:#e3e9e5;--bg:#fff}
+@media (prefers-color-scheme:dark){:root{--ink:#e9f1ec;--mut:#9db0a5;--line:#26332c;--bg:#0e1511}svg line[stroke="#e1e9e4"],svg line[stroke="#e3e8e5"],svg line[stroke="#e3e9e5"],svg line[stroke="#eee"]{stroke:#26332c}svg text[fill="#5b6b64"],svg text[fill="#5d6b64"],svg text[fill="#55635a"]{fill:#9db0a5}thead th,thead th:first-child{background:#1b2a22!important}.best{background:#14301f!important}.up{color:#3ddc97!important}.dn{color:#ff6b6b!important}.tw,.chart{background:var(--card)!important}details{background:var(--card)!important}div.note{background:#16261d!important;border-color:#26332c!important}pre,code{color:#7ee2a8!important}div.warn,p.warn.box,.warn.box{background:#2b2410!important;border-color:#4a3c14!important;color:#f0d9a0!important}.chip,.pg button,.nx2{background:var(--card)}.fee.top{background:#14301f;border-color:#26523a}.b-n{background:#33270f;color:#f0b44c}.b-b{background:#331818;color:#ff8a8a}.bar{background:#26332c}main a:not([class]),p a:not([class]),li a:not([class]){color:#3ddc97}input,select,textarea{background:var(--card);color:var(--ink);border-color:var(--line)}}
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:var(--ink);background:var(--bg);line-height:1.55}
+header{background:var(--g);color:#fff;padding:14px 20px}header a{color:#fff;text-decoration:none;font-weight:800}
+main{max-width:720px;margin:0 auto;padding:20px 20px 40px}
+h1{font-size:1.5rem;margin:6px 0 8px}h2{font-size:1.1rem;margin:24px 0 6px}
+p{margin:6px 0}ul{padding-left:20px;margin:6px 0}li{margin:4px 0}
+a{color:var(--g);font-weight:600}.note{color:var(--mut);font-size:.9rem}
+footer{border-top:1px solid var(--line);padding:18px 20px;text-align:center;color:var(--mut);font-size:.9rem}footer a{color:var(--mut);font-weight:400}
+</style>
+<style>.az{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}.az a{border:1px solid var(--line);border-radius:8px;padding:4px 10px;text-decoration:none}dt{font-weight:800;margin-top:18px;scroll-margin-top:12px}dd{margin:4px 0 0}.top{margin-top:14px;font-size:.85rem}</style>
+<script src="/theme.js"></script>
+<script src="/i18n.js" defer></script></head>
+<body>
+<header><a href="./">PriceCheck NG</a></header>
+<main>
+<h1>How PriceCheck NG works out its numbers</h1>
+<p class="note">Last reviewed 7 November 2026. This page explains our method in plain words. For the list of providers, see <a href="data-sources.html">Data sources</a>.</p>
+<h2>Live prices</h2>
+<p>We read public market data from more than 20 exchanges, including Binance, Bybit, OKX, KuCoin, Gate.io, MEXC, Bitget, Coinbase, Kraken and others. For each coin we use a middle price across those exchanges and ignore prices that look wrong, such as a single exchange far away from the rest. For coins that are not listed on those exchanges, we use data from decentralised exchanges (through DexScreener). Prices refresh every few minutes, and a coin page shows when its price was last updated.</p>
+<h2>Market cap and rank</h2>
+<p>Market cap is calculated by PriceCheck NG as our live price multiplied by the circulating supply. Rank follows market cap. Supply figures come from CoinGecko and Live Coin Watch. Because supply data is reported by third parties, it can be late or wrong for some coins, and so can the market cap that depends on it.</p>
+<h2>24-hour volume</h2>
+<p>24-hour volume is the value traded on the exchanges we read. Sites that count more exchanges can show a larger number, so our volume can be lower than the totals you see elsewhere.</p>
+<h2>Naira and other currencies</h2>
+<p>Every price starts in US dollars and is converted into naira and other currencies at market exchange rates from Exchange Rate API. The naira price on a coin page is therefore the dollar price converted at that rate. It is not the price you would pay on a local exchange or a P2P market, which can be different.</p>
+<h2>USDT to naira P2P rate</h2>
+<p>The P2P page shows the rate people are offering for USDT in naira on the peer-to-peer markets of Bybit, OKX, Bitget and MEXC. These offers change quickly and depend on the payment method, the amount and the seller, so treat the number as a guide and check the offer before you trade.</p>
+<h2>Fear & Greed Index</h2>
+<p>The 0 to 100 score comes from alternative.me. We show it as published. Our own pages explain how to read it in plain words.</p>
+<h2>Daily and weekly summaries</h2>
+<p>The daily market summary and the weekly recap are written by an AI model from PriceCheck NG's own market numbers (total market cap, volume, Bitcoin dominance, Fear & Greed, top gainers and losers). The model is told to use only that data and not to give reasons, predictions or advice. Every summary says it was written by AI. Always check the live numbers.</p>
+<h2>News</h2>
+<p>Headlines come from the public feeds of publishers. Each story opens on the publisher's own site, and we do not edit the stories.</p>
+<h2>Categories and coin facts</h2>
+<p>Categories (such as memes, AI or gaming), all-time high, coin age, number of exchanges, maximum supply and official links come from third-party data providers. A coin can belong to more than one category, and the facts on a coin page can be a little behind the live price.</p>
+<h2>Tokenized assets</h2>
+<p>Tokens that represent real-world assets, such as funds, bonds or stocks, are labelled as tokenized and kept out of the main ranking, because they behave differently from ordinary coins.</p>
+<h2>Which coins get a page</h2>
+<p>Coin pages are made for up to 500 coins that rank highly by market cap and have recent prices and real trading volume. If a coin stops meeting those conditions, its page is removed, and it comes back when the coin qualifies again.</p>
+<h2>Delays, mistakes and corrections</h2>
+<p>Crypto data can be delayed, incomplete or wrong. A price can look different from another site because we use different exchanges and a different method. Check important numbers on more than one source before you act. If you find a mistake, write to <a href="mailto:support@pricecheckng.com.ng">support@pricecheckng.com.ng</a> and tell us the coin and the page.</p>
+<h2>Not financial advice</h2>
+<p>PriceCheck NG shows information only. It does not hold your money, it is not an exchange, and nothing on the site is a recommendation to buy or sell. Crypto prices can fall quickly, and you can lose money. Read our <a href="learn-scams.html">guide to avoiding scams</a> and our <a href="glossary.html">glossary</a> if some words are new to you.</p>
+
+</main>
+<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="api.html">API</a> · <a href="data-sources.html">Data sources</a> · <a href="methodology.html">Methodology</a> · <a href="glossary.html">Glossary</a> · <a href="contact.html">Contact</a><div style="margin-top:8px">© <span class="yr">2026</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></div><script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script></footer>
+</body>
+</html>
