@@ -31,7 +31,7 @@ const rankCol = ["market_cap_rank", "rank", "cmc_rank"].find((c) => c in sample)
 const order = rankCol ? rankCol + ".asc.nullslast" : "market_cap.desc.nullslast";
 // Only coins that really trade, were updated in the last 3 days, and are not tokenized assets.
 const fresh = new Date(Date.now() - 3 * 864e5).toISOString();
-const rows = await get("coins?select=id,symbol,name,price_usd,market_cap_usd,volume_24h_usd,change_24h_pct" + (rankCol ? "," + rankCol : "") + "&price_usd=not.is.null" + (rankCol ? "&" + rankCol + "=not.is.null" : "") + "&volume_24h_usd=gte." + MIN_VOLUME + "&last_updated=gte." + encodeURIComponent(fresh) + "&or=(kind.is.null,kind.neq.tokenized)&order=" + order + "&limit=1500");
+const rows = await get("coins?select=id,symbol,name,price_usd,image_url,market_cap_usd,volume_24h_usd,change_24h_pct" + (rankCol ? "," + rankCol : "") + "&price_usd=not.is.null" + (rankCol ? "&" + rankCol + "=not.is.null" : "") + "&volume_24h_usd=gte." + MIN_VOLUME + "&last_updated=gte." + encodeURIComponent(fresh) + "&or=(kind.is.null,kind.neq.tokenized)&order=" + order + "&limit=1500");
 
 // Leave out tokenized funds, bridged copies and other noise.
 const JUNK = /(heloc|tokenized|treasury|t-bill|money market|\bfund\b|\bnav\b|real estate|bridged|restaked|liquid staking|staked|\bshares?\b)/i;
@@ -139,7 +139,7 @@ header a{color:#fff;text-decoration:none}
 main{max-width:720px;margin:0 auto;padding:24px 20px 48px}
 h1{font-size:1.6rem;line-height:1.25;margin:0 0 6px}
 h2{font-size:1.15rem;margin:28px 0 8px}
-.coinrow{display:flex;gap:12px;align-items:flex-start}.badge{flex:none;width:44px;height:44px;border-radius:50%;background:var(--g);color:#fff;font-weight:800;font-size:.72rem;display:flex;align-items:center;justify-content:center;margin-top:2px;overflow:hidden}.badge.s{font-size:.58rem}
+.coinrow{display:flex;gap:12px;align-items:flex-start}.badge{flex:none;width:44px;height:44px;border-radius:50%;background:var(--g);color:#fff;font-weight:800;font-size:.72rem;display:flex;align-items:center;justify-content:center;margin-top:2px;overflow:hidden}.badge.s{font-size:.58rem}.badge{position:relative}.badge img,.badge svg{position:absolute;inset:0;width:100%;height:100%;border-radius:50%;object-fit:cover;background:#fff}.badge svg{background:none}.badge.ok{font-size:0;background:transparent}
 .sub{color:var(--mut);margin:0 0 18px}
 .box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 20px}
 #tbl{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:4px 16px;border-collapse:separate;border-spacing:0}#tbl td{padding:12px 0}#tbl tr:first-child td{border-top:0}
@@ -233,6 +233,15 @@ function keyFacts(c) {
   return `<h2>${esc(name)} key facts</h2>` + (out.trim() ? `<p>${out.trim()}</p>` : "") + (links.length ? `<p>Official links: ${links.join(" · ")}</p>` : "");
 }
 
+const BTC_SVG = `<svg class="bl" viewBox="0 0 64 64" width="44" height="44" role="img" aria-label="Bitcoin" style="display:block"><circle cx="32" cy="32" r="32" fill="#f7931a"/><g class="btcb"><path fill="#fff" d="M46.103,27.444c0.637-4.258-2.605-6.547-7.038-8.074l1.438-5.768l-3.511-0.875l-1.4,5.616c-0.923-0.23-1.871-0.447-2.813-0.662l1.41-5.653l-3.509-0.875l-1.439,5.766c-0.764-0.174-1.514-0.346-2.242-0.527l0.004-0.018l-4.842-1.209l-0.934,3.75c0,0,2.605,0.597,2.55,0.634c1.422,0.355,1.679,1.296,1.636,2.042l-1.638,6.571c0.098,0.025,0.225,0.061,0.365,0.117c-0.117-0.029-0.242-0.061-0.371-0.092l-2.296,9.205c-0.174,0.432-0.615,1.08-1.609,0.834c0.035,0.051-2.552-0.637-2.552-0.637l-1.743,4.019l4.569,1.139c0.85,0.213,1.683,0.436,2.503,0.646l-1.453,5.834l3.507,0.875l1.439-5.772c0.958,0.26,1.888,0.5,2.798,0.726l-1.434,5.745l3.511,0.875l1.453-5.823c5.987,1.133,10.489,0.676,12.384-4.739c1.527-4.36-0.076-6.875-3.226-8.515C42.819,32.676,45.526,31.746,46.103,27.444L46.103,27.444z M38.079,38.696c-1.085,4.36-8.426,2.003-10.806,1.412l1.928-7.729C31.581,32.972,39.211,34.147,38.079,38.696z M39.164,27.381c-0.99,3.966-7.1,1.951-9.082,1.457l1.748-7.01C33.812,22.322,40.176,23.254,39.164,27.381z"/></g></svg>`;
+function badge(c, sym, name) {
+  const s = sym.length > 4 ? " s" : "";
+  if (c.id === "bitcoin") return `<span class="badge ok">${BTC_SVG}</span>`;
+  const u = String(c.image_url || "");
+  if (/^https:\/\/[^\s"'<>]+$/.test(u)) return `<span class="badge${s}">${esc(sym)}<img src="${esc(u)}" alt="${esc(name)} logo" width="44" height="44" referrerpolicy="no-referrer" onerror="this.remove()" onload="this.parentNode.classList.add('ok')"></span>`;
+  return `<span class="badge${s}">${esc(sym)}</span>`;
+}
+
 function page(c, i) {
   const sym = c.symbol.toUpperCase();
   const name = c.name;
@@ -289,7 +298,7 @@ ${css}
 <body>
 <header><a class="brand" href="./"><span class="mark">${logo}</span><span>PriceCheck <b>NG</b></span></a><a class="open" href="./#coin/${c.id}">Open app</a></header>
 <main>
-<div class="coinrow"><span class="badge${sym.length > 4 ? " s" : ""}">${esc(sym)}</span><div><h1>${esc(name)} (${esc(sym)}) price</h1></div></div>
+<div class="coinrow">${badge(c, sym, name)}<div><h1>${esc(name)} (${esc(sym)}) price</h1></div></div>
 <p class="sub">Live ${esc(name)} price in Naira, USD, GBP, EUR and more.${rk ? ` ${esc(name)} is ranked #${rk} by market cap.` : ""} Prices update regularly through the day.</p>
 <div class="box">
   <p class="big" id="usd">${SN.stat || "Loading price…"}</p>
