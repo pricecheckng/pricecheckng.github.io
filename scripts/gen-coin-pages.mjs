@@ -31,13 +31,19 @@ const rankCol = ["market_cap_rank", "rank", "cmc_rank"].find((c) => c in sample)
 const order = rankCol ? rankCol + ".asc.nullslast" : "market_cap.desc.nullslast";
 // Only coins that really trade, were updated in the last 3 days, and are not tokenized assets.
 const fresh = new Date(Date.now() - 3 * 864e5).toISOString();
-const rows = await get("coins?select=id,symbol,name,price_usd" + (rankCol ? "," + rankCol : "") + "&price_usd=not.is.null" + (rankCol ? "&" + rankCol + "=not.is.null" : "") + "&volume_24h_usd=gte." + MIN_VOLUME + "&last_updated=gte." + encodeURIComponent(fresh) + "&or=(kind.is.null,kind.neq.tokenized)&order=" + order + "&limit=1500");
+const rows = await get("coins?select=id,symbol,name,price_usd,market_cap_usd,volume_24h_usd,change_24h_pct" + (rankCol ? "," + rankCol : "") + "&price_usd=not.is.null" + (rankCol ? "&" + rankCol + "=not.is.null" : "") + "&volume_24h_usd=gte." + MIN_VOLUME + "&last_updated=gte." + encodeURIComponent(fresh) + "&or=(kind.is.null,kind.neq.tokenized)&order=" + order + "&limit=1500");
 
 // Leave out tokenized funds, bridged copies and other noise.
 const JUNK = /(heloc|tokenized|treasury|t-bill|money market|\bfund\b|\bnav\b|real estate|bridged|restaked|liquid staking|staked|\bshares?\b)/i;
 const good = rows.filter((c) => c.id && c.symbol && c.name && /^[a-z0-9-]+$/.test(c.id) && /^[A-Za-z0-9]{1,10}$/.test(c.symbol) && !JUNK.test(c.name) && !JUNK.test(c.id));
 const top = good.slice(0, COUNT);
 if (top.length < 30) throw new Error("Only " + top.length + " coins found. Not writing anything.");
+
+// Naira rate, so each page can say its price in naira in plain text (not only through JavaScript).
+let NGN = 0;
+try { const fx = await get("fx_rates?select=currency,per_usd&currency=eq.NGN"); NGN = Number(fx && fx[0] && fx[0].per_usd) || 0; } catch (e) {}
+console.log("NGN rate for static text:", NGN || "not found");
+
 
 
 // ---- Exchange facts: what our own exchange data says about each coin (unique text for every page) ----
@@ -139,6 +145,47 @@ footer a{color:var(--mut)}`;
 const logo = `<img src="/icon-192.png" width="34" height="34" alt="" style="display:block">`;
 const CUR = [["NGN", "Nigerian naira"], ["GBP", "British pound"], ["EUR", "Euro"], ["GHS", "Ghanaian cedi"], ["ZAR", "South African rand"], ["KES", "Kenyan shilling"], ["TZS", "Tanzanian shilling"], ["UGX", "Ugandan shilling"], ["CAD", "Canadian dollar"], ["AUD", "Australian dollar"], ["AED", "UAE dirham"], ["CNY", "Chinese yuan"], ["INR", "Indian rupee"], ["JPY", "Japanese yen"]];
 
+// Plain-text facts for one coin, written into the page so Google sees real, different content on every coin page.
+const fUsd = (n) => { n = Number(n); const o = n >= 1000 ? { maximumFractionDigits: 0 } : n >= 1 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : { maximumSignificantDigits: 4 }; return "$" + n.toLocaleString("en-US", o); };
+const fNgn = (n) => "₦" + Number(n).toLocaleString("en-US", { maximumFractionDigits: n >= 100 ? 0 : n >= 1 ? 2 : 4 });
+const fBig = (n) => { n = Number(n); return n >= 1e12 ? "$" + (n / 1e12).toFixed(2) + " trillion" : n >= 1e9 ? "$" + (n / 1e9).toFixed(2) + " billion" : n >= 1e6 ? "$" + (n / 1e6).toFixed(1) + " million" : "$" + Math.round(n).toLocaleString("en-US"); };
+const fAmt = (n) => (n >= 100 ? Math.round(n).toLocaleString("en-US") : n >= 1 ? n.toFixed(2) : n >= 0.01 ? n.toFixed(4) : n.toPrecision(3));
+const SNAP_DATE = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+function snapshot(c, i) {
+  const sym = c.symbol.toUpperCase(), name = c.name, usd = Number(c.price_usd);
+  if (!(usd > 0)) return { html: "", faq: [], stat: "" };
+  const cap = Number(c.market_cap_usd), vol = Number(c.volume_24h_usd), ch = Number(c.change_24h_pct);
+  const rk = rankCol && Number.isFinite(Number(c[rankCol])) ? Math.round(Number(c[rankCol])) : 0;
+  const prev = top[i - 1], next = top[i + 1], btc = top.find((o) => o.id === "bitcoin");
+  let t = `<p>On ${SNAP_DATE}, ${esc(name)} (${esc(sym)}) was priced at ${fUsd(usd)}`;
+  if (NGN) t += `, which is about ${fNgn(usd * NGN)} in Nigerian naira`;
+  t += ".";
+  if (Number.isFinite(ch)) t += ` The price ${ch >= 0 ? "rose" : "fell"} ${Math.abs(ch).toFixed(2)}% over the previous 24 hours.`;
+  if (rk) t += ` ${esc(name)} is ranked #${rk} by market cap`;
+  if (rk && cap > 0) t += ` with a market cap of ${fBig(cap)}`;
+  if (rk) t += ".";
+  if (vol > 0) {
+    t += ` About ${fBig(vol)} of ${esc(sym)} was traded in 24 hours`;
+    if (cap > 0) { const r = (100 * vol) / cap; t += `, equal to ${r < 0.1 ? "less than 0.1" : r.toFixed(r < 10 ? 1 : 0)}% of its market cap, ${r >= 20 ? "which is a very active market for its size" : r >= 5 ? "which is a healthy level of trading" : "so trading is fairly quiet compared with its size"}`; }
+    t += ".";
+  }
+  t += "</p>";
+  const bits = [];
+  if (prev && Number(prev.market_cap_usd) > 0 && cap > 0) bits.push(`The next coin up by market cap is <a href="${prev.id}-price.html">${esc(prev.name)}</a>, which is ${(Number(prev.market_cap_usd) / cap).toFixed(2)} times as large.`);
+  if (next && Number(next.market_cap_usd) > 0 && cap > 0) bits.push(`Just below it is <a href="${next.id}-price.html">${esc(next.name)}</a>, at ${(100 * Number(next.market_cap_usd) / cap).toFixed(0)}% of its size.`);
+  if (btc && btc.id !== c.id && Number(btc.market_cap_usd) > 0 && cap > 0) { const r = (100 * cap) / Number(btc.market_cap_usd); bits.push(`Compared with Bitcoin, its market cap is ${r < 0.01 ? "under 0.01" : r.toFixed(r < 1 ? 2 : 1)}% of Bitcoin's.`); }
+  if (bits.length) t += "<p>" + bits.join(" ") + "</p>";
+  const faq = [];
+  let ex = "";
+  if (NGN) {
+    const n100 = 100000 / (usd * NGN), n1 = usd * NGN;
+    faq.push([`How much is 1 ${sym} in naira?`, `On ${SNAP_DATE}, 1 ${name} (${sym}) was about ${fNgn(n1)}. The live naira price is at the top of this page.`]);
+    faq.push([`How much ${sym} can I buy with ₦100,000?`, `At the ${SNAP_DATE} price, ₦100,000 is worth about ${fAmt(n100)} ${sym}. Exchange fees and the exact rate you get will change this a little.`]);
+    ex = `<p class="note">Quick conversion: ₦100,000 ≈ ${fAmt(n100)} ${esc(sym)}, and 1 ${esc(sym)} ≈ ${fNgn(n1)}.</p>`;
+  }
+  return { html: `<h2>${esc(name)} market snapshot</h2>` + t + ex, faq, stat: fUsd(usd) };
+}
+
 function page(c, i) {
   const sym = c.symbol.toUpperCase();
   const name = c.name;
@@ -147,13 +194,19 @@ function page(c, i) {
   const desc = `Live ${name} (${sym}) price in NGN, USD, GBP, EUR, GHS, ZAR, KES and more, with free price alerts on PriceCheck NG.`;
   const rk = rankCol && Number.isFinite(Number(c[rankCol])) ? Math.round(Number(c[rankCol])) : 0;
   const waShare = `${name} (${sym}) price in Naira, USD and more: ${url}`;
-  const others = top.filter((o) => o.id !== c.id).slice(0, 12).map((o) => `<a href="${o.id}-price.html">${esc(o.name)} price</a>`).join("");
+  const SN = snapshot(c, i);
+  // links: the 5 coins just above and below this one by rank, then the biggest coins, so every page links to different pages
+  const near = [];
+  for (let k = Math.max(0, i - 5); k <= Math.min(top.length - 1, i + 5); k++) if (k !== i) near.push(top[k]);
+  const seen = new Set([c.id, ...near.map((o) => o.id)]);
+  const big6 = top.filter((o) => !seen.has(o.id)).slice(0, 6);
+  const others = near.concat(big6).map((o) => `<a href="${o.id}-price.html">${esc(o.name)} price</a>`).join("");
   const faq = [
     [`What is the ${name} (${sym}) price in naira today?`, `The live ${name} price in Nigerian naira is shown at the top of this page and in the currency table. It is converted from the US dollar price at market exchange rates and updates through the day.`],
     [`Where does PriceCheck NG get its ${sym} prices?`, `Prices come from public market data providers and are refreshed regularly. Prices are for information only, and the price on a particular exchange can be slightly different.`],
     [`Can I get an alert when ${name} reaches a price?`, `Yes. You can set a free ${sym} price alert on PriceCheck NG and get notified by push notification or Telegram when ${sym} reaches your price or moves by a percent you choose.`],
     [`Can I buy ${name} on PriceCheck NG?`, `No. PriceCheck NG is a price tracker, not an exchange. It does not hold your money or let you trade. This page is not financial advice.`]
-  ];
+  ].concat(SN.faq);
   const faqHtml = `<h2>${esc(name)} price FAQ</h2>` + faq.map((q) => `<h3>${esc(q[0])}</h3><p>${esc(q[1])}</p>`).join("");
   const ld = JSON.stringify([
     { "@context": "https://schema.org", "@type": "WebPage", name: `${name} (${sym}) price`, url, description: desc, isPartOf: { "@type": "WebSite", name: "PriceCheck NG", url: SITE + "/" } },
@@ -192,7 +245,7 @@ ${css}
 <div class="coinrow"><span class="badge${sym.length > 4 ? " s" : ""}">${esc(sym)}</span><div><h1>${esc(name)} (${esc(sym)}) price</h1></div></div>
 <p class="sub">Live ${esc(name)} price in Naira, USD, GBP, EUR and more.${rk ? ` ${esc(name)} is ranked #${rk} by market cap.` : ""} Prices update regularly through the day.</p>
 <div class="box">
-  <p class="big" id="usd">Loading price…</p>
+  <p class="big" id="usd">${SN.stat || "Loading price…"}</p>
   <p class="chg" id="chg" style="margin:4px 0 0"></p>
   <p class="note" id="upd" style="margin:6px 0 0"></p>
 </div>
@@ -206,6 +259,7 @@ ${css}
 <table id="tbl"><tbody></tbody></table>
 <a class="btn" href="./#coin/${c.id}?alert=1">Set a free ${esc(sym)} price alert</a>
 <p class="note" style="text-align:center;margin-top:8px"><a href="./#coin/${c.id}" style="color:var(--g);font-weight:700">Or open the ${esc(sym)} chart in the app</a></p>
+${SN.html}
 <section id="mk">${MK.has(c.id) ? `<h2>Where ${esc(name)} (${esc(sym)}) is traded</h2>` + mkHtml(MK.get(c.id), name, sym, EX_NAMES, WHEN, LOCAL) : ""}</section>
 <h2>About ${esc(name)} prices on PriceCheck NG</h2>
 <p>PriceCheck NG shows the live ${esc(name)} (${esc(sym)}) price in US dollars and in your choice of Nigerian naira (NGN), British pounds (GBP), euros (EUR), Ghanaian cedis (GHS), South African rand (ZAR), Kenyan shillings (KES), and more. You can set an alert for when ${esc(sym)} reaches a price or moves by a percent, and get notified by push notification or Telegram. It is free to use.</p>
