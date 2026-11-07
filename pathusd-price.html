@@ -75,7 +75,7 @@ footer a{color:var(--mut)}
 <table id="tbl"><tbody></tbody></table>
 <a class="btn" href="./#coin/pathusd?alert=1">Set a free PATHUSD price alert</a>
 <p class="note" style="text-align:center;margin-top:8px"><a href="./#coin/pathusd" style="color:var(--g);font-weight:700">Or open the PATHUSD chart in the app</a></p>
-<h2>pathUSD market snapshot</h2><p>On 7 November 2026, pathUSD (PATHUSD) was priced at $1.01, which is about ₦1,355 in Nigerian naira. The price rose 0.53% over the previous 24 hours. pathUSD is ranked #534 by market cap with a market cap of $36.9 million. About $510,890 of PATHUSD was traded in 24 hours, equal to 1.4% of its market cap, so trading is fairly quiet compared with its size.</p><p>The next coin up by market cap is <a href="degen-base-price.html">Degen</a>, which is 1.00 times as large. Just below it is <a href="bitkub-coin-price.html">KUB Coin</a>, at 100% of its size. Compared with Bitcoin, its market cap is under 0.01% of Bitcoin's.</p><p class="note">Quick conversion: ₦100,000 ≈ 73.81 PATHUSD, and 1 PATHUSD ≈ ₦1,355.</p>
+<h2>pathUSD market snapshot</h2><p>On 7 November 2026, pathUSD (PATHUSD) was priced at $1.01, which is about ₦1,355 in Nigerian naira. The price rose 0.53% over the previous 24 hours. pathUSD is ranked #534 by market cap with a market cap of $36.9 million. About $510,890 of PATHUSD was traded in 24 hours, equal to 1.4% of its market cap, so trading is fairly quiet compared with its size.</p><p>The next coin up by market cap is <a href="degen-base-price.html">Degen</a>, which is 0.99 times as large. Just below it is <a href="bitkub-coin-price.html">KUB Coin</a>, at 100% of its size. Compared with Bitcoin, its market cap is under 0.01% of Bitcoin's.</p><p class="note">Quick conversion: ₦100,000 ≈ 73.81 PATHUSD, and 1 PATHUSD ≈ ₦1,355.</p>
 
 <section id="mk"></section>
 <h2>About pathUSD prices on PriceCheck NG</h2>
@@ -98,8 +98,8 @@ const H = { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY };
 const get = (p) => fetch(SUPABASE_URL + "/rest/v1/" + p, { headers: H }).then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
 const money = (n, c) => {
   try {
-    const big = n >= 1000;
-    return new Intl.NumberFormat("en", { style: "currency", currency: c, maximumFractionDigits: big ? 0 : n >= 1 ? 2 : 6 }).format(n);
+    const o = n >= 1000 ? { maximumFractionDigits: 0 } : n >= 1 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : n >= 0.01 ? { minimumFractionDigits: 2, maximumFractionDigits: 4 } : { maximumSignificantDigits: 4 };
+    return new Intl.NumberFormat("en", { style: "currency", currency: c, ...o }).format(n);
   } catch (e) {
     return c + " " + n.toFixed(2);
   }
