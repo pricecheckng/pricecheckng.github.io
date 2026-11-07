@@ -338,8 +338,8 @@ const H = { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY };
 const get = (p) => fetch(SUPABASE_URL + "/rest/v1/" + p, { headers: H }).then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
 const money = (n, c) => {
   try {
-    const big = n >= 1000;
-    return new Intl.NumberFormat("en", { style: "currency", currency: c, maximumFractionDigits: big ? 0 : n >= 1 ? 2 : 6 }).format(n);
+    const o = n >= 1000 ? { maximumFractionDigits: 0 } : n >= 1 ? { minimumFractionDigits: 2, maximumFractionDigits: 2 } : n >= 0.01 ? { minimumFractionDigits: 2, maximumFractionDigits: 4 } : { maximumSignificantDigits: 4 };
+    return new Intl.NumberFormat("en", { style: "currency", currency: c, ...o }).format(n);
   } catch (e) {
     return c + " " + n.toFixed(2);
   }
