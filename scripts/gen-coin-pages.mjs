@@ -110,6 +110,23 @@ const WHEN = new Date().toISOString();
   console.log(`Exchange facts added to ${MK.size} of ${top.length} coin pages`);
 }
 
+// Fetch the "key facts" (age, supply, all-time high, categories, links) for every coin page. If it fails, the page is written without them.
+const XT = new Map();
+{
+  const queue = top.map((c) => c.id);
+  const worker = async () => {
+    while (queue.length) {
+      const id = queue.shift();
+      try {
+        const r = await fetch(SUPABASE_URL + "/rest/v1/rpc/coin_extras", { method: "POST", headers: { ...H, "Content-Type": "application/json" }, body: JSON.stringify({ p_id: id }), signal: AbortSignal.timeout(15000) });
+        if (r.ok) { const x = await r.json(); if (x && typeof x === "object" && !Array.isArray(x)) XT.set(id, x); }
+      } catch (e) {}
+    }
+  };
+  await Promise.all(Array.from({ length: 8 }, worker));
+  console.log(`Key facts added to ${XT.size} of ${top.length} coin pages`);
+}
+
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 const css = `:root{--g:#0b7d4d;--ink:#0f1a14;--mut:#55635a;--line:#e3e9e5;--bg:#fff;--card:#f6f8f7}
 @media (prefers-color-scheme:dark){:root{--bg:#0e1511;--card:#16201a;--ink:#e9f1ec;--mut:#9db0a5;--line:#26332c}div.note{background:#16261d;border-color:#26332c}main a:not([class]),p a:not([class]),li a:not([class]){color:#3ddc97}}
@@ -186,6 +203,36 @@ function snapshot(c, i) {
   return { html: `<h2>${esc(name)} market snapshot</h2>` + t + ex, faq, stat: fUsd(usd) };
 }
 
+const fNum = (n) => { n = Number(n); return n >= 1e12 ? (n / 1e12).toFixed(2) + " trillion" : n >= 1e9 ? (n / 1e9).toFixed(2) + " billion" : n >= 1e6 ? (n / 1e6).toFixed(2) + " million" : Math.round(n).toLocaleString("en-US"); };
+function keyFacts(c) {
+  const x = XT.get(c.id);
+  if (!x) return "";
+  const sym = c.symbol.toUpperCase(), name = c.name, usd = Number(c.price_usd);
+  const s = [];
+  const age = Number(x.age_days);
+  if (age > 0) { const y = Math.floor(age / 365); s.push(`${esc(name)} is ${y >= 1 ? "about " + y + " year" + (y === 1 ? "" : "s") : age + " days"} old`); }
+  const ex = Number(x.exchanges);
+  if (ex > 0) s.push(`${s.length ? "and it is" : esc(name) + " is"} listed on ${ex.toLocaleString("en-US")} exchange${ex === 1 ? "" : "s"}`);
+  let out = s.length ? s.join(" ") + "." : "";
+  const sup = [];
+  if (Number(x.total_supply) > 0) sup.push(`The total supply is ${fNum(x.total_supply)} ${esc(sym)}`);
+  if (Number(x.max_supply) > 0) sup.push(`${sup.length ? "and the maximum supply is" : "The maximum supply is"} ${fNum(x.max_supply)} ${esc(sym)}`);
+  if (sup.length) out += " " + sup.join(" ") + ".";
+  if (Number(x.fdv) > 0) out += ` Its fully diluted value, which counts every coin that will ever exist at today's price, is ${fBig(x.fdv)}.`;
+  const ath = Number(x.ath);
+  if (ath > 0) {
+    const below = usd > 0 ? (usd / ath - 1) * 100 : null;
+    out += ` Its all-time high price is ${fUsd(ath)}${below != null && below < -0.5 ? ", so today's price is " + Math.abs(below).toFixed(1) + "% below the peak" : below != null && below >= -0.5 ? ", and today's price is at or very close to that peak" : ""}.`;
+  }
+  const cats = Array.isArray(x.categories) ? x.categories.filter((v) => typeof v === "string" && v).slice(0, 6).map((v) => v.replace(/_/g, " ")) : [];
+  if (cats.length) out += ` It is grouped under: ${cats.map(esc).join(", ")}.`;
+  const LN = { website: "Website", whitepaper: "Whitepaper", reddit: "Reddit", twitter: "X (Twitter)", telegram: "Telegram", discord: "Discord", medium: "Medium", youtube: "YouTube", linkedin: "LinkedIn" };
+  const lk = x.links && typeof x.links === "object" ? x.links : {};
+  const links = Object.keys(LN).filter((k) => typeof lk[k] === "string" && /^https:\/\/[^\s"<>]+$/.test(lk[k])).map((k) => `<a href="${esc(lk[k])}" target="_blank" rel="noopener nofollow">${LN[k]}</a>`);
+  if (!out.trim() && !links.length) return "";
+  return `<h2>${esc(name)} key facts</h2>` + (out.trim() ? `<p>${out.trim()}</p>` : "") + (links.length ? `<p>Official links: ${links.join(" · ")}</p>` : "");
+}
+
 function page(c, i) {
   const sym = c.symbol.toUpperCase();
   const name = c.name;
@@ -260,6 +307,7 @@ ${css}
 <a class="btn" href="./#coin/${c.id}?alert=1">Set a free ${esc(sym)} price alert</a>
 <p class="note" style="text-align:center;margin-top:8px"><a href="./#coin/${c.id}" style="color:var(--g);font-weight:700">Or open the ${esc(sym)} chart in the app</a></p>
 ${SN.html}
+${keyFacts(c)}
 <section id="mk">${MK.has(c.id) ? `<h2>Where ${esc(name)} (${esc(sym)}) is traded</h2>` + mkHtml(MK.get(c.id), name, sym, EX_NAMES, WHEN, LOCAL) : ""}</section>
 <h2>About ${esc(name)} prices on PriceCheck NG</h2>
 <p>PriceCheck NG shows the live ${esc(name)} (${esc(sym)}) price in US dollars and in your choice of Nigerian naira (NGN), British pounds (GBP), euros (EUR), Ghanaian cedis (GHS), South African rand (ZAR), Kenyan shillings (KES), and more. You can set an alert for when ${esc(sym)} reaches a price or moves by a percent, and get notified by push notification or Telegram. It is free to use.</p>
