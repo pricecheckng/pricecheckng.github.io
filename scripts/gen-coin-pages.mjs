@@ -395,6 +395,20 @@ Promise.all([get("coins?id=eq." + ID + "&select=price_usd,change_24h_pct,last_up
 // Write the pages.
 top.forEach((c, i) => fs.writeFileSync(c.id + "-price.html", page(c, i)));
 
+// Remove old coin pages for coins that no longer qualify (rank, volume or freshness), so Google is not left with stale, thin pages.
+// Safety: only runs when a full list was found, and only touches files this script made (their canonical link matches the file name).
+if (top.length >= 300) {
+  const keepNames = new Set(top.map((c) => c.id + "-price.html"));
+  let removed = 0;
+  for (const f of fs.readdirSync(".")) {
+    if (!/^[a-z0-9-]+-price\.html$/.test(f) || keepNames.has(f)) continue;
+    let body = "";
+    try { body = read(f); } catch (e) { continue; }
+    if (body.includes('<link rel="canonical" href="' + SITE + "/" + f + '">') && body.includes("PriceCheck NG")) { fs.unlinkSync(f); removed++; }
+  }
+  console.log("Removed " + removed + " old coin pages that no longer qualify");
+}
+
 
 // ---- Exchange pages: one page per exchange, plus an index (exchanges.html). Needs public.exchange_list() and public.exchange_markets(). ----
 const EX_ORDER2 = ["bitflyer", "bitbank", "btcbox", "coincheck", "btcmarkets", "independentreserve", "coinjar", "foxbit", "paribu", "buda", "deribit"];
