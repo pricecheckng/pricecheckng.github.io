@@ -44,6 +44,7 @@ td:last-child,th:last-child{text-align:right;font-weight:700}
 .nhead{display:flex;align-items:baseline;justify-content:space-between}.nhead a{color:var(--g);font-weight:700;font-size:.9rem;text-decoration:none}.ni{display:block;padding:12px 0;border-top:1px solid var(--line);color:var(--ink);text-decoration:none}.ni b{display:block;line-height:1.35}.ni span{display:block;color:var(--mut);font-size:.8rem;margin-top:3px}
 .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .links a{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--ink);text-decoration:none;font-size:.9rem}
+.shr{display:inline-flex;align-items:center;gap:8px;margin:12px 0 0 8px;background:var(--card,#fff);color:var(--g,#0b7a4b);border:1.5px solid var(--g,#0b7a4b);font:inherit;font-weight:800;font-size:.9rem;border-radius:999px;padding:8px 16px;cursor:pointer}
 .wa{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:#25d366;color:#fff!important;font-weight:800;font-size:.9rem;text-decoration:none;border-radius:999px;padding:9px 16px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.stats[hidden]{display:none}.stats div{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px}.stats small{display:block;color:var(--mut);font-size:.72rem}.stats b{font-size:.95rem}
 h3{font-size:1rem;margin:16px 0 4px}
@@ -70,7 +71,7 @@ footer a{color:var(--mut)}
   <div><small>Market cap</small><b id="s-cap">-</b></div>
   <div><small>24h volume</small><b id="s-vol">-</b></div>
 </div>
-<a class="wa" id="wa" href="https://wa.me/?text=ORE%20(ORE)%20price%20in%20Naira%2C%20USD%20and%20more%3A%20https%3A%2F%2Fpricecheckng.com.ng%2Fore-price.html" target="_blank" rel="noopener">Share on WhatsApp</a>
+<a class="wa" id="wa" href="https://wa.me/?text=ORE%20(ORE)%20price%20in%20Naira%2C%20USD%20and%20more%3A%20https%3A%2F%2Fpricecheckng.com.ng%2Fore-price.html" target="_blank" rel="noopener">Share on WhatsApp</a><button type="button" class="shr" id="shr">Share</button>
 <h2>ORE price in other currencies</h2>
 <table id="tbl"><tbody></tbody></table>
 <a class="btn" href="./#coin/ore?alert=1">Set a free ORE price alert</a>
@@ -167,6 +168,13 @@ Promise.all([get("coins?id=eq." + ID + "&select=price_usd,change_24h_pct,last_up
     document.getElementById("usd").textContent = money(usd, "USD");
     const wa = document.getElementById("wa");
     if (wa) wa.href = "https://wa.me/?text=" + encodeURIComponent(NAME + " (" + SYM + ") price now: " + money(usd, "USD") + ". See it in Naira, USD, GBP, EUR and more: https://pricecheckng.com.ng/ore-price.html");
+    const ng = (fx || []).find((r) => r.currency === "NGN");
+    const shr = document.getElementById("shr");
+    if (shr) shr.onclick = async () => {
+      const t = NAME + " (" + SYM + ") price now: " + money(usd, "USD") + (ng ? " = " + money(usd * Number(ng.per_usd), "NGN") : "") + ". Live on PriceCheck NG:";
+      try { if (navigator.share) { await navigator.share({ title: NAME + " price", text: t, url: "https://pricecheckng.com.ng/ore-price.html" }); return; } } catch (_) { return; }
+      try { await navigator.clipboard.writeText(t + " https://pricecheckng.com.ng/ore-price.html"); shr.textContent = "Copied"; setTimeout(() => (shr.textContent = "Share"), 2000); } catch (_) { prompt("Copy this:", t + " https://pricecheckng.com.ng/ore-price.html"); }
+    };
     const ch = Number(c.change_24h_pct);
     const e = document.getElementById("chg");
     if (Number.isFinite(ch)) {
