@@ -377,8 +377,7 @@ async function rwaHtml() {
     rows = rwaSub === "all" ? all.slice(0, 150) : all.filter((c) => rwaKind(c) === rwaSub).slice(0, 150);
     body = rows.length ? rowsHtml(rows) : "";
   }
-  const find = '<input type="search" id="rwaFind" placeholder="Find a token, e.g. Microsoft" autocomplete="off" style="width:100%;margin:0 0 10px;padding:11px 14px;border-radius:12px;border:1px solid rgba(128,128,128,.3);background:transparent;color:inherit;font:inherit">';
-  return { html: stats + helNote + chips + find + (body || '<p class="mk-tnote">Nothing here yet.</p>'), rows };
+  return { html: stats + helNote + chips + (body || '<p class="mk-tnote">Nothing here yet.</p>'), rows };
 }
 function tabQuery(tab) {
   let q = sb.from("coins").select(COLS, { count: "exact" });
@@ -871,7 +870,6 @@ async function loadCoins(reset, pg) {
       if (id !== state.req || !$("#list")) return;
       state.coins = r.rows;
       list.innerHTML = r.html || emptyBox("Could not load this list", "Check your connection and try again.");
-      const fi = list.querySelector("#rwaFind");
       if (fi) { fi.value = window.__rwaQ || ""; const run = () => { const q = fi.value.trim().toLowerCase(); window.__rwaQ = q; list.querySelectorAll(".catrow, .cw").forEach((r) => { r.style.display = !q || r.textContent.toLowerCase().includes(q) ? "" : "none"; }); }; fi.addEventListener("input", run); run(); }
       list.querySelectorAll("[data-rsub]").forEach((b) => b.addEventListener("click", () => { rwaSub = b.dataset.rsub; state.req++; loadCoins(true); }));
       const pg = $("#pager"); if (pg) pg.innerHTML = "";
