@@ -341,11 +341,16 @@ async function rwaHtml() {
   const all = RWA_CACHE;
   if (!all.length) return { html: "", rows: [] };
   let cap = 0, vol = 0, w = 0, t = 0;
-  const scope = rwaSub === "all" ? all : all.filter((c) => rwaKind(c) === rwaSub);
+  const isHeloc = (c) => /heloc/i.test(c.name + " " + c.symbol);
+  const inSub = rwaSub === "all" ? all : all.filter((c) => rwaKind(c) === rwaSub);
+  const scope = inSub.filter((c) => !isHeloc(c));
+  const hel = inSub.filter(isHeloc);
+  const helCap = hel.reduce((s, c) => s + (Number(c.market_cap_usd) || 0), 0);
   for (const c of scope) { const m = Number(c.market_cap_usd) || 0, ch = Number(c.change_24h_pct); cap += m; vol += Number(c.volume_24h_usd) || 0; if (m > 0 && c.change_24h_pct !== null && Number.isFinite(ch)) { w += m; t += m * ch; } }
   const avg = w > 0 ? t / w : null;
   const d = chg(avg);
   const stats = '<div class="rwa-st"><div><small>Market cap of this group</small><b>' + mnyBig(cap) + '</b></div><div><small>24h volume</small><b>' + mnyBig(vol) + '</b></div><div><small>Tokens</small><b>' + scope.length + '</b></div><div><small>Avg 24h</small><b class="' + d.c + '">' + (avg === null ? "-" : d.t) + "</b></div></div>";
+  const helNote = hel.length ? '<p class="mk-tnote" style="margin:-2px 0 10px">The totals above leave out Figure HELOC (' + mnyBig(helCap) + '), a token backed by home-equity loans. It is still listed below.</p>' : "";
   const chips = '<div class="rwa-ch">' + RWA_SUBS.map((s) => '<button type="button" data-rsub="' + s[0] + '" class="' + (rwaSub === s[0] ? "on" : "") + '">' + s[1] + "</button>").join("") + "</div>";
   let body = "", rows = [];
   if (rwaSub === "stock" || rwaSub === "metal") {
@@ -372,7 +377,7 @@ async function rwaHtml() {
     rows = rwaSub === "all" ? all.slice(0, 150) : all.filter((c) => rwaKind(c) === rwaSub).slice(0, 150);
     body = rows.length ? rowsHtml(rows) : "";
   }
-  return { html: stats + chips + (body || '<p class="mk-tnote">Nothing here yet.</p>'), rows };
+  return { html: stats + helNote + chips + (body || '<p class="mk-tnote">Nothing here yet.</p>'), rows };
 }
 function tabQuery(tab) {
   let q = sb.from("coins").select(COLS, { count: "exact" });
