@@ -225,3 +225,11 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
 .catrow{display:flex;align-items:center;gap:12px;padding:13px 14px;text-decoration:none;color:inherit}.catrow+.catrow{border-top:1px solid rgba(128,128,128,.2)}
 .catrow .cr-i{width:22px;text-align:center;opacity:.6;font-size:.85rem}.catrow .cr-n{flex:1;min-width:0}.catrow .cr-n b{display:block}.catrow .cr-n small{display:block;opacity:.65;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .catrow .cr-c{font-weight:700;white-space:nowrap}.catrow .cr-c.up{color:#16a34a}.catrow .cr-c.down{color:#ef4444}
+
+.rwa-st{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+.rwa-st div{border:1px solid rgba(128,128,128,.2);border-radius:12px;padding:10px 12px}.rwa-st small{display:block;opacity:.65;font-size:.74rem}.rwa-st b{font-size:1.05rem}
+.rwa-st b.up{color:#16a34a}.rwa-st b.down{color:#ef4444}
+.rwa-ch{display:flex;gap:6px;overflow-x:auto;margin-bottom:10px;padding-bottom:2px}
+.rwa-ch button{flex:none;border:1px solid rgba(128,128,128,.3);background:none;color:inherit;font:inherit;font-size:.85rem;font-weight:600;border-radius:999px;padding:7px 13px;cursor:pointer}
+.rwa-ch button.on{background:#0b7a4b;border-color:#0b7a4b;color:#fff}
+.catrow .logo{width:32px;height:32px;border-radius:50%;flex:none}.catrow .cr-p{display:flex;flex-direction:column;align-items:flex-end;gap:2px}

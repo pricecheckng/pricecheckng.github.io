@@ -293,7 +293,7 @@ async function tgHomeTip() {
   } catch (_) {}
 }
 const MK_TABS = [["all", "Top"], ["trend", "Trending"], ["watch", "★ Watchlist"], ["new", "New"], ["cat", "Categories"], ["gain", "Gainers"], ["lose", "Losers"], ["stable", "Stablecoins"], ["rwa", "Tokenized assets"]];
-const MK_NOTES = { cat: "Coins grouped by what they do. The % is the average 24-hour move of the coins in each group.", new: "Coins added to PriceCheck NG in the last 14 days.", trend: "Most traded coins in the last 24 hours.", gain: "Biggest price rises in 24 hours. Tiny coins are left out.", lose: "Biggest price falls in 24 hours. Tiny coins are left out.", stable: "Coins designed to stay at one US dollar.", rwa: "Tokens that track funds, bonds, stocks or similar. They trade very little. They are not issued by the company or fund they track." };
+const MK_NOTES = { cat: "Coins grouped by what they do. The % is the average 24-hour move of the coins in each group.", new: "Coins added to PriceCheck NG in the last 14 days.", trend: "Most traded coins in the last 24 hours.", gain: "Biggest price rises in 24 hours. Tiny coins are left out.", lose: "Biggest price falls in 24 hours. Tiny coins are left out.", stable: "Coins designed to stay at one US dollar.", rwa: "Tokens that track stocks, gold, funds or bonds. Each stock row adds up every issuer\u2019s token for that stock, and the price shown is the biggest token\u2019s. They trade very little and are not issued by the company or fund they track." };
 const STABLE_SYMS = ["usdt", "usdc", "dai", "usde", "usds", "fdusd", "tusd", "usdd", "usd1", "pyusd", "usdg", "rlusd", "gusd", "frax", "usdp"];
 let CAT_CACHE = null;
 async function catRowsHtml() {
@@ -318,6 +318,61 @@ async function catRowsHtml() {
     return '<a class="catrow" href="' + esc(c.f) + '"><span class="cr-i">' + (i + 1) + '</span><span class="cr-n"><b>' + esc(c.t) + '</b><small>' + c.n + " coins · " + esc(c.top.join(", ")) + '</small></span><span class="cr-c ' + cls + '">' + (ch === null ? "-" : (ch >= 0 ? "▲ " : "▼ ") + Math.abs(ch).toFixed(2) + "%") + "</span></a>";
   }).join("") + "</div>";
 }
+let RWA_CACHE = null, RWA_AT = 0, rwaSub = "stock";
+const RWA_SUBS = [["stock", "Stocks"], ["metal", "Gold & metals"], ["fund", "Funds & bonds"], ["pre", "Pre-IPO"], ["all", "All tokens"]];
+const METAL_RE = /(tether gold|pax gold|kinesis gold|kinesis silver|matrixdock gold|vnx gold|digital gold|gold xstock|gold trust|gold shares|silver trust|silver xstock)/i;
+const STOCK_RE = /(xstock|tokenized stock|robinhood token)/i;
+function rwaKind(c) {
+  if (/prestocks/i.test(c.id)) return "pre";
+  if (METAL_RE.test(c.name)) return "metal";
+  if (STOCK_RE.test(c.name)) return "stock";
+  return "fund";
+}
+function rwaGroupName(c, kind) {
+  if (kind === "metal") return /silver/i.test(c.name) ? "Silver" : "Gold";
+  return c.name.replace(/\s*\([^)]*\)\s*$/, "").replace(/\s*•\s*Robinhood Token$/i, "").replace(/\s+xStock$/i, "").trim() || c.name;
+}
+async function rwaHtml() {
+  if (!RWA_CACHE || Date.now() - RWA_AT > 120000) {
+    const { data } = await sb.from("coins").select(COLS).eq("kind", "tokenized").not("price_usd", "is", null).order("market_cap_usd", { ascending: false, nullsFirst: false }).limit(1000);
+    RWA_CACHE = data || []; RWA_AT = Date.now();
+    for (const c of RWA_CACHE) state.coinMap.set(c.id, c);
+  }
+  const all = RWA_CACHE;
+  if (!all.length) return { html: "", rows: [] };
+  let cap = 0, vol = 0, w = 0, t = 0;
+  for (const c of all) { const m = Number(c.market_cap_usd) || 0, ch = Number(c.change_24h_pct); cap += m; vol += Number(c.volume_24h_usd) || 0; if (m > 0 && c.change_24h_pct !== null && Number.isFinite(ch)) { w += m; t += m * ch; } }
+  const avg = w > 0 ? t / w : null;
+  const d = chg(avg);
+  const stats = '<div class="rwa-st"><div><small>Tokenized market cap</small><b>' + mnyBig(cap) + '</b></div><div><small>24h volume</small><b>' + mnyBig(vol) + '</b></div><div><small>Tokens</small><b>' + all.length + '</b></div><div><small>Avg 24h</small><b class="' + d.c + '">' + (avg === null ? "-" : d.t) + "</b></div></div>";
+  const chips = '<div class="rwa-ch">' + RWA_SUBS.map((s) => '<button type="button" data-rsub="' + s[0] + '" class="' + (rwaSub === s[0] ? "on" : "") + '">' + s[1] + "</button>").join("") + "</div>";
+  let body = "", rows = [];
+  if (rwaSub === "stock" || rwaSub === "metal") {
+    const g = new Map();
+    for (const c of all) {
+      const k = rwaKind(c); if (k !== rwaSub) continue;
+      const n = rwaGroupName(c, k), key = n.toLowerCase();
+      if (!g.has(key)) g.set(key, { n, list: [] });
+      g.get(key).list.push(c);
+    }
+    const arr = [...g.values()].map((x) => {
+      const lead = x.list[0];
+      let w2 = 0, t2 = 0, cp = 0;
+      for (const c of x.list) { const m = Number(c.market_cap_usd) || 0, ch = Number(c.change_24h_pct); cp += m; if (m > 0 && c.change_24h_pct !== null && Number.isFinite(ch)) { w2 += m; t2 += m * ch; } }
+      return { n: x.n, lead, k: x.list.length, cap: cp, ch: w2 > 0 ? t2 / w2 : null };
+    }).sort((p, q) => q.cap - p.cap);
+    body = '<div class="catlist">' + arr.map((x, i) => {
+      const cc = x.ch === null ? "" : x.ch >= 0 ? "up" : "down";
+      const img = x.lead.image_url ? '<img class="logo" src="' + esc(x.lead.image_url) + '" alt="" loading="lazy" width="32" height="32">' : "";
+      return '<button type="button" class="catrow" data-id="' + esc(x.lead.id) + '" style="width:100%;background:none;border:0;font:inherit;text-align:left;cursor:pointer"><span class="cr-i">' + (i + 1) + "</span>" + img + '<span class="cr-n"><b>' + esc(x.n) + "</b><small>" + x.k + (x.k === 1 ? " token" : " tokens") + " · " + (x.cap > 0 ? mnyBig(x.cap) : "-") + '</small></span><span class="cr-p"><b>' + mainPx(x.lead) + '</b><span class="cr-c ' + cc + '">' + (x.ch === null ? "-" : (x.ch >= 0 ? "▲ " : "▼ ") + Math.abs(x.ch).toFixed(2) + "%") + "</span></span></button>";
+    }).join("") + "</div>";
+    if (!arr.length) body = "";
+  } else {
+    rows = rwaSub === "all" ? all.slice(0, 150) : all.filter((c) => rwaKind(c) === rwaSub).slice(0, 150);
+    body = rows.length ? rowsHtml(rows) : "";
+  }
+  return { html: stats + chips + (body || '<p class="mk-tnote">Nothing here yet.</p>'), rows };
+}
 function tabQuery(tab) {
   let q = sb.from("coins").select(COLS, { count: "exact" });
   const real = (x) => x.or("kind.is.null,kind.neq.tokenized");
@@ -336,7 +391,7 @@ function syncTabs() {
   if (tl) tl.style.display = state.tab === "all" ? "" : "none";
   const nt = document.querySelector(".mk-net");
   if (nt) nt.style.display = state.tab === "all" && state.netOk ? "" : "none";
-  const lh = $("#lhdr"); if (lh) lh.style.display = state.tab === "cat" ? "none" : "";
+  const lh = $("#lhdr"); if (lh) lh.style.display = state.tab === "cat" || state.tab === "rwa" ? "none" : "";
   const on = document.querySelector("#mkTabs .on");
   if (on && on.scrollIntoView) on.scrollIntoView({ block: "nearest", inline: "center" });
 }
@@ -802,6 +857,17 @@ async function loadCoins(reset, pg) {
     if ($("#toolBox")) $("#toolBox").innerHTML = "";
     setStaleNote("");
     $("#moreBtn").hidden = true;
+    if (state.tab === "rwa") {
+      const r = await rwaHtml();
+      if (id !== state.req || !$("#list")) return;
+      await loadWatch();
+      if (id !== state.req || !$("#list")) return;
+      state.coins = r.rows;
+      list.innerHTML = r.html || emptyBox("Could not load this list", "Check your connection and try again.");
+      list.querySelectorAll("[data-rsub]").forEach((b) => b.addEventListener("click", () => { rwaSub = b.dataset.rsub; state.req++; loadCoins(true); }));
+      const pg = $("#pager"); if (pg) pg.innerHTML = "";
+      return;
+    }
     if (state.tab === "cat") {
       const html = await catRowsHtml();
       if (id !== state.req || !$("#list")) return;
