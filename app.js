@@ -341,10 +341,11 @@ async function rwaHtml() {
   const all = RWA_CACHE;
   if (!all.length) return { html: "", rows: [] };
   let cap = 0, vol = 0, w = 0, t = 0;
-  for (const c of all) { const m = Number(c.market_cap_usd) || 0, ch = Number(c.change_24h_pct); cap += m; vol += Number(c.volume_24h_usd) || 0; if (m > 0 && c.change_24h_pct !== null && Number.isFinite(ch)) { w += m; t += m * ch; } }
+  const scope = rwaSub === "all" ? all : all.filter((c) => rwaKind(c) === rwaSub);
+  for (const c of scope) { const m = Number(c.market_cap_usd) || 0, ch = Number(c.change_24h_pct); cap += m; vol += Number(c.volume_24h_usd) || 0; if (m > 0 && c.change_24h_pct !== null && Number.isFinite(ch)) { w += m; t += m * ch; } }
   const avg = w > 0 ? t / w : null;
   const d = chg(avg);
-  const stats = '<div class="rwa-st"><div><small>Tokenized market cap</small><b>' + mnyBig(cap) + '</b></div><div><small>24h volume</small><b>' + mnyBig(vol) + '</b></div><div><small>Tokens</small><b>' + all.length + '</b></div><div><small>Avg 24h</small><b class="' + d.c + '">' + (avg === null ? "-" : d.t) + "</b></div></div>";
+  const stats = '<div class="rwa-st"><div><small>Market cap of this group</small><b>' + mnyBig(cap) + '</b></div><div><small>24h volume</small><b>' + mnyBig(vol) + '</b></div><div><small>Tokens</small><b>' + scope.length + '</b></div><div><small>Avg 24h</small><b class="' + d.c + '">' + (avg === null ? "-" : d.t) + "</b></div></div>";
   const chips = '<div class="rwa-ch">' + RWA_SUBS.map((s) => '<button type="button" data-rsub="' + s[0] + '" class="' + (rwaSub === s[0] ? "on" : "") + '">' + s[1] + "</button>").join("") + "</div>";
   let body = "", rows = [];
   if (rwaSub === "stock" || rwaSub === "metal") {
@@ -363,7 +364,7 @@ async function rwaHtml() {
     }).sort((p, q) => q.cap - p.cap);
     body = '<div class="catlist">' + arr.map((x, i) => {
       const cc = x.ch === null ? "" : x.ch >= 0 ? "up" : "down";
-      const img = x.lead.image_url ? '<img class="logo" src="' + esc(x.lead.image_url) + '" alt="" loading="lazy" width="32" height="32">' : "";
+      const img = rwaSub === "metal" ? '<span class="logo" style="display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.8rem;color:#fff;background:' + (/silver/i.test(x.n) ? "#9ca3af" : "#d4a017") + '">' + (/silver/i.test(x.n) ? "Ag" : "Au") + "</span>" : x.lead.image_url ? '<img class="logo" src="' + esc(x.lead.image_url) + '" alt="" loading="lazy" width="32" height="32">' : "";
       return '<button type="button" class="catrow" data-id="' + esc(x.lead.id) + '" style="width:100%;background:none;border:0;font:inherit;text-align:left;cursor:pointer"><span class="cr-i">' + (i + 1) + "</span>" + img + '<span class="cr-n"><b>' + esc(x.n) + "</b><small>" + x.k + (x.k === 1 ? " token" : " tokens") + " · " + (x.cap > 0 ? mnyBig(x.cap) : "-") + '</small></span><span class="cr-p"><b>' + mainPx(x.lead) + '</b><span class="cr-c ' + cc + '">' + (x.ch === null ? "-" : (x.ch >= 0 ? "▲ " : "▼ ") + Math.abs(x.ch).toFixed(2) + "%") + "</span></span></button>";
     }).join("") + "</div>";
     if (!arr.length) body = "";
