@@ -56,7 +56,7 @@
   function rows(list) {
     return list.map(function (c) {
       return '<button type="button" class="pcs-row" data-id="' + esc(c.id) + '" data-sym="' + esc(c.symbol) + '" data-name="' + esc(c.name) + '" data-img="' + esc(c.image_url || '') + '">' + logo(c) +
-        '<span class="pcs-nm"><b>' + esc(c.name) + '</b><small>' + esc(String(c.symbol).toUpperCase()) + (c.kind === 'tokenized' ? ' · Tokenized' : c.market_cap_rank ? ' · #' + c.market_cap_rank : '') + '</small></span>' +
+        '<span class="pcs-nm"><b>' + esc(c.name) + '</b><small>' + esc(String(c.symbol).toUpperCase()) + ((c.kind === 'tokenized' || /(xstock|tokenized stock|robinhood token)/i.test(c.name)) ? ' · Tokenized' : c.market_cap_rank ? ' · #' + c.market_cap_rank : '') + '</small></span>' +
         '<span class="pcs-pr">' + usd(c.price_usd) + pct(c.change_24h_pct) + '</span></button>';
     }).join('');
   }

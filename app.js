@@ -330,11 +330,11 @@ function rwaKind(c) {
 }
 function rwaGroupName(c, kind) {
   if (kind === "metal") return /silver/i.test(c.name) ? "Silver" : "Gold";
-  return c.name.replace(/\s*\([^)]*\)\s*$/, "").replace(/\s*•\s*Robinhood Token$/i, "").replace(/\s+xStock$/i, "").trim() || c.name;
+  return c.name.replace(/\s*\([^)]*\)\s*$/, "").replace(/\s*•\s*Robinhood Token$/i, "").replace(/\s+xStock$/i, "").replace(/\s+Tokenized Stock$/i, "").trim() || c.name;
 }
 async function rwaHtml() {
   if (!RWA_CACHE || Date.now() - RWA_AT > 120000) {
-    const { data } = await sb.from("coins").select(COLS).eq("kind", "tokenized").not("price_usd", "is", null).order("market_cap_usd", { ascending: false, nullsFirst: false }).limit(1000);
+    const { data } = await sb.from("coins").select(COLS).or("kind.eq.tokenized,name.ilike.*tokenized stock*,name.ilike.*xstock*,name.ilike.*robinhood token*").not("price_usd", "is", null).order("market_cap_usd", { ascending: false, nullsFirst: false }).limit(1000);
     RWA_CACHE = data || []; RWA_AT = Date.now();
     for (const c of RWA_CACHE) state.coinMap.set(c.id, c);
   }
@@ -677,7 +677,7 @@ function coinRow(c) {
   return `<div class="cw"><button class="star${on ? " on" : ""}" type="button" data-star="${esc(c.id)}" aria-label="${on ? "Remove from watchlist" : "Add to watchlist"}" aria-pressed="${on}">${on ? "★" : "☆"}</button><button class="coin" type="button" data-id="${esc(c.id)}">
     <span class="rk">${c.market_cap_rank != null ? c.market_cap_rank : ""}</span>
     ${c.id === "bitcoin" ? btcLogo("logo") : `<img class="logo" src="${esc(c.image_url || "")}" alt="" loading="lazy" width="32" height="32">`}
-    <div class="meta"><b>${sym}</b><span>${state.cols.mcap ? esc(c.name) : c.market_cap_usd ? mnyBig(c.market_cap_usd) : esc(c.name)}${c.kind === "tokenized" ? " · Tokenized" : ""}</span></div>
+    <div class="meta"><b>${sym}</b><span>${state.cols.mcap ? esc(c.name) : c.market_cap_usd ? mnyBig(c.market_cap_usd) : esc(c.name)}${c.kind === "tokenized" || STOCK_RE.test(c.name) ? " · Tokenized" : ""}</span></div>
     ${state.cols.mcap ? `<span class="xc">${c.market_cap_usd ? mnyBig(c.market_cap_usd) : "–"}</span>` : ""}
     <div class="px"><b>${mainPx(c)}</b></div>
     ${state.cols.chg ? `<span class="chg ${d.c}">${chgTxt(d)}</span>` : ""}
