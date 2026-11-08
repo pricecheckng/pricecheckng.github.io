@@ -50,13 +50,13 @@
   var BTC = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle cx="32" cy="32" r="32" fill="#f7931a"/><text x="32" y="44" font-size="38" font-weight="700" text-anchor="middle" fill="#fff" font-family="Arial,sans-serif">\u20bf</text></svg>');
   function logo(c) { if (c.id === 'bitcoin') return '<img src="' + BTC + '" alt="">'; return c.image_url ? '<img src="' + esc(c.image_url) + '" alt="" loading="lazy">' : '<img alt="" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==">'; }
   function H() { return { apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_KEY }; }
-  var COLS = 'id,symbol,name,image_url,market_cap_rank,price_usd,change_24h_pct';
+  var COLS = 'id,symbol,name,image_url,market_cap_rank,price_usd,change_24h_pct,kind';
   var REAL = 'or(kind.is.null,kind.neq.tokenized)';
 
   function rows(list) {
     return list.map(function (c) {
       return '<button type="button" class="pcs-row" data-id="' + esc(c.id) + '" data-sym="' + esc(c.symbol) + '" data-name="' + esc(c.name) + '" data-img="' + esc(c.image_url || '') + '">' + logo(c) +
-        '<span class="pcs-nm"><b>' + esc(c.name) + '</b><small>' + esc(String(c.symbol).toUpperCase()) + (c.market_cap_rank ? ' · #' + c.market_cap_rank : '') + '</small></span>' +
+        '<span class="pcs-nm"><b>' + esc(c.name) + '</b><small>' + esc(String(c.symbol).toUpperCase()) + (c.kind === 'tokenized' ? ' · Tokenized' : c.market_cap_rank ? ' · #' + c.market_cap_rank : '') + '</small></span>' +
         '<span class="pcs-pr">' + usd(c.price_usd) + pct(c.change_24h_pct) + '</span></button>';
     }).join('');
   }

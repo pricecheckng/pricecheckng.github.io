@@ -293,7 +293,7 @@ async function tgHomeTip() {
   } catch (_) {}
 }
 const MK_TABS = [["all", "Top"], ["trend", "Trending"], ["watch", "★ Watchlist"], ["new", "New"], ["cat", "Categories"], ["gain", "Gainers"], ["lose", "Losers"], ["stable", "Stablecoins"], ["rwa", "Tokenized assets"]];
-const MK_NOTES = { cat: "Coins grouped by what they do. The % is the average 24-hour move of the coins in each group.", new: "Coins added to PriceCheck NG in the last 14 days.", trend: "Most traded coins in the last 24 hours.", gain: "Biggest price rises in 24 hours. Tiny coins are left out.", lose: "Biggest price falls in 24 hours. Tiny coins are left out.", stable: "Coins designed to stay at one US dollar.", rwa: "Tokens that track funds, bonds, stocks or similar. They trade very little." };
+const MK_NOTES = { cat: "Coins grouped by what they do. The % is the average 24-hour move of the coins in each group.", new: "Coins added to PriceCheck NG in the last 14 days.", trend: "Most traded coins in the last 24 hours.", gain: "Biggest price rises in 24 hours. Tiny coins are left out.", lose: "Biggest price falls in 24 hours. Tiny coins are left out.", stable: "Coins designed to stay at one US dollar.", rwa: "Tokens that track funds, bonds, stocks or similar. They trade very little. They are not issued by the company or fund they track." };
 const STABLE_SYMS = ["usdt", "usdc", "dai", "usde", "usds", "fdusd", "tusd", "usdd", "usd1", "pyusd", "usdg", "rlusd", "gusd", "frax", "usdp"];
 let CAT_CACHE = null;
 async function catRowsHtml() {
@@ -616,7 +616,7 @@ function coinRow(c) {
   return `<div class="cw"><button class="star${on ? " on" : ""}" type="button" data-star="${esc(c.id)}" aria-label="${on ? "Remove from watchlist" : "Add to watchlist"}" aria-pressed="${on}">${on ? "★" : "☆"}</button><button class="coin" type="button" data-id="${esc(c.id)}">
     <span class="rk">${c.market_cap_rank != null ? c.market_cap_rank : ""}</span>
     ${c.id === "bitcoin" ? btcLogo("logo") : `<img class="logo" src="${esc(c.image_url || "")}" alt="" loading="lazy" width="32" height="32">`}
-    <div class="meta"><b>${sym}</b><span>${state.cols.mcap ? esc(c.name) : c.market_cap_usd ? mnyBig(c.market_cap_usd) : esc(c.name)}</span></div>
+    <div class="meta"><b>${sym}</b><span>${state.cols.mcap ? esc(c.name) : c.market_cap_usd ? mnyBig(c.market_cap_usd) : esc(c.name)}${c.kind === "tokenized" ? " · Tokenized" : ""}</span></div>
     ${state.cols.mcap ? `<span class="xc">${c.market_cap_usd ? mnyBig(c.market_cap_usd) : "–"}</span>` : ""}
     <div class="px"><b>${mainPx(c)}</b></div>
     ${state.cols.chg ? `<span class="chg ${d.c}">${chgTxt(d)}</span>` : ""}
