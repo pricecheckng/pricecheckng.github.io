@@ -678,6 +678,7 @@ fetch(SUPABASE_URL + "/rest/v1/coins?select=id,price_usd,change_24h_pct&id=in.("
   }
   // index page (only when there are real categories, never an empty page)
   if (ranked.length >= 3) {
+  fs.writeFileSync("categories.json", JSON.stringify(ranked.map((r) => ({ k: r.k, t: catTitle(r.k), f: catFile(r.k), ids: r.list.map((c) => c.id) }))));
   const idxBody = `<h1>Crypto categories</h1><p class="sub">Browse coins by what they do. Each category page shows live prices in US dollars and Nigerian naira.</p>` +
     `<div class="cats">${ranked.map((r) => `<a href="${catFile(r.k)}"><span>${esc(catTitle(r.k))}</span><small>${r.list.length} coins${r.cap > 0 ? " · " + fBig(r.cap) : ""}</small></a>`).join("")}</div>` +
     `<p class="note">Categories come from third-party data and a coin can belong to more than one. Only categories with at least 5 coins are listed.</p>`;

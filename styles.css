@@ -220,3 +220,8 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
 .doc ul { padding-left: 20px; margin-bottom: 8px; }
 .doc a { color: var(--green); text-decoration: underline; }
 .doc .muted { margin-bottom: 14px; }
+
+.catlist{border:1px solid rgba(128,128,128,.2);border-radius:14px;overflow:hidden}
+.catrow{display:flex;align-items:center;gap:12px;padding:13px 14px;text-decoration:none;color:inherit}.catrow+.catrow{border-top:1px solid rgba(128,128,128,.2)}
+.catrow .cr-i{width:22px;text-align:center;opacity:.6;font-size:.85rem}.catrow .cr-n{flex:1;min-width:0}.catrow .cr-n b{display:block}.catrow .cr-n small{display:block;opacity:.65;font-size:.8rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.catrow .cr-c{font-weight:700;white-space:nowrap}.catrow .cr-c.up{color:#16a34a}.catrow .cr-c.down{color:#ef4444}

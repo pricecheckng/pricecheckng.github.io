@@ -292,9 +292,27 @@ async function tgHomeTip() {
     if (x) x.onclick = () => { try { localStorage.setItem("pc_tg_hide", String(Date.now())); } catch (_) {} t.innerHTML = ""; };
   } catch (_) {}
 }
-const MK_TABS = [["all", "Top"], ["trend", "Trending"], ["watch", "★ Watchlist"], ["new", "New"], ["gain", "Gainers"], ["lose", "Losers"], ["stable", "Stablecoins"], ["rwa", "Tokenized assets"]];
-const MK_NOTES = { new: "Coins added to PriceCheck NG in the last 14 days.", trend: "Most traded coins in the last 24 hours.", gain: "Biggest price rises in 24 hours. Tiny coins are left out.", lose: "Biggest price falls in 24 hours. Tiny coins are left out.", stable: "Coins designed to stay at one US dollar.", rwa: "Tokens that track funds, bonds, stocks or similar. They trade very little." };
+const MK_TABS = [["all", "Top"], ["trend", "Trending"], ["watch", "★ Watchlist"], ["new", "New"], ["cat", "Categories"], ["gain", "Gainers"], ["lose", "Losers"], ["stable", "Stablecoins"], ["rwa", "Tokenized assets"]];
+const MK_NOTES = { cat: "Coins grouped by what they do. The % is the average 24-hour move of the coins in each group.", new: "Coins added to PriceCheck NG in the last 14 days.", trend: "Most traded coins in the last 24 hours.", gain: "Biggest price rises in 24 hours. Tiny coins are left out.", lose: "Biggest price falls in 24 hours. Tiny coins are left out.", stable: "Coins designed to stay at one US dollar.", rwa: "Tokens that track funds, bonds, stocks or similar. They trade very little." };
 const STABLE_SYMS = ["usdt", "usdc", "dai", "usde", "usds", "fdusd", "tusd", "usdd", "usd1", "pyusd", "usdg", "rlusd", "gusd", "frax", "usdp"];
+let CAT_CACHE = null;
+async function catRowsHtml() {
+  if (!CAT_CACHE) {
+    const [r, cq] = await Promise.all([fetch("categories.json").then((x) => (x.ok ? x.json() : [])).catch(() => []), sb.from("coins").select("id,symbol,market_cap_usd,change_24h_pct,market_cap_rank").not("market_cap_rank", "is", null).order("market_cap_rank", { ascending: true }).limit(600)]);
+    const m = new Map(((cq && cq.data) || []).map((c) => [c.id, c]));
+    CAT_CACHE = r.map((c) => {
+      const mem = c.ids.map((i) => m.get(i)).filter(Boolean).sort((x, y) => x.market_cap_rank - y.market_cap_rank);
+      let w = 0, t = 0;
+      for (const x of mem) { const cap = Number(x.market_cap_usd) || 0, ch = Number(x.change_24h_pct); if (cap > 0 && x.change_24h_pct !== null && Number.isFinite(ch)) { w += cap; t += cap * ch; } }
+      return { t: c.t, f: c.f, n: c.ids.length, top: mem.slice(0, 3).map((x) => String(x.symbol).toUpperCase()), ch: w > 0 ? t / w : null, cap: mem.reduce((s, x) => s + (Number(x.market_cap_usd) || 0), 0) };
+    }).filter((c) => c.top.length).sort((a, b) => b.cap - a.cap);
+  }
+  if (!CAT_CACHE.length) return "";
+  return '<div class="catlist">' + CAT_CACHE.map((c, i) => {
+    const ch = c.ch, cls = ch === null ? "" : ch >= 0 ? "up" : "down";
+    return '<a class="catrow" href="' + esc(c.f) + '"><span class="cr-i">' + (i + 1) + '</span><span class="cr-n"><b>' + esc(c.t) + '</b><small>' + c.n + " coins · " + esc(c.top.join(", ")) + '</small></span><span class="cr-c ' + cls + '">' + (ch === null ? "-" : (ch >= 0 ? "▲ " : "▼ ") + Math.abs(ch).toFixed(2) + "%") + "</span></a>";
+  }).join("") + "</div>";
+}
 function tabQuery(tab) {
   let q = sb.from("coins").select(COLS, { count: "exact" });
   const real = (x) => x.or("kind.is.null,kind.neq.tokenized");
@@ -313,6 +331,7 @@ function syncTabs() {
   if (tl) tl.style.display = state.tab === "all" ? "" : "none";
   const nt = document.querySelector(".mk-net");
   if (nt) nt.style.display = state.tab === "all" && state.netOk ? "" : "none";
+  const lh = $("#lhdr"); if (lh) lh.style.display = state.tab === "cat" ? "none" : "";
   const on = document.querySelector("#mkTabs .on");
   if (on && on.scrollIntoView) on.scrollIntoView({ block: "nearest", inline: "center" });
 }
@@ -778,6 +797,13 @@ async function loadCoins(reset, pg) {
     if ($("#toolBox")) $("#toolBox").innerHTML = "";
     setStaleNote("");
     $("#moreBtn").hidden = true;
+    if (state.tab === "cat") {
+      const html = await catRowsHtml();
+      if (id !== state.req || !$("#list")) return;
+      list.innerHTML = html || emptyBox("Categories are not ready yet", "Check back soon.");
+      const pg = $("#pager"); if (pg) pg.innerHTML = "";
+      return;
+    }
     const { data: td, error: te } = await tabQuery(state.tab);
     if (id !== state.req || !$("#list")) return;
     if (te) { list.innerHTML = state.tab === "new" ? emptyBox("No new coins yet", "New coins will show here when they are added.") : emptyBox("Could not load this list", "Check your connection and try again."); return; }
