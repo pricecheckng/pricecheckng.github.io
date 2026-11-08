@@ -17,7 +17,7 @@ const PAGE = 100;
 const COLS_BASE = "id,symbol,name,image_url,market_cap_rank,price_usd,price_ngn,market_cap_usd,volume_24h_usd,change_24h_pct,tier,last_updated,kind";
 // Big screens (laptop/desktop) get the wide table with 1h, 7d, supply and a small chart
 const DESK = typeof matchMedia === "function" && matchMedia("(min-width:960px)").matches;
-const COLS = COLS_BASE + (DESK ? ",sparkline,circulating_supply" : "");
+const COLS = COLS_BASE + (DESK ? ",sparkline,circulating_supply,change_1h_pct,change_7d_pct" : "");
 
 /* ---------- currencies (USD is always shown on top; one more is chosen) ---------- */
 const CURRENCIES = {
@@ -688,13 +688,14 @@ function openColumns() {
 const btcLogo = (cls) => `<svg class="${cls}" viewBox="0 0 64 64" width="32" height="32" role="img" aria-label="Bitcoin" style="display:block"><circle cx="32" cy="32" r="32" fill="#f7931a"/><g class="btcb"><path fill="#fff" d="M46.103,27.444c0.637-4.258-2.605-6.547-7.038-8.074l1.438-5.768l-3.511-0.875l-1.4,5.616c-0.923-0.23-1.871-0.447-2.813-0.662l1.41-5.653l-3.509-0.875l-1.439,5.766c-0.764-0.174-1.514-0.346-2.242-0.527l0.004-0.018l-4.842-1.209l-0.934,3.75c0,0,2.605,0.597,2.55,0.634c1.422,0.355,1.679,1.296,1.636,2.042l-1.638,6.571c0.098,0.025,0.225,0.061,0.365,0.117c-0.117-0.029-0.242-0.061-0.371-0.092l-2.296,9.205c-0.174,0.432-0.615,1.08-1.609,0.834c0.035,0.051-2.552-0.637-2.552-0.637l-1.743,4.019l4.569,1.139c0.85,0.213,1.683,0.436,2.503,0.646l-1.453,5.834l3.507,0.875l1.439-5.772c0.958,0.26,1.888,0.5,2.798,0.726l-1.434,5.745l3.511,0.875l1.453-5.823c5.987,1.133,10.489,0.676,12.384-4.739c1.527-4.36-0.076-6.875-3.226-8.515C42.819,32.676,45.526,31.746,46.103,27.444L46.103,27.444z M38.079,38.696c-1.085,4.36-8.426,2.003-10.806,1.412l1.928-7.729C31.581,32.972,39.211,34.147,38.079,38.696z M39.164,27.381c-0.99,3.966-7.1,1.951-9.082,1.457l1.748-7.01C33.812,22.322,40.176,23.254,39.164,27.381z"/></g></svg>`;
 
 // Extra cells for the wide (desktop) table: 1h, 7d, circulating supply and a 7-day mini chart.
-// 1h and 7d are worked out from the saved 7-day price line, so they are close but not exact.
+// 1h and 7d come from CoinGecko for the top 250 coins; other coins use the saved 7-day price line (close, not exact).
 function dxCells(c) {
   const sp = Array.isArray(c.sparkline) ? c.sparkline.map(Number).filter((v) => isFinite(v) && v > 0) : [];
   const ok = sp.length >= 100;
   const pc = (a, b) => (ok && a > 0 ? chg(((b / a) - 1) * 100) : { t: "–", c: "" });
-  const d1 = pc(sp[sp.length - 2], sp[sp.length - 1]);
-  const d7 = pc(sp[0], sp[sp.length - 1]);
+  // real CoinGecko numbers when we have them (top 250 coins), otherwise the estimate from the price line
+  const d1 = c.change_1h_pct != null ? chg(c.change_1h_pct) : pc(sp[sp.length - 2], sp[sp.length - 1]);
+  const d7 = c.change_7d_pct != null ? chg(c.change_7d_pct) : pc(sp[0], sp[sp.length - 1]);
   let svg = "";
   if (ok) {
     const W = 120, H = 36, mn = Math.min(...sp), mx = Math.max(...sp), rg = mx - mn || 1;
