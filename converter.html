@@ -194,6 +194,5 @@ $("to").addEventListener("change", calc);
 $("swap").addEventListener("click", () => { const f = $("from").value; $("from").value = $("to").value; $("to").value = f; chips(); calc(); });
 load().catch(() => { $("out").textContent = "Rates unavailable right now"; $("lbl").textContent = ""; });
 </script>
-<script src="/wa-float.js" defer></script>
 </body>
 </html>
