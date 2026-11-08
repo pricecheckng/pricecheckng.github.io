@@ -300,6 +300,11 @@ async function catRowsHtml() {
   if (!CAT_CACHE) {
     const [r, cq] = await Promise.all([fetch("categories.json").then((x) => (x.ok ? x.json() : [])).catch(() => []), sb.from("coins").select("id,symbol,market_cap_usd,change_24h_pct,market_cap_rank").not("market_cap_rank", "is", null).order("market_cap_rank", { ascending: true }).limit(600)]);
     const m = new Map(((cq && cq.data) || []).map((c) => [c.id, c]));
+    const need = [...new Set(r.filter((c) => c.tok).flatMap((c) => c.ids))].filter((i) => !m.has(i)).slice(0, 100);
+    if (need.length) {
+      const tq = await sb.from("coins").select("id,symbol,market_cap_usd,change_24h_pct,market_cap_rank").in("id", need);
+      for (const c of (tq && tq.data) || []) m.set(c.id, c);
+    }
     CAT_CACHE = r.map((c) => {
       const mem = c.ids.map((i) => m.get(i)).filter(Boolean).sort((x, y) => x.market_cap_rank - y.market_cap_rank);
       let w = 0, t = 0;

@@ -129,7 +129,7 @@ const XT = new Map();
 
 // ---- Categories: which coins belong to which category (from the key-facts data). Used by the coin pages and the category pages. ----
 const CAT_FIX = { cex: "CEX", iot: "IoT", dns: "DNS", ecommerce: "E-commerce", ai: "AI", nfts: "NFTs", nft: "NFT", defi: "DeFi", dex: "DEX", rwa: "RWA", depin: "DePIN", dao: "DAO", dapp: "dApp", dapps: "dApps", btc: "Bitcoin", eth: "Ethereum", bnb: "BNB", sol: "Solana", usd: "USD", l1: "Layer 1", l2: "Layer 2", x402: "x402" };
-const catTitle = (k) => String(k).split("_").map((w) => CAT_FIX[w] || w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+const catTitle = (k) => k === "pre_ipo_stocks" ? "Pre-IPO stocks" : String(k).split("_").map((w) => CAT_FIX[w] || w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 const catFile = (k) => "category-" + String(k).replace(/_/g, "-") + ".html";
 const CATS = new Map();
 {
@@ -631,7 +631,18 @@ ${script || ""}
 </html>
 `;
   const ranked = [...CATS.entries()].map(([k, list]) => ({ k, list, cap: list.reduce((t, c) => t + (Number(c.market_cap_usd) || 0), 0) })).sort((a, b) => b.cap - a.cap);
-  for (const { k, list, cap } of ranked) {
+  // Pre-IPO stocks: tokenized shares of private companies (they have no coin page, so rows open the app).
+  const TOK = new Set();
+  try {
+    const pre = await get("coins?select=id,symbol,name,price_usd,image_url,market_cap_usd,volume_24h_usd,change_24h_pct&kind=eq.tokenized&price_usd=not.is.null&or=(id.ilike.*prestocks*,name.ilike.*prestocks*)&order=market_cap_usd.desc.nullslast&limit=100");
+    const okp = pre.filter((c) => c.id && c.symbol && c.name && /^[a-z0-9-]+$/.test(c.id));
+    if (okp.length >= 3) {
+      for (const c of okp) TOK.add(c.id);
+      ranked.push({ k: "pre_ipo_stocks", list: okp, cap: okp.reduce((t, c) => t + (Number(c.market_cap_usd) || 0), 0), tok: true });
+    }
+  } catch (e) { console.log("Pre-IPO list skipped:", e.message); }
+  const hrefOf = (c) => (TOK.has(c.id) ? "./#coin/" + c.id : c.id + "-price.html");
+  for (const { k, list, cap, tok } of ranked) {
     const name = catTitle(k), file = catFile(k), url = SITE + "/" + file;
     const rows = list.slice(0, 100);
     const chs = list.filter((c) => Number.isFinite(Number(c.change_24h_pct)) && c.change_24h_pct !== null);
@@ -640,21 +651,21 @@ ${script || ""}
     const dn = chs.slice().sort((a, b) => Number(a.change_24h_pct) - Number(b.change_24h_pct))[0];
     const lead = list.slice(0, 3);
     let t = `<p>PriceCheck NG tracks ${list.length} ${esc(name)} coins${cap > 0 ? " with a combined market cap of " + fBig(cap) : ""}. On ${SNAP_DATE}, `;
-    t += `the biggest are ${lead.map((c) => `<a href="${c.id}-price.html">${esc(c.name)}</a>`).join(", ")}.`;
+    t += `the biggest are ${lead.map((c) => `<a href="${hrefOf(c)}">${esc(c.name)}</a>`).join(", ")}.`;
     if (avg !== null) t += ` On average these coins ${avg >= 0 ? "rose" : "fell"} ${Math.abs(avg).toFixed(2)}% over the previous 24 hours.`;
-    if (up && dn && up.id !== dn.id) t += ` The best performer was <a href="${up.id}-price.html">${esc(up.name)}</a> (${Number(up.change_24h_pct) >= 0 ? "+" : ""}${Number(up.change_24h_pct).toFixed(2)}%) and the weakest was <a href="${dn.id}-price.html">${esc(dn.name)}</a> (${Number(dn.change_24h_pct) >= 0 ? "+" : ""}${Number(dn.change_24h_pct).toFixed(2)}%).`;
+    if (up && dn && up.id !== dn.id) t += ` The best performer was <a href="${hrefOf(up)}">${esc(up.name)}</a> (${Number(up.change_24h_pct) >= 0 ? "+" : ""}${Number(up.change_24h_pct).toFixed(2)}%) and the weakest was <a href="${hrefOf(dn)}">${esc(dn.name)}</a> (${Number(dn.change_24h_pct) >= 0 ? "+" : ""}${Number(dn.change_24h_pct).toFixed(2)}%).`;
     t += `</p>`;
     const tr = rows.map((c, i) => {
       const p = Number(c.price_usd), ch = Number(c.change_24h_pct), mc = Number(c.market_cap_usd);
       const img = /^https:\/\/[^\s"'<>]+$/.test(String(c.image_url || "")) ? `<img src="${esc(c.image_url)}" alt="" width="24" height="24" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : "";
-      return `<tr><td>${i + 1}</td><td><a class="cl" href="${c.id}-price.html">${img}<span>${esc(c.name)} <small>${esc(c.symbol.toUpperCase())}</small></span></a></td><td data-p="${esc(c.id)}">${p > 0 ? fUsd(p) : "-"}</td><td>${NGN && p > 0 ? fNgn(p * NGN) : "-"}</td><td data-c="${esc(c.id)}" class="${Number.isFinite(ch) ? (ch >= 0 ? "up" : "down") : ""}">${Number.isFinite(ch) ? (ch >= 0 ? "+" : "") + ch.toFixed(2) + "%" : "-"}</td><td>${mc > 0 ? fBig(mc) : "-"}</td></tr>`;
+      return `<tr><td>${i + 1}</td><td><a class="cl" href="${hrefOf(c)}">${img}<span>${esc(c.name)} <small>${esc(c.symbol.toUpperCase())}</small></span></a></td><td data-p="${esc(c.id)}">${p > 0 ? fUsd(p) : "-"}</td><td>${NGN && p > 0 ? fNgn(p * NGN) : "-"}</td><td data-c="${esc(c.id)}" class="${Number.isFinite(ch) ? (ch >= 0 ? "up" : "down") : ""}">${Number.isFinite(ch) ? (ch >= 0 ? "+" : "") + ch.toFixed(2) + "%" : "-"}</td><td>${mc > 0 ? fBig(mc) : "-"}</td></tr>`;
     }).join("");
     const body = `<h1>${esc(name)} crypto prices</h1><p class="sub">Live prices in US dollars and Nigerian naira for ${list.length} ${esc(name)} coins.</p>` + t +
       `<div class="tw"><table class="catt"><thead><tr><th>#</th><th>Coin</th><th>Price</th><th>Price (NGN)</th><th>24h</th><th>Market cap</th></tr></thead><tbody>${tr}</tbody></table></div>` +
-      `<p class="note">${list.length > 100 ? "Showing the top 100 of " + list.length + " coins. " : ""}Prices in the table update when the page loads. Categories come from third-party data and a coin can belong to more than one. Not financial advice.</p>` +
+      `<p class="note">${list.length > 100 ? "Showing the top 100 of " + list.length + " coins. " : ""}Prices in the table update when the page loads. ${tok ? "These are tokens that track shares of private companies. They are not issued by the companies they track, they trade very little, and prices can be far from the real value of the shares. " : ""}Categories come from third-party data and a coin can belong to more than one. Not financial advice.</p>` +
       `<h2>More categories</h2><div class="links">${ranked.filter((r) => r.k !== k).slice(0, 12).map((r) => `<a href="${catFile(r.k)}">${esc(catTitle(r.k))}</a>`).join("")}<a href="categories.html">All categories</a></div>`;
     const ld = [{ "@context": "https://schema.org", "@type": "CollectionPage", name: `${name} crypto prices`, url, isPartOf: { "@type": "WebSite", name: "PriceCheck NG", url: SITE + "/" } },
-      { "@context": "https://schema.org", "@type": "ItemList", itemListElement: rows.slice(0, 10).map((c, i) => ({ "@type": "ListItem", position: i + 1, url: SITE + "/" + c.id + "-price.html", name: c.name })) }];
+      { "@context": "https://schema.org", "@type": "ItemList", itemListElement: rows.slice(0, 10).map((c, i) => ({ "@type": "ListItem", position: i + 1, url: SITE + "/" + (TOK.has(c.id) ? "#coin/" + c.id : c.id + "-price.html"), name: c.name })) }];
     const ids = rows.map((c) => c.id);
     const script = `<script type="module">
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
@@ -678,7 +689,7 @@ fetch(SUPABASE_URL + "/rest/v1/coins?select=id,price_usd,change_24h_pct&id=in.("
   }
   // index page (only when there are real categories, never an empty page)
   if (ranked.length >= 3) {
-  fs.writeFileSync("categories.json", JSON.stringify(ranked.map((r) => ({ k: r.k, t: catTitle(r.k), f: catFile(r.k), ids: r.list.map((c) => c.id) }))));
+  fs.writeFileSync("categories.json", JSON.stringify(ranked.map((r) => ({ k: r.k, t: catTitle(r.k), f: catFile(r.k), ids: r.list.map((c) => c.id), ...(r.tok ? { tok: 1 } : {}) }))));
   const idxBody = `<h1>Crypto categories</h1><p class="sub">Browse coins by what they do. Each category page shows live prices in US dollars and Nigerian naira.</p>` +
     `<div class="cats">${ranked.map((r) => `<a href="${catFile(r.k)}"><span>${esc(catTitle(r.k))}</span><small>${r.list.length} coins${r.cap > 0 ? " · " + fBig(r.cap) : ""}</small></a>`).join("")}</div>` +
     `<p class="note">Categories come from third-party data and a coin can belong to more than one. Only categories with at least 5 coins are listed.</p>`;
