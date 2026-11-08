@@ -128,7 +128,7 @@ const XT = new Map();
 }
 
 // ---- Categories: which coins belong to which category (from the key-facts data). Used by the coin pages and the category pages. ----
-const CAT_FIX = { ai: "AI", nfts: "NFTs", nft: "NFT", defi: "DeFi", dex: "DEX", rwa: "RWA", depin: "DePIN", dao: "DAO", dapp: "dApp", dapps: "dApps", btc: "Bitcoin", eth: "Ethereum", bnb: "BNB", sol: "Solana", usd: "USD", l1: "Layer 1", l2: "Layer 2", x402: "x402" };
+const CAT_FIX = { cex: "CEX", iot: "IoT", dns: "DNS", ecommerce: "E-commerce", ai: "AI", nfts: "NFTs", nft: "NFT", defi: "DeFi", dex: "DEX", rwa: "RWA", depin: "DePIN", dao: "DAO", dapp: "dApp", dapps: "dApps", btc: "Bitcoin", eth: "Ethereum", bnb: "BNB", sol: "Solana", usd: "USD", l1: "Layer 1", l2: "Layer 2", x402: "x402" };
 const catTitle = (k) => String(k).split("_").map((w) => CAT_FIX[w] || w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 const catFile = (k) => "category-" + String(k).replace(/_/g, "-") + ".html";
 const CATS = new Map();
