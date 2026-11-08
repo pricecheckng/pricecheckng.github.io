@@ -52,4 +52,5 @@ async function load() {
 }
 const post = () => { try { parent.postMessage({ pcnH: document.getElementById("w").offsetHeight + 2 }, "*"); } catch (e) {} };
 load().then(post); setInterval(() => load().then(post), 30000);
-</script></body></html>
+</script><script src="/wa-float.js" defer></script>
+</body></html>

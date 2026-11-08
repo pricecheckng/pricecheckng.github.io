@@ -188,5 +188,6 @@ $("wa").href = "https://wa.me/?text=" + encodeURIComponent("Check the warning si
 const pre = new URLSearchParams(location.search).get("id");
 if (pre) get("coins?select=" + SEL + "&id=eq." + encodeURIComponent(pre) + "&limit=1").then((r) => { if (r[0]) { $("q").value = r[0].name; show(r[0]); } }).catch(() => {});
 </script>
+<script src="/wa-float.js" defer></script>
 </body>
 </html>

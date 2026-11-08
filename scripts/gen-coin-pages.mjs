@@ -419,6 +419,7 @@ Promise.all([get("coins?id=eq." + ID + "&select=price_usd,change_24h_pct,last_up
     document.getElementById("usd").textContent = "Price unavailable right now";
   });
 </script>
+<script src="/wa-float.js" defer></script>
 </body>
 </html>
 `;
@@ -525,6 +526,7 @@ ${body}
 <footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="api.html">API</a> · <a href="data-sources.html">Data sources</a> · <a href="compare.html">Compare coins</a> · <a href="treasuries.html">Treasuries</a> · <a href="pulse.html">Daily market summary</a> · <a href="categories.html">Categories</a> · <a href="glossary.html">Glossary</a> · <a href="faq.html">FAQ</a> · <a href="methodology.html">Methodology</a> · <a href="network.html">Bitcoin network</a> · <a href="gas.html">Ethereum gas</a> · <a href="stablecoins.html">Stablecoins</a> · <a href="exchanges.html">Exchanges</a> · <a href="contact.html">Contact</a><br>© <span class="yr">${new Date().getUTCFullYear()}</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></footer>
 <script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script>
 ${extraJs || ""}
+<script src="/wa-float.js" defer></script>
 </body>
 </html>
 `;
@@ -627,6 +629,7 @@ ${body}
 ${FOOTC}
 <script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script>
 ${script || ""}
+<script src="/wa-float.js" defer></script>
 </body>
 </html>
 `;

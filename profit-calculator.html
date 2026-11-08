@@ -208,5 +208,6 @@ $("coin").addEventListener("change", () => { $("buy").value = ""; $("sell").valu
 $("cur").addEventListener("change", () => { $("buy").value = ""; $("sell").value = ""; chips(); nowText(); calc(); });
 load().catch(() => { $("pl").textContent = "Rates unavailable right now"; $("now").textContent = ""; });
 </script>
+<script src="/wa-float.js" defer></script>
 </body>
 </html>
