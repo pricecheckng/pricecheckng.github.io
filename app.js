@@ -129,6 +129,7 @@ function fmtUsd(n) {
   n = Number(n);
   const a = Math.abs(n);
   if (a >= 0.97 && a <= 1.03) return "$" + n.toLocaleString("en-US", { minimumFractionDigits: 4, maximumFractionDigits: 4 }); // coins pegged near $1 (USDT, USDC): show 4 decimals so the small moves are visible
+  if (a > 0 && a < 0.0001) return (n < 0 ? "-$" : "$") + Number(a.toPrecision(4)).toLocaleString("en-US", { maximumFractionDigits: 20 }); // very small prices: keep 4 real digits, no "$0"
   const max = a >= 1 ? 2 : a >= 0.01 ? 4 : a >= 0.0001 ? 6 : 8;
   return "$" + n.toLocaleString("en-US", { minimumFractionDigits: a >= 1 ? 2 : 0, maximumFractionDigits: max });
 }
@@ -144,6 +145,7 @@ function fmtUsdX(n) {
 function fmtNgn(n) {
   if (n == null) return "–";
   n = Number(n);
+  if (n > 0 && n < 0.01) return "₦" + Number(n.toPrecision(4)).toLocaleString("en-US", { maximumFractionDigits: 20 });
   const max = n >= 100 ? 0 : n >= 1 ? 2 : 4;
   return "₦" + n.toLocaleString("en-US", { maximumFractionDigits: max });
 }
@@ -151,6 +153,7 @@ const fmtCur = (n, cur) => (String(cur).toLowerCase() === "usd" ? fmtUsd(n) : fm
 function fmtLocal(n, code) {
   if (n == null || isNaN(n)) return "–";
   n = Number(n);
+  if (n > 0 && n < 0.01) return (CURRENCIES[code]?.sym ?? code + " ") + Number(n.toPrecision(4)).toLocaleString("en-US", { maximumFractionDigits: 20 });
   const max = code === "NGN" ? (n >= 100 ? 0 : n >= 1 ? 2 : 4) : n >= 1000 ? 0 : n >= 1 ? 2 : n >= 0.01 ? 4 : 8;
   return (CURRENCIES[code]?.sym ?? code + " ") + n.toLocaleString("en-US", { minimumFractionDigits: Math.min(2, max), maximumFractionDigits: max });
 }
