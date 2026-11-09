@@ -1601,7 +1601,7 @@ async function renderCoin(id) {
   await state.fxReady;
   const my = ++state.req;
   view.innerHTML = `<section class="page"><a href="#market" style="display:inline-block;margin:4px 0 14px;color:#15803d;font-weight:600;text-decoration:none">← All coins</a><div id="coinBody">${skeleton(3)}</div></section>${footer()}`;
-  const { data, error } = await sb.from("coins").select(COLS_BASE + ",sparkline,circulating_supply").eq("id", id).maybeSingle();
+  const { data, error } = await sb.from("coins").select(COLS_BASE + ",sparkline,circulating_supply,platforms").eq("id", id).maybeSingle();
   if (my !== state.req || !$("#coinBody")) return;
   if (error || !data) {
     $("#coinBody").innerHTML = emptyBox(error ? "Could not load this coin" : "Coin not found", error ? "Check your connection and try again." : "It may have been removed, or the link is wrong.");
@@ -1993,6 +1993,33 @@ const KL_SRC = {
     return Array.isArray(l) ? l.map((k) => ({ t: Number(k[0]) * 1000, p: Number(k[2]) })).reverse() : null;
   },
 };
+/* ---------- coins that trade only on DEXes: find the main pool by contract address on GeckoTerminal ---------- */
+const GT_NET = { ethereum: "eth", "binance-smart-chain": "bsc", solana: "solana", base: "base", "polygon-pos": "polygon_pos", "arbitrum-one": "arbitrum", "optimistic-ethereum": "optimism", avalanche: "avax", tron: "tron", "the-open-network": "ton", sui: "sui", fantom: "ftm", cronos: "cronos", linea: "linea", blast: "blast", mantle: "mantle", scroll: "scroll", zksync: "zksync", xdai: "xdai", celo: "celo", aptos: "aptos", sonic: "sonic", berachain: "berachain", unichain: "unichain", hyperevm: "hyperevm" };
+const GT_TF = { "15m": ["minute", 15], "1h": ["hour", 1], "4h": ["hour", 4], "1d": ["day", 1] };
+const gtPool = new Map();
+async function dexKlines(c, iv, lim) {
+  const pl = c.platforms && typeof c.platforms === "object" ? c.platforms : null;
+  if (!pl) return null;
+  const key = Object.keys(GT_NET).find((k) => pl[k]);
+  if (!key) return null;
+  const net = GT_NET[key];
+  const addr = pl[key];
+  let pool = gtPool.get(c.id);
+  if (pool === undefined) {
+    const j = await klGet(`https://api.geckoterminal.com/api/v2/networks/${net}/tokens/${encodeURIComponent(addr)}/pools?page=1`, 8000);
+    pool = j && Array.isArray(j.data) && j.data[0] && j.data[0].attributes ? j.data[0].attributes.address : null;
+    gtPool.set(c.id, pool);
+  }
+  if (!pool) return null;
+  const [tf, ag] = GT_TF[iv];
+  const j = await klGet(`https://api.geckoterminal.com/api/v2/networks/${net}/pools/${pool}/ohlcv/${tf}?aggregate=${ag}&limit=${Math.min(lim, 1000)}&currency=usd&token=${encodeURIComponent(addr)}`, 8000);
+  const l = j && j.data && j.data.attributes && j.data.attributes.ohlcv_list;
+  if (!Array.isArray(l) || l.length < 2) return null;
+  const out = l.map((k) => ({ t: Number(k[0]) * 1000, p: Number(k[4]) })).filter((o) => isFinite(o.p) && o.p > 0).sort((a, b) => a.t - b.t);
+  if (out.length < 2) return null;
+  out.dex = true;
+  return out;
+}
 // returns [{t,p}] oldest first, or null. Rejects a series whose last price is far from our live price (wrong token with the same symbol).
 async function fetchKlines(c, iv, lim) {
   const S = encodeURIComponent(String(c.symbol || "").toUpperCase());
@@ -2013,7 +2040,7 @@ async function fetchKlines(c, iv, lim) {
   const rest = order.slice(1);
   const res = await Promise.all(rest.map((n) => KL_SRC[n](S, iv, lim).then(clean).catch(() => null)));
   for (let i = 0; i < rest.length; i++) if (res[i]) { klCoin.set(c.id, rest[i]); return res[i]; }
-  return null;
+  return await dexKlines(c, iv, lim).catch(() => null);
 }
 async function loadCoinChanges(c) {
   try {
@@ -2035,11 +2062,12 @@ async function loadCoinChanges(c) {
     };
     const pct = (sr, ms, iv) => {
       const o = at(sr, ms, iv);
-      return o && px ? (px / o.p - 1) * 100 : null;
+      const now = sr && sr.dex ? sr[sr.length - 1].p : px;
+      return o && now ? (now / o.p - 1) * 100 : null;
     };
     const cells = [
       ["1h", pct(h, 36e5, 36e5)],
-      ["24h", Number.isFinite(Number(c.change_24h_pct)) ? Number(c.change_24h_pct) : null],
+      ["24h", h && h.dex ? pct(h, 864e5, 36e5) : Number.isFinite(Number(c.change_24h_pct)) ? Number(c.change_24h_pct) : null],
       ["7d", pct(h, 7 * 864e5, 36e5)],
       ["14d", pct(h, 14 * 864e5, 36e5)],
       ["30d", pct(d, 30 * 864e5, 864e5)],
@@ -2146,7 +2174,7 @@ async function getSeries(c, r, sp) {
     const sr = await fetchKlines(c, iv, lim);
     if (sr) {
       const px = Number(c.price_usd);
-      if (px) sr[sr.length - 1].p = px;
+      if (px && !sr.dex) sr[sr.length - 1].p = px;
       out = sr;
     }
   } catch (_) {}
