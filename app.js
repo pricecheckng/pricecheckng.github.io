@@ -1941,27 +1941,80 @@ async function loadCoinMarkets(c) {
     paint();
   } catch (_) {}
 }
+/* ---------- candles from any exchange: Binance first, then Bybit, OKX, MEXC, Gate, KuCoin (all public, read in the browser) ---------- */
+const KL_IV = { "15m": { by: "15", okx: "15m", mx: "15m", gate: "15m", ku: "15min", ms: 9e5 }, "1h": { by: "60", okx: "1H", mx: "60m", gate: "1h", ku: "1hour", ms: 36e5 }, "4h": { by: "240", okx: "4H", mx: "4h", gate: "4h", ku: "4hour", ms: 144e5 }, "1d": { by: "D", okx: "1D", mx: "1d", gate: "1d", ku: "1day", ms: 864e5 } };
+const klCoin = new Map(); // coin id -> exchange that worked last time
+async function klGet(url, ms) {
+  const ctl = new AbortController();
+  const to = setTimeout(() => ctl.abort(), ms || 6000);
+  try {
+    const res = await fetch(url, { signal: ctl.signal });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (_) {
+    return null;
+  } finally {
+    clearTimeout(to);
+  }
+}
+const KL_SRC = {
+  binance: async (S, iv, lim) => {
+    const j = await klGet(`https://data-api.binance.vision/api/v3/klines?symbol=${S}USDT&interval=${iv}&limit=${lim}`, 8000);
+    return Array.isArray(j) ? j.map((k) => ({ t: k[0], p: Number(k[4]) })) : null;
+  },
+  bybit: async (S, iv, lim) => {
+    const j = await klGet(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${S}USDT&interval=${KL_IV[iv].by}&limit=${Math.min(lim, 1000)}`);
+    const l = j && j.result && j.result.list;
+    return Array.isArray(l) ? l.map((k) => ({ t: Number(k[0]), p: Number(k[4]) })).reverse() : null;
+  },
+  okx: async (S, iv, lim) => {
+    const j = await klGet(`https://www.okx.com/api/v5/market/candles?instId=${S}-USDT&bar=${KL_IV[iv].okx}&limit=${Math.min(lim, 300)}`);
+    const l = j && j.data;
+    return Array.isArray(l) ? l.map((k) => ({ t: Number(k[0]), p: Number(k[4]) })).reverse() : null;
+  },
+  mexc: async (S, iv, lim) => {
+    const j = await klGet(`https://api.mexc.com/api/v3/klines?symbol=${S}USDT&interval=${KL_IV[iv].mx}&limit=${Math.min(lim, 500)}`);
+    return Array.isArray(j) ? j.map((k) => ({ t: Number(k[0]), p: Number(k[4]) })) : null;
+  },
+  gate: async (S, iv, lim) => {
+    const j = await klGet(`https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=${S}_USDT&interval=${KL_IV[iv].gate}&limit=${Math.min(lim, 1000)}`);
+    return Array.isArray(j) ? j.map((k) => ({ t: Number(k[0]) * 1000, p: Number(k[2]) })) : null;
+  },
+  kucoin: async (S, iv, lim) => {
+    const end = Math.floor(Date.now() / 1000);
+    const j = await klGet(`https://api.kucoin.com/api/v1/market/candles?type=${KL_IV[iv].ku}&symbol=${S}-USDT&startAt=${end - Math.ceil((lim * KL_IV[iv].ms) / 1000)}&endAt=${end}`);
+    const l = j && j.data;
+    return Array.isArray(l) ? l.map((k) => ({ t: Number(k[0]) * 1000, p: Number(k[2]) })).reverse() : null;
+  },
+};
+// returns [{t,p}] oldest first, or null. Rejects a series whose last price is far from our live price (wrong token with the same symbol).
+async function fetchKlines(c, iv, lim) {
+  const S = encodeURIComponent(String(c.symbol || "").toUpperCase());
+  if (!S) return null;
+  const px = Number(c.price_usd);
+  const clean = (rows) => {
+    if (!rows) return null;
+    const sr = rows.filter((o) => isFinite(o.t) && isFinite(o.p) && o.p > 0);
+    if (sr.length < 2) return null;
+    const l = sr[sr.length - 1].p;
+    return px && !(px / l > 0.8 && px / l < 1.25) ? null : sr;
+  };
+  const known = klCoin.get(c.id);
+  const order = ["binance", "bybit", "okx", "mexc", "gate", "kucoin"];
+  if (known) order.splice(order.indexOf(known), 1), order.unshift(known);
+  const first = clean(await KL_SRC[order[0]](S, iv, lim).catch(() => null));
+  if (first) { klCoin.set(c.id, order[0]); return first; }
+  const rest = order.slice(1);
+  const res = await Promise.all(rest.map((n) => KL_SRC[n](S, iv, lim).then(clean).catch(() => null)));
+  for (let i = 0; i < rest.length; i++) if (res[i]) { klCoin.set(c.id, rest[i]); return res[i]; }
+  return null;
+}
 async function loadCoinChanges(c) {
   try {
     const box = $("#coinChanges");
     if (!box) return;
     const px = Number(c.price_usd);
-    const get = async (iv, lim) => {
-      try {
-        const ctl = new AbortController();
-        const to = setTimeout(() => ctl.abort(), 8000);
-        const res = await fetch(`https://data-api.binance.vision/api/v3/klines?symbol=${encodeURIComponent(c.symbol.toUpperCase())}USDT&interval=${iv}&limit=${lim}`, { signal: ctl.signal });
-        clearTimeout(to);
-        if (!res.ok) return null;
-        const rows = await res.json();
-        if (!Array.isArray(rows) || rows.length < 2) return null;
-        const sr = rows.map((k) => ({ t: k[0], p: Number(k[4]) })).filter((o) => isFinite(o.p) && o.p > 0);
-        const l = sr.length ? sr[sr.length - 1].p : 0;
-        return l && px && px / l > 0.8 && px / l < 1.25 ? sr : null;
-      } catch (_) {
-        return null;
-      }
-    };
+    const get = (iv, lim) => fetchKlines(c, iv, lim);
     const [h, d] = await Promise.all([get("1h", 336), get("1d", 365)]);
     const at = (sr, ms, iv) => {
       if (!sr) return null;
@@ -2084,24 +2137,11 @@ async function getSeries(c, r, sp) {
   let out = null;
   try {
     const { iv, lim } = CHART_RANGES[r];
-    const ctl = new AbortController();
-    const to = setTimeout(() => ctl.abort(), 8000);
-    const res = await fetch(
-      `https://data-api.binance.vision/api/v3/klines?symbol=${encodeURIComponent(c.symbol.toUpperCase())}USDT&interval=${iv}&limit=${lim}`,
-      { signal: ctl.signal }
-    );
-    clearTimeout(to);
-    if (res.ok) {
-      const rows = await res.json();
-      if (Array.isArray(rows) && rows.length >= 2) {
-        const s = rows.map((k) => ({ t: k[0], p: Number(k[4]) })).filter((o) => isFinite(o.p) && o.p > 0);
-        const px = Number(c.price_usd);
-        const ratio = px ? px / s[s.length - 1].p : 1;
-        if (s.length >= 2 && ratio > 0.8 && ratio < 1.25) {
-          if (px) s[s.length - 1].p = px;
-          out = s;
-        }
-      }
+    const sr = await fetchKlines(c, iv, lim);
+    if (sr) {
+      const px = Number(c.price_usd);
+      if (px) sr[sr.length - 1].p = px;
+      out = sr;
     }
   } catch (_) {}
   if (!out && r === "7D" && sp.length >= 2) {
