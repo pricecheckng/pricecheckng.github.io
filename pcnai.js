@@ -23,7 +23,7 @@
         .pcn-chip:hover, .pcn-chip:active { background: #eef7f2; border-color: #12a150; color: #12a150; }
 
         .pcn-chat-form { display: flex; padding: 10px; border-top: 1px solid #e1e9e4; background: #fff; gap: 6px; }
-        .pcn-chat-form input { flex: 1; border: 1px solid #e1e9e4; border-radius: 10px; padding: 10px 12px; font-size: 14px; outline: none; }
+        .pcn-chat-form input { flex: 1; min-width: 0; border: 1px solid #e1e9e4; border-radius: 10px; padding: 10px 12px; font-size: 16px; outline: none; }
         .pcn-chat-form button { background: #12a150; color: #fff; border: none; border-radius: 10px; padding: 10px 16px; font-weight: bold; cursor: pointer; }
         .pcn-close { cursor: pointer; font-size: 22px; font-weight: bold; }
       </style>
@@ -54,6 +54,31 @@
 
     var modal = document.getElementById('pcn-chat-modal');
     document.getElementById('pcnClose').onclick = function () { modal.classList.remove('open'); };
+
+    // Keep the chat above the phone keyboard: size the box to the part of the screen you can actually see
+    var chatBox = modal.querySelector('.pcn-chat-box');
+    var chatInput = document.getElementById('pcnInput');
+    function fitChat() {
+      var vv = window.visualViewport;
+      if (!modal.classList.contains('open')) { modal.style.top = ''; modal.style.bottom = ''; modal.style.height = ''; chatBox.style.height = ''; return; }
+      var h = vv ? vv.height : window.innerHeight;
+      var kb = vv ? (window.innerHeight - vv.height - vv.offsetTop > 80 || vv.height < window.innerHeight - 120) : false;
+      modal.style.top = (vv ? vv.offsetTop : 0) + 'px';
+      modal.style.bottom = 'auto';
+      modal.style.height = h + 'px';
+      chatBox.style.height = (kb ? h - 8 : Math.round(h * 0.8)) + 'px';
+      chatBox.style.maxHeight = h + 'px';
+      var m = document.getElementById('pcnMsgs');
+      if (kb && m) m.scrollTop = m.scrollHeight;
+    }
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', fitChat);
+      window.visualViewport.addEventListener('scroll', fitChat);
+    }
+    window.addEventListener('resize', fitChat);
+    new MutationObserver(fitChat).observe(modal, { attributes: true, attributeFilter: ['class'] });
+    chatInput.addEventListener('focus', function () { setTimeout(fitChat, 150); setTimeout(fitChat, 450); });
+    chatInput.addEventListener('blur', function () { setTimeout(fitChat, 150); });
 
     // ---- live-data answers (no AI cost): every chip gets its own answer ----
     var JUNK = /^(usdt|usdc|dai|usde|fdusd|tusd|usdd|pyusd|usds|usd1|usdg|usdy|usyc|buidl|rlusd|figr_heloc|wbtc|weth|steth|wsteth|weeth|cbbtc|xaut|paxg)$/i;
