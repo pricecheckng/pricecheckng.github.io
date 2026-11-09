@@ -58,9 +58,20 @@
     // Keep the chat above the phone keyboard: size the box to the part of the screen you can actually see
     var chatBox = modal.querySelector('.pcn-chat-box');
     var chatInput = document.getElementById('pcnInput');
+    var vk = navigator.virtualKeyboard || null; // Chrome on Android: tells the page exactly how tall the keyboard is
     function fitChat() {
       var vv = window.visualViewport;
-      if (!modal.classList.contains('open')) { modal.style.top = ''; modal.style.bottom = ''; modal.style.height = ''; chatBox.style.height = ''; return; }
+      var isOpen = modal.classList.contains('open');
+      if (vk) {
+        try { vk.overlaysContent = isOpen; } catch (_) {}
+        modal.style.top = ''; modal.style.bottom = ''; modal.style.height = '';
+        modal.style.paddingBottom = isOpen ? ((vk.boundingRect && vk.boundingRect.height) || 0) + 'px' : '';
+        chatBox.style.height = ''; chatBox.style.maxHeight = isOpen ? 'calc(100% - 8px)' : '';
+        var mm = document.getElementById('pcnMsgs');
+        if (isOpen && mm && vk.boundingRect && vk.boundingRect.height > 0) mm.scrollTop = mm.scrollHeight;
+        return;
+      }
+      if (!isOpen) { modal.style.top = ''; modal.style.bottom = ''; modal.style.height = ''; chatBox.style.height = ''; return; }
       var h = vv ? vv.height : window.innerHeight;
       var kb = vv ? (window.innerHeight - vv.height - vv.offsetTop > 80 || vv.height < window.innerHeight - 120) : false;
       modal.style.top = (vv ? vv.offsetTop : 0) + 'px';
@@ -76,6 +87,7 @@
       window.visualViewport.addEventListener('scroll', fitChat);
     }
     window.addEventListener('resize', fitChat);
+    if (vk) vk.addEventListener('geometrychange', fitChat);
     new MutationObserver(fitChat).observe(modal, { attributes: true, attributeFilter: ['class'] });
     chatInput.addEventListener('focus', function () { setTimeout(fitChat, 150); setTimeout(fitChat, 450); });
     chatInput.addEventListener('blur', function () { setTimeout(fitChat, 150); });
