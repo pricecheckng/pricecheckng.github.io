@@ -1942,7 +1942,7 @@ async function loadCoinMarkets(c) {
   } catch (_) {}
 }
 /* ---------- candles from any exchange: Binance first, then Bybit, OKX, MEXC, Gate, KuCoin (all public, read in the browser) ---------- */
-const KL_IV = { "15m": { by: "15", okx: "15m", mx: "15m", gate: "15m", ku: "15min", ms: 9e5 }, "1h": { by: "60", okx: "1H", mx: "60m", gate: "1h", ku: "1hour", ms: 36e5 }, "4h": { by: "240", okx: "4H", mx: "4h", gate: "4h", ku: "4hour", ms: 144e5 }, "1d": { by: "D", okx: "1D", mx: "1d", gate: "1d", ku: "1day", ms: 864e5 } };
+const KL_IV = { "15m": { by: "15", okx: "15m", mx: "15m", gate: "15m", ku: "15min", lb: "minute15", ms: 9e5 }, "1h": { by: "60", okx: "1H", mx: "60m", gate: "1h", ku: "1hour", lb: "hour1", ms: 36e5 }, "4h": { by: "240", okx: "4H", mx: "4h", gate: "4h", ku: "4hour", lb: "hour4", ms: 144e5 }, "1d": { by: "D", okx: "1D", mx: "1d", gate: "1d", ku: "1day", lb: "day1", ms: 864e5 } };
 const klCoin = new Map(); // coin id -> exchange that worked last time
 async function klGet(url, ms) {
   const ctl = new AbortController();
@@ -1980,6 +1980,12 @@ const KL_SRC = {
     const j = await klGet(`https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=${S}_USDT&interval=${KL_IV[iv].gate}&limit=${Math.min(lim, 1000)}`);
     return Array.isArray(j) ? j.map((k) => ({ t: Number(k[0]) * 1000, p: Number(k[2]) })) : null;
   },
+  lbank: async (S, iv, lim) => {
+    const start = Math.floor(Date.now() / 1000) - Math.ceil((lim * KL_IV[iv].ms) / 1000);
+    const j = await klGet(`https://api.lbkex.com/v2/kline.do?symbol=${S.toLowerCase()}_usdt&size=${Math.min(lim, 2000)}&type=${KL_IV[iv].lb}&time=${start}`);
+    const l = j && j.data;
+    return Array.isArray(l) ? l.map((k) => ({ t: Number(k[0]) * 1000, p: Number(k[4]) })) : null;
+  },
   kucoin: async (S, iv, lim) => {
     const end = Math.floor(Date.now() / 1000);
     const j = await klGet(`https://api.kucoin.com/api/v1/market/candles?type=${KL_IV[iv].ku}&symbol=${S}-USDT&startAt=${end - Math.ceil((lim * KL_IV[iv].ms) / 1000)}&endAt=${end}`);
@@ -2000,7 +2006,7 @@ async function fetchKlines(c, iv, lim) {
     return px && !(px / l > 0.8 && px / l < 1.25) ? null : sr;
   };
   const known = klCoin.get(c.id);
-  const order = ["binance", "bybit", "okx", "mexc", "gate", "kucoin"];
+  const order = ["binance", "bybit", "okx", "mexc", "gate", "kucoin", "lbank"];
   if (known) order.splice(order.indexOf(known), 1), order.unshift(known);
   const first = clean(await KL_SRC[order[0]](S, iv, lim).catch(() => null));
   if (first) { klCoin.set(c.id, order[0]); return first; }
