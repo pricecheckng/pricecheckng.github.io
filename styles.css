@@ -241,7 +241,8 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
   main:has(#lwrap) { max-width: 1240px; }
   main:has(#lwrap) .hero { max-width: 560px; }
   .top { padding-left: max(16px, calc((100vw - 1240px) / 2 + 16px)); padding-right: max(16px, calc((100vw - 1240px) / 2 + 16px)); }
-  .tabs { left: 50%; right: auto; width: 560px; transform: translateX(-50%); border: 1px solid var(--line); border-bottom: 0; border-radius: 16px 16px 0 0; }
+  :root { --nav: 72px; }
+  .tabs a { font-size: 13px; }
   #colBtn { display: none; }
   .mk-tools button { flex: none !important; min-width: 140px; }
   .mk-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -284,4 +285,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
   #lin.dk .lhd .hc.m { width: 112px; min-width: 112px; }
   #lin.dk .lhd .hc.s { width: 150px; }
   #lin.dk .lhd .hc.k { width: 130px; }
+}
+@media (min-width: 1280px) {
+  .tabs { left: 50%; right: auto; width: 560px; transform: translateX(-50%); border: 1px solid var(--line); border-bottom: 0; border-radius: 16px 16px 0 0; }
 }
