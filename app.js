@@ -691,10 +691,11 @@ const btcLogo = (cls) => `<svg class="${cls}" viewBox="0 0 64 64" width="32" hei
 // 1h and 7d come from CoinGecko for the top 250 coins; other coins use the saved 7-day price line (close, not exact).
 function dxCells(c) {
   const sp = Array.isArray(c.sparkline) ? c.sparkline.map(Number).filter((v) => isFinite(v) && v > 0) : [];
-  const ok = sp.length >= 100;
+  const ok = sp.length >= 20; // saved line is 42 points: one every 4 hours over 7 days
+  const hourly = sp.length >= 100;
   const pc = (a, b) => (ok && a > 0 ? chg(((b / a) - 1) * 100) : { t: "–", c: "" });
   // real CoinGecko numbers when we have them (top 250 coins), otherwise the estimate from the price line
-  const d1 = c.change_1h_pct != null ? chg(c.change_1h_pct) : pc(sp[sp.length - 2], sp[sp.length - 1]);
+  const d1 = c.change_1h_pct != null ? chg(c.change_1h_pct) : hourly ? pc(sp[sp.length - 2], sp[sp.length - 1]) : { t: "–", c: "" };
   const d7 = c.change_7d_pct != null ? chg(c.change_7d_pct) : pc(sp[0], sp[sp.length - 1]);
   let svg = "";
   if (ok) {
