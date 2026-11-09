@@ -1,0 +1,283 @@
+{
+ "site": "PriceCheck NG (https://pricecheckng.com.ng): a naira-first crypto price site with live prices, charts, alerts, Telegram and WhatsApp channels.",
+ "coin_pages": 500,
+ "pages": [
+  {
+   "url": "https://pricecheckng.com.ng/about.html",
+   "title": "About PriceCheck NG | Free crypto price tracker from Nigeria",
+   "about": "PriceCheck NG is a free crypto price tracker from Nigeria, founded in 2026. Live prices from many exchanges, in dollars and your local currency."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/api.html",
+   "title": "PriceCheck NG API: crypto prices in naira",
+   "about": "A simple JSON API for crypto prices in naira, exchange rates and market data from PriceCheck NG."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/categories.html",
+   "title": "Crypto Categories: Memes, AI, DeFi, Gaming and More",
+   "about": "Browse crypto by category: memes, AI, DeFi, gaming, layer 1 and more. Live prices in US dollars and Nigerian naira."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/coin-risk.html",
+   "title": "Coin Risk Check: Is This Crypto Risky to Buy?",
+   "about": "Search any coin and see warning signs from market data: market cap, trading volume and price swings. A simple risk label with reasons. Free on PriceCheck NG."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/coins.html",
+   "title": "Crypto Prices in Naira, USD, GBP, EUR and More",
+   "about": "Live prices for popular coins like Bitcoin, Ethereum, Solana, XRP and Dogecoin in NGN, USD, GBP, EUR, GHS, ZAR, KES and more, with free price alerts."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/compare.html",
+   "title": "Compare crypto coins side by side",
+   "about": "Compare two to four coins side by side: price in dollars and naira, 24h and 7 day change, market cap, volume and supply, with a 7 day performance chart."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/contact.html",
+   "title": "Contact PriceCheck NG | Support and Help",
+   "about": "Contact PriceCheck NG for help with your account, alerts or a wrong price. Email support or message us on Telegram."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/converter.html",
+   "title": "Crypto to Naira Converter: BTC, ETH, USDT and More",
+   "about": "Free live crypto converter. Convert Naira (NGN), USD, GBP, EUR, GHS, KES and more to Bitcoin, Ethereum, USDT and hundreds of coins, and back, on PriceCheck NG."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/data-sources.html",
+   "title": "Data sources",
+   "about": "Where PriceCheck NG gets its crypto prices, exchange rates, supply figures, news and charts."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/exchanges.html",
+   "title": "Crypto exchanges compared: volume and coins tracked",
+   "about": "Compare 38 crypto exchanges by 24 hour trading volume and number of coins tracked. Live data collected by PriceCheck NG."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/faq.html",
+   "title": "FAQ: Questions About PriceCheck NG",
+   "about": "Answers about PriceCheck NG: where prices come from, naira rates, market cap, AI summaries, and what the site does and does not do."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/fear-greed.html",
+   "title": "Crypto Fear & Greed Index Today",
+   "about": "Live Crypto Fear & Greed Index today. See if the crypto market is scared or greedy, what the number means and how to use it. Free on PriceCheck NG."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/gas.html",
+   "title": "Ethereum gas fees today: cost to send ETH, USDT and swap",
+   "about": "Live Ethereum gas fees: what it costs right now to send Ether, move USDT or swap tokens, in dollars and your local currency, and how busy the network is."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/glossary.html",
+   "title": "Crypto Glossary: Plain-English Meanings",
+   "about": "What is market cap, a stablecoin, gas fee, P2P trading or a rug pull? Simple meanings of 39 crypto words, with links to live data in naira."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/heatmap.html",
+   "title": "Crypto Heatmap Today: Top 100 Coins by Market Cap",
+   "about": "Live crypto heatmap of the top 100 coins by market cap. See at a glance which coins are up or down in the last 24 hours and 7 days. Free on PriceCheck NG."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/index.html",
+   "title": "PriceCheck NG | Live Crypto Prices in Naira, USD, GBP, EUR & More",
+   "about": "Check live crypto prices in NGN, USD, GBP, EUR, GHS, ZAR, KES, and more with instant price alerts on PriceCheck NG."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/learn-candlesticks.html",
+   "title": "How to Read Candlestick Charts: A Beginner's Guide",
+   "about": "Learn how to read candlestick charts step by step: what the body and wicks mean, common patterns like doji and hammer, plus a free interactive lesson and quiz."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/learn-fear-greed.html",
+   "title": "What Is the Crypto Fear and Greed Index?",
+   "about": "Learn what the crypto Fear and Greed Index means, how to read the 0 to 100 score, and why it is a mood gauge and not a buy or sell signal. Free lesson with a quiz."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/learn-market-cap.html",
+   "title": "What Is Market Cap in Crypto? A Beginner's Guide",
+   "about": "Learn what crypto market cap means, how it is calculated from price and supply, and why a low price does not mean a cheap coin. Free lesson with a calculator and quiz."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/learn-scams.html",
+   "title": "How to Avoid Crypto Scams in Nigeria: A Beginner's Guide",
+   "about": "Learn the most common crypto scams in Nigeria, from fake P2P payments to double-your-money platforms, plus a free safety checklist and quiz."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/learn-stablecoins.html",
+   "title": "What Is a Stablecoin? USDT and USDC Explained",
+   "about": "Learn what stablecoins like USDT and USDC are, why Nigerians use them, how to send them on the right network, and the risks. Free lesson with a converter and quiz."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/market-chart.html",
+   "title": "Crypto Market Cap Chart: Total Market Cap, BTC Dominance",
+   "about": "Live crypto market cap chart. Track the total crypto market cap, Bitcoin dominance and the Fear & Greed index over 24 hours, 7 days and 30 days. Free on PriceCheck NG."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/methodology.html",
+   "title": "Methodology: How PriceCheck NG Gets Its Prices",
+   "about": "How PriceCheck NG collects crypto prices, works out market cap and rank, converts to naira, and writes its daily summaries."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/movers.html",
+   "title": "Top Crypto Gainers and Losers Today + Fear & Greed Index",
+   "about": "See today"
+  },
+  {
+   "url": "https://pricecheckng.com.ng/network-check.html",
+   "title": "Crypto Network Checker for USDT and Other Tokens",
+   "about": "Avoid losing money by sending USDT or other crypto on the wrong network. Check TRC20, ERC20, BEP20, Bitcoin and more, and see which network an address belongs to. Free on PriceCheck NG."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/network.html",
+   "title": "Bitcoin network status: fees today, mempool and blocks",
+   "about": "Live Bitcoin network status: how much it costs to send Bitcoin right now, how busy the network is, the latest blocks, the next difficulty change and the halving countdown."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/news.html",
+   "title": "Crypto News Today: Latest Headlines",
+   "about": "Latest crypto news headlines from top global outlets in one place. Bitcoin, Ethereum and market news, updated every 30 minutes. Free on PriceCheck NG."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/p2p-check.html",
+   "title": "Is My P2P Rate Fair? USDT to Naira Rate Checker",
+   "about": "Check if the USDT to naira rate an agent gave you is fair. Compare it with live P2P prices from Bybit, OKX and Bitget. Free on PriceCheck NG."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/p2p.html",
+   "title": "USDT to Naira P2P Rate Today: Bybit, OKX, Bitget, MEXC",
+   "about": "Compare today"
+  },
+  {
+   "url": "https://pricecheckng.com.ng/predict.html",
+   "title": "Daily Bitcoin Prediction Contest: Higher or Lower?",
+   "about": "Free daily Bitcoin prediction game. Will BTC be higher or lower tomorrow? Pick, earn points and climb the leaderboard on PriceCheck NG."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/privacy.html",
+   "title": "Privacy Policy · PriceCheck NG",
+   "about": ""
+  },
+  {
+   "url": "https://pricecheckng.com.ng/profit-calculator.html",
+   "title": "Crypto Profit Calculator in Naira, USD and More",
+   "about": "Free crypto profit and loss calculator. Enter what you invested, your buy price and sell price to see your profit, loss and return in Naira, USD, GBP, EUR and more."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/pulse.html",
+   "title": "Crypto Market Today: Daily AI Summary",
+   "about": "Crypto market today in 30 seconds. A daily AI summary of Bitcoin, Ethereum, total market cap, Fear & Greed and the top gainers and losers, from live PriceCheck NG data."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/stablecoins.html",
+   "title": "Stablecoin health: is USDT holding its $1 peg?",
+   "about": "Live stablecoin check: is USDT, USDC and other stablecoins holding their one dollar price, how much of each exists, and how supply changed this week."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/telegram-bot.html",
+   "title": "Crypto Telegram Bot – Live Prices, Naira P2P Rates & Alerts",
+   "about": "Check live Bitcoin, Ethereum and crypto prices inside Telegram, see USDT/Naira P2P rates and get price alerts. Free PriceCheck NG bot that works in groups too."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/terms.html",
+   "title": "Terms of Service · PriceCheck NG",
+   "about": ""
+  },
+  {
+   "url": "https://pricecheckng.com.ng/track-token.html",
+   "title": "Track any token",
+   "about": "Paste a token contract address or a DexScreener link to see its price in dollars and naira, liquidity, volume and risk warnings."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/treasuries.html",
+   "title": "Crypto treasuries: which companies hold Bitcoin and Ethereum",
+   "about": "See which public companies hold the most Bitcoin, Ethereum, Solana and other crypto: how many coins they own, what they are worth today and how much they are up or down."
+  },
+  {
+   "url": "https://pricecheckng.com.ng/widget.html",
+   "title": "Free Crypto Price Widget for WordPress, Blogger and Any Website",
+   "about": "Embed live Bitcoin, Ethereum and crypto prices on your blog or website with one line of code. Free widget for WordPress, Blogger, Wix and plain HTML. Choose coins, theme and currency, including Naira."
+  }
+ ],
+ "exchange_pages": [
+  "BigONE exchange: top coins, prices and trading volume",
+  "Binance exchange: top coins, prices and trading volume",
+  "BingX exchange: top coins, prices and trading volume",
+  "Bit2Me exchange: top coins, prices and trading volume",
+  "bitbank exchange: top coins, prices and trading volume",
+  "Bitfinex exchange: top coins, prices and trading volume",
+  "Bitget exchange: top coins, prices and trading volume",
+  "Bithumb exchange: top coins, prices and trading volume",
+  "Bitkub exchange: top coins, prices and trading volume",
+  "Bitso exchange: top coins, prices and trading volume",
+  "Bitstamp exchange: top coins, prices and trading volume",
+  "Bitvavo exchange: top coins, prices and trading volume",
+  "BTC Markets exchange: top coins, prices and trading volume",
+  "BTCTurk exchange: top coins, prices and trading volume",
+  "Bybit exchange: top coins, prices and trading volume",
+  "Coinbase exchange: top coins, prices and trading volume",
+  "CoinJar exchange: top coins, prices and trading volume",
+  "Coinone exchange: top coins, prices and trading volume",
+  "Crypto.com exchange: top coins, prices and trading volume",
+  "Deribit exchange: top coins, prices and trading volume",
+  "DigiFinex exchange: top coins, prices and trading volume",
+  "Foxbit exchange: top coins, prices and trading volume",
+  "Gate exchange: top coins, prices and trading volume",
+  "HTX exchange: top coins, prices and trading volume",
+  "Korbit exchange: top coins, prices and trading volume",
+  "Kraken exchange: top coins, prices and trading volume",
+  "KuCoin exchange: top coins, prices and trading volume",
+  "LBank exchange: top coins, prices and trading volume",
+  "Luno exchange: top coins, prices and trading volume",
+  "MEXC exchange: top coins, prices and trading volume",
+  "OKX exchange: top coins, prices and trading volume",
+  "Paribu exchange: top coins, prices and trading volume",
+  "Phemex exchange: top coins, prices and trading volume",
+  "Pionex exchange: top coins, prices and trading volume",
+  "Poloniex exchange: top coins, prices and trading volume",
+  "Upbit exchange: top coins, prices and trading volume",
+  "VALR exchange: top coins, prices and trading volume",
+  "WhiteBIT exchange: top coins, prices and trading volume",
+  "XT exchange: top coins, prices and trading volume"
+ ],
+ "category_pages": [
+  "AI Crypto Prices Today in Naira and USD",
+  "Analytics Crypto Prices Today in Naira and USD",
+  "Asset Backed Tokens Crypto Prices Today in Naira and USD",
+  "Bots Crypto Prices Today in Naira and USD",
+  "CEX Crypto Prices Today in Naira and USD",
+  "Cloud Hosting Crypto Prices Today in Naira and USD",
+  "Debit Cards Crypto Prices Today in Naira and USD",
+  "DEX Crypto Prices Today in Naira and USD",
+  "DNS Crypto Prices Today in Naira and USD",
+  "E-commerce Crypto Prices Today in Naira and USD",
+  "Gaming Crypto Prices Today in Naira and USD",
+  "Governance Crypto Prices Today in Naira and USD",
+  "Identity Crypto Prices Today in Naira and USD",
+  "IoT Crypto Prices Today in Naira and USD",
+  "Launchpad Crypto Prices Today in Naira and USD",
+  "Lending Crypto Prices Today in Naira and USD",
+  "Leverage Crypto Prices Today in Naira and USD",
+  "Liquid Staking Crypto Prices Today in Naira and USD",
+  "Meme Crypto Prices Today in Naira and USD",
+  "Metaverse Crypto Prices Today in Naira and USD",
+  "Music Crypto Prices Today in Naira and USD",
+  "NFTs Crypto Prices Today in Naira and USD",
+  "Oracle Crypto Prices Today in Naira and USD",
+  "Perpetuals Crypto Prices Today in Naira and USD",
+  "Pre-IPO stocks Crypto Prices Today in Naira and USD",
+  "Privacy Coins Crypto Prices Today in Naira and USD",
+  "Restaking Crypto Prices Today in Naira and USD",
+  "Smart Contract Platforms Crypto Prices Today in Naira and USD",
+  "Social Media Crypto Prices Today in Naira and USD",
+  "Sports Crypto Prices Today in Naira and USD",
+  "Stablecoins Crypto Prices Today in Naira and USD",
+  "Storage Crypto Prices Today in Naira and USD",
+  "Streaming Crypto Prices Today in Naira and USD",
+  "Synthetics Crypto Prices Today in Naira and USD",
+  "Token Bridges Crypto Prices Today in Naira and USD",
+  "Token Issuance Platforms Crypto Prices Today in Naira and USD",
+  "Wallets Crypto Prices Today in Naira and USD",
+  "Yield Aggregators Crypto Prices Today in Naira and USD",
+  "Yield Farming Crypto Prices Today in Naira and USD"
+ ]
+}
