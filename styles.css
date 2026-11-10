@@ -297,3 +297,17 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
 @media (min-width: 1280px) {
   .tabs { left: 50%; right: auto; width: 560px; transform: translateX(-50%); border: 1px solid var(--line); border-bottom: 0; border-radius: 16px 16px 0 0; }
 }
+
+/* Coin page section tabs */
+.cp-tabs { display: flex; gap: 4px; overflow-x: auto; margin: 0 0 14px; padding: 0; border-bottom: 1px solid rgba(128,128,128,.25); position: sticky; top: 48px; z-index: 10; background: #fff; -webkit-overflow-scrolling: touch; }
+.cp-tabs a { flex: none; padding: 10px 14px; font-size: 14px; font-weight: 600; text-decoration: none; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.cp-tabs a.on { color: #16a34a; border-bottom-color: #16a34a; }
+/* Coin page: two columns on wide screens only */
+@media (min-width: 960px) {
+  main:has(#coinBody) { max-width: 1240px; }
+  .cp-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; }
+  .cp-l, .cp-r { min-width: 0; }
+  .cp-r { position: sticky; top: 112px; }
+  .cp-head { margin-top: 4px; }
+}
+html.dk .cp-tabs { background: #0e1511; }

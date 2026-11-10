@@ -1743,6 +1743,7 @@ function paintCoin(c) {
       ${c.id === "bitcoin" ? btcLogo("logo lg").replace('width="32" height="32"', 'width="48" height="48"') : `<img class="logo lg" src="${esc(c.image_url || "")}" alt="" width="48" height="48">`}
       <div><h1>${esc(c.name)}</h1><p>${esc(sym)}${c.market_cap_rank && c.kind !== "tokenized" ? " · Rank #" + c.market_cap_rank : ""}${c.kind === "tokenized" ? '<em style="font-style:normal;font-size:.72rem;background:rgba(22,163,74,.14);color:#15803d;border-radius:99px;padding:1px 8px;margin-left:6px">Tokenized asset</em>' : ""}</p>${c.kind === "tokenized" ? '<p class="muted" style="font-size:.85rem;margin:6px 0 0">A tokenized asset tracks the value of a fund, bond, stock or similar. Its price does not move like normal crypto and it may trade very little.</p>' : ""}</div>
     </div>
+    <nav class="cp-tabs" aria-label="Sections"><a href="#" data-go="top">Overview</a><a href="#" data-go="#coinMarkets">Markets</a><a href="#" data-go="#coinNews">News</a><a href="#" data-go="#cpAbout">About</a></nav>
     <div class="cp-price">
       <small>PRICE IN ${esc(state.cur)}</small>
       <div class="big">${mainPx(c)}</div>
@@ -1761,13 +1762,14 @@ function paintCoin(c) {
     <div id="coinVote"></div>
     <div id="coinMarkets"></div>
     <div id="coinNews"></div>
-    ${explainerHtml(c, sym)}
+    <div id="cpAbout">${explainerHtml(c, sym)}</div>
     <button class="btn" type="button" id="alertBtn" style="padding:10px 14px;min-height:0;font-size:.95rem;border-radius:12px">🔔 Set price alert</button>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 4px">
       <button class="btn ghost" type="button" id="watchBtn" style="padding:9px 8px;min-height:0;font-size:.88rem;border-radius:12px">${watchLabel(c.id)}</button>
       <button class="btn ghost" type="button" id="shareBtn" style="padding:9px 8px;min-height:0;font-size:.88rem;border-radius:12px">Share</button>
     </div>
     ${referralCardHtml()}`;
+  cpLayout();
   $("#alertBtn").onclick = () => alertForm(c);
   loadCoinNews(c);
   loadCoinMarkets(c);
@@ -1811,6 +1813,35 @@ function paintCoin(c) {
   initChart(c, sp, sec);
 }
 
+
+/* Coin page: section tabs (all screens) and two-column layout (wide screens only) */
+function cpLayout() {
+  const body = $("#coinBody");
+  if (!body) return;
+  body.querySelectorAll(".cp-tabs a").forEach((a) => {
+    a.onclick = (e) => {
+      e.preventDefault();
+      const t = a.dataset.go;
+      const el = t === "top" ? null : body.querySelector(t);
+      const y = el ? el.getBoundingClientRect().top + window.scrollY - 110 : 0;
+      window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+      body.querySelectorAll(".cp-tabs a").forEach((x) => x.classList.toggle("on", x === a));
+    };
+  });
+  if (!window.matchMedia("(min-width: 960px)").matches) return;
+  const head = body.querySelector(".cp-head"), tabs = body.querySelector(".cp-tabs");
+  const price = body.querySelector(".cp-price"), chart = body.querySelector(".cp-card");
+  const alertBtn = $("#alertBtn");
+  const left = [chart, $("#coinChanges"), $("#coinMarkets"), $("#coinNews"), $("#cpAbout")];
+  const right = [price, body.querySelector(".cp-stats"), $("#coinConv"), $("#coinVote"), alertBtn, alertBtn && alertBtn.nextElementSibling, alertBtn && alertBtn.nextElementSibling && alertBtn.nextElementSibling.nextElementSibling];
+  const grid = document.createElement("div"); grid.className = "cp-grid";
+  const l = document.createElement("div"); l.className = "cp-l";
+  const r = document.createElement("div"); r.className = "cp-r";
+  left.forEach((n) => n && l.appendChild(n));
+  right.forEach((n) => n && r.appendChild(n));
+  grid.append(l, r);
+  (tabs || head).after(grid);
+}
 /* ---------- coin news ---------- */
 const EX_NAMES = { bitflyer: "bitFlyer", bitbank: "bitbank", btcbox: "BTCBOX", coincheck: "Coincheck", btcmarkets: "BTC Markets", independentreserve: "Independent Reserve", coinjar: "CoinJar", foxbit: "Foxbit", paribu: "Paribu", buda: "Buda.com", deribit: "Deribit", binance: "Binance", bybit: "Bybit", okx: "OKX", kucoin: "KuCoin", gate: "Gate", mexc: "MEXC", bitget: "Bitget", htx: "HTX", cryptocom: "Crypto.com", lbank: "LBank", whitebit: "WhiteBIT", bitmart: "BitMart", coinex: "CoinEx", poloniex: "Poloniex", digifinex: "DigiFinex", xt: "XT", kraken: "Kraken", bitstamp: "Bitstamp", bitfinex: "Bitfinex", bitvavo: "Bitvavo", valr: "VALR", btcturk: "BTCTurk", coinbase: "Coinbase", bingx: "BingX", phemex: "Phemex", bit2me: "Bit2Me", pionex: "Pionex", bigone: "BigONE", coindcx: "CoinDCX", hashkey: "HashKey", wazirx: "WazirX", bitopro: "BitoPro", bitso: "Bitso", luno: "Luno", upbit: "Upbit", bithumb: "Bithumb", coinone: "Coinone", korbit: "Korbit", bitkub: "Bitkub" };
 const EX_ORDER = ["binance", "bybit", "okx", "kucoin", "gate", "mexc", "bitget", "htx", "cryptocom", "lbank", "whitebit", "poloniex", "digifinex", "xt", "kraken", "bitstamp", "bitfinex", "bitvavo", "valr", "btcturk", "coinbase", "bingx", "phemex", "bitmart", "coinex", "bit2me", "pionex", "bigone", "coindcx", "hashkey", "wazirx", "bitopro", "bitso", "luno", "upbit", "bithumb", "coinone", "korbit", "bitkub"];
