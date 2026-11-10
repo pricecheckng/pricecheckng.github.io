@@ -65,7 +65,7 @@
       if (vk) {
         try { vk.overlaysContent = isOpen; } catch (_) {}
         modal.style.top = ''; modal.style.bottom = ''; modal.style.height = '';
-        modal.style.paddingBottom = isOpen ? ((vk.boundingRect && vk.boundingRect.height) || 0) + 'px' : '';
+        modal.style.paddingBottom = isOpen ? (((vk.boundingRect && vk.boundingRect.height) || 0) + 64) + 'px' : '';
         chatBox.style.height = ''; chatBox.style.maxHeight = isOpen ? 'calc(100% - 8px)' : '';
         var mm = document.getElementById('pcnMsgs');
         if (isOpen && mm && vk.boundingRect && vk.boundingRect.height > 0) mm.scrollTop = mm.scrollHeight;
