@@ -1,4 +1,4 @@
-const CACHE = "pricecheck-ng-v33";
+const CACHE = "pricecheck-ng-v34";
 const SHELL = ["./", "index.html", "styles.css", "app.js", "config.js", "manifest.webmanifest", "icon-green-192.png"];
 
 self.addEventListener("install", (e) => {

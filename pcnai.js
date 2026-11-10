@@ -229,7 +229,11 @@
       if (r.status === 429) return 'You have used your ' + (j.limit || 10) + ' questions for today. They reset at midnight UTC (1:00 AM Nigeria time). The question buttons below still work.';
       if (r.status === 503) return 'PCN AI is very busy today. Please try again tomorrow. The question buttons below still work.';
       if (!r.ok || !j.answer) return 'PCN AI could not answer right now. Please try again in a moment.';
-      var body = escapeHtml(j.answer).replace(/\n/g, '<br>');
+      var body = escapeHtml(j.answer).replace(/(https?:\/\/[^\s<]+)/g, function (u) {
+        var tail = ''; var m = u.match(/[.,;:!?)]+$/); if (m) { tail = m[0]; u = u.slice(0, -tail.length); }
+        var own = /^https?:\/\/(www\.)?pricecheckng\.com\.ng/i.test(u);
+        return '<a href="' + u + '"' + (own ? '' : ' target="_blank" rel="noopener"') + ' style="display:inline-block;margin:6px 0 2px;padding:7px 14px;border-radius:999px;background:#16a34a;color:#fff;font-weight:700;font-size:.9em;text-decoration:none">View full details \u2192</a>' + tail;
+      }).replace(/\n/g, '<br>');
       var left = (j.left != null) ? j.left + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '';
       return body + note(left + 'AI answers can be wrong. Not financial advice.');
     }
