@@ -23,12 +23,14 @@
         .pcn-chip { background: #fff; border: 1px solid #e1e9e4; border-radius: 999px; padding: 9px 15px; max-width: 100%; font-size: 13px; color: #10201a; cursor: pointer; text-align: left; transition: background 0.2s, border-color 0.2s; font-weight: 500; }
         .pcn-chip:hover, .pcn-chip:active { background: #eef7f2; border-color: #12a150; color: #12a150; }
 
-        .pcn-chat-form { display: flex; padding: 10px; border-top: 1px solid #e1e9e4; background: #fff; gap: 6px; }
-        .pcn-chat-form input { flex: 1; min-width: 0; border: 1px solid #e1e9e4; border-radius: 10px; padding: 10px 12px; font-size: 16px; outline: none; }
-        .pcn-chat-form button { background: #12a150; color: #fff; border: none; border-radius: 10px; padding: 10px 16px; font-weight: bold; cursor: pointer; }
+        .pcn-chat-form { display: flex; flex-direction: column; margin: 8px 10px 10px; padding: 12px 12px 10px; border: 1px solid #d5e0da; border-radius: 18px; background: #fff; gap: 8px; }
+        .pcn-chat-form textarea { width: 100%; box-sizing: border-box; border: 0; outline: none; resize: none; background: transparent; color: inherit; font: inherit; font-size: 16px; line-height: 1.4; min-height: 52px; max-height: 140px; padding: 2px 2px; }
+        .pcn-row { display: flex; align-items: center; gap: 8px; }
+        .pcn-row .sp { flex: 1; }
+        .pcn-go { width: 42px; height: 36px; border: 0; border-radius: 10px; background: #12a150; color: #fff; font-size: 18px; font-weight: 800; cursor: pointer; }
         .pcn-close { cursor: pointer; font-size: 22px; font-weight: bold; }
         .pcn-chat-box { position: relative; }
-        .pcn-mode { background: none; border: 1px solid #d5e0da; color: #10201a; border-radius: 10px; padding: 0 10px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .pcn-mode { background: none; border: 1px solid #d5e0da; color: #10201a; border-radius: 10px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
         .pcn-sheet { display: none; position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 5; align-items: flex-end; }
         .pcn-sheet.open { display: flex; }
         .pcn-sheet-in { background: #fff; width: 100%; border-top-left-radius: 16px; border-top-right-radius: 16px; padding: 8px 14px 14px; }
@@ -36,7 +38,7 @@
         .pcn-opt b { display: block; font-size: 15px; } .pcn-opt small { color: #5b6b64; font-size: 12.5px; }
         .pcn-opt .ck { color: #12a150; font-weight: 800; font-size: 18px; visibility: hidden; } .pcn-opt.on .ck { visibility: visible; }
         .pcn-sheet-close { width: 100%; margin-top: 10px; padding: 12px; border-radius: 10px; border: 0; background: #eef3f0; color: #10201a; font-weight: 700; cursor: pointer; }
-        .pcn-lib { background: none; border: 1px solid #d5e0da; color: #10201a; border-radius: 10px; padding: 0 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .pcn-lib { background: none; border: 1px solid #d5e0da; color: #10201a; border-radius: 10px; padding: 7px 11px; font-size: 14px; font-weight: 700; cursor: pointer; }
         .pcn-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 10px; scrollbar-width: none; }
         .pcn-tabs::-webkit-scrollbar { display: none; }
         .pcn-tab { flex: none; background: #eef3f0; color: #10201a; border: 1px solid transparent; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
@@ -68,8 +70,9 @@
           </div>
         </div>
         <div class="pcn-sheet" id="pcnSheet"><div class="pcn-sheet-in">
-          <button type="button" class="pcn-opt" data-mode="quick"><span><b>Quick</b><small>Short, fast answers</small><br><small id="pcnLeftQuick"></small></span><span class="ck">&#10003;</span></button>
-          <button type="button" class="pcn-opt" data-mode="deep"><span><b>Deep</b><small>Full analysis: TLDR, Deep Dive, Conclusion</small><br><small id="pcnLeftDeep"></small></span><span class="ck">&#10003;</span></button>
+          <button type="button" class="pcn-opt" data-mode="quick"><span><b>Quick</b> <small>&middot; Short, fast answers</small><br><small id="pcnLeftQuick"></small></span><span class="ck">&#10003;</span></button>
+          <button type="button" class="pcn-opt" data-mode="pro"><span><b>Pro</b> <small>&middot; Focused research with key numbers</small><br><small id="pcnLeftPro"></small></span><span class="ck">&#10003;</span></button>
+          <button type="button" class="pcn-opt" data-mode="deep"><span><b>Deep</b> <small>&middot; Full analysis: TLDR, Deep Dive, Conclusion</small><br><small id="pcnLeftDeep"></small></span><span class="ck">&#10003;</span></button>
           <button type="button" class="pcn-sheet-close" id="pcnSheetClose">Close</button>
         </div></div>
         <div class="pcn-sheet" id="pcnLibSheet"><div class="pcn-sheet-in">
@@ -78,10 +81,13 @@
           <button type="button" class="pcn-sheet-close" id="pcnLibClose">Close</button>
         </div></div>
         <form class="pcn-chat-form" id="pcnForm">
-          <button type="button" class="pcn-lib" id="pcnLib" aria-label="Question ideas">{ }</button>
-          <button type="button" class="pcn-mode" id="pcnMode">Quick &#9662;</button>
-          <input type="text" id="pcnInput" placeholder="Ask about the market or your watchlist..." required autocomplete="off" />
-          <button type="submit">Send</button>
+          <textarea id="pcnInput" rows="2" placeholder="Ask PCN AI about the market, a coin or the Naira rate" required autocomplete="off"></textarea>
+          <div class="pcn-row">
+            <button type="button" class="pcn-mode" id="pcnMode">Quick &#9662;</button>
+            <button type="button" class="pcn-lib" id="pcnLib" aria-label="Question ideas">{ }</button>
+            <span class="sp"></span>
+            <button type="submit" class="pcn-go" aria-label="Send">&#10148;</button>
+          </div>
         </form>
       </div>
     `;
@@ -250,13 +256,13 @@
       } catch (e) {}
       return null;
     }
-    var LEFT = { quick: null, deep: null };
-    function getMode() { try { return localStorage.getItem('pcn_ai_mode') === 'deep' ? 'deep' : 'quick'; } catch (e) { return 'quick'; } }
+    var LEFT = { quick: null, pro: null, deep: null };
+    function getMode() { try { var m = localStorage.getItem('pcn_ai_mode'); return (m === 'deep' || m === 'pro') ? m : 'quick'; } catch (e) { return 'quick'; } }
     function paintMode() {
       var m = getMode();
-      document.getElementById('pcnMode').innerHTML = (m === 'deep' ? 'Deep' : 'Quick') + ' &#9662;';
+      document.getElementById('pcnMode').innerHTML = ({ deep: 'Deep', pro: 'Pro', quick: 'Quick' })[m] + ' &#9662;';
       document.querySelectorAll('.pcn-opt').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-mode') === m); });
-      ['Quick', 'Deep'].forEach(function (k) {
+      ['Quick', 'Pro', 'Deep'].forEach(function (k) {
         var v = LEFT[k.toLowerCase()];
         document.getElementById('pcnLeft' + k).textContent = v == null ? '' : v + ' question' + (v === 1 ? '' : 's') + ' left today';
       });
@@ -266,7 +272,7 @@
       try {
         var cfg = await import('./config.js');
         var r = await fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/pcn_chat_left', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + tok }, body: '{}' });
-        if (r.ok) { var j = await r.json(); LEFT.quick = j.quick; LEFT.deep = j.deep; paintMode(); }
+        if (r.ok) { var j = await r.json(); LEFT.quick = j.quick; LEFT.pro = j.pro; LEFT.deep = j.deep; paintMode(); }
       } catch (e) {}
     }
     (function () {
@@ -346,7 +352,7 @@
       if (soft && !r.ok) return null;
       if (j && j.left != null) { LEFT[mode] = j.left; paintMode(); }
       if (r.status === 401) return 'Your sign-in has expired. Please ' + signin + ' again.';
-      if (r.status === 429) return 'You have used your ' + (j.limit || 10) + (mode === 'deep' ? ' Deep' : '') + ' questions for today. They reset at 1:00 AM Nigeria time.' + (mode === 'deep' ? ' You can still use Quick mode.' : '');
+      if (r.status === 429) return 'You have used your ' + (j.limit || 10) + (mode === 'deep' ? ' Deep' : mode === 'pro' ? ' Pro' : '') + ' questions for today. They reset at 1:00 AM Nigeria time.' + (mode !== 'quick' ? ' You can still use another mode.' : '');
       if (r.status === 503) return 'PCN AI is very busy today. Please try again tomorrow. The question buttons below still work.';
       if (!r.ok || !j.answer) return 'PCN AI could not answer right now. Please try again in a moment.';
       if (/^#{1,3}\s|\*\*|\]\(https?:/m.test(j.answer)) {
@@ -458,13 +464,21 @@
       });
     });
 
+    (function () {
+      var ta = document.getElementById('pcnInput');
+      ta.addEventListener('input', function () { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 140) + 'px'; });
+      ta.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey && !('ontouchstart' in window)) { e.preventDefault(); document.getElementById('pcnForm').requestSubmit(); }
+      });
+    })();
+
     // Handle Form Submit
     document.getElementById('pcnForm').onsubmit = function (e) {
       e.preventDefault();
       var input = document.getElementById('pcnInput');
       var text = input.value.trim();
       if (!text) return;
-      input.value = '';
+      input.value = ''; input.style.height = 'auto';
       sendQuery(text, false, getMode());
     };
   }
