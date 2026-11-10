@@ -36,6 +36,13 @@
         .pcn-opt b { display: block; font-size: 15px; } .pcn-opt small { color: #5b6b64; font-size: 12.5px; }
         .pcn-opt .ck { color: #12a150; font-weight: 800; font-size: 18px; visibility: hidden; } .pcn-opt.on .ck { visibility: visible; }
         .pcn-sheet-close { width: 100%; margin-top: 10px; padding: 12px; border-radius: 10px; border: 0; background: #eef3f0; color: #10201a; font-weight: 700; cursor: pointer; }
+        .pcn-lib { background: none; border: 1px solid #d5e0da; color: #10201a; border-radius: 10px; padding: 0 10px; font-size: 14px; font-weight: 700; cursor: pointer; }
+        .pcn-tabs { display: flex; gap: 8px; overflow-x: auto; padding: 12px 0 10px; scrollbar-width: none; }
+        .pcn-tabs::-webkit-scrollbar { display: none; }
+        .pcn-tab { flex: none; background: #eef3f0; color: #10201a; border: 1px solid transparent; border-radius: 999px; padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .pcn-tab.on { background: #e3f6ea; color: #12a150; border-color: #12a150; }
+        .pcn-libq { display: block; width: 100%; text-align: left; margin: 0 0 10px; padding: 13px 14px; border-radius: 14px; border: 1px solid #cfe3d6; background: #f3faf6; color: #10201a; font-size: 14.5px; font-weight: 600; cursor: pointer; }
+        .pcn-libwrap { max-height: 48vh; overflow-y: auto; }
         .pcn-copy { align-self: flex-start; margin-top: 8px; background: none; border: 1px solid #d5e0da; color: #5b6b64; border-radius: 8px; padding: 3px 9px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
         .pcn-copy:hover { border-color: #12a150; color: #12a150; }
         @media (min-width: 720px) {
@@ -65,7 +72,13 @@
           <button type="button" class="pcn-opt" data-mode="deep"><span><b>Deep</b><small>Full analysis: TLDR, Deep Dive, Conclusion</small><br><small id="pcnLeftDeep"></small></span><span class="ck">&#10003;</span></button>
           <button type="button" class="pcn-sheet-close" id="pcnSheetClose">Close</button>
         </div></div>
+        <div class="pcn-sheet" id="pcnLibSheet"><div class="pcn-sheet-in">
+          <div class="pcn-tabs" id="pcnTabs"></div>
+          <div class="pcn-libwrap" id="pcnLibList"></div>
+          <button type="button" class="pcn-sheet-close" id="pcnLibClose">Close</button>
+        </div></div>
         <form class="pcn-chat-form" id="pcnForm">
+          <button type="button" class="pcn-lib" id="pcnLib" aria-label="Question ideas">{ }</button>
           <button type="button" class="pcn-mode" id="pcnMode">Quick &#9662;</button>
           <input type="text" id="pcnInput" placeholder="Ask about the market or your watchlist..." required autocomplete="off" />
           <button type="submit">Send</button>
@@ -265,6 +278,37 @@
         b.onclick = function () { try { localStorage.setItem('pcn_ai_mode', b.getAttribute('data-mode')); } catch (e) {} paintMode(); sh.classList.remove('open'); };
       });
       paintMode();
+    })();
+
+    // Question library (rows live in the database table ai_prompts)
+    var LIB = null, LIBTAB = null;
+    function paintLib() {
+      var cats = []; (LIB || []).forEach(function (r) { if (cats.indexOf(r.category) < 0) cats.push(r.category); });
+      if (!LIBTAB || cats.indexOf(LIBTAB) < 0) LIBTAB = cats[0];
+      var tabs = document.getElementById('pcnTabs'); tabs.innerHTML = '';
+      cats.forEach(function (c) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'pcn-tab' + (c === LIBTAB ? ' on' : ''); b.textContent = c;
+        b.onclick = function () { LIBTAB = c; paintLib(); }; tabs.appendChild(b);
+      });
+      var list = document.getElementById('pcnLibList'); list.innerHTML = '';
+      if (!LIB || !LIB.length) { list.innerHTML = '<div style="padding:14px;color:#5b6b64">No ideas to show right now.</div>'; return; }
+      LIB.filter(function (r) { return r.category === LIBTAB; }).forEach(function (r) {
+        var b = document.createElement('button'); b.type = 'button'; b.className = 'pcn-libq'; b.textContent = r.question;
+        b.onclick = function () { document.getElementById('pcnLibSheet').classList.remove('open'); sendQuery(r.question, true, getMode()); };
+        list.appendChild(b);
+      });
+    }
+    (function () {
+      var sh = document.getElementById('pcnLibSheet');
+      document.getElementById('pcnLib').onclick = async function () {
+        sh.classList.add('open');
+        if (!LIB) {
+          try { var cfg = await import('./config.js'); LIB = await api(cfg, 'ai_prompts?select=category,question&active=eq.true&order=sort.asc,id.asc'); } catch (e) { LIB = []; }
+        }
+        paintLib();
+      };
+      document.getElementById('pcnLibClose').onclick = function () { sh.classList.remove('open'); };
+      sh.addEventListener('click', function (e) { if (e.target === sh) sh.classList.remove('open'); });
     })();
 
     function mdRender(t) {
