@@ -302,12 +302,22 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
 .cp-tabs { display: flex; gap: 4px; overflow-x: auto; margin: 0 0 14px; padding: 0; border-bottom: 1px solid rgba(128,128,128,.25); position: sticky; top: 48px; z-index: 10; background: #fff; -webkit-overflow-scrolling: touch; }
 .cp-tabs a { flex: none; padding: 10px 14px; font-size: 14px; font-weight: 600; text-decoration: none; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .cp-tabs a.on { color: #16a34a; border-bottom-color: #16a34a; }
-/* Coin page: two columns on wide screens only */
+/* Coin page: full-width sections on wide screens, like CoinMarketCap */
+.cp-stats-h, #coinMore h2 { font-size: 1.15rem; margin: 22px 0 10px; }
+#coinMore h2 { margin-top: 26px; }
+.cp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.cp-chip { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; background: rgba(127,127,127,.12); font-size: 13px; }
+.cp-chip b { font-weight: 700; }
+.cp-chipa { text-decoration: none; color: inherit; }
+.cp-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+.cp-cc { display: flex; flex-direction: column; gap: 6px; padding: 12px; border-radius: 14px; border: 1px solid rgba(128,128,128,.25); text-decoration: none; color: inherit; }
+.cp-cn { display: flex; align-items: center; gap: 8px; }
+.cp-cn img { border-radius: 50%; }
+.cp-cp { font-weight: 700; }
 @media (min-width: 960px) {
   main:has(#coinBody) { max-width: 1240px; }
-  .cp-grid { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; }
-  .cp-l, .cp-r { min-width: 0; }
-  .cp-r { position: sticky; top: 112px; }
   .cp-head { margin-top: 4px; }
+  .cp-stats { grid-template-columns: repeat(4, 1fr); }
+  .cp-stats .cp-stat { grid-column: auto !important; }
+  .cp-cards { grid-template-columns: repeat(5, 1fr); }
 }
-html.dk .cp-tabs { background: #0e1511; }

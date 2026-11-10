@@ -1763,6 +1763,7 @@ function paintCoin(c) {
     <div id="coinMarkets"></div>
     <div id="coinNews"></div>
     <div id="cpAbout">${explainerHtml(c, sym)}</div>
+    <div id="coinMore"></div>
     <button class="btn" type="button" id="alertBtn" style="padding:10px 14px;min-height:0;font-size:.95rem;border-radius:12px">🔔 Set price alert</button>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 4px">
       <button class="btn ghost" type="button" id="watchBtn" style="padding:9px 8px;min-height:0;font-size:.88rem;border-radius:12px">${watchLabel(c.id)}</button>
@@ -1770,6 +1771,7 @@ function paintCoin(c) {
     </div>
     ${referralCardHtml()}`;
   cpLayout();
+  loadCoinMore(c);
   $("#alertBtn").onclick = () => alertForm(c);
   loadCoinNews(c);
   loadCoinMarkets(c);
@@ -1828,20 +1830,56 @@ function cpLayout() {
       body.querySelectorAll(".cp-tabs a").forEach((x) => x.classList.toggle("on", x === a));
     };
   });
-  if (!window.matchMedia("(min-width: 960px)").matches) return;
-  const head = body.querySelector(".cp-head"), tabs = body.querySelector(".cp-tabs");
-  const price = body.querySelector(".cp-price"), chart = body.querySelector(".cp-card");
-  const alertBtn = $("#alertBtn");
-  const left = [chart, $("#coinChanges"), $("#coinMarkets"), $("#coinNews"), $("#cpAbout")];
-  const right = [price, body.querySelector(".cp-stats"), $("#coinConv"), $("#coinVote"), alertBtn, alertBtn && alertBtn.nextElementSibling, alertBtn && alertBtn.nextElementSibling && alertBtn.nextElementSibling.nextElementSibling];
-  const grid = document.createElement("div"); grid.className = "cp-grid";
-  const l = document.createElement("div"); l.className = "cp-l";
-  const r = document.createElement("div"); r.className = "cp-r";
-  left.forEach((n) => n && l.appendChild(n));
-  right.forEach((n) => n && r.appendChild(n));
-  grid.append(l, r);
-  (tabs || head).after(grid);
+  // Wide screens: same order as CoinMarketCap (converter, then statistics)
+  if (window.matchMedia("(min-width: 960px)").matches) {
+    const stats = body.querySelector(".cp-stats"), conv = $("#coinConv");
+    if (stats && conv) stats.before(conv);
+    if (stats && !body.querySelector(".cp-stats-h")) stats.insertAdjacentHTML("beforebegin", `<h2 class="cp-stats-h">${esc(body.querySelector(".cp-head h1")?.textContent || "")} statistics</h2>`);
+  }
 }
+
+/* Chip sections like CoinMarketCap: price in other currencies, pairs, conversions, similar and trending coins */
+async function loadCoinMore(c) {
+  try {
+    const box = $("#coinMore");
+    if (!box) return;
+    const px = Number(c.price_usd);
+    if (!(px > 0)) return;
+    const sym = c.symbol.toUpperCase();
+    const chip = (img, a, b) => `<span class="cp-chip">${img ? `<img src="${esc(img)}" alt="" width="18" height="18" loading="lazy">` : ""}<span>${a}</span><b>${b}</b></span>`;
+    const link = (id, inner) => `<a class="cp-chipa" href="#coin/${encodeURIComponent(id)}">${inner}</a>`;
+    const secs = [];
+    // 1. price in other currencies
+    const codes = ["NGN", "EUR", "GBP", "GHS", "ZAR", "KES", "CAD", "AUD", "INR", "JPY", "BRL", "CHF", "AED", "CNY"].filter((k) => state.fx[k] && CURRENCIES[k]);
+    if (codes.length) secs.push(`<h2>${esc(c.name)} price in other currencies</h2><div class="cp-chips">${codes.map((k) => chip("", `${CURRENCIES[k].flag} ${esc(c.name)} to ${esc(CURRENCIES[k].name)}`, esc(fmtLocal(px * state.fx[k], k)))).join("")}</div>`);
+    // coins used for pairs, similar and trending
+    const sel = "id,symbol,name,image_url,price_usd,change_24h_pct,market_cap_rank,kind";
+    const [ref, near, trend] = await Promise.all([
+      sb.from("coins").select(sel).in("id", ["tether", "ethereum", "binancecoin", "bitcoin", "solana", "ripple", "dogecoin", "cardano"]),
+      c.market_cap_rank && c.kind !== "tokenized" ? sb.from("coins").select(sel).or("kind.is.null,kind.neq.tokenized").gte("market_cap_rank", Math.max(1, c.market_cap_rank - 4)).lte("market_cap_rank", c.market_cap_rank + 4).neq("id", c.id).order("market_cap_rank") : Promise.resolve({ data: [] }),
+      sb.from("coins").select(sel).or("kind.is.null,kind.neq.tokenized").lte("market_cap_rank", 300).gt("volume_24h_usd", 0).order("volume_24h_usd", { ascending: false }).limit(6)
+    ]);
+    const R = {};
+    for (const r of ref.data || []) R[r.id] = r;
+    const usdt = R.tether && Number(R.tether.price_usd) > 0 ? Number(R.tether.price_usd) : 1;
+    // 2. trading pairs
+    const pairs = ["tether", "ethereum", "binancecoin"].filter((id) => id !== c.id && R[id] && Number(R[id].price_usd) > 0);
+    if (pairs.length) secs.push(`<h2>${esc(c.name)} trading pairs</h2><div class="cp-chips">${pairs.map((id) => link(id, chip(R[id].image_url, `${esc(c.name)} to ${esc(R[id].name)}`, `${esc((px / Number(R[id].price_usd)).toLocaleString("en-US", { maximumFractionDigits: px / Number(R[id].price_usd) >= 100 ? 2 : 6 }))} ${esc(R[id].symbol.toUpperCase())}`))).join("")}</div>`);
+    // 3. popular conversions
+    const conv = ["ethereum", "solana", "ripple", "binancecoin", "dogecoin", "cardano"].filter((id) => id !== c.id && R[id] && Number(R[id].price_usd) > 0);
+    if (conv.length) secs.push(`<h2>Popular conversions</h2><div class="cp-chips">${conv.map((id) => link(id, chip(R[id].image_url, `${esc(R[id].name)} to Tether`, `${esc((Number(R[id].price_usd) / usdt).toLocaleString("en-US", { maximumFractionDigits: 4 }))} USDT`))).join("")}</div>`);
+    // 4. similar coins
+    const card = (r) => { const d = chg(r.change_24h_pct); return `<a class="cp-cc" href="#coin/${encodeURIComponent(r.id)}"><span class="cp-cn"><img src="${esc(r.image_url || "")}" alt="" width="24" height="24" loading="lazy"><b>${esc(r.name)}</b></span><span class="cp-cp">${esc(mny(r.price_usd))}</span><span class="cp-pill ${d.c}">${d.t}</span></a>`; };
+    const sim = (near.data || []).slice(0, 5);
+    if (sim.length) secs.push(`<h2>Similar coins to ${esc(c.name)}</h2><div class="cp-cards">${sim.map(card).join("")}</div>`);
+    // 5. trending
+    const tr = (trend.data || []).filter((r) => r.id !== c.id).slice(0, 5);
+    if (tr.length) secs.push(`<h2>Trending</h2><div class="cp-cards">${tr.map(card).join("")}</div>`);
+    if (!$("#coinMore")) return;
+    box.innerHTML = secs.join("");
+  } catch (_) {}
+}
+
 /* ---------- coin news ---------- */
 const EX_NAMES = { bitflyer: "bitFlyer", bitbank: "bitbank", btcbox: "BTCBOX", coincheck: "Coincheck", btcmarkets: "BTC Markets", independentreserve: "Independent Reserve", coinjar: "CoinJar", foxbit: "Foxbit", paribu: "Paribu", buda: "Buda.com", deribit: "Deribit", binance: "Binance", bybit: "Bybit", okx: "OKX", kucoin: "KuCoin", gate: "Gate", mexc: "MEXC", bitget: "Bitget", htx: "HTX", cryptocom: "Crypto.com", lbank: "LBank", whitebit: "WhiteBIT", bitmart: "BitMart", coinex: "CoinEx", poloniex: "Poloniex", digifinex: "DigiFinex", xt: "XT", kraken: "Kraken", bitstamp: "Bitstamp", bitfinex: "Bitfinex", bitvavo: "Bitvavo", valr: "VALR", btcturk: "BTCTurk", coinbase: "Coinbase", bingx: "BingX", phemex: "Phemex", bit2me: "Bit2Me", pionex: "Pionex", bigone: "BigONE", coindcx: "CoinDCX", hashkey: "HashKey", wazirx: "WazirX", bitopro: "BitoPro", bitso: "Bitso", luno: "Luno", upbit: "Upbit", bithumb: "Bithumb", coinone: "Coinone", korbit: "Korbit", bitkub: "Bitkub" };
 const EX_ORDER = ["binance", "bybit", "okx", "kucoin", "gate", "mexc", "bitget", "htx", "cryptocom", "lbank", "whitebit", "poloniex", "digifinex", "xt", "kraken", "bitstamp", "bitfinex", "bitvavo", "valr", "btcturk", "coinbase", "bingx", "phemex", "bitmart", "coinex", "bit2me", "pionex", "bigone", "coindcx", "hashkey", "wazirx", "bitopro", "bitso", "luno", "upbit", "bithumb", "coinone", "korbit", "bitkub"];
