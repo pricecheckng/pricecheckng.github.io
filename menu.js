@@ -96,7 +96,7 @@
     '#mnu .m-ts svg{width:16px;height:16px;flex:none}' +
     '#mnu .m-ft{display:flex;flex-wrap:wrap;gap:6px 16px;margin:14px 2px 0;font-size:13px}' +
     '#mnu .m-ft a{color:#16a34a;font-weight:600;text-decoration:underline;text-underline-offset:3px}' +
-    '#mnu .m-so{display:flex;gap:20px;margin:16px 2px 4px}#mnu .m-so a{color:inherit;opacity:.7;display:inline-flex}' +
+    '#mnu .m-so{display:flex;flex-direction:column;gap:12px;margin:16px 2px 4px}#mnu .m-so a{color:#16a34a;font-weight:600;display:inline-flex;align-items:center;gap:10px;text-decoration:none}#mnu .m-so a span{text-decoration:underline;text-underline-offset:3px}' +
     '@media(min-width:640px){#mnu .m-sh{bottom:auto;top:50%;border-radius:20px;transform:translateY(-40%);opacity:0;transition:transform .25s,opacity .25s}#mnu.on .m-sh{transform:translateY(-50%);opacity:1}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -116,7 +116,7 @@
   html += '<div class="m-pair"><div class="m-cu" id="mLu"><span>Language</span><button type="button" class="m-cb" id="mLb" aria-haspopup="dialog" aria-label="Language"></button></div><div class="m-cu" id="mCu" hidden><span>Currency</span><button type="button" class="m-cb" id="mCb" aria-haspopup="dialog" aria-label="Currency"></button></div></div>';
   html += '<div class="m-th"><span>Theme</span><div class="m-ts" id="mTs" role="group" aria-label="Theme"><button type="button" data-th="light" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg> Light</button><button type="button" data-th="dark" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg> Dark</button><button type="button" data-th="system" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg> System</button></div></div>';
   html += '<div class="m-ft"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="about.html">About</a><a href="contact.html">Contact</a></div>';
-  html += '<div class="m-so"><a href="https://t.me/pricecheckNG" target="_blank" rel="noopener" aria-label="Telegram channel">'+TG+'</a><a href="https://whatsapp.com/channel/0029Vb92PIYEQIasRKfKYR0s" target="_blank" rel="noopener" aria-label="WhatsApp channel">'+WA+'</a></div>';
+  html += '<div class="m-so"><a href="https://t.me/pricecheckNG" target="_blank" rel="noopener" aria-label="Telegram channel">'+TG+'<span>Telegram channel</span></a><a href="https://whatsapp.com/channel/0029Vb92PIYEQIasRKfKYR0s" target="_blank" rel="noopener" aria-label="WhatsApp channel">'+WA+'<span>WhatsApp channel</span></a></div>';
   html += '</div>';
 
   var box = document.createElement('div'); box.id = 'mnu'; box.innerHTML = html; document.body.appendChild(box);
