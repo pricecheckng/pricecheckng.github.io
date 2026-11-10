@@ -18,8 +18,9 @@
         
         /* Suggested Prompt Chips */
         .pcn-prompts-title { font-size: 12px; font-weight: 700; color: #5b6b64; margin-top: 6px; }
-        .pcn-prompts { display: flex; flex-direction: column; gap: 6px; margin-top: 4px; }
-        .pcn-chip { background: #fff; border: 1px solid #e1e9e4; border-radius: 10px; padding: 8px 12px; font-size: 13px; color: #10201a; cursor: pointer; text-align: left; transition: background 0.2s, border-color 0.2s; font-weight: 500; }
+        .pcn-prompts { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 6px; }
+        .pcn-chip .ci { margin-right: 8px; font-weight: 700; }
+        .pcn-chip { background: #fff; border: 1px solid #e1e9e4; border-radius: 999px; padding: 9px 15px; max-width: 100%; font-size: 13px; color: #10201a; cursor: pointer; text-align: left; transition: background 0.2s, border-color 0.2s; font-weight: 500; }
         .pcn-chip:hover, .pcn-chip:active { background: #eef7f2; border-color: #12a150; color: #12a150; }
 
         .pcn-chat-form { display: flex; padding: 10px; border-top: 1px solid #e1e9e4; background: #fff; gap: 6px; }
@@ -42,11 +43,12 @@
         <div class="pcn-chat-body" id="pcnMsgs">
           <div class="pcn-prompts-title" id="pcnPromptTitle">Ask PCN AI anything about the market, a coin or the Naira rate, or tap one of these:</div>
           <div class="pcn-prompts" id="pcnPrompts">
-            <button class="pcn-chip" data-query="What is the latest crypto news?">📰 What is the latest crypto news?</button>
-            <button class="pcn-chip" data-query="Why is the market moving today?">🔥 Why is the market moving today?</button>
-            <button class="pcn-chip" data-query="Are altcoins outperforming Bitcoin?">📈 Are altcoins outperforming Bitcoin?</button>
-            <button class="pcn-chip" data-query="What cryptos are showing bullish momentum?">🚀 What cryptos are showing bullish momentum?</button>
-            <button class="pcn-chip" data-query="Summarize today's Fear & Greed index">📊 Summarize Fear & Greed index</button>
+            <button class="pcn-chip" id="pcnHeadChip" data-query="" style="display:none"><span class="ci" style="color:#e5484d">&#128293;</span><span id="pcnHeadTxt"></span></button>
+            <button class="pcn-chip" data-query="Why is the market moving today?"><span class="ci" style="color:#e5484d">&#8600;</span>Why is the market moving today?</button>
+            <button class="pcn-chip" data-query="Are altcoins outperforming Bitcoin?"><span class="ci" style="color:#16a34a">&#8644;</span>Are altcoins outperforming Bitcoin?</button>
+            <button class="pcn-chip" data-query="What are the trending narratives?"><span class="ci" style="color:#6366f1">&#9993;</span>What are the trending narratives?</button>
+            <button class="pcn-chip" data-query="What cryptos are showing bullish momentum?"><span class="ci" style="color:#f97316">&#8599;</span>What cryptos are showing bullish momentum?</button>
+            <button class="pcn-chip" data-query="Summarize today's Fear & Greed index"><span class="ci" style="color:#a855f7">&#9719;</span>Summarize Fear &amp; Greed index</button>
           </div>
         </div>
         <form class="pcn-chat-form" id="pcnForm">
@@ -278,6 +280,7 @@
       "What is the latest crypto news?": answerNews,
       "Why is the market moving today?": answerSummary,
       "Are altcoins outperforming Bitcoin?": answerAlts,
+      "What are the trending narratives?": answerBullish,
       "What cryptos are showing bullish momentum?": answerBullish,
       "Summarize today's Fear & Greed index": answerFng
     };
@@ -306,7 +309,7 @@
       el.appendChild(b);
     }
 
-    async function sendQuery(text) {
+    async function sendQuery(text, forceAI) {
       if (busy) return;
       busy = true;
       var msgs = document.getElementById('pcnMsgs');
@@ -324,8 +327,8 @@
       try {
         var cfg = await import('./config.js');
         var fn = ROUTES[text];
-        var AIFIRST = { "Why is the market moving today?": 1, "Are altcoins outperforming Bitcoin?": 1, "What cryptos are showing bullish momentum?": 1 };
-        var ai0 = (fn && AIFIRST[text]) ? await askAI(cfg, text, true) : null;
+        var AIFIRST = { "Why is the market moving today?": 1, "Are altcoins outperforming Bitcoin?": 1, "What cryptos are showing bullish momentum?": 1, "What are the trending narratives?": 1 };
+        var ai0 = ((fn && AIFIRST[text]) || forceAI) ? await askAI(cfg, text, true) : null;
         html = ai0 ? ai0 : fn ? await fn(cfg, text) : (NEWS_Q.test(text) ? await answerNews(cfg, text) : await askAI(cfg, text));
       } catch (err) {
         html = 'Could not load live data right now. Try again in a moment. <a href="pulse.html" style="' + HL + '">Daily summary</a>';
@@ -339,6 +342,21 @@
       msgs.scrollTop = msgs.scrollHeight;
       busy = false;
     }
+
+    // First chip = the newest news headline, like CoinMarketCap's AI page
+    (async function () {
+      try {
+        var cfg = await import('./config.js');
+        var rows = await api(cfg, 'news?select=title,published_at&order=published_at.desc&limit=1');
+        if (rows[0] && rows[0].title) {
+          var t = String(rows[0].title).replace(/\s+/g, ' ').trim(); if (t.length > 70) t = t.slice(0, 67).replace(/\s+\S*$/, '') + '...';
+          var hc = document.getElementById('pcnHeadChip');
+          document.getElementById('pcnHeadTxt').textContent = t;
+          hc.style.display = ''; hc.setAttribute('data-full', String(rows[0].title));
+          hc.onclick = function () { sendQuery('Tell me about this news and why it matters: ' + hc.getAttribute('data-full'), true); };
+        }
+      } catch (e) {}
+    })();
 
     // Handle Chip Clicks
     document.querySelectorAll('.pcn-chip').forEach(function (chip) {
