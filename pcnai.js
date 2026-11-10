@@ -235,7 +235,7 @@
         return '<a href="' + u + '"' + (own ? '' : ' target="_blank" rel="noopener"') + ' style="display:inline-block;margin:6px 0 2px;padding:7px 14px;border-radius:999px;background:#16a34a;color:#fff;font-weight:700;font-size:.9em;text-decoration:none">View full details \u2192</a>' + tail;
       }).replace(/\n/g, '<br>');
       var left = (j.left != null) ? j.left + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '';
-      return body + note(left + (j.checked ? 'Checked by a second AI. ' : '') + 'AI answers can be wrong. Not financial advice.');
+      return body + note(left + 'AI answers can be wrong. Not financial advice.');
     }
 
     var ROUTES = {
