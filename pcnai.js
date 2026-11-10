@@ -7,9 +7,9 @@
     div.id = 'pcn-chat-modal';
     div.innerHTML = `
       <style>
-        #pcn-chat-modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 10000; align-items: flex-end; justify-content: center; }
+        #pcn-chat-modal { display: none; position: fixed; inset: 0; background: rgba(6,11,8,0.94); z-index: 10000; align-items: flex-end; justify-content: center; }
         #pcn-chat-modal.open { display: flex; }
-        .pcn-chat-box { background: #fff; width: 100%; max-width: 480px; height: 80vh; border-top-left-radius: 18px; border-top-right-radius: 18px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
+        .pcn-chat-box { background: #fff; width: 100%; max-width: 480px; height: 80vh; max-height: 100%; border-top-left-radius: 18px; border-top-right-radius: 18px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
         .pcn-chat-header { background: #12a150; color: #fff; padding: 14px 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .pcn-chat-body { flex: 1; padding: 14px; overflow-y: auto; background: #f5f8f6; display: flex; flex-direction: column; gap: 10px; }
         .pcn-msg { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.4; }
@@ -17,7 +17,7 @@
         .pcn-msg.user { background: #12a150; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
         
         /* Suggested Prompt Chips */
-        .pcn-prompts-title { font-size: 12px; font-weight: 700; color: #5b6b64; margin-top: 6px; }
+        .pcn-prompts-title { font-size: 20px; font-weight: 800; color: #10201a; margin-top: 6px; }
         .pcn-prompts { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 6px; }
         .pcn-chip .ci { margin-right: 8px; font-weight: 700; }
         .pcn-chip { background: #fff; border: 1px solid #e1e9e4; border-radius: 999px; padding: 9px 15px; max-width: 100%; font-size: 13px; color: #10201a; cursor: pointer; text-align: left; transition: background 0.2s, border-color 0.2s; font-weight: 500; }
@@ -69,7 +69,7 @@
           <span class="pcn-close" id="pcnClose">&times;</span>
         </div>
         <div class="pcn-chat-body" id="pcnMsgs">
-          <div class="pcn-prompts-title" id="pcnPromptTitle">Ask PCN AI anything about the market, a coin or the Naira rate, or tap one of these:</div>
+          <div class="pcn-prompts-title" id="pcnPromptTitle">Ask PCN AI</div>
           <div class="pcn-prompts" id="pcnPrompts">
             <button class="pcn-chip" id="pcnHeadChip" data-query="" style="display:none"><span class="ci" style="color:#e5484d">&#128293;</span><span id="pcnHeadTxt"></span></button>
             <button class="pcn-chip" data-query="Why is the market moving today?"><span class="ci" style="color:#e5484d">&#8600;</span>Why is the market moving today?</button>
@@ -95,7 +95,7 @@
           <div class="pcn-libwrap" id="pcnSrcList"></div>
         </div></div>
         <form class="pcn-chat-form" id="pcnForm">
-          <textarea id="pcnInput" rows="2" placeholder="Ask PCN AI about the market, a coin or the Naira rate" required autocomplete="off"></textarea>
+          <textarea id="pcnInput" rows="2" placeholder="Ask PCN AI" required autocomplete="off"></textarea>
           <div class="pcn-row">
             <button type="button" class="pcn-mode" id="pcnMode">Quick &#9662;</button>
             <button type="button" class="pcn-lib" id="pcnLib" aria-label="Question ideas">{ }</button>
@@ -120,7 +120,7 @@
       if (vk) {
         try { vk.overlaysContent = isOpen; } catch (_) {}
         modal.style.top = ''; modal.style.bottom = ''; modal.style.height = '';
-        modal.style.paddingBottom = isOpen ? (((vk.boundingRect && vk.boundingRect.height) || 0) + 64) + 'px' : '';
+        modal.style.paddingBottom = isOpen ? ((vk.boundingRect && vk.boundingRect.height) || 0) + 'px' : '';
         chatBox.style.height = ''; chatBox.style.maxHeight = isOpen ? 'calc(100% - 8px)' : '';
         var mm = document.getElementById('pcnMsgs');
         if (isOpen && mm && vk.boundingRect && vk.boundingRect.height > 0) mm.scrollTop = mm.scrollHeight;

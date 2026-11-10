@@ -55,7 +55,7 @@ html.dk .pcn-chat-box{background:#121a15}
 html.dk .pcn-chat-body{background:#0e1511}
 html.dk .pcn-msg.ai,html.dk .pcn-chip{background:#16201a;border-color:#26332c;color:#e9f1ec}
 html.dk .pcn-chip:hover,html.dk .pcn-chip:active{background:#1b2a22;color:#3ddc97}
-html.dk .pcn-prompts-title{color:#9db0a5}
+html.dk .pcn-prompts-title{color:#e9f1ec}
 html.dk .pcn-chat-form{background:#16201a;border-color:#2c3b33}
 html.dk .pcn-chat-form textarea{color:#e9f1ec}
 /* round 3: Alerts screen */
