@@ -27,6 +27,15 @@
         .pcn-chat-form input { flex: 1; min-width: 0; border: 1px solid #e1e9e4; border-radius: 10px; padding: 10px 12px; font-size: 16px; outline: none; }
         .pcn-chat-form button { background: #12a150; color: #fff; border: none; border-radius: 10px; padding: 10px 16px; font-weight: bold; cursor: pointer; }
         .pcn-close { cursor: pointer; font-size: 22px; font-weight: bold; }
+        .pcn-chat-box { position: relative; }
+        .pcn-mode { background: none; border: 1px solid #d5e0da; color: #10201a; border-radius: 10px; padding: 0 10px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+        .pcn-sheet { display: none; position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 5; align-items: flex-end; }
+        .pcn-sheet.open { display: flex; }
+        .pcn-sheet-in { background: #fff; width: 100%; border-top-left-radius: 16px; border-top-right-radius: 16px; padding: 8px 14px 14px; }
+        .pcn-opt { display: flex; justify-content: space-between; align-items: center; width: 100%; background: none; border: 0; border-bottom: 1px solid #e8eeea; padding: 14px 4px; text-align: left; cursor: pointer; color: #10201a; }
+        .pcn-opt b { display: block; font-size: 15px; } .pcn-opt small { color: #5b6b64; font-size: 12.5px; }
+        .pcn-opt .ck { color: #12a150; font-weight: 800; font-size: 18px; visibility: hidden; } .pcn-opt.on .ck { visibility: visible; }
+        .pcn-sheet-close { width: 100%; margin-top: 10px; padding: 12px; border-radius: 10px; border: 0; background: #eef3f0; color: #10201a; font-weight: 700; cursor: pointer; }
         .pcn-copy { align-self: flex-start; margin-top: 8px; background: none; border: 1px solid #d5e0da; color: #5b6b64; border-radius: 8px; padding: 3px 9px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
         .pcn-copy:hover { border-color: #12a150; color: #12a150; }
         @media (min-width: 720px) {
@@ -51,7 +60,13 @@
             <button class="pcn-chip" data-query="Summarize today's Fear & Greed index"><span class="ci" style="color:#a855f7">&#9719;</span>Summarize Fear &amp; Greed index</button>
           </div>
         </div>
+        <div class="pcn-sheet" id="pcnSheet"><div class="pcn-sheet-in">
+          <button type="button" class="pcn-opt" data-mode="quick"><span><b>Quick</b><small>Short, fast answers</small><br><small id="pcnLeftQuick"></small></span><span class="ck">&#10003;</span></button>
+          <button type="button" class="pcn-opt" data-mode="deep"><span><b>Deep</b><small>Full analysis: TLDR, Deep Dive, Conclusion</small><br><small id="pcnLeftDeep"></small></span><span class="ck">&#10003;</span></button>
+          <button type="button" class="pcn-sheet-close" id="pcnSheetClose">Close</button>
+        </div></div>
         <form class="pcn-chat-form" id="pcnForm">
+          <button type="button" class="pcn-mode" id="pcnMode">Quick &#9662;</button>
           <input type="text" id="pcnInput" placeholder="Ask about the market or your watchlist..." required autocomplete="off" />
           <button type="submit">Send</button>
         </form>
@@ -222,6 +237,36 @@
       } catch (e) {}
       return null;
     }
+    var LEFT = { quick: null, deep: null };
+    function getMode() { try { return localStorage.getItem('pcn_ai_mode') === 'deep' ? 'deep' : 'quick'; } catch (e) { return 'quick'; } }
+    function paintMode() {
+      var m = getMode();
+      document.getElementById('pcnMode').innerHTML = (m === 'deep' ? 'Deep' : 'Quick') + ' &#9662;';
+      document.querySelectorAll('.pcn-opt').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-mode') === m); });
+      ['Quick', 'Deep'].forEach(function (k) {
+        var v = LEFT[k.toLowerCase()];
+        document.getElementById('pcnLeft' + k).textContent = v == null ? '' : v + ' question' + (v === 1 ? '' : 's') + ' left today';
+      });
+    }
+    async function loadLeft() {
+      var tok = getToken(); if (!tok) return;
+      try {
+        var cfg = await import('./config.js');
+        var r = await fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/pcn_chat_left', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + tok }, body: '{}' });
+        if (r.ok) { var j = await r.json(); LEFT.quick = j.quick; LEFT.deep = j.deep; paintMode(); }
+      } catch (e) {}
+    }
+    (function () {
+      var sh = document.getElementById('pcnSheet');
+      document.getElementById('pcnMode').onclick = function () { paintMode(); loadLeft(); sh.classList.add('open'); };
+      document.getElementById('pcnSheetClose').onclick = function () { sh.classList.remove('open'); };
+      sh.addEventListener('click', function (e) { if (e.target === sh) sh.classList.remove('open'); });
+      document.querySelectorAll('.pcn-opt').forEach(function (b) {
+        b.onclick = function () { try { localStorage.setItem('pcn_ai_mode', b.getAttribute('data-mode')); } catch (e) {} paintMode(); sh.classList.remove('open'); };
+      });
+      paintMode();
+    })();
+
     function mdRender(t) {
       var inl = function (x) {
         return x.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function (m, a, u) {
@@ -243,19 +288,21 @@
       }).join('');
     }
 
-    async function askAI(cfg, text, soft) {
+    async function askAI(cfg, text, soft, mode) {
+      mode = mode || 'quick';
       var tok = getToken();
       var signin = '<a href="#account" style="' + HL + '">Sign in with Google</a>';
       if (!tok) return soft ? null : 'To ask your own questions, ' + signin + ' first. It is free: 10 questions a day. You can also tap one of the questions below.';
       var r = await fetch(cfg.SUPABASE_URL + '/functions/v1/pcn-chat2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + tok },
-        body: JSON.stringify({ question: text })
+        body: JSON.stringify({ question: text, mode: mode })
       });
       var j = {}; try { j = await r.json(); } catch (e) {}
       if (soft && !r.ok) return null;
+      if (j && j.left != null) { LEFT[mode] = j.left; paintMode(); }
       if (r.status === 401) return 'Your sign-in has expired. Please ' + signin + ' again.';
-      if (r.status === 429) return 'You have used your ' + (j.limit || 10) + ' questions for today. They reset at midnight UTC (1:00 AM Nigeria time). The question buttons below still work.';
+      if (r.status === 429) return 'You have used your ' + (j.limit || 10) + (mode === 'deep' ? ' Deep' : '') + ' questions for today. They reset at 1:00 AM Nigeria time.' + (mode === 'deep' ? ' You can still use Quick mode.' : '');
       if (r.status === 503) return 'PCN AI is very busy today. Please try again tomorrow. The question buttons below still work.';
       if (!r.ok || !j.answer) return 'PCN AI could not answer right now. Please try again in a moment.';
       if (/^#{1,3}\s|\*\*|\]\(https?:/m.test(j.answer)) {
@@ -309,7 +356,8 @@
       el.appendChild(b);
     }
 
-    async function sendQuery(text, forceAI) {
+    async function sendQuery(text, forceAI, mode) {
+      mode = mode || 'quick';
       if (busy) return;
       busy = true;
       var msgs = document.getElementById('pcnMsgs');
@@ -328,8 +376,8 @@
         var cfg = await import('./config.js');
         var fn = ROUTES[text];
         var AIFIRST = { "Why is the market moving today?": 1, "Are altcoins outperforming Bitcoin?": 1, "What cryptos are showing bullish momentum?": 1, "What are the trending narratives?": 1 };
-        var ai0 = ((fn && AIFIRST[text]) || forceAI) ? await askAI(cfg, text, true) : null;
-        html = ai0 ? ai0 : fn ? await fn(cfg, text) : (NEWS_Q.test(text) ? await answerNews(cfg, text) : await askAI(cfg, text));
+        var ai0 = ((fn && AIFIRST[text]) || forceAI) ? await askAI(cfg, text, true, mode) : null;
+        html = ai0 ? ai0 : fn ? await fn(cfg, text) : (NEWS_Q.test(text) ? await answerNews(cfg, text) : await askAI(cfg, text, false, mode));
       } catch (err) {
         html = 'Could not load live data right now. Try again in a moment. <a href="pulse.html" style="' + HL + '">Daily summary</a>';
       }
@@ -373,7 +421,7 @@
       var text = input.value.trim();
       if (!text) return;
       input.value = '';
-      sendQuery(text);
+      sendQuery(text, false, getMode());
     };
   }
 

@@ -72,3 +72,10 @@ html.dk .cw .chg.up{color:#3ddc97}html.dk .cw .chg.down{color:#ff6b6b}html.dk .l
 html.dk #mnu .m-ts button[aria-pressed="true"]{background:#26332c;color:#e9f1ec}
 @media (min-width:960px){html.dk #lin.dk{--rowbg:#16201a;--rowhover:#1b2a22;--hdrbg:#0e1511}html.dk #lin.dk .cw .dx.up{color:#3ddc97}html.dk #lin.dk .cw .dx.down{color:#ff6b6b}}
 @media (min-width:1280px){html.dk .tabs{border-color:rgba(255,255,255,.12)}}
+
+html.dk .pcn-sheet-in{background:#121a15}
+html.dk .pcn-opt{color:#e9f1ec;border-color:#26332c}
+html.dk .pcn-opt small{color:#8fa399}
+html.dk .pcn-sheet-close{background:#1d2a23;color:#e9f1ec}
+html.dk .pcn-mode{color:#e9f1ec;border-color:#26332c}
+html.dk .pcn-copy{border-color:#26332c;color:#8fa399}
