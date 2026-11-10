@@ -1,5 +1,6 @@
 /* PriceCheck NG - bottom "Menu" tab: opens a sheet with Account, all tools and links */
 (function () {
+  var TG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M9.8 15.3l-.4 4.2c.6 0 .9-.3 1.2-.6l2.9-2.7 6 4.4c1.1.6 1.9.3 2.2-1L23.9 4.6c.4-1.6-.6-2.3-1.6-1.9L1.3 10.8c-1.5.6-1.5 1.4-.3 1.8l5.4 1.7L19 6.4c.6-.4 1.1-.2.7.2z"/></svg>', WA = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.5 2 2 6.5 2 12.04c0 1.77.46 3.5 1.34 5.02L2 22l5.07-1.33a10 10 0 0 0 4.97 1.27C17.58 21.94 22.08 17.44 22.08 11.9 22.08 6.45 17.58 2 12.04 2zm4.43 12.38c-.24-.12-1.43-.7-1.65-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.2-.47-.4-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.4 1.37.5.58.18 1.1.16 1.51.1.46-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>';
   var TOP = [
     ['Account', 'Profile, alerts and settings', '#account'],
     ['Daily contest', 'Predict the price and win', 'predict.html'],
@@ -95,6 +96,7 @@
     '#mnu .m-ts svg{width:16px;height:16px;flex:none}' +
     '#mnu .m-ft{display:flex;flex-wrap:wrap;gap:6px 16px;margin:14px 2px 0;font-size:13px}' +
     '#mnu .m-ft a{color:inherit;opacity:.65;text-decoration:none}' +
+    '#mnu .m-so{display:flex;gap:20px;margin:16px 2px 4px}#mnu .m-so a{color:inherit;opacity:.7;display:inline-flex}' +
     '@media(min-width:640px){#mnu .m-sh{bottom:auto;top:50%;border-radius:20px;transform:translateY(-40%);opacity:0;transition:transform .25s,opacity .25s}#mnu.on .m-sh{transform:translateY(-50%);opacity:1}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
@@ -113,7 +115,8 @@
   html += '<button type="button" class="m-lo" id="mLo" hidden>Log out</button>';
   html += '<div class="m-pair"><div class="m-cu" id="mLu"><span>Language</span><button type="button" class="m-cb" id="mLb" aria-haspopup="dialog" aria-label="Language"></button></div><div class="m-cu" id="mCu" hidden><span>Currency</span><button type="button" class="m-cb" id="mCb" aria-haspopup="dialog" aria-label="Currency"></button></div></div>';
   html += '<div class="m-th"><span>Theme</span><div class="m-ts" id="mTs" role="group" aria-label="Theme"><button type="button" data-th="light" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg> Light</button><button type="button" data-th="dark" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg> Dark</button><button type="button" data-th="system" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg> System</button></div></div>';
-  html += '<div class="m-ft"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="about.html">About</a></div>';
+  html += '<div class="m-ft"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="about.html">About</a><a href="contact.html">Contact</a></div>';
+  html += '<div class="m-so"><a href="https://t.me/pricecheckNG" target="_blank" rel="noopener" aria-label="Telegram channel">'+TG+'</a><a href="https://whatsapp.com/channel/0029Vb92PIYEQIasRKfKYR0s" target="_blank" rel="noopener" aria-label="WhatsApp channel">'+WA+'</a></div>';
   html += '</div>';
 
   var box = document.createElement('div'); box.id = 'mnu'; box.innerHTML = html; document.body.appendChild(box);
