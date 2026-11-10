@@ -242,7 +242,7 @@
       if (urls.length) {
         var u = urls[0];
         var own = /^https?:\/\/(www\.)?pricecheckng\.com\.ng/i.test(u);
-        body += '<br><a data-copyurl="' + escapeHtml(u) + '" href="' + escapeHtml(u) + '"' + (own ? '' : ' target="_blank" rel="noopener"') + ' style="display:inline-block;margin:8px 0 2px;padding:7px 14px;border-radius:999px;background:#16a34a;color:#fff;font-weight:700;font-size:.9em;text-decoration:none">View full details \u2192</a>';
+        body += '<div style="margin-top:10px"><a data-copyurl="' + escapeHtml(u) + '" href="' + escapeHtml(u) + '"' + (own ? '' : ' target="_blank" rel="noopener"') + ' style="color:#16a34a;font-weight:600;font-size:.92em;text-decoration:none">View full details \u2192</a></div>';
       }
       var left = (j.left != null) ? j.left + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '';
       return body + note(left + 'AI answers can be wrong. Not financial advice.');
