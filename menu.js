@@ -95,7 +95,7 @@
     '#mnu .m-ts button[aria-pressed="true"]{opacity:1;background:#fff;color:#10201a;box-shadow:0 1px 4px rgba(0,0,0,.2)}' +
     '#mnu .m-ts svg{width:16px;height:16px;flex:none}' +
     '#mnu .m-ft{display:flex;flex-wrap:wrap;gap:6px 16px;margin:14px 2px 0;font-size:13px}' +
-    '#mnu .m-ft a{color:inherit;opacity:.65;text-decoration:none}' +
+    '#mnu .m-ft a{color:#16a34a;font-weight:600;text-decoration:underline;text-underline-offset:3px}' +
     '#mnu .m-so{display:flex;gap:20px;margin:16px 2px 4px}#mnu .m-so a{color:inherit;opacity:.7;display:inline-flex}' +
     '@media(min-width:640px){#mnu .m-sh{bottom:auto;top:50%;border-radius:20px;transform:translateY(-40%);opacity:0;transition:transform .25s,opacity .25s}#mnu.on .m-sh{transform:translateY(-50%);opacity:1}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
