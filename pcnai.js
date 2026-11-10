@@ -45,6 +45,16 @@
         .pcn-tab.on { background: #e3f6ea; color: #12a150; border-color: #12a150; }
         .pcn-libq { display: block; width: 100%; text-align: left; margin: 0 0 10px; padding: 13px 14px; border-radius: 14px; border: 1px solid #cfe3d6; background: #f3faf6; color: #10201a; font-size: 14.5px; font-weight: 600; cursor: pointer; }
         .pcn-libwrap { max-height: 48vh; overflow-y: auto; }
+        .pcn-srcchip { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 5px 12px 5px 6px; border-radius: 999px; background: #eef3f0; color: #10201a; font-size: 13px; font-weight: 600; cursor: pointer; border: 0; }
+        .pcn-fav { width: 22px; height: 22px; border-radius: 50%; background: #fff; border: 2px solid #eef3f0; margin-left: -9px; object-fit: contain; display: inline-flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; color: #12a150; overflow: hidden; }
+        .pcn-favs { display: inline-flex; padding-left: 9px; }
+        .pcn-srchead { display: flex; align-items: center; padding: 6px 0 12px; font-weight: 800; font-size: 16px; }
+        .pcn-srchead button { background: none; border: 0; font-size: 22px; line-height: 1; cursor: pointer; color: inherit; padding: 4px 10px 4px 0; }
+        .pcn-srchead span { flex: 1; text-align: center; padding-right: 30px; }
+        .pcn-srcitem { display: block; padding: 13px 2px; border-bottom: 1px solid #e8eeea; text-decoration: none; color: #10201a; }
+        .pcn-srcitem b { display: block; font-size: 14.5px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .pcn-srcitem small { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: #5b6b64; font-size: 13px; }
+        .pcn-srcitem small img { width: 22px; height: 22px; border-radius: 6px; background: #fff; }
         .pcn-copy { align-self: flex-start; margin-top: 8px; background: none; border: 1px solid #d5e0da; color: #5b6b64; border-radius: 8px; padding: 3px 9px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
         .pcn-copy:hover { border-color: #12a150; color: #12a150; }
         @media (min-width: 720px) {
@@ -79,6 +89,10 @@
           <div class="pcn-tabs" id="pcnTabs"></div>
           <div class="pcn-libwrap" id="pcnLibList"></div>
           <button type="button" class="pcn-sheet-close" id="pcnLibClose">Close</button>
+        </div></div>
+        <div class="pcn-sheet" id="pcnSrcSheet"><div class="pcn-sheet-in">
+          <div class="pcn-srchead"><button type="button" id="pcnSrcClose" aria-label="Close">&times;</button><span>Sources</span></div>
+          <div class="pcn-libwrap" id="pcnSrcList"></div>
         </div></div>
         <form class="pcn-chat-form" id="pcnForm">
           <textarea id="pcnInput" rows="2" placeholder="Ask PCN AI about the market, a coin or the Naira rate" required autocomplete="off"></textarea>
@@ -317,6 +331,39 @@
       sh.addEventListener('click', function (e) { if (e.target === sh) sh.classList.remove('open'); });
     })();
 
+    var SRC = [];
+    function hostOf(u, t) {
+      var h = ''; try { h = new URL(u).hostname.replace(/^www\./, ''); } catch (e) {}
+      if (/vertexaisearch|google\.com$/.test(h) && /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(t || '')) h = String(t).toLowerCase();
+      return h;
+    }
+    function favUrl(h) { return 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(h) + '&sz=64'; }
+    function srcChip(list) {
+      SRC.push(list); var i = SRC.length - 1;
+      var favs = list.slice(0, 3).map(function (x) {
+        return '<img class="pcn-fav" src="' + favUrl(hostOf(x.u, x.t)) + '" alt="" onerror="this.style.visibility=\'hidden\'">';
+      }).join('');
+      return '<div data-nocopy="1"><button type="button" class="pcn-srcchip" data-src="' + i + '"><span class="pcn-favs">' + favs + '</span>' + list.length + ' source' + (list.length === 1 ? '' : 's') + '</button></div>';
+    }
+    (function () {
+      var sh = document.getElementById('pcnSrcSheet');
+      document.getElementById('pcnSrcClose').onclick = function () { sh.classList.remove('open'); };
+      sh.addEventListener('click', function (e) { if (e.target === sh) sh.classList.remove('open'); });
+      document.getElementById('pcnMsgs').addEventListener('click', function (e) {
+        var b = e.target.closest ? e.target.closest('.pcn-srcchip') : null; if (!b) return;
+        var list = SRC[+b.getAttribute('data-src')] || [];
+        var box = document.getElementById('pcnSrcList'); box.innerHTML = '';
+        list.forEach(function (x) {
+          var a = document.createElement('a'); a.className = 'pcn-srcitem'; a.href = x.u; a.target = '_blank'; a.rel = 'noopener';
+          var h = hostOf(x.u, x.t);
+          a.innerHTML = '<b></b><small><img alt="" src="' + favUrl(h) + '" onerror="this.style.visibility=\'hidden\'"><span></span></small>';
+          a.querySelector('b').textContent = x.t; a.querySelector('span').textContent = h;
+          box.appendChild(a);
+        });
+        sh.classList.add('open');
+      });
+    })();
+
     function mdRender(t) {
       var inl = function (x) {
         return x.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function (m, a, u) {
@@ -357,7 +404,13 @@
       if (!r.ok || !j.answer) return 'PCN AI could not answer right now. Please try again in a moment.';
       if (/^#{1,3}\s|\*\*|\]\(https?:/m.test(j.answer)) {
         var left0 = (j.left != null) ? j.left + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '';
-        return mdRender(j.answer) + note(left0 + 'AI answers can be wrong. Not financial advice.');
+        var ans = String(j.answer), srcs = [];
+        var sm = ans.match(/\n+\s*Sources:\s*([\s\S]+)$/);
+        if (sm) {
+          sm[1].replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function (m, t, u) { srcs.push({ t: t, u: u }); return m; });
+          if (srcs.length) ans = ans.slice(0, sm.index);
+        }
+        return mdRender(ans) + (srcs.length ? srcChip(srcs) : '') + note(left0 + 'AI answers can be wrong. Not financial advice.');
       }
       var urls = [];
       var clean = String(j.answer).replace(/\(?(https?:\/\/[^\s<)]+)\)?/g, function (u0, u) {
@@ -393,7 +446,7 @@
       t.innerHTML = el.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(div|h\d)>/gi, '\n');
       var lk = t.querySelector('a[data-copyurl]'); var url = lk ? lk.getAttribute('data-copyurl') : '';
       if (lk) lk.remove();
-      t.querySelectorAll('p').forEach(function (x) { x.remove(); });
+      t.querySelectorAll('p,[data-nocopy]').forEach(function (x) { x.remove(); });
       var txt = (t.textContent || '').trim() + (url ? '\n' + url : '');
       var b = document.createElement('button');
       b.type = 'button'; b.className = 'pcn-copy';
