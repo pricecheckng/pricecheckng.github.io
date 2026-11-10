@@ -220,20 +220,46 @@
       } catch (e) {}
       return null;
     }
-    async function askAI(cfg, text) {
+    function mdRender(t) {
+      var inl = function (x) {
+        return x.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function (m, a, u) {
+          var own = /^https?:\/\/(www\.)?pricecheckng\.com\.ng/i.test(u.replace(/&amp;/g, '&'));
+          return '<a href="' + u + '"' + (own ? '' : ' target="_blank" rel="noopener"') + ' style="color:#16a34a;font-weight:600;text-decoration:none">' + a + '</a>';
+        }).replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>');
+      };
+      return escapeHtml(t).split(/\n/).map(function (l) {
+        l = l.trim(); if (!l) return '';
+        var h = l.match(/^(#{1,4})\s+(.*)$/);
+        if (h) return h[1].length <= 2
+          ? '<div style="font-weight:800;font-size:1.05em;margin:12px 0 4px">' + inl(h[2]) + '</div>'
+          : '<div style="font-weight:700;margin:10px 0 2px">' + inl(h[2]) + '</div>';
+        var n = l.match(/^(\d+)\.\s+(.*)$/);
+        if (n) return '<div style="margin:6px 0;padding-left:20px;text-indent:-20px"><b>' + n[1] + '.</b> ' + inl(n[2]) + '</div>';
+        var b = l.match(/^[-*\u2022]\s+(.*)$/);
+        if (b) return '<div style="margin:4px 0;padding-left:16px;text-indent:-16px">\u2022 ' + inl(b[1]) + '</div>';
+        return '<div style="margin:6px 0">' + inl(l) + '</div>';
+      }).join('');
+    }
+
+    async function askAI(cfg, text, soft) {
       var tok = getToken();
       var signin = '<a href="#account" style="' + HL + '">Sign in with Google</a>';
-      if (!tok) return 'To ask your own questions, ' + signin + ' first. It is free: 10 questions a day. You can also tap one of the questions below.';
+      if (!tok) return soft ? null : 'To ask your own questions, ' + signin + ' first. It is free: 10 questions a day. You can also tap one of the questions below.';
       var r = await fetch(cfg.SUPABASE_URL + '/functions/v1/pcn-chat2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + tok },
         body: JSON.stringify({ question: text })
       });
       var j = {}; try { j = await r.json(); } catch (e) {}
+      if (soft && !r.ok) return null;
       if (r.status === 401) return 'Your sign-in has expired. Please ' + signin + ' again.';
       if (r.status === 429) return 'You have used your ' + (j.limit || 10) + ' questions for today. They reset at midnight UTC (1:00 AM Nigeria time). The question buttons below still work.';
       if (r.status === 503) return 'PCN AI is very busy today. Please try again tomorrow. The question buttons below still work.';
       if (!r.ok || !j.answer) return 'PCN AI could not answer right now. Please try again in a moment.';
+      if (/^#{1,3}\s|\*\*|\]\(https?:/m.test(j.answer)) {
+        var left0 = (j.left != null) ? j.left + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '';
+        return mdRender(j.answer) + note(left0 + 'AI answers can be wrong. Not financial advice.');
+      }
       var urls = [];
       var clean = String(j.answer).replace(/\(?(https?:\/\/[^\s<)]+)\)?/g, function (u0, u) {
         u = u.replace(/[.,;:!?]+$/, ''); urls.push(u); return '';
@@ -264,7 +290,7 @@
 
     function addCopy(el) {
       var t = document.createElement('div');
-      t.innerHTML = el.innerHTML.replace(/<br\s*\/?>/gi, '\n');
+      t.innerHTML = el.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(div|h\d)>/gi, '\n');
       var lk = t.querySelector('a[data-copyurl]'); var url = lk ? lk.getAttribute('data-copyurl') : '';
       if (lk) lk.remove();
       t.querySelectorAll('p').forEach(function (x) { x.remove(); });
@@ -298,7 +324,9 @@
       try {
         var cfg = await import('./config.js');
         var fn = ROUTES[text];
-        html = fn ? await fn(cfg, text) : (NEWS_Q.test(text) ? await answerNews(cfg, text) : await askAI(cfg, text));
+        var AIFIRST = { "Why is the market moving today?": 1, "Are altcoins outperforming Bitcoin?": 1, "What cryptos are showing bullish momentum?": 1 };
+        var ai0 = (fn && AIFIRST[text]) ? await askAI(cfg, text, true) : null;
+        html = ai0 ? ai0 : fn ? await fn(cfg, text) : (NEWS_Q.test(text) ? await answerNews(cfg, text) : await askAI(cfg, text));
       } catch (err) {
         html = 'Could not load live data right now. Try again in a moment. <a href="pulse.html" style="' + HL + '">Daily summary</a>';
       }
