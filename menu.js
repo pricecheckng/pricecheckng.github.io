@@ -97,13 +97,13 @@
     '#mnu .m-ft{display:flex;flex-wrap:wrap;gap:6px 16px;margin:14px 2px 0;font-size:13px}' +
     '#mnu .m-ft a{color:#16a34a;font-weight:600;text-decoration:underline;text-underline-offset:3px}' +
     '#mnu .m-so{display:flex;flex-direction:column;gap:12px;margin:16px 2px 4px}#mnu .m-so a{color:#16a34a;font-weight:600;display:inline-flex;align-items:center;gap:10px;text-decoration:none}#mnu .m-so a span{text-decoration:underline;text-underline-offset:3px}' +
-    '@media(min-width:640px){#mnu .m-sh{top:0;bottom:0;left:0;right:0;width:100%;max-width:none;height:100%;max-height:none;margin:0;border-radius:0;transform:translateY(-12px);opacity:0;transition:transform .2s,opacity .2s;padding:12px 20px 24px;box-sizing:border-box;overflow-y:auto}#mnu.on .m-sh{transform:none;opacity:1}#mnu .m-sh>*{max-width:760px;margin-left:auto;margin-right:auto}#mnu .m-gr{display:none}#mnu .m-r,#mnu .m-g{background:none;border-radius:0;border-bottom:1px solid rgba(127,127,127,.2);margin-bottom:0}#mnu .m-r{padding:14px 4px}#mnu .m-r small{display:none}#mnu .m-gh{padding:14px 4px}#mnu .m-th{background:none;padding:12px 0}#mnu .m-so{flex-direction:row;gap:28px}}';
+    '@media(min-width:640px){#mnu .m-sh{top:0;bottom:0;left:0;right:0;width:100%;max-width:none;height:100%;max-height:none;margin:0;border-radius:0;transform:translateY(-12px);opacity:0;transition:transform .2s,opacity .2s;padding:12px 20px 24px;box-sizing:border-box;overflow-y:auto}#mnu.on .m-sh{transform:none;opacity:1}#mnu .m-sh>*{max-width:none}#mnu .m-sh{padding:12px 10px 24px}#mnu .m-h b{font-size:18px}#mnu .m-gr{display:none}#mnu .m-r,#mnu .m-g{background:none;border-radius:0;border-bottom:1px solid rgba(127,127,127,.2);margin-bottom:0}#mnu .m-r{padding:14px 4px}#mnu .m-r small{display:none}#mnu .m-gh{padding:14px 4px}#mnu .m-th{background:none;padding:12px 0}#mnu .m-so{flex-direction:row;gap:28px}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
   var chev = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
   var html = '<div class="m-sc" data-x></div><div class="m-sh" role="dialog" aria-modal="true" aria-label="Menu"><div class="m-gr"></div>' +
-    '<div class="m-h"><b>Menu</b><button class="m-x" type="button" aria-label="Close" data-x>×</button></div>';
+    '<div class="m-h"><b>PriceCheck <span style="color:#16a34a">NG</span></b><button class="m-x" type="button" aria-label="Close" data-x>×</button></div>';
   function row(r) {
     return '<a class="m-r" href="' + r[2] + '"><div><span>' + esc(r[0]) + (r[3] ? '<em class="m-d"></em>' : '') + '</span>' + (r[1] ? '<small>' + esc(r[1]) + '</small>' : '') + '</div>' + chev + '</a>';
   }
