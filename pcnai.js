@@ -410,6 +410,11 @@
           sm[1].replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function (m, t, u) { srcs.push({ t: t, u: u }); return m; });
           if (srcs.length) ans = ans.slice(0, sm.index);
         }
+        // links inside the text become plain words; they go into the sources button instead
+        var seenU = {}; srcs.forEach(function (x) { seenU[x.u] = 1; });
+        var inl = [];
+        ans = ans.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function (m, t, u) { if (!seenU[u]) { seenU[u] = 1; inl.push({ t: t, u: u }); } return t; });
+        srcs = inl.concat(srcs);
         return mdRender(ans) + (srcs.length ? srcChip(srcs) : '') + note(left0 + 'AI answers can be wrong. Not financial advice.');
       }
       var urls = [];
