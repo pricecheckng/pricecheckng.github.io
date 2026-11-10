@@ -26,6 +26,13 @@
         .pcn-chat-form input { flex: 1; min-width: 0; border: 1px solid #e1e9e4; border-radius: 10px; padding: 10px 12px; font-size: 16px; outline: none; }
         .pcn-chat-form button { background: #12a150; color: #fff; border: none; border-radius: 10px; padding: 10px 16px; font-weight: bold; cursor: pointer; }
         .pcn-close { cursor: pointer; font-size: 22px; font-weight: bold; }
+        .pcn-copy { align-self: flex-start; margin-top: 8px; background: none; border: 1px solid #d5e0da; color: #5b6b64; border-radius: 8px; padding: 3px 9px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+        .pcn-copy:hover { border-color: #12a150; color: #12a150; }
+        @media (min-width: 720px) {
+          #pcn-chat-modal { align-items: center; background: rgba(8,14,11,0.82); }
+          .pcn-chat-box { max-width: 760px; height: 86vh; border-radius: 16px; }
+          .pcn-msg { font-size: 15px; max-width: 80%; }
+        }
       </style>
       <div class="pcn-chat-box">
         <div class="pcn-chat-header">
@@ -33,9 +40,7 @@
           <span class="pcn-close" id="pcnClose">&times;</span>
         </div>
         <div class="pcn-chat-body" id="pcnMsgs">
-          <div class="pcn-msg ai">Hello! I am PCN AI. Ask me anything about live market trends, token stats, or technical analysis.</div>
-          
-          <div class="pcn-prompts-title" id="pcnPromptTitle">Ask PCN AI:</div>
+          <div class="pcn-prompts-title" id="pcnPromptTitle">Ask PCN AI anything about the market, a coin or the Naira rate, or tap one of these:</div>
           <div class="pcn-prompts" id="pcnPrompts">
             <button class="pcn-chip" data-query="What is the latest crypto news?">📰 What is the latest crypto news?</button>
             <button class="pcn-chip" data-query="Why is the market moving today?">🔥 Why is the market moving today?</button>
@@ -229,11 +234,16 @@
       if (r.status === 429) return 'You have used your ' + (j.limit || 10) + ' questions for today. They reset at midnight UTC (1:00 AM Nigeria time). The question buttons below still work.';
       if (r.status === 503) return 'PCN AI is very busy today. Please try again tomorrow. The question buttons below still work.';
       if (!r.ok || !j.answer) return 'PCN AI could not answer right now. Please try again in a moment.';
-      var body = escapeHtml(j.answer).replace(/(https?:\/\/[^\s<]+)/g, function (u) {
-        var tail = ''; var m = u.match(/[.,;:!?)]+$/); if (m) { tail = m[0]; u = u.slice(0, -tail.length); }
+      var urls = [];
+      var clean = String(j.answer).replace(/\(?(https?:\/\/[^\s<)]+)\)?/g, function (u0, u) {
+        u = u.replace(/[.,;:!?]+$/, ''); urls.push(u); return '';
+      }).replace(/\s+(at|on|here|from|via|see|visit|check|and|or|in|to|of)\s*([.,;:!?]*)\s*$/i, '$2').replace(/\s*:\s*$/, '.').replace(/[ \t]+([.,;:!?])/g, '$1').trim();
+      var body = escapeHtml(clean).replace(/\n/g, '<br>');
+      if (urls.length) {
+        var u = urls[0];
         var own = /^https?:\/\/(www\.)?pricecheckng\.com\.ng/i.test(u);
-        return '<a href="' + u + '"' + (own ? '' : ' target="_blank" rel="noopener"') + ' style="display:inline-block;margin:6px 0 2px;padding:7px 14px;border-radius:999px;background:#16a34a;color:#fff;font-weight:700;font-size:.9em;text-decoration:none">View full details \u2192</a>' + tail;
-      }).replace(/\n/g, '<br>');
+        body += '<br><a data-copyurl="' + escapeHtml(u) + '" href="' + escapeHtml(u) + '"' + (own ? '' : ' target="_blank" rel="noopener"') + ' style="display:inline-block;margin:8px 0 2px;padding:7px 14px;border-radius:999px;background:#16a34a;color:#fff;font-weight:700;font-size:.9em;text-decoration:none">View full details \u2192</a>';
+      }
       var left = (j.left != null) ? j.left + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '';
       return body + note(left + 'AI answers can be wrong. Not financial advice.');
     }
@@ -251,6 +261,24 @@
       var a = e.target.closest ? e.target.closest('a[href^="#"]') : null;
       if (a) modal.classList.remove('open');
     });
+
+    function addCopy(el) {
+      var t = document.createElement('div');
+      t.innerHTML = el.innerHTML.replace(/<br\s*\/?>/gi, '\n');
+      var lk = t.querySelector('a[data-copyurl]'); var url = lk ? lk.getAttribute('data-copyurl') : '';
+      if (lk) lk.remove();
+      t.querySelectorAll('p').forEach(function (x) { x.remove(); });
+      var txt = (t.textContent || '').trim() + (url ? '\n' + url : '');
+      var b = document.createElement('button');
+      b.type = 'button'; b.className = 'pcn-copy';
+      b.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Copy</span>';
+      b.onclick = function () {
+        function done() { b.lastChild.textContent = 'Copied'; setTimeout(function () { b.lastChild.textContent = 'Copy'; }, 1800); }
+        try { navigator.clipboard.writeText(txt).then(done, fb); } catch (_) { fb(); }
+        function fb() { var a = document.createElement('textarea'); a.value = txt; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch (_) {} a.remove(); done(); }
+      };
+      el.appendChild(b);
+    }
 
     async function sendQuery(text) {
       if (busy) return;
@@ -275,7 +303,10 @@
         html = 'Could not load live data right now. Try again in a moment. <a href="pulse.html" style="' + HL + '">Daily summary</a>';
       }
       var el = document.getElementById(loadingId);
-      if (el) el.innerHTML = html;
+      if (el) {
+        el.innerHTML = html;
+        if (!/Thinking|could not|Could not|very busy|Sign in with Google|expired/.test(el.textContent)) addCopy(el);
+      }
       // the suggestion chips stay hidden once the conversation has started
       msgs.scrollTop = msgs.scrollHeight;
       busy = false;
