@@ -1,0 +1,190 @@
+/* PCN Chart - small self-contained candle chart (no libraries). Candles, volume, MA lines, RSI panel, support/resistance zones.
+   Touch: drag to pan, pinch to zoom, press & hold for crosshair. Mouse: drag, wheel. */
+(function () {
+  function PCNChart(mainEl, rsiEl, opts) {
+    opts = opts || {};
+    var C = { up: '#16c784', dn: '#ea3943', grid: '#16221b', txt: '#8aa396', line: '#1e2d25', ma50: '#f5a524', ma200: '#5b8def', rsi: '#a78bfa', sup: '22,199,132', res: '234,57,67' };
+    var dpr = Math.min(window.devicePixelRatio || 1, 3);
+    var mc = document.createElement('canvas'), rc = document.createElement('canvas');
+    [mc, rc].forEach(function (c) { c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block'; });
+    mainEl.appendChild(mc); rsiEl.appendChild(rc);
+    var mx = mc.getContext('2d'), rx = rc.getContext('2d');
+    var D = { c: [], ma50: [], ma200: [], rsi: [], levels: [] };   // ma/rsi arrays aligned to candles (null when none)
+    var V = { start: 0, bw: 7 };                                    // start = index of left-most bar (float), bw = px per bar
+    var W = 0, H = 0, RH = 0, AX = 58, cross = null, hov = null;
+    var tz = opts.tz || undefined;
+    var tfmt = function (t, iv) {
+      try {
+        var d = new Date(t);
+        if (iv === '1d' || iv === '1w') return new Intl.DateTimeFormat('en-US', { timeZone: tz, month: 'short', day: 'numeric' }).format(d);
+        return new Intl.DateTimeFormat('en-US', { timeZone: tz, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
+      } catch (e) { return ''; }
+    };
+    var iv = '4h';
+
+    function size() {
+      var r = mainEl.getBoundingClientRect(), r2 = rsiEl.getBoundingClientRect();
+      W = Math.max(1, r.width); H = Math.max(1, r.height); RH = Math.max(1, r2.height);
+      mc.width = W * dpr; mc.height = H * dpr; rc.width = W * dpr; rc.height = RH * dpr;
+      mx.setTransform(dpr, 0, 0, dpr, 0, 0); rx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      draw();
+    }
+    function plotW() { return W - AX; }
+    function clampView() {
+      var n = D.c.length, vis = plotW() / V.bw;
+      V.bw = Math.max(2, Math.min(40, V.bw));
+      vis = plotW() / V.bw;
+      var minS = -vis * 0.6, maxS = Math.max(0, n - vis * 0.4);        // allow a little empty space on both sides
+      V.start = Math.max(minS, Math.min(V.start, maxS));
+    }
+    function fit() { var n = D.c.length; V.bw = Math.max(3, Math.min(14, plotW() / Math.min(n, 90))); V.start = Math.max(0, n - plotW() / V.bw + 4); clampView(); }
+    function range() { var s = Math.max(0, Math.floor(V.start)), e = Math.min(D.c.length - 1, Math.ceil(V.start + plotW() / V.bw)); return [s, e]; }
+    function nice(v) { return v >= 1000 ? v.toLocaleString('en-US', { maximumFractionDigits: 0 }) : v >= 100 ? v.toFixed(1) : v >= 1 ? v.toFixed(3) : v.toPrecision(3); }
+    function xOf(i) { return (i - V.start) * V.bw + V.bw / 2; }
+
+    function axisSteps(lo, hi, n) {
+      var span = hi - lo || 1, raw = span / n, p = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / p;
+      var st = (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p, out = [];
+      for (var v = Math.ceil(lo / st) * st; v <= hi; v += st) out.push(v);
+      return out;
+    }
+
+    function draw() {
+      if (!W) return;
+      var n = D.c.length;
+      mx.clearRect(0, 0, W, H); rx.clearRect(0, 0, W, RH);
+      if (!n) return;
+      var r = range(), s = r[0], e = r[1], PH = H - 22, volH = PH * 0.16;      // 22px for the time axis
+      var hi = -Infinity, lo = Infinity, vmax = 0, i;
+      for (i = s; i <= e; i++) { var k = D.c[i]; if (k.h > hi) hi = k.h; if (k.l < lo) lo = k.l; if (k.v > vmax) vmax = k.v; }
+      var pad = (hi - lo) * 0.08 || hi * 0.01; hi += pad; lo -= pad;
+      var py = function (v) { return (hi - v) / (hi - lo) * (PH - volH - 6) + 4; };
+      // grid + price axis
+      mx.font = '11px system-ui,sans-serif'; mx.textBaseline = 'middle';
+      axisSteps(lo, hi, 6).forEach(function (v) {
+        var y = py(v); mx.strokeStyle = C.grid; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(0, y); mx.lineTo(plotW(), y); mx.stroke();
+        mx.fillStyle = C.txt; mx.textAlign = 'left'; mx.fillText(nice(v), plotW() + 6, y);
+      });
+      // time axis
+      mx.textAlign = 'center'; mx.textBaseline = 'alphabetic';
+      var every = Math.max(1, Math.round(90 / V.bw));
+      for (i = Math.ceil(s / every) * every; i <= e; i += every) {
+        var x = xOf(i); if (x < 20 || x > plotW() - 20) continue;
+        mx.strokeStyle = C.grid; mx.beginPath(); mx.moveTo(x, 0); mx.lineTo(x, PH); mx.stroke();
+        mx.fillStyle = C.txt; mx.fillText(tfmt(D.c[i].t, iv), x, H - 6);
+      }
+      mx.save(); mx.beginPath(); mx.rect(0, 0, plotW(), H); mx.clip();
+      // support / resistance zones
+      D.levels.forEach(function (L) {
+        var y1 = py(L.high), y2 = py(L.low), col = L.kind === 'support' ? C.sup : C.res;
+        if (y2 - y1 < 3) { y1 -= 1.5; y2 += 1.5; }
+        mx.fillStyle = 'rgba(' + col + ',.14)'; mx.fillRect(0, y1, plotW(), y2 - y1);
+        mx.strokeStyle = 'rgba(' + col + ',.7)'; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(0, py(L.price)); mx.lineTo(plotW(), py(L.price)); mx.stroke();
+        mx.fillStyle = 'rgba(' + col + ',1)'; mx.textAlign = 'left'; mx.textBaseline = 'bottom';
+        mx.fillText(L.kind + ' ' + nice(L.price), 6, y1 - 2);
+      });
+      // volume + candles
+      var bw = Math.max(1, V.bw * 0.7);
+      for (i = s; i <= e; i++) {
+        var c = D.c[i], x2 = xOf(i), up = c.c >= c.o, col2 = up ? C.up : C.dn;
+        mx.fillStyle = up ? 'rgba(22,199,132,.3)' : 'rgba(234,57,67,.3)';
+        var vh = vmax ? c.v / vmax * volH : 0; mx.fillRect(x2 - bw / 2, PH - vh, bw, vh);
+        mx.strokeStyle = col2; mx.fillStyle = col2; mx.lineWidth = 1;
+        mx.beginPath(); mx.moveTo(x2, py(c.h)); mx.lineTo(x2, py(c.l)); mx.stroke();
+        var yo = py(c.o), yc = py(c.c); mx.fillRect(x2 - bw / 2, Math.min(yo, yc), bw, Math.max(1, Math.abs(yo - yc)));
+      }
+      // MAs
+      [['ma50', C.ma50], ['ma200', C.ma200]].forEach(function (m) {
+        var a = D[m[0]], started = false; mx.strokeStyle = m[1]; mx.lineWidth = 1.6; mx.beginPath();
+        for (var j = Math.max(0, s - 1); j <= Math.min(n - 1, e + 1); j++) { if (a[j] == null) continue; var xx = xOf(j), yy = py(a[j]); if (!started) { mx.moveTo(xx, yy); started = true; } else mx.lineTo(xx, yy); }
+        mx.stroke();
+      });
+      mx.restore();
+      // last price tag
+      var last = D.c[n - 1], yl = py(last.c), upL = last.c >= last.o;
+      mx.setLineDash([3, 3]); mx.strokeStyle = upL ? C.up : C.dn; mx.beginPath(); mx.moveTo(0, yl); mx.lineTo(plotW(), yl); mx.stroke(); mx.setLineDash([]);
+      mx.fillStyle = upL ? C.up : C.dn; mx.fillRect(plotW(), yl - 9, AX, 18); mx.fillStyle = '#04100a'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(nice(last.c), plotW() + 6, yl);
+      // crosshair
+      if (cross != null && cross >= 0 && cross < n) {
+        var cx = xOf(cross), k2 = D.c[cross];
+        mx.strokeStyle = 'rgba(138,163,150,.6)'; mx.setLineDash([4, 4]); mx.beginPath(); mx.moveTo(cx, 0); mx.lineTo(cx, PH); mx.stroke(); mx.setLineDash([]);
+        var yc2 = py(k2.c); mx.beginPath(); mx.moveTo(0, yc2); mx.lineTo(plotW(), yc2); mx.setLineDash([4, 4]); mx.stroke(); mx.setLineDash([]);
+        mx.fillStyle = '#2a3b32'; mx.fillRect(plotW(), yc2 - 9, AX, 18); mx.fillStyle = '#e8f1ec'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(nice(k2.c), plotW() + 6, yc2);
+      }
+      // RSI panel
+      var ry = function (v) { return (100 - v) / 100 * (RH - 14) + 7; };
+      [30, 50, 70].forEach(function (v) {
+        rx.strokeStyle = v === 50 ? C.grid : '#2c4337'; rx.setLineDash(v === 50 ? [] : [4, 4]); rx.lineWidth = 1; rx.beginPath(); rx.moveTo(0, ry(v)); rx.lineTo(plotW(), ry(v)); rx.stroke(); rx.setLineDash([]);
+        rx.fillStyle = C.txt; rx.font = '10px system-ui,sans-serif'; rx.textAlign = 'left'; rx.textBaseline = 'middle'; rx.fillText(String(v), plotW() + 6, ry(v));
+      });
+      rx.save(); rx.beginPath(); rx.rect(0, 0, plotW(), RH); rx.clip();
+      rx.strokeStyle = C.rsi; rx.lineWidth = 1.6; rx.beginPath(); var st = false;
+      for (i = Math.max(0, s - 1); i <= Math.min(n - 1, e + 1); i++) { var v2 = D.rsi[i]; if (v2 == null) continue; var xr = xOf(i), yr = ry(v2); if (!st) { rx.moveTo(xr, yr); st = true; } else rx.lineTo(xr, yr); }
+      rx.stroke();
+      if (cross != null && cross >= 0 && cross < n) { rx.strokeStyle = 'rgba(138,163,150,.6)'; rx.setLineDash([4, 4]); rx.beginPath(); rx.moveTo(xOf(cross), 0); rx.lineTo(xOf(cross), RH); rx.stroke(); rx.setLineDash([]); }
+      rx.restore();
+      var lr = D.rsi[cross != null && cross < n ? cross : n - 1];
+      if (lr != null) { rx.fillStyle = C.rsi; rx.fillRect(plotW(), ry(lr) - 8, AX, 16); rx.fillStyle = '#0b120e'; rx.textAlign = 'left'; rx.textBaseline = 'middle'; rx.font = '11px system-ui,sans-serif'; rx.fillText(lr.toFixed(2), plotW() + 6, ry(lr)); }
+      if (opts.onHover) opts.onHover(cross != null && cross < n ? D.c[cross] : null);
+    }
+
+    // ---- gestures ----
+    var ptrs = {}, dragX = null, startDist = 0, startBw = 0, holdT = null, moved = false, anchorIdx = 0;
+    function idxAt(px) { return Math.round((px - V.bw / 2) / V.bw + V.start); }
+    mc.addEventListener('pointerdown', function (ev) {
+      mc.setPointerCapture(ev.pointerId); ptrs[ev.pointerId] = { x: ev.offsetX, y: ev.offsetY }; moved = false;
+      var ids = Object.keys(ptrs);
+      if (ids.length === 1) {
+        dragX = ev.offsetX; var ox = ev.offsetX;
+        holdT = setTimeout(function () { if (!moved && ev.offsetX < plotW()) { cross = idxAt(ox); dragX = null; draw(); } }, 380);
+      } else if (ids.length === 2) {
+        clearTimeout(holdT); var a = ptrs[ids[0]], b = ptrs[ids[1]];
+        startDist = Math.abs(a.x - b.x) || 1; startBw = V.bw; anchorIdx = idxAt((a.x + b.x) / 2); dragX = null;
+      }
+    });
+    mc.addEventListener('pointermove', function (ev) {
+      if (!ptrs[ev.pointerId]) { if (ev.pointerType === 'mouse' && ev.offsetX < plotW()) { cross = idxAt(ev.offsetX); draw(); } return; }
+      ptrs[ev.pointerId] = { x: ev.offsetX, y: ev.offsetY };
+      var ids = Object.keys(ptrs);
+      if (ids.length === 2) {
+        var a = ptrs[ids[0]], b = ptrs[ids[1]], d = Math.abs(a.x - b.x) || 1, mid = (a.x + b.x) / 2;
+        V.bw = startBw * d / startDist; V.start = anchorIdx - (mid - V.bw / 2) / V.bw; clampView(); draw(); return;
+      }
+      if (cross != null && dragX == null) { cross = Math.max(0, Math.min(D.c.length - 1, idxAt(ev.offsetX))); draw(); return; }
+      if (dragX != null) {
+        var dx = ev.offsetX - dragX; if (Math.abs(dx) > 3) { moved = true; clearTimeout(holdT); }
+        V.start -= dx / V.bw; dragX = ev.offsetX; clampView(); draw();
+      }
+    });
+    function up(ev) {
+      delete ptrs[ev.pointerId]; clearTimeout(holdT);
+      var ids = Object.keys(ptrs);
+      if (ids.length === 1) dragX = ptrs[ids[0]].x; else if (!ids.length) { dragX = null; if (ev.pointerType !== 'mouse') { cross = null; draw(); } }
+    }
+    mc.addEventListener('pointerup', up); mc.addEventListener('pointercancel', up);
+    mc.addEventListener('pointerleave', function (ev) { if (ev.pointerType === 'mouse') { cross = null; draw(); } });
+    mc.addEventListener('wheel', function (ev) {
+      ev.preventDefault(); var ai = idxAt(ev.offsetX); V.bw *= ev.deltaY < 0 ? 1.12 : 1 / 1.12; V.start = ai - (ev.offsetX - V.bw / 2) / V.bw; clampView(); draw();
+    }, { passive: false });
+    // RSI panel mirrors the same pan/zoom
+    rc.addEventListener('pointerdown', function (ev) { rc.setPointerCapture(ev.pointerId); dragX = ev.offsetX; });
+    rc.addEventListener('pointermove', function (ev) { if (dragX == null) return; V.start -= (ev.offsetX - dragX) / V.bw; dragX = ev.offsetX; clampView(); draw(); });
+    rc.addEventListener('pointerup', function () { dragX = null; });
+    rc.addEventListener('pointercancel', function () { dragX = null; });
+
+    window.addEventListener('resize', size);
+    if (window.ResizeObserver) { var ro = new ResizeObserver(size); ro.observe(mainEl); ro.observe(rsiEl); }
+
+    return {
+      setData: function (d, interval) {
+        iv = interval || iv; D.c = d.candles || []; D.levels = d.levels || [];
+        var fill = function (arr) { var o = new Array(D.c.length).fill(null), m = {}; (arr || []).forEach(function (p) { if (p) m[p.t] = p.v; }); D.c.forEach(function (c, i) { if (m[c.t] != null) o[i] = m[c.t]; }); return o; };
+        D.ma50 = fill(d.sma50); D.ma200 = fill(d.sma200); D.rsi = fill(d.rsi14);
+        cross = null; size(); fit(); draw();
+      },
+      setZones: function (z) { D.levels = z || []; draw(); },
+      resize: size, fit: function () { fit(); draw(); },
+    };
+  }
+  window.PCNChart = PCNChart;
+})();

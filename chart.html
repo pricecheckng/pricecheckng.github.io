@@ -18,8 +18,8 @@
   .tfs { display:flex; gap:4px; margin-left:auto; }
   .tf { background:none; border:0; color:var(--mut); font:inherit; font-size:13px; font-weight:700; padding:7px 9px; border-radius:9px; cursor:pointer; }
   .tf.on { background:#16241d; color:var(--txt); }
-  .info { padding:8px 12px 2px; font-size:13px; display:flex; gap:12px; flex-wrap:wrap; align-items:baseline; }
-  .info b { font-size:20px; } .info .mut { color:var(--mut); }
+  .info { padding:8px 12px 2px; font-size:13px; white-space:nowrap; overflow:hidden; display:flex; gap:12px; flex-wrap:wrap; align-items:baseline; }
+  .info b { font-size:20px; } #px.hv { font-size:12px; font-weight:700; } .info .mut { color:var(--mut); }
   .leg { padding:0 12px 4px; font-size:11px; color:var(--mut); display:flex; gap:12px; }
   .leg i { display:inline-block; width:10px; height:3px; border-radius:2px; margin-right:5px; vertical-align:middle; }
   #main { flex:1 1 62%; min-height:0; position:relative; }
@@ -45,7 +45,7 @@
   <div id="rsiWrap"><span class="lbl">RSI 14</span><div class="c" id="cRsi"></div></div>
   <div class="foot"><span id="tz"></span><span>Prices in USD (USDT)</span></div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/lightweight-charts/4.1.3/lightweight-charts.standalone.production.js"></script>
+<script src="pcnchart.js"></script>
 <script type="module">
 import { SUPABASE_URL } from './config.js';
 const $ = id => document.getElementById(id);
@@ -57,29 +57,9 @@ $('sym').value = symbol;
 document.querySelectorAll('.tf').forEach(b => b.classList.toggle('on', b.dataset.i === interval));
 
 function fail(t) { const m = $('msg'); m.textContent = t; m.style.display = 'flex'; }
-if (!window.LightweightCharts) { fail('The chart library could not load. Check your connection and refresh.'); throw new Error('no lib'); }
-const L = window.LightweightCharts;
-const base = { layout: { background: { color: '#0b120e' }, textColor: '#8aa396', fontSize: 11 },
-  grid: { vertLines: { color: '#16221b' }, horzLines: { color: '#16221b' } },
-  rightPriceScale: { borderColor: '#1e2d25' }, timeScale: { borderColor: '#1e2d25', timeVisible: true, secondsVisible: false },
-  crosshair: { mode: 0 } };
-const main = L.createChart($('cMain'), { ...base, autoSize: true });
-const rsiC = L.createChart($('cRsi'), { ...base, autoSize: true, timeScale: { ...base.timeScale, visible: false } });
-const candles = main.addCandlestickSeries({ upColor: '#16c784', downColor: '#ea3943', borderVisible: false, wickUpColor: '#16c784', wickDownColor: '#ea3943' });
-const vol = main.addHistogramSeries({ priceFormat: { type: 'volume' }, priceScaleId: 'vol', lastValueVisible: false, priceLineVisible: false });
-main.priceScale('vol').applyOptions({ scaleMargins: { top: 0.82, bottom: 0 } });
-const ma50 = main.addLineSeries({ color: '#f5a524', lineWidth: 2, lastValueVisible: false, priceLineVisible: false });
-const ma200 = main.addLineSeries({ color: '#5b8def', lineWidth: 2, lastValueVisible: false, priceLineVisible: false });
-const rsi = rsiC.addLineSeries({ color: '#a78bfa', lineWidth: 2, priceLineVisible: false });
-[30, 70].forEach(p => rsi.createPriceLine({ price: p, color: '#35503f', lineWidth: 1, lineStyle: 2, axisLabelVisible: true, title: '' }));
-rsiC.priceScale('right').applyOptions({ scaleMargins: { top: 0.1, bottom: 0.1 } });
-// keep both charts scrolling/zooming together
-let syncing = false;
-const link = (a, b) => a.timeScale().subscribeVisibleLogicalRangeChange(r => { if (syncing || !r) return; syncing = true; b.timeScale().setVisibleLogicalRange(r); syncing = false; });
-link(main, rsiC); link(rsiC, main);
-
-const off = () => -new Date().getTimezoneOffset() * 60;           // seconds east of UTC for this viewer (chart draws UTC, so shift)
+const chart = new window.PCNChart($('cMain'), $('cRsi'), { tz, onHover: c => { if (c) { $('px').classList.add('hv'); $('px').textContent = 'O ' + fmt(c.o) + ' H ' + fmt(c.h) + ' L ' + fmt(c.l) + ' C ' + fmt(c.c); } else if (lastPx) { $('px').classList.remove('hv'); $('px').textContent = lastPx; } } });
 const fmt = n => n >= 100 ? n.toLocaleString('en-US', { maximumFractionDigits: 2 }) : n >= 1 ? n.toFixed(3) : n.toPrecision(4);
+let lastPx = '';
 let token = 0;
 async function load() {
   const my = ++token; fail('Loading chart…');
@@ -88,17 +68,12 @@ async function load() {
     const d = await r.json();
     if (my !== token) return;
     if (!r.ok || d.error) throw new Error(d.error || r.status);
-    const o = off(), T = t => Math.floor(t / 1000) + o;
-    candles.setData(d.candles.map(c => ({ time: T(c.t), open: c.o, high: c.h, low: c.l, close: c.c })));
-    vol.setData(d.candles.map(c => ({ time: T(c.t), value: c.v, color: c.c >= c.o ? 'rgba(22,199,132,.35)' : 'rgba(234,57,67,.35)' })));
-    const line = a => (a || []).filter(Boolean).map(p => ({ time: T(p.t), value: p.v }));
-    ma50.setData(line(d.series.sma50)); ma200.setData(line(d.series.sma200)); rsi.setData(line(d.series.rsi14));
+    chart.setData({ candles: d.candles, sma50: d.series.sma50, sma200: d.series.sma200, rsi14: d.series.rsi14, levels: (d.analysis.levels || []) }, interval);
     const a = d.analysis, t = a.today;
-    $('px').textContent = '$' + fmt(a.price);
+    lastPx = '$' + fmt(a.price); $('px').textContent = lastPx;
     $('chg').textContent = t ? (t.change_pct >= 0 ? '+' : '') + t.change_pct.toFixed(2) + '% today' : '';
     $('chg').style.color = t && t.change_pct >= 0 ? '#16c784' : '#ea3943';
     $('src').textContent = 'via ' + d.source;
-    main.timeScale().fitContent(); main.timeScale().scrollToRealTime();
     $('msg').style.display = 'none';
   } catch (e) { if (my === token) fail('Could not load ' + symbol + '/USDT. Check the symbol and try again.'); }
 }
