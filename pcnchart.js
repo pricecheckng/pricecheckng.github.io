@@ -20,8 +20,16 @@
         return new Intl.DateTimeFormat('en-US', { timeZone: tz, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
       } catch (e) { return ''; }
     };
-    var iv = '4h';
+    var iv = '4h', raf = 0;
 
+
+    function smaArr(c, n) { var o = [], sum = 0; for (var i = 0; i < c.length; i++) { sum += c[i]; if (i >= n) sum -= c[i - n]; o.push(i >= n - 1 ? sum / n : null); } return o; }
+    function rsiArr(c, n) {
+      var o = new Array(c.length).fill(null); if (c.length <= n) return o; var g = 0, l = 0, i, d;
+      for (i = 1; i <= n; i++) { d = c[i] - c[i - 1]; if (d >= 0) g += d; else l -= d; } g /= n; l /= n; o[n] = l === 0 ? 100 : 100 - 100 / (1 + g / l);
+      for (i = n + 1; i < c.length; i++) { d = c[i] - c[i - 1]; g = (g * (n - 1) + Math.max(d, 0)) / n; l = (l * (n - 1) + Math.max(-d, 0)) / n; o[i] = l === 0 ? 100 : 100 - 100 / (1 + g / l); }
+      return o;
+    }
     function size() {
       var r = mainEl.getBoundingClientRect(), r2 = rsiEl.getBoundingClientRect();
       W = Math.max(1, r.width); H = Math.max(1, r.height); RH = Math.max(1, r2.height);
@@ -76,12 +84,11 @@
       mx.save(); mx.beginPath(); mx.rect(0, 0, plotW(), H); mx.clip();
       // support / resistance zones
       D.levels.forEach(function (L) {
-        var y1 = py(L.high), y2 = py(L.low), col = L.kind === 'support' ? C.sup : C.res;
-        if (y2 - y1 < 3) { y1 -= 1.5; y2 += 1.5; }
-        mx.fillStyle = 'rgba(' + col + ',.14)'; mx.fillRect(0, y1, plotW(), y2 - y1);
-        mx.strokeStyle = 'rgba(' + col + ',.7)'; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(0, py(L.price)); mx.lineTo(plotW(), py(L.price)); mx.stroke();
-        mx.fillStyle = 'rgba(' + col + ',1)'; mx.textAlign = 'left'; mx.textBaseline = 'bottom';
-        mx.fillText(L.kind + ' ' + nice(L.price), 6, y1 - 2);
+        var y = py(L.price), col = L.kind === 'support' ? C.sup : C.res;
+        mx.strokeStyle = 'rgba(' + col + ',.85)'; mx.lineWidth = 1.2; mx.setLineDash([6, 4]); mx.beginPath(); mx.moveTo(0, y); mx.lineTo(plotW(), y); mx.stroke(); mx.setLineDash([]);
+        var t = L.kind + ' ' + nice(L.price), tw = mx.measureText(t).width + 10;
+        mx.fillStyle = 'rgba(11,18,14,.85)'; mx.fillRect(4, y - 16, tw, 14);
+        mx.fillStyle = 'rgba(' + col + ',1)'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(t, 9, y - 9);
       });
       // volume + candles
       var bw = Math.max(1, V.bw * 0.7);
@@ -182,6 +189,15 @@
         D.ma50 = fill(d.sma50); D.ma200 = fill(d.sma200); D.rsi = fill(d.rsi14);
         cross = null; size(); fit(); draw();
       },
+      tick: function (k) {   // live candle update: {t,o,h,l,c,v}. Replaces the newest candle or appends a new one; MAs and RSI follow.
+        var n = D.c.length; if (!n) return;
+        var lastC = D.c[n - 1], follow = V.start + plotW() / V.bw >= n - 1;
+        if (k.t === lastC.t) D.c[n - 1] = k; else if (k.t > lastC.t) { D.c.push(k); if (follow) V.start += 1; } else return;
+        var cl = D.c.map(function (x) { return x.c; });
+        D.ma50 = smaArr(cl, 50); D.ma200 = smaArr(cl, 200); D.rsi = rsiArr(cl, 14);
+        if (!raf) raf = requestAnimationFrame(function () { raf = 0; draw(); });
+      },
+      last: function () { return D.c[D.c.length - 1]; },
       setZones: function (z) { D.levels = z || []; draw(); },
       resize: size, fit: function () { fit(); draw(); },
     };
