@@ -124,7 +124,7 @@
       if (vk && window.innerWidth < 900) {
         try { vk.overlaysContent = isOpen; } catch (_) {}
         ['top', 'left', 'width', 'height', 'right', 'bottom'].forEach(function (k) { modal.style[k] = ''; });
-        modal.style.paddingBottom = isOpen ? ((vk.boundingRect && vk.boundingRect.height) || 0) + 'px' : '';
+        modal.style.paddingBottom = isOpen ? ((((vk.boundingRect && vk.boundingRect.height) || 0) + ((vk.boundingRect && vk.boundingRect.height) > 0 ? 14 : 0))) + 'px' : '';
         chatBox.style.height = ''; chatBox.style.maxHeight = isOpen ? 'calc(100% - 8px)' : '';
         var mm = document.getElementById('pcnMsgs');
         if (isOpen && mm && vk.boundingRect && vk.boundingRect.height > 0) mm.scrollTop = mm.scrollHeight;
