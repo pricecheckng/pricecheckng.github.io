@@ -83,8 +83,13 @@
       }
       mx.save(); mx.beginPath(); mx.rect(0, 0, plotW(), H); mx.clip();
       // support / resistance zones
-      D.levels.forEach(function (L) {
-        var y = py(L.price), col = L.kind === 'support' ? C.sup : C.res;
+      var lastYp = py(D.c[n - 1].c), usedY = [];
+      D.levels.slice().sort(function (a, b) { return Math.abs(a.price - D.c[n - 1].c) - Math.abs(b.price - D.c[n - 1].c); }).forEach(function (L) {
+        var y = py(L.price);
+        if (y < 2 || y > PH - 2 || Math.abs(y - lastYp) < 9) return;                       // too close to the live price line: would look like a double line
+        for (var u = 0; u < usedY.length; u++) if (Math.abs(usedY[u] - y) < 17) return;    // too close to another level: skip
+        usedY.push(y);
+        var col = L.kind === 'support' ? C.sup : C.res;
         mx.strokeStyle = 'rgba(' + col + ',.85)'; mx.lineWidth = 1.2; mx.setLineDash([6, 4]); mx.beginPath(); mx.moveTo(0, y); mx.lineTo(plotW(), y); mx.stroke(); mx.setLineDash([]);
         var t = L.kind + ' ' + nice(L.price), tw = mx.measureText(t).width + 10;
         mx.fillStyle = 'rgba(11,18,14,.85)'; mx.fillRect(4, y - 16, tw, 14);
