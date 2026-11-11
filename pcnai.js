@@ -166,8 +166,17 @@
     window.addEventListener('resize', fitChat);
     window.addEventListener('orientationchange', function () { baseH = 0; setTimeout(fitChat, 300); });
     new MutationObserver(fitChat).observe(modal, { attributes: true, attributeFilter: ['class'] });
-    chatInput.addEventListener('focus', function () { setTimeout(fitChat, 150); setTimeout(fitChat, 450); setTimeout(fitChat, 900); });
-    chatInput.addEventListener('blur', function () { setTimeout(fitChat, 150); });
+    // In "desktop site" mode the browser reports the keyboard late, so keep checking quickly for a few seconds
+    var pollId = null;
+    function pollFit(sec) {
+      if (pollId) clearInterval(pollId);
+      var n = 0, max = Math.round((sec || 5) * 1000 / 80);
+      pollId = setInterval(function () { fitChat(); if (++n > max || !modal.classList.contains('open')) { clearInterval(pollId); pollId = null; } }, 80);
+    }
+    chatInput.addEventListener('touchstart', function () { pollFit(6); }, { passive: true });
+    chatInput.addEventListener('mousedown', function () { pollFit(6); });
+    chatInput.addEventListener('focus', function () { fitChat(); pollFit(6); });
+    chatInput.addEventListener('blur', function () { pollFit(3); });
 
     // ---- live-data answers (no AI cost): every chip gets its own answer ----
     var JUNK = /^(usdt|usdc|dai|usde|fdusd|tusd|usdd|pyusd|usds|usd1|usdg|usdy|usyc|buidl|rlusd|figr_heloc|wbtc|weth|steth|wsteth|weeth|cbbtc|xaut|paxg)$/i;
