@@ -1,4 +1,4 @@
-/* PriceCheck NG - PCN AI chat. BUILD 60 */
+/* PriceCheck NG - PCN AI chat. BUILD 61 */
 (function () {
   // 1. Inject Chat Modal Markup & Styles
   function injectChatUI() {
@@ -125,7 +125,7 @@
       // Normal phone view keeps the original, working behaviour
       if (vk && window.innerWidth < 900) {
         try { vk.overlaysContent = isOpen; } catch (_) {}
-        ['top', 'left', 'width', 'height', 'right', 'bottom'].forEach(function (k) { modal.style[k] = ''; });
+        ['top', 'left', 'width', 'height', 'right', 'bottom', 'background'].forEach(function (k) { modal.style[k] = ''; });
         modal.style.paddingBottom = isOpen ? ((((vk.boundingRect && vk.boundingRect.height) || 0) + ((vk.boundingRect && vk.boundingRect.height) > 0 ? 14 : 0))) + 'px' : '';
         chatBox.style.height = ''; chatBox.style.maxHeight = isOpen ? 'calc(100% - 8px)' : '';
         var mm = document.getElementById('pcnMsgs');
@@ -138,7 +138,7 @@
       if (!isOpen) {
         baseH = 0;
         if (vk) { try { vk.overlaysContent = false; } catch (_) {} }
-        ['top', 'left', 'width', 'height', 'right', 'bottom', 'transform', 'transformOrigin'].forEach(function (k) { modal.style[k] = ''; });
+        ['top', 'left', 'width', 'height', 'right', 'bottom', 'transform', 'transformOrigin', 'background'].forEach(function (k) { modal.style[k] = ''; });
         chatBox.style.height = ''; chatBox.style.maxHeight = '';
         return;
       }
@@ -162,6 +162,7 @@
       modal.style.transform = sc === 1 ? '' : 'scale(' + (1 / sc) + ')';
       // Desktop-site view: like CoinGecko, the layout never moves when you tap or type. The chat is a fixed box at the
       // top (about 60% of the screen), so the text box is always above the keyboard. You can still pinch to zoom by hand.
+      modal.style.background = '#0b120e';   // solid page behind the chat: no coin list showing through
       var fixedH = Math.round(baseH * 0.6);
       chatBox.style.height = fixedH + 'px';
       chatBox.style.maxHeight = fixedH + 'px';
