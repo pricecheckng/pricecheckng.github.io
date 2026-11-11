@@ -1,4 +1,4 @@
-/* PriceCheck NG - PCN AI chat. BUILD 56 */
+/* PriceCheck NG - PCN AI chat. BUILD 57 */
 (function () {
   // 1. Inject Chat Modal Markup & Styles
   function injectChatUI() {
@@ -28,7 +28,9 @@
         .pcn-row { display: flex; align-items: center; gap: 8px; }
         .pcn-row .sp { flex: 1; }
         .pcn-go { width: 42px; height: 36px; border: 0; border-radius: 10px; background: #12a150; color: #fff; font-size: 18px; font-weight: 800; cursor: pointer; }
-        .pcn-close { cursor: pointer; font-size: 22px; font-weight: bold; }
+        .pcn-close { cursor: pointer; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; margin-right: -6px; }
+        #pcn-chat-modal.typing { align-items: flex-start; }
+        #pcn-chat-modal.typing .pcn-chat-box { height: var(--pcn-h, 50vh) !important; max-height: var(--pcn-h, 50vh) !important; }
         .pcn-chat-box { position: relative; }
         .pcn-mode { background: none; border: 1px solid #d5e0da; color: #10201a; border-radius: 10px; padding: 7px 12px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
         .pcn-sheet { display: none; position: absolute; inset: 0; background: rgba(0,0,0,.45); z-index: 5; align-items: flex-end; }
@@ -66,7 +68,7 @@
       <div class="pcn-chat-box">
         <div class="pcn-chat-header">
           <span>✦ PCN AI Assistant</span>
-          <span class="pcn-close" id="pcnClose">&times;</span>
+          <span class="pcn-close" id="pcnClose"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg></span>
         </div>
         <div class="pcn-chat-body" id="pcnMsgs">
           <div class="pcn-prompts-title" id="pcnPromptTitle">Ask PCN AI</div>
@@ -108,7 +110,7 @@
     document.body.appendChild(div);
 
     var modal = document.getElementById('pcn-chat-modal');
-    document.getElementById('pcnClose').onclick = function () { modal.classList.remove('open'); };
+    document.getElementById('pcnClose').onclick = function () { modal.classList.remove('open', 'typing'); };
 
     // Keep the chat above the phone keyboard: size the box to the part of the screen you can actually see
     var chatBox = modal.querySelector('.pcn-chat-box');
@@ -173,16 +175,33 @@
     window.addEventListener('orientationchange', function () { baseH = 0; setTimeout(fitChat, 300); });
     new MutationObserver(fitChat).observe(modal, { attributes: true, attributeFilter: ['class'] });
     // In "desktop site" mode the browser reports the keyboard late, so keep checking quickly for a few seconds
+    // Typing mode: while you type, the chat is a compact box at the top (about half the screen), so the text box
+    // is above the keyboard straight away, without waiting for the phone to report the keyboard.
+    var typingOff = null;
+    function typingOn() {
+      if (typingOff) { clearTimeout(typingOff); typingOff = null; }
+      var vv = window.visualViewport;
+      var sc = vv && vv.scale > 0 && vv.scale <= 0.85 ? vv.scale : 1;
+      var full = Math.max(baseH || 0, (vv ? vv.height * sc : window.innerHeight));
+      if (!(window.innerWidth >= 900)) full = window.innerHeight;       // normal phone view
+      modal.style.setProperty('--pcn-h', Math.round(full * 0.5) + 'px');
+      modal.classList.add('typing');
+      var m = document.getElementById('pcnMsgs'); if (m) m.scrollTop = m.scrollHeight;
+    }
+    function typingStop() {
+      if (typingOff) clearTimeout(typingOff);
+      typingOff = setTimeout(function () { if (document.activeElement !== chatInput) modal.classList.remove('typing'); }, 350);
+    }
     var pollId = null;
     function pollFit(sec) {
       if (pollId) clearInterval(pollId);
       var n = 0, max = Math.round((sec || 5) * 1000 / 80);
       pollId = setInterval(function () { fitChat(); if (++n > max || !modal.classList.contains('open')) { clearInterval(pollId); pollId = null; } }, 80);
     }
-    chatInput.addEventListener('touchstart', function () { pollFit(6); }, { passive: true });
-    chatInput.addEventListener('mousedown', function () { pollFit(6); });
-    chatInput.addEventListener('focus', function () { fitChat(); pollFit(6); });
-    chatInput.addEventListener('blur', function () { pollFit(3); });
+    chatInput.addEventListener('touchstart', function () { typingOn(); pollFit(6); }, { passive: true });
+    chatInput.addEventListener('mousedown', function () { typingOn(); pollFit(6); });
+    chatInput.addEventListener('focus', function () { typingOn(); fitChat(); pollFit(6); });
+    chatInput.addEventListener('blur', function () { typingStop(); pollFit(3); });
 
     // ---- live-data answers (no AI cost): every chip gets its own answer ----
     var JUNK = /^(usdt|usdc|dai|usde|fdusd|tusd|usdd|pyusd|usds|usd1|usdg|usdy|usyc|buidl|rlusd|figr_heloc|wbtc|weth|steth|wsteth|weeth|cbbtc|xaut|paxg)$/i;

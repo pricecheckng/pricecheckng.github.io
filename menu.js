@@ -54,7 +54,7 @@
     '#mnu .m-gr{width:42px;height:4px;border-radius:3px;background:rgba(127,127,127,.4);margin:6px auto 10px}' +
     '#mnu .m-h{display:flex;align-items:center;justify-content:space-between;margin:0 0 4px}' +
     '#mnu .m-h b{font-size:18px}' +
-    '#mnu .m-x{border:0;background:rgba(127,127,127,.15);color:inherit;width:32px;height:32px;border-radius:50%;font-size:18px;line-height:1;cursor:pointer}' +
+    '#mnu .m-x{border:0;background:rgba(127,127,127,.15);color:inherit;width:32px;height:32px;border-radius:50%;padding:0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}' +
     '#mnu .m-t{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.55;margin:14px 0 6px}' +
     '#mnu .m-r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border-radius:12px;text-decoration:none;color:inherit;background:rgba(127,127,127,.07);margin-bottom:6px}' +
     '#mnu .m-d{display:inline-block;width:8px;height:8px;border-radius:50%;background:#12a150;margin-left:7px;vertical-align:middle;box-shadow:0 0 0 3px rgba(18,161,80,.2)}' +
@@ -77,7 +77,7 @@
     '#cps .c-sc,#lps .c-sc{position:absolute;inset:0;background:rgba(0,0,0,.5);opacity:0;transition:opacity .2s}#cps.on .c-sc,#lps.on .c-sc{opacity:1}' +
     '#cps .c-sh,#lps .c-sh{position:absolute;left:0;right:0;bottom:0;max-width:560px;margin:0 auto;height:84vh;display:flex;flex-direction:column;background:#fff;color:#10201a;border-radius:20px 20px 0 0;padding:14px 16px 0;transform:translateY(100%);transition:transform .25s ease}#cps.on .c-sh,#lps.on .c-sh{transform:none}' +
     '#cps .c-h,#lps .c-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}#cps .c-h b,#lps .c-h b{font-size:18px}' +
-    '#cps .c-x,#lps .c-x{border:0;background:rgba(127,127,127,.15);color:inherit;width:32px;height:32px;border-radius:50%;font-size:18px;line-height:1;cursor:pointer}' +
+    '#cps .c-x,#lps .c-x{border:0;background:rgba(127,127,127,.15);color:inherit;width:32px;height:32px;border-radius:50%;padding:0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}' +
     '#cps input,#lps input{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:12px 14px;border-radius:12px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);color:inherit;margin-bottom:8px}' +
     '#cps .c-l,#lps .c-l{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(20px + env(safe-area-inset-bottom))}' +
     '#cps .c-r,#lps .c-r{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:inherit;font:inherit;text-align:left;padding:12px 10px;border-radius:12px;cursor:pointer}' +
@@ -103,7 +103,7 @@
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
   var chev = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
   var html = '<div class="m-sc" data-x></div><div class="m-sh" role="dialog" aria-modal="true" aria-label="Menu"><div class="m-gr"></div>' +
-    '<div class="m-h"><b>PriceCheck <span style="color:#16a34a">NG</span></b><button class="m-x" type="button" aria-label="Close" data-x>×</button></div>';
+    '<div class="m-h"><b>PriceCheck <span style="color:#16a34a">NG</span></b><button class="m-x" type="button" aria-label="Close" data-x><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg></button></div>';
   function row(r) {
     return '<a class="m-r" href="' + r[2] + '"><div><span>' + esc(r[0]) + (r[3] ? '<em class="m-d"></em>' : '') + '</span>' + (r[1] ? '<small>' + esc(r[1]) + '</small>' : '') + '</div>' + chev + '</a>';
   }
@@ -135,7 +135,7 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') close(); });
   /* ---- currency picker (like CoinMarketCap): USD by default, any currency from the list ---- */
   var cps = document.createElement('div'); cps.id = 'cps';
-  cps.innerHTML = '<div class="c-sc" data-cx></div><div class="c-sh" role="dialog" aria-modal="true" aria-label="Choose currency"><div class="c-h"><b>Currency</b><button type="button" class="c-x" data-cx aria-label="Close">×</button></div><input id="cpsQ" type="search" enterkeyhint="search" placeholder="Search currency" autocomplete="off" aria-label="Search currency"><div class="c-l" id="cpsL"></div></div>';
+  cps.innerHTML = '<div class="c-sc" data-cx></div><div class="c-sh" role="dialog" aria-modal="true" aria-label="Choose currency"><div class="c-h"><b>Currency</b><button type="button" class="c-x" data-cx aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg></button></div><input id="cpsQ" type="search" enterkeyhint="search" placeholder="Search currency" autocomplete="off" aria-label="Search currency"><div class="c-l" id="cpsL"></div></div>';
   document.body.appendChild(cps);
   function api() { return window.PCN_CUR; }
   function paintBtn() {
@@ -165,7 +165,7 @@
 
   /* ---- language picker ---- */
   var lps = document.createElement('div'); lps.id = 'lps';
-  lps.innerHTML = '<div class="c-sc" data-lx></div><div class="c-sh" role="dialog" aria-modal="true" aria-label="Language"><div class="c-h"><b>Language</b><button type="button" class="c-x" data-lx aria-label="Close">×</button></div><input id="lpsQ" type="search" enterkeyhint="search" placeholder="Search language" autocomplete="off" aria-label="Search language"><div class="c-l" id="lpsL"></div></div>';
+  lps.innerHTML = '<div class="c-sc" data-lx></div><div class="c-sh" role="dialog" aria-modal="true" aria-label="Language"><div class="c-h"><b>Language</b><button type="button" class="c-x" data-lx aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg></button></div><input id="lpsQ" type="search" enterkeyhint="search" placeholder="Search language" autocomplete="off" aria-label="Search language"><div class="c-l" id="lpsL"></div></div>';
   document.body.appendChild(lps);
   function lg() { return window.PCN_LANG; }
   function paintLb() {
