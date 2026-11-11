@@ -1,4 +1,4 @@
-/* PriceCheck NG - PCN AI chat. BUILD 57 */
+/* PriceCheck NG - PCN AI chat. BUILD 58 */
 (function () {
   // 1. Inject Chat Modal Markup & Styles
   function injectChatUI() {
@@ -179,6 +179,7 @@
     // is above the keyboard straight away, without waiting for the phone to report the keyboard.
     var typingOff = null;
     function typingOn() {
+      if (!(window.innerWidth >= 900)) { modal.classList.remove('typing'); return; }   // normal phone view: untouched
       if (typingOff) { clearTimeout(typingOff); typingOff = null; }
       var vv = window.visualViewport;
       var sc = vv && vv.scale > 0 && vv.scale <= 0.85 ? vv.scale : 1;
@@ -189,6 +190,7 @@
       var m = document.getElementById('pcnMsgs'); if (m) m.scrollTop = m.scrollHeight;
     }
     function typingStop() {
+      if (!(window.innerWidth >= 900)) return;
       if (typingOff) clearTimeout(typingOff);
       typingOff = setTimeout(function () { if (document.activeElement !== chatInput) modal.classList.remove('typing'); }, 350);
     }
