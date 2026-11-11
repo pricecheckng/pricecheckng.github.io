@@ -1,4 +1,4 @@
-/* PriceCheck NG - PCN AI chat. BUILD 61 */
+/* PriceCheck NG - PCN AI chat. BUILD 62 */
 (function () {
   // 1. Inject Chat Modal Markup & Styles
   function injectChatUI() {
@@ -139,6 +139,13 @@
         baseH = 0;
         if (vk) { try { vk.overlaysContent = false; } catch (_) {} }
         ['top', 'left', 'width', 'height', 'right', 'bottom', 'transform', 'transformOrigin', 'background'].forEach(function (k) { modal.style[k] = ''; });
+        chatBox.style.height = ''; chatBox.style.maxHeight = '';
+        return;
+      }
+      // Real laptop/desktop (mouse, not zoomed out): leave the normal centred chat alone
+      var isTouch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+      if (!isTouch && !(vv && vv.scale > 0 && vv.scale <= 0.85)) {
+        ['top', 'left', 'width', 'height', 'right', 'bottom', 'transform', 'transformOrigin', 'background', 'alignItems'].forEach(function (k) { modal.style[k] = ''; });
         chatBox.style.height = ''; chatBox.style.maxHeight = '';
         return;
       }
