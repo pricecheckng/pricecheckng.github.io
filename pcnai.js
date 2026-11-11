@@ -113,27 +113,29 @@
     // Keep the chat above the phone keyboard: size the box to the part of the screen you can actually see
     var chatBox = modal.querySelector('.pcn-chat-box');
     var chatInput = document.getElementById('pcnInput');
-    var vk = navigator.virtualKeyboard || null; // Chrome on Android: tells the page exactly how tall the keyboard is
+    // Fit the chat to the part of the screen you can actually see (works on phones and in "desktop site" mode):
+    // when the keyboard opens, the chat shrinks so the text box stays visible above the keyboard.
+    var baseH = 0;
     function fitChat() {
       var vv = window.visualViewport;
       var isOpen = modal.classList.contains('open');
-      if (vk) {
-        try { vk.overlaysContent = isOpen; } catch (_) {}
-        modal.style.top = ''; modal.style.bottom = ''; modal.style.height = '';
-        modal.style.paddingBottom = isOpen ? ((vk.boundingRect && vk.boundingRect.height) || 0) + 'px' : '';
-        chatBox.style.height = ''; chatBox.style.maxHeight = isOpen ? 'calc(100% - 8px)' : '';
-        var mm = document.getElementById('pcnMsgs');
-        if (isOpen && mm && vk.boundingRect && vk.boundingRect.height > 0) mm.scrollTop = mm.scrollHeight;
+      if (!isOpen) {
+        baseH = 0;
+        ['top', 'left', 'width', 'height', 'right', 'bottom'].forEach(function (k) { modal.style[k] = ''; });
+        chatBox.style.height = ''; chatBox.style.maxHeight = '';
         return;
       }
-      if (!isOpen) { modal.style.top = ''; modal.style.bottom = ''; modal.style.height = ''; chatBox.style.height = ''; return; }
       var h = vv ? vv.height : window.innerHeight;
-      var kb = vv ? (window.innerHeight - vv.height - vv.offsetTop > 80 || vv.height < window.innerHeight - 120) : false;
+      var w = vv ? vv.width : window.innerWidth;
+      if (!baseH || h > baseH) baseH = h;
+      var kb = h < baseH - 100;
+      modal.style.right = 'auto'; modal.style.bottom = 'auto';
       modal.style.top = (vv ? vv.offsetTop : 0) + 'px';
-      modal.style.bottom = 'auto';
+      modal.style.left = (vv ? vv.offsetLeft : 0) + 'px';
+      modal.style.width = w + 'px';
       modal.style.height = h + 'px';
-      chatBox.style.height = (kb ? h - 8 : Math.round(h * 0.8)) + 'px';
-      chatBox.style.maxHeight = h + 'px';
+      chatBox.style.height = (kb ? h - 6 : Math.round(h * 0.82)) + 'px';
+      chatBox.style.maxHeight = (h - 6) + 'px';
       var m = document.getElementById('pcnMsgs');
       if (kb && m) m.scrollTop = m.scrollHeight;
     }
@@ -142,9 +144,9 @@
       window.visualViewport.addEventListener('scroll', fitChat);
     }
     window.addEventListener('resize', fitChat);
-    if (vk) vk.addEventListener('geometrychange', fitChat);
+    window.addEventListener('orientationchange', function () { baseH = 0; setTimeout(fitChat, 300); });
     new MutationObserver(fitChat).observe(modal, { attributes: true, attributeFilter: ['class'] });
-    chatInput.addEventListener('focus', function () { setTimeout(fitChat, 150); setTimeout(fitChat, 450); });
+    chatInput.addEventListener('focus', function () { setTimeout(fitChat, 150); setTimeout(fitChat, 450); setTimeout(fitChat, 900); });
     chatInput.addEventListener('blur', function () { setTimeout(fitChat, 150); });
 
     // ---- live-data answers (no AI cost): every chip gets its own answer ----
