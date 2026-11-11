@@ -135,17 +135,22 @@
       modal.style.paddingBottom = '';
       if (!isOpen) {
         baseH = 0;
+        if (vk) { try { vk.overlaysContent = false; } catch (_) {} }
         ['top', 'left', 'width', 'height', 'right', 'bottom', 'transform', 'transformOrigin'].forEach(function (k) { modal.style[k] = ''; });
         chatBox.style.height = ''; chatBox.style.maxHeight = '';
         return;
       }
+      if (vk) { try { vk.overlaysContent = true; } catch (_) {} }   // Chrome then reports the keyboard height straight away
       var vw = vv ? vv.width : window.innerWidth;
       var vh = vv ? vv.height : window.innerHeight;
       var sc = vv ? vv.scale : 1;
       if (!(sc > 0) || sc > 0.85) sc = 1;      // not zoomed out: no scaling needed
       var Wi = vw * sc, Hi = vh * sc;           // size of the chat in phone-sized pixels
       if (!baseH || Hi > baseH) baseH = Hi;
-      var kb = Hi < baseH - 100;
+      var kbVK = vk && vk.boundingRect ? (vk.boundingRect.height || 0) * sc : 0;   // keyboard height from Chrome
+      var kbVV = Math.max(0, baseH - Hi);                                           // or from the shrunk visible area
+      var kb = kbVK > 100 || kbVV > 100;
+      var Ha = kbVK > 100 ? Hi - kbVK : Hi;     // height left above the keyboard (Hi is already smaller if Chrome shrank the view)
       modal.style.right = 'auto'; modal.style.bottom = 'auto';
       modal.style.top = (vv ? vv.offsetTop : 0) + 'px';
       modal.style.left = (vv ? vv.offsetLeft : 0) + 'px';
@@ -153,8 +158,9 @@
       modal.style.height = Hi + 'px';
       modal.style.transformOrigin = '0 0';
       modal.style.transform = sc === 1 ? '' : 'scale(' + (1 / sc) + ')';
-      chatBox.style.height = (kb ? Hi - 6 : Math.round(Hi * 0.82)) + 'px';
-      chatBox.style.maxHeight = (Hi - 6) + 'px';
+      chatBox.style.height = (kb ? Ha - 14 : Math.round(Hi * 0.82)) + 'px';
+      chatBox.style.maxHeight = (Ha - 14) + 'px';
+      modal.style.alignItems = kb ? 'flex-start' : '';
       var m = document.getElementById('pcnMsgs');
       if (kb && m) m.scrollTop = m.scrollHeight;
     }
