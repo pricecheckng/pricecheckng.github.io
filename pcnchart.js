@@ -20,7 +20,7 @@
         return new Intl.DateTimeFormat('en-US', { timeZone: tz, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
       } catch (e) { return ''; }
     };
-    var iv = '4h', raf = 0;
+    var iv = '4h', raf = 0, show = { ma50: true, ma200: true, levels: true };
 
 
     function smaArr(c, n) { var o = [], sum = 0; for (var i = 0; i < c.length; i++) { sum += c[i]; if (i >= n) sum -= c[i - n]; o.push(i >= n - 1 ? sum / n : null); } return o; }
@@ -84,7 +84,7 @@
       mx.save(); mx.beginPath(); mx.rect(0, 0, plotW(), H); mx.clip();
       // support / resistance zones
       var lastYp = py(D.c[n - 1].c), usedY = [];
-      D.levels.slice().sort(function (a, b) { return Math.abs(a.price - D.c[n - 1].c) - Math.abs(b.price - D.c[n - 1].c); }).forEach(function (L) {
+      (show.levels ? D.levels : []).slice().sort(function (a, b) { return Math.abs(a.price - D.c[n - 1].c) - Math.abs(b.price - D.c[n - 1].c); }).forEach(function (L) {
         var y = py(L.price);
         if (y < 2 || y > PH - 2 || Math.abs(y - lastYp) < 9) return;                       // too close to the live price line: would look like a double line
         for (var u = 0; u < usedY.length; u++) if (Math.abs(usedY[u] - y) < 17) return;    // too close to another level: skip
@@ -107,6 +107,7 @@
       }
       // MAs
       [['ma50', C.ma50], ['ma200', C.ma200]].forEach(function (m) {
+        if (!show[m[0]]) return;
         var a = D[m[0]], started = false; mx.strokeStyle = m[1]; mx.lineWidth = 1.6; mx.beginPath();
         for (var j = Math.max(0, s - 1); j <= Math.min(n - 1, e + 1); j++) { if (a[j] == null) continue; var xx = xOf(j), yy = py(a[j]); if (!started) { mx.moveTo(xx, yy); started = true; } else mx.lineTo(xx, yy); }
         mx.stroke();
@@ -202,6 +203,7 @@
         D.ma50 = smaArr(cl, 50); D.ma200 = smaArr(cl, 200); D.rsi = rsiArr(cl, 14);
         if (!raf) raf = requestAnimationFrame(function () { raf = 0; draw(); });
       },
+      setShow: function (o) { for (var k in o) show[k] = !!o[k]; draw(); },
       last: function () { return D.c[D.c.length - 1]; },
       setZones: function (z) { D.levels = z || []; draw(); },
       resize: size, fit: function () { fit(); draw(); },

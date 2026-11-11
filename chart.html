@@ -62,6 +62,22 @@
   .ddm.r { left:auto; right:0; } .ddm.on { display:block; }
   .ddm button { display:flex; width:100%; justify-content:space-between; align-items:center; gap:14px; background:none; border:0; color:var(--txt); font:inherit; font-size:14px; font-weight:600; padding:10px 10px; border-radius:8px; cursor:pointer; text-align:left; }
   .ddm button.on { background:#1b2e24; } .ddm button:disabled { color:var(--mut); opacity:.5; cursor:default; } .ddm em { font-style:normal; font-size:10px; color:var(--mut); }
+
+  .view { flex:1; min-height:0; flex-direction:column; } .pg { overflow-y:auto; }
+  .pgh { padding:16px; font-size:20px; font-weight:800; }
+  .tabbar { display:flex; border-top:1px solid var(--line); background:var(--panel); padding-bottom:env(safe-area-inset-bottom); }
+  .tb { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; background:none; border:0; color:var(--mut); font:inherit; font-size:11px; font-weight:700; padding:9px 0 8px; cursor:pointer; }
+  .tb.on { color:var(--txt); } .tb.on svg { color:var(--acc); }
+  .grp { padding:14px 16px 6px; color:var(--mut); font-size:12px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+  .set { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line); font-weight:600; }
+  .set b { color:var(--mut); font-weight:600; font-size:13px; } .set select { background:#16241d; color:var(--txt); border:1px solid var(--line); border-radius:10px; padding:8px; font:inherit; }
+  .set input[type=checkbox] { appearance:none; width:46px; height:26px; border-radius:13px; background:#2a3b32; position:relative; transition:.15s; flex:none; }
+  .set input[type=checkbox]::after { content:""; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:.15s; }
+  .set input[type=checkbox]:checked { background:var(--acc); } .set input[type=checkbox]:checked::after { left:23px; }
+  .wrow { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .wrow .nm { flex:1; font-weight:700; } .wrow .nm small { display:block; color:var(--mut); font-weight:500; font-size:12px; }
+  .wrow .pr { text-align:right; font-weight:700; } .wrow .pr small { display:block; font-size:12px; font-weight:700; }
+  .addb { margin:18px 16px; display:block; width:calc(100% - 32px); background:var(--acc); color:#fff; border:0; border-radius:12px; padding:13px; font:inherit; font-weight:800; cursor:pointer; }
 </style>
 </head>
 <body>
@@ -74,11 +90,34 @@
     <div class="dd" style="margin-left:auto"><button class="ddb tfb" id="tfBtn"><span id="tfTxt">4h</span> <span>&#9662;</span></button>
       <div class="ddm r" id="tfMenu"><button class="tf" data-i="15m">15 minutes</button><button class="tf" data-i="1h">1 hour</button><button class="tf on" data-i="4h">4 hours</button><button class="tf" data-i="1d">1 day</button><button class="tf" data-i="1w">1 week</button></div></div>
   </div>
+  <div id="vChart" class="view" style="display:flex">
   <div class="info"><b id="px">--</b><span id="chg" class="mut"></span><span class="live" id="live"><i></i><span id="liveT">connecting</span></span></div>
   <div class="leg"><span><i style="background:#f5a524"></i>MA 50</span><span><i style="background:#5b8def"></i>MA 200</span></div>
   <div id="main"><div id="cMain"></div><div class="msg" id="msg">Loading chart…</div></div>
   <div id="rsiWrap"><span class="lbl">RSI 14</span><div class="c" id="cRsi"></div></div>
-  <div class="foot"><span id="tz"></span><span>Prices in USD (USDT)</span></div>
+  </div>
+  <div id="vWatch" class="view pg" style="display:none">
+    <div class="pgh">Watchlist</div>
+    <div id="wlist"></div>
+  </div>
+  <div id="vSet" class="view pg" style="display:none">
+    <div class="pgh">Settings</div>
+    <div class="grp">Chart</div>
+    <label class="set"><span>Moving average 50</span><input type="checkbox" data-k="ma50"></label>
+    <label class="set"><span>Moving average 200</span><input type="checkbox" data-k="ma200"></label>
+    <label class="set"><span>Support &amp; resistance lines</span><input type="checkbox" data-k="levels"></label>
+    <label class="set"><span>RSI 14 panel</span><input type="checkbox" data-k="rsi"></label>
+    <div class="set"><span>Default timeframe</span><select id="setTf"><option value="15m">15 minutes</option><option value="1h">1 hour</option><option value="4h">4 hours</option><option value="1d">1 day</option><option value="1w">1 week</option></select></div>
+    <div class="grp">Info</div>
+    <div class="set"><span>Prices</span><b>USD (USDT)</b></div>
+    <div class="set"><span>Times shown in</span><b id="tz"></b></div>
+    <div class="set"><span>Live data</span><b>Binance</b></div>
+  </div>
+  <nav class="tabbar">
+    <button class="tb on" data-v="vChart"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 4v16M7 8H4v7h3M17 4v16M17 6h-3v8h3"/></svg><span>Chart</span></button>
+    <button class="tb" data-v="vWatch"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg><span>Watchlist</span></button>
+    <button class="tb" data-v="vSet"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/></svg><span>Settings</span></button>
+  </nav>
 </div>
 
 <div id="sheetBg">
@@ -96,7 +135,7 @@
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
-$('tz').textContent = 'Times in ' + tz.replace('_', ' ');
+$('tz').textContent = tz.replace('_', ' ');
 const qs = new URLSearchParams(location.search);
 let symbol = (qs.get('s') || 'BTC').toUpperCase().replace(/[^A-Z0-9]/g, '') || 'BTC', interval = ['15m','1h','4h','1d','1w'].includes(qs.get('i')) ? qs.get('i') : '4h';
 let meta = {};                       // symbol -> {name, img}
@@ -208,6 +247,52 @@ function renderList() {
 function closeSheet() { $('sheetBg').classList.remove('on'); }
 $('pairBtn').onclick = async () => { $('sheetBg').classList.add('on'); $('plist').innerHTML = '<div class="empty">Loading pairs…</div>'; await loadPairs(); renderList(); };
 $('shBack').onclick = closeSheet; $('shQ').oninput = renderList;
+
+
+// ---------- footer: Chart / Watchlist / Settings ----------
+const DEF = { ma50: true, ma200: true, levels: true, rsi: true, tf: '4h' };
+let SET = Object.assign({}, DEF, sg('pcn_chart_set', {}));
+function applySet() {
+  chart.setShow({ ma50: SET.ma50, ma200: SET.ma200, levels: SET.levels });
+  $('rsiWrap').style.display = SET.rsi ? '' : 'none';
+  const leg = document.querySelectorAll('.leg')[1]; if (leg) { const sp = leg.querySelectorAll('span'); sp[0].style.display = SET.ma50 ? '' : 'none'; sp[1].style.display = SET.ma200 ? '' : 'none'; }
+  requestAnimationFrame(() => chart.resize());
+}
+document.querySelectorAll('#vSet input[data-k]').forEach(i => { i.checked = !!SET[i.dataset.k]; i.onchange = () => { SET[i.dataset.k] = i.checked; ss('pcn_chart_set', SET); applySet(); }; });
+$('setTf').value = SET.tf; $('setTf').onchange = e => { SET.tf = e.target.value; ss('pcn_chart_set', SET); };
+if (!qs.get('i') && SET.tf !== interval) { interval = SET.tf; syncTf(); load(); }
+applySet();
+
+let wlTimer = 0;
+function showView(v) {
+  document.querySelectorAll('.view').forEach(x => x.style.display = x.id === v ? 'flex' : 'none');
+  document.querySelectorAll('.tb').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  document.querySelector('.top').style.display = v === 'vChart' ? '' : 'none';
+  clearInterval(wlTimer); wlTimer = 0;
+  if (v === 'vChart') requestAnimationFrame(() => chart.resize());
+  if (v === 'vWatch') { renderWatch(); wlTimer = setInterval(renderWatch, 8000); }
+}
+document.querySelectorAll('.tb').forEach(b => b.onclick = () => showView(b.dataset.v));
+const wprev = {};
+async function renderWatch() {
+  const box = $('wlist'); favs = sg('pcn_chart_favs', []);
+  if (!favs.length) { box.innerHTML = '<div class="empty">Your watchlist is empty.<br>Tap the star next to a pair in the pair list to add it here.</div><button class="addb" id="wAdd">Add pairs</button>'; $('wAdd').onclick = () => { showView('vChart'); $('pairBtn').click(); }; return; }
+  let tk = {};
+  try { const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=' + encodeURIComponent(JSON.stringify(favs.map(s => s + 'USDT')))); (await r.json()).forEach(t => tk[t.symbol] = t); } catch (_) {}
+  if (!$('vWatch') || $('vWatch').style.display === 'none') return;
+  box.innerHTML = '';
+  favs.forEach(sym => {
+    const t = tk[sym + 'USDT'], p = t ? +t.lastPrice : null, c = t ? +t.priceChangePercent : null;
+    const row = document.createElement('div'); row.className = 'wrow';
+    row.innerHTML = `<span class="ico"></span><span class="nm">${sym}/USDT<small>${(meta[sym] && meta[sym].name || '').replace(/</g, '')}</small></span><span class="pr"><span class="p">${p == null ? '--' : '$' + fmt(p)}</span><small style="color:${c == null ? 'var(--mut)' : c >= 0 ? '#16c784' : '#ea3943'}">${c == null ? '' : (c >= 0 ? '+' : '') + c.toFixed(2) + '%'}</small></span>`;
+    setIco(row.querySelector('.ico'), sym);
+    if (p != null && wprev[sym] != null && p !== wprev[sym]) flash(row.querySelector('.p'), p > wprev[sym] ? 1 : -1);
+    if (p != null) wprev[sym] = p;
+    row.onclick = () => { symbol = sym; history.replaceState(null, '', `?s=${symbol}&i=${interval}`); showView('vChart'); load(); };
+    box.appendChild(row);
+  });
+  const add = document.createElement('button'); add.className = 'addb'; add.textContent = 'Add pairs'; add.onclick = () => { showView('vChart'); $('pairBtn').click(); }; box.appendChild(add);
+}
 
 setPair(); load();
 loadPairs().then(setPair);
