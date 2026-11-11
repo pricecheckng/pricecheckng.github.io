@@ -116,9 +116,22 @@
     // Fit the chat to the part of the screen you can actually see (works on phones and in "desktop site" mode):
     // when the keyboard opens, the chat shrinks so the text box stays visible above the keyboard.
     var baseH = 0;
+    var vk = navigator.virtualKeyboard || null; // normal phone view: Chrome tells the page the exact keyboard height
     function fitChat() {
       var vv = window.visualViewport;
       var isOpen = modal.classList.contains('open');
+      // Normal phone view keeps the original, working behaviour
+      if (vk && window.innerWidth < 900) {
+        try { vk.overlaysContent = isOpen; } catch (_) {}
+        ['top', 'left', 'width', 'height', 'right', 'bottom'].forEach(function (k) { modal.style[k] = ''; });
+        modal.style.paddingBottom = isOpen ? ((vk.boundingRect && vk.boundingRect.height) || 0) + 'px' : '';
+        chatBox.style.height = ''; chatBox.style.maxHeight = isOpen ? 'calc(100% - 8px)' : '';
+        var mm = document.getElementById('pcnMsgs');
+        if (isOpen && mm && vk.boundingRect && vk.boundingRect.height > 0) mm.scrollTop = mm.scrollHeight;
+        return;
+      }
+      // "Desktop site" view on a phone: fit the chat to the visible area
+      modal.style.paddingBottom = '';
       if (!isOpen) {
         baseH = 0;
         ['top', 'left', 'width', 'height', 'right', 'bottom'].forEach(function (k) { modal.style[k] = ''; });
@@ -143,6 +156,7 @@
       window.visualViewport.addEventListener('resize', fitChat);
       window.visualViewport.addEventListener('scroll', fitChat);
     }
+    if (vk) vk.addEventListener('geometrychange', fitChat);
     window.addEventListener('resize', fitChat);
     window.addEventListener('orientationchange', function () { baseH = 0; setTimeout(fitChat, 300); });
     new MutationObserver(fitChat).observe(modal, { attributes: true, attributeFilter: ['class'] });
