@@ -1,4 +1,4 @@
-/* PriceCheck NG - PCN AI chat. BUILD 65 */
+/* PriceCheck NG - PCN AI chat. BUILD 66 */
 (function () {
   // 1. Inject Chat Modal Markup & Styles
   function injectChatUI() {
@@ -79,6 +79,7 @@
             <button class="pcn-chip" data-query="What are the trending narratives?"><span class="ci" style="color:#6366f1">&#9993;</span>What are the trending narratives?</button>
             <button class="pcn-chip" data-query="What cryptos are showing bullish momentum?"><span class="ci" style="color:#f97316">&#8599;</span>What cryptos are showing bullish momentum?</button>
             <button class="pcn-chip" data-query="Summarize today's Fear & Greed index"><span class="ci" style="color:#a855f7">&#9719;</span>Summarize Fear &amp; Greed index</button>
+            <a class="pcn-chip" href="chart.html?s=BTC" style="text-decoration:none;display:inline-block;border-color:#12a150;color:#12a150;font-weight:700"><span class="ci">&#9783;</span>Open AI chart</a>
           </div>
         </div>
         <div class="pcn-sheet" id="pcnSheet"><div class="pcn-sheet-in">
