@@ -1,4 +1,4 @@
-/* PriceCheck NG - PCN AI chat. BUILD 59 */
+/* PriceCheck NG - PCN AI chat. BUILD 60 */
 (function () {
   // 1. Inject Chat Modal Markup & Styles
   function injectChatUI() {
@@ -160,12 +160,12 @@
       modal.style.height = Hi + 'px';
       modal.style.transformOrigin = '0 0';
       modal.style.transform = sc === 1 ? '' : 'scale(' + (1 / sc) + ')';
-      chatBox.style.height = (kb ? Ha - 14 : Math.round(Hi * 0.82)) + 'px';
-      chatBox.style.maxHeight = (Ha - 14) + 'px';
-      modal.style.alignItems = kb ? 'flex-start' : '';
-      if (kb) modal.style.setProperty('--pcn-h', Math.round(Ha - 14) + 'px');   // exact fit above the real keyboard
-      var m = document.getElementById('pcnMsgs');
-      if (kb && m) m.scrollTop = m.scrollHeight;
+      // Desktop-site view: like CoinGecko, the layout never moves when you tap or type. The chat is a fixed box at the
+      // top (about 60% of the screen), so the text box is always above the keyboard. You can still pinch to zoom by hand.
+      var fixedH = Math.round(baseH * 0.6);
+      chatBox.style.height = fixedH + 'px';
+      chatBox.style.maxHeight = fixedH + 'px';
+      modal.style.alignItems = 'flex-start';
     }
     if (window.visualViewport) {
       window.visualViewport.addEventListener('resize', fitChat);
@@ -180,6 +180,7 @@
     // is above the keyboard straight away, without waiting for the phone to report the keyboard.
     var typingOff = null;
     function typingOn() {
+      return;   // typing mode removed: layout stays fixed
       if (!(window.innerWidth >= 900)) { modal.classList.remove('typing'); return; }   // normal phone view: untouched
       if (typingOff) { clearTimeout(typingOff); typingOff = null; }
       var vv = window.visualViewport;
@@ -191,6 +192,7 @@
       var m = document.getElementById('pcnMsgs'); if (m) m.scrollTop = m.scrollHeight;
     }
     function typingStop() {
+      return;
       if (!(window.innerWidth >= 900)) return;
       if (typingOff) clearTimeout(typingOff);
       typingOff = setTimeout(function () { if (document.activeElement !== chatInput) modal.classList.remove('typing'); }, 350);
