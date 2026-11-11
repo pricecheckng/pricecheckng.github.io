@@ -130,25 +130,31 @@
         if (isOpen && mm && vk.boundingRect && vk.boundingRect.height > 0) mm.scrollTop = mm.scrollHeight;
         return;
       }
-      // "Desktop site" view on a phone: fit the chat to the visible area
+      // "Desktop site" view on a phone: the page is zoomed out, so draw the chat at normal phone size
+      // (scaled up to fill the visible area) and keep it above the keyboard.
       modal.style.paddingBottom = '';
       if (!isOpen) {
         baseH = 0;
-        ['top', 'left', 'width', 'height', 'right', 'bottom'].forEach(function (k) { modal.style[k] = ''; });
+        ['top', 'left', 'width', 'height', 'right', 'bottom', 'transform', 'transformOrigin'].forEach(function (k) { modal.style[k] = ''; });
         chatBox.style.height = ''; chatBox.style.maxHeight = '';
         return;
       }
-      var h = vv ? vv.height : window.innerHeight;
-      var w = vv ? vv.width : window.innerWidth;
-      if (!baseH || h > baseH) baseH = h;
-      var kb = h < baseH - 100;
+      var vw = vv ? vv.width : window.innerWidth;
+      var vh = vv ? vv.height : window.innerHeight;
+      var sc = vv ? vv.scale : 1;
+      if (!(sc > 0) || sc > 0.85) sc = 1;      // not zoomed out: no scaling needed
+      var Wi = vw * sc, Hi = vh * sc;           // size of the chat in phone-sized pixels
+      if (!baseH || Hi > baseH) baseH = Hi;
+      var kb = Hi < baseH - 100;
       modal.style.right = 'auto'; modal.style.bottom = 'auto';
       modal.style.top = (vv ? vv.offsetTop : 0) + 'px';
       modal.style.left = (vv ? vv.offsetLeft : 0) + 'px';
-      modal.style.width = w + 'px';
-      modal.style.height = h + 'px';
-      chatBox.style.height = (kb ? h - 6 : Math.round(h * 0.82)) + 'px';
-      chatBox.style.maxHeight = (h - 6) + 'px';
+      modal.style.width = Wi + 'px';
+      modal.style.height = Hi + 'px';
+      modal.style.transformOrigin = '0 0';
+      modal.style.transform = sc === 1 ? '' : 'scale(' + (1 / sc) + ')';
+      chatBox.style.height = (kb ? Hi - 6 : Math.round(Hi * 0.82)) + 'px';
+      chatBox.style.maxHeight = (Hi - 6) + 'px';
       var m = document.getElementById('pcnMsgs');
       if (kb && m) m.scrollTop = m.scrollHeight;
     }
@@ -598,7 +604,7 @@
         var m = document.getElementById('pcnMsgs');
         if (m) {
           var msgsAll = m.querySelectorAll('.pcn-msg');
-          for (var i = 1; i < msgsAll.length; i++) msgsAll[i].remove();
+          for (var i = 0; i < msgsAll.length; i++) msgsAll[i].remove();
           var pr = document.getElementById('pcnPrompts'), pt = document.getElementById('pcnPromptTitle');
           if (pr) pr.style.display = '';
           if (pt) pt.style.display = '';
