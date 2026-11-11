@@ -423,6 +423,7 @@
         var inl = [];
         ans = ans.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function (m, t, u) { if (!seenU[u]) { seenU[u] = 1; inl.push({ t: t, u: u }); } return t; });
         srcs = inl.concat(srcs);
+        ans = ans.replace(/\(?https?:\/\/[^\s<)]+\)?/g, '').replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n').trim();
         return mdRender(ans) + (srcs.length ? srcChip(srcs) : '') + note(left0 + 'AI answers can be wrong. Not financial advice.');
       }
       var urls = [];
