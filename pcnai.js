@@ -1,4 +1,4 @@
-/* PriceCheck NG - PCN AI chat. BUILD 64 */
+/* PriceCheck NG - PCN AI chat. BUILD 65 */
 (function () {
   // 1. Inject Chat Modal Markup & Styles
   function injectChatUI() {
@@ -117,7 +117,7 @@
     var chatInput = document.getElementById('pcnInput');
     // Fit the chat to the part of the screen you can actually see (works on phones and in "desktop site" mode):
     // when the keyboard opens, the chat shrinks so the text box stays visible above the keyboard.
-    var baseH = 0;
+    var baseH = 0, lastKbN = 0;
     var vk = navigator.virtualKeyboard || null; // normal phone view: Chrome tells the page the exact keyboard height
     function fitChat() {
       var vv = window.visualViewport;
@@ -129,7 +129,9 @@
         modal.style.paddingBottom = isOpen ? ((((vk.boundingRect && vk.boundingRect.height) || 0) + ((vk.boundingRect && vk.boundingRect.height) > 0 ? 14 : 0))) + 'px' : '';
         chatBox.style.height = ''; chatBox.style.maxHeight = isOpen ? 'calc(100% - 8px)' : '';
         var mm = document.getElementById('pcnMsgs');
-        if (isOpen && mm && vk.boundingRect && vk.boundingRect.height > 0) mm.scrollTop = mm.scrollHeight;
+        var kbNow = (vk.boundingRect && vk.boundingRect.height) || 0;
+        if (isOpen && mm && kbNow > 0 && kbNow !== lastKbN) mm.scrollTop = mm.scrollHeight;   // only when the keyboard size changes, so you can still scroll
+        lastKbN = isOpen ? kbNow : 0;
         return;
       }
       // "Desktop site" view on a phone: the page is zoomed out, so draw the chat at normal phone size
