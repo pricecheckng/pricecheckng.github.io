@@ -337,11 +337,17 @@
       if (/vertexaisearch|google\.com$/.test(h) && /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(t || '')) h = String(t).toLowerCase();
       return h;
     }
+    var OWNLOGO = '/icon-green-192.png';
+    function srcImg(x, cls) {
+      var src = x.own ? OWNLOGO : favUrl(hostOf(x.u, x.t));
+      return '<img ' + (cls ? 'class="' + cls + '" ' : '') + 'src="' + src + '" alt="" onerror="this.style.visibility=\'hidden\'">';
+    }
+    function srcLabel(x) { return x.own ? ('PriceCheck NG' + (x.own && x.own !== 'PriceCheck NG' ? ' \u00b7 ' + x.own : '')) : hostOf(x.u, x.t); }
     function favUrl(h) { return 'https://www.google.com/s2/favicons?domain=' + encodeURIComponent(h) + '&sz=64'; }
     function srcChip(list) {
       SRC.push(list); var i = SRC.length - 1;
       var favs = list.slice(0, 3).map(function (x) {
-        return '<img class="pcn-fav" src="' + favUrl(hostOf(x.u, x.t)) + '" alt="" onerror="this.style.visibility=\'hidden\'">';
+        return srcImg(x, 'pcn-fav');
       }).join('');
       return '<div data-nocopy="1"><button type="button" class="pcn-srcchip" data-src="' + i + '"><span class="pcn-favs">' + favs + '</span>' + list.length + ' source' + (list.length === 1 ? '' : 's') + '</button></div>';
     }
@@ -355,9 +361,8 @@
         var box = document.getElementById('pcnSrcList'); box.innerHTML = '';
         list.forEach(function (x) {
           var a = document.createElement('a'); a.className = 'pcn-srcitem'; a.href = x.u; a.target = '_blank'; a.rel = 'noopener';
-          var h = hostOf(x.u, x.t);
-          a.innerHTML = '<b></b><small><img alt="" src="' + favUrl(h) + '" onerror="this.style.visibility=\'hidden\'"><span></span></small>';
-          a.querySelector('b').textContent = x.t; a.querySelector('span').textContent = h;
+          a.innerHTML = '<b></b><small>' + srcImg(x, '') + '<span></span></small>';
+          a.querySelector('b').textContent = x.t; a.querySelector('span').textContent = srcLabel(x);
           box.appendChild(a);
         });
         sh.classList.add('open');
@@ -402,15 +407,18 @@
       if (r.status === 429) return 'You have used your ' + (j.limit || 10) + (mode === 'deep' ? ' Deep' : mode === 'pro' ? ' Pro' : '') + ' questions for today. They reset at 1:00 AM Nigeria time.' + (mode !== 'quick' ? ' You can still use another mode.' : '');
       if (r.status === 503) return 'PCN AI is very busy today. Please try again tomorrow. The question buttons below still work.';
       if (!r.ok || !j.answer) return 'PCN AI could not answer right now. Please try again in a moment.';
-      if (/^#{1,3}\s|\*\*|\]\(https?:/m.test(j.answer)) {
+      var ans = String(j.answer), srcs = [];
+      var sm = ans.match(/\n+\s*Sources:\s*([\s\S]+)$/);
+      if (sm) {
+        sm[1].replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function (m, t, u) {
+          var x = { t: t, u: u }, k = u.indexOf('#pcn=');
+          if (k > 0) { x.own = decodeURIComponent(u.slice(k + 5)); x.u = u.slice(0, k); }
+          srcs.push(x); return m;
+        });
+        if (srcs.length) ans = ans.slice(0, sm.index);
+      }
+      if (/^#{1,3}\s|\*\*|\]\(https?:/m.test(ans)) {
         var left0 = (j.left != null) ? j.left + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '';
-        var ans = String(j.answer), srcs = [];
-        var sm = ans.match(/\n+\s*Sources:\s*([\s\S]+)$/);
-        if (sm) {
-          sm[1].replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function (m, t, u) { srcs.push({ t: t, u: u }); return m; });
-          if (srcs.length) ans = ans.slice(0, sm.index);
-        }
-        // links inside the text become plain words; they go into the sources button instead
         var seenU = {}; srcs.forEach(function (x) { seenU[x.u] = 1; });
         var inl = [];
         ans = ans.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function (m, t, u) { if (!seenU[u]) { seenU[u] = 1; inl.push({ t: t, u: u }); } return t; });
@@ -418,7 +426,7 @@
         return mdRender(ans) + (srcs.length ? srcChip(srcs) : '') + note(left0 + 'AI answers can be wrong. Not financial advice.');
       }
       var urls = [];
-      var clean = String(j.answer).replace(/\(?(https?:\/\/[^\s<)]+)\)?/g, function (u0, u) {
+      var clean = ans.replace(/\(?(https?:\/\/[^\s<)]+)\)?/g, function (u0, u) {
         u = u.replace(/[.,;:!?]+$/, ''); urls.push(u); return '';
       }).replace(/\s+(at|on|here|from|via|see|visit|check|and|or|in|to|of)\s*([.,;:!?]*)\s*$/i, '$2').replace(/\s*:\s*$/, '.').replace(/[ \t]+([.,;:!?])/g, '$1').trim();
       var body = escapeHtml(clean).replace(/\n/g, '<br>');
@@ -428,7 +436,7 @@
         body += '<div style="margin-top:10px"><a data-copyurl="' + escapeHtml(u) + '" href="' + escapeHtml(u) + '"' + (own ? '' : ' target="_blank" rel="noopener"') + ' style="color:#16a34a;font-weight:600;font-size:.92em;text-decoration:none">View full details \u2192</a></div>';
       }
       var left = (j.left != null) ? j.left + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '';
-      return body + note(left + 'AI answers can be wrong. Not financial advice.');
+      return body + (srcs.length ? srcChip(srcs) : '') + note(left + 'AI answers can be wrong. Not financial advice.');
     }
 
     var ROUTES = {
