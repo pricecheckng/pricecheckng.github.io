@@ -28,6 +28,8 @@
   #dtools::-webkit-scrollbar { display:none; }
   #dtools button { flex:none; width:38px; height:38px; border:0; border-radius:10px; background:none; color:var(--mut); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
   #dtools button.on { background:#1b2e24; color:var(--acc2,#16c784); } #dtools button.dis { opacity:.35; }
+  #dFav { display:contents; }
+  .st { margin-left:auto; font-style:normal; font-size:20px; line-height:1; color:var(--mut); padding:4px 4px 4px 12px; } .st.on { color:#f5a524; }
   #dtools hr { width:24px; border:0; border-top:1px solid var(--line); margin:4px 0; }
   #curBg { position:fixed; inset:0; z-index:19; display:none; background:rgba(0,0,0,.45); } #curBg.on { display:block; }
   #curSheet { position:absolute; left:0; right:0; bottom:0; background:#101a15; border-top:1px solid var(--line); border-radius:16px 16px 0 0; padding:8px 0 14px; }
@@ -156,6 +158,7 @@
       <button type="button" id="lnBtn" data-tool="line" aria-label="Lines"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 17.5l11-11"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/></svg></button>
       <button type="button" id="fibBtn" data-tool="fibmenu" aria-label="Fibonacci"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 5h18M3 9h18M3 13h18M3 19h18"/><circle cx="5" cy="19" r="1.8" fill="currentColor"/><circle cx="19" cy="5" r="1.8" fill="currentColor"/></svg></button>
       <button type="button" data-tool="ruler" aria-label="Measure"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8" width="19" height="8" rx="1.5" transform="rotate(-35 12 12)"/><path d="M8 13l1.5 1.2M11 11l1.5 1.2M14 9l1.5 1.2"/></svg></button>
+      <div id="dFav"></div>
       <hr>
       <button type="button" id="dDel" class="dis" aria-label="Delete drawing"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button>
     </div><div id="dhint"></div><div id="cMain"></div><div class="msg" id="msg">Loading chart…</div></div>
@@ -254,9 +257,27 @@ let fbType = (() => { try { const v = localStorage.getItem('pcn_chart_fib'); ret
 const CUI = {'cross': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/></svg>', 'dot': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>', 'arrow': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3l12 8-5.5 1.5L10 18z"/></svg>', 'eraser': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 20H9L4 15l9-9 7 7-6 6M8 11l6 6"/></svg>'};
 let curMode = (() => { try { const v = localStorage.getItem('pcn_chart_cur'); return CUI[v] ? v : 'cross'; } catch (_) { return 'cross'; } })();
 chart.setCursor(curMode);
+// favourite tools: star a tool in any menu and it gets its own one-tap button on the toolbar
+const TFK = 'pcn_chart_tfav';
+let TF = (() => { try { const a = JSON.parse(localStorage.getItem(TFK) || '[]'); return Array.isArray(a) ? a.slice(0, 6) : []; } catch (_) { return []; } })();
+const ALLI = Object.assign({}, CUI, LNI, FBI);
+function useTool(k) { if (CUI[k]) { curMode = k; try { localStorage.setItem('pcn_chart_cur', k); } catch (_) {} chart.setCursor(k); chart.setTool('cursor'); } else { chart.setTool(k); } paintTool(); }
+function renderFav() {
+  $('dFav').innerHTML = TF.map(k => '<button type="button" data-fav="' + k + '" aria-label="' + k + '">' + ALLI[k] + '</button>').join('');
+  $('dFav').querySelectorAll('[data-fav]').forEach(b => b.onclick = () => useTool(b.dataset.fav));
+  document.querySelectorAll('.st').forEach(i => { const on = TF.includes(i.dataset.k); i.classList.toggle('on', on); i.textContent = on ? '\u2605' : '\u2606'; });
+}
+function initStars() {
+  document.querySelectorAll('#curSheet [data-cur], #lnSheet [data-ln], #fibSheet [data-fb]').forEach(b => {
+    const k = b.dataset.cur || b.dataset.ln || b.dataset.fb, i = document.createElement('i'); i.className = 'st'; i.dataset.k = k; b.appendChild(i);
+    i.onclick = e => { e.stopPropagation(); TF = TF.includes(k) ? TF.filter(x => x !== k) : TF.concat(k).slice(-6); try { localStorage.setItem(TFK, JSON.stringify(TF)); } catch (_) {} renderFav(); paintTool(); };
+  });
+  renderFav();
+}
 function paintTool(t) {
   if (t) curTool = t;
   document.querySelectorAll('#dtools [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === curTool || (b.dataset.tool === 'line' && !!LN[curTool]) || (b.dataset.tool === 'fibmenu' && !!FBN[curTool])));
+  $('dFav').querySelectorAll('[data-fav]').forEach(b => b.classList.toggle('on', b.dataset.fav === curTool || (CUI[b.dataset.fav] && curTool === 'cursor' && b.dataset.fav === curMode)));
   $('fibBtn').innerHTML = FBI[FBN[curTool] ? curTool : fbType];
   $('lnBtn').innerHTML = LNI[LN[curTool] ? curTool : lnType];
   const hh = HINT[curTool] || (curTool === 'cursor' ? CHINT[curMode] : '') || ''; const h = $('dhint'); h.textContent = hh; h.classList.toggle('on', !!hh); $('curBtn').innerHTML = CUI[curMode];
@@ -271,6 +292,7 @@ $('fibBg').onclick = e => { if (e.target === $('fibBg')) $('fibBg').classList.re
 $('lnBg').onclick = e => { if (e.target === $('lnBg')) $('lnBg').classList.remove('on'); };
 $('dDel').onclick = () => { if (chart.hasSelection()) { chart.deleteSelected(); } else if (chart.count() && confirm('Remove all your drawings on ' + symbol + '?')) chart.clearDrawings(); paintTool(); };
 $('main').addEventListener('pointerup', () => setTimeout(() => paintTool(), 30));
+initStars();
 function loadDrawings() { try { const m = JSON.parse(localStorage.getItem(DK) || '{}'); chart.setDrawings(m[symbol] || []); } catch (_) { chart.setDrawings([]); } paintTool(); }
 
 // ---------- live price ----------
