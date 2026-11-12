@@ -102,8 +102,8 @@
   #agMode { background:#101a15; border:1px solid var(--line); color:var(--txt); border-radius:10px; font:inherit; font-size:12px; font-weight:700; padding:5px 9px; cursor:pointer; }
   #agSend { margin-left:auto; width:36px; height:36px; border-radius:10px; border:0; background:var(--acc); color:#fff; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; } #agSend:disabled { opacity:.5; }
   #agUp { width:44px; height:44px; flex:none; border-radius:12px; border:1px solid var(--line); background:#16241d; color:var(--txt); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
-  #agModeMenu { display:none; position:absolute; left:20px; bottom:70px; z-index:12; background:#14211a; border:1px solid var(--line); border-radius:12px; padding:6px; min-width:190px; box-shadow:0 10px 30px rgba(0,0,0,.5); } #agModeMenu.on { display:block; }
-  #agModeMenu button { display:block; width:100%; text-align:left; background:none; border:0; color:var(--txt); font:inherit; font-size:14px; font-weight:700; padding:9px 10px; border-radius:8px; cursor:pointer; } #agModeMenu button small { display:block; color:var(--mut); font-weight:500; font-size:11px; } #agModeMenu button.on { background:#1b2e24; }
+  #agModeMenu { display:none; position:absolute; left:16px; right:16px; bottom:70px; z-index:12; background:#14211a; border:1px solid var(--line); border-radius:12px; padding:6px; box-shadow:0 10px 30px rgba(0,0,0,.5); } #agModeMenu.on { display:block; }
+  #agModeMenu button { display:block; width:100%; text-align:left; background:none; border:0; color:var(--txt); font:inherit; font-size:14px; font-weight:700; padding:9px 10px; border-radius:8px; cursor:pointer; } #agModeMenu button small { display:block; color:var(--mut); font-weight:500; font-size:11px; } #agModeMenu button { position:relative; padding-right:34px; } #agModeMenu button small { font-size:12px; } #agModeMenu button.on { background:#1b2e24; } #agModeMenu button.on::after { content:'\2713'; position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--g,#16c784); font-size:16px; }
 </style>
 </head>
 <body>
@@ -128,7 +128,7 @@
     <div id="agModeMenu"><button data-m="quick">Quick<small>Short answer, uses your Quick questions</small></button><button data-m="pro">Pro<small>More detail, uses your Pro questions</small></button><button data-m="deep">Deep<small>Full analysis with news, uses your Deep questions</small></button></div>
     <form id="agForm" autocomplete="off">
       <div class="box"><textarea id="agIn" rows="1" placeholder="Ask your agent..." maxlength="380"></textarea>
-        <div class="agrow"><button type="button" id="agMode">Quick &#9662;</button><button type="submit" id="agSend" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5v-6.8l9-1.7-9-1.7V3.5L22 12z"/></svg></button></div></div>
+        <div class="agrow"><button type="button" id="agMode">Pro &#9662;</button><button type="submit" id="agSend" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5v-6.8l9-1.7-9-1.7V3.5L22 12z"/></svg></button></div></div>
       <button type="button" id="agUp" aria-label="Expand chat"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l5-5 5 5"/></svg></button>
     </form>
   </div>
@@ -334,7 +334,7 @@ async function renderWatch() {
 // ---------- chat sheet under the chart ----------
 const agent = $('agent'), msgsEl = $('agMsgs'), agIn = $('agIn');
 const getToken = () => { try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k)) { const v = JSON.parse(localStorage.getItem(k)); const se = v && (v.access_token ? v : v.currentSession); if (se && se.access_token) return se.access_token; } } } catch (_) {} return null; };
-let agMode = (() => { try { const m = localStorage.getItem('pcn_ai_mode'); return m === 'pro' || m === 'deep' ? m : 'quick'; } catch (_) { return 'quick'; } })();
+let agMode = (() => { try { const m = localStorage.getItem('pcn_ai_mode'); return m === 'quick' || m === 'deep' ? m : 'pro'; } catch (_) { return 'pro'; } })();
 const MN = { quick: 'Quick', pro: 'Pro', deep: 'Deep' };
 function paintAgMode() { $('agMode').innerHTML = MN[agMode] + ' &#9662;'; document.querySelectorAll('#agModeMenu button').forEach(b => b.classList.toggle('on', b.dataset.m === agMode)); }
 paintAgMode();

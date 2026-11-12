@@ -83,17 +83,15 @@
       }
       mx.save(); mx.beginPath(); mx.rect(0, 0, plotW(), H); mx.clip();
       // support / resistance zones
-      var lastYp = py(D.c[n - 1].c), usedY = [];
+      var lastYp = py(D.c[n - 1].c), usedY = [], labs = [];
       (show.levels ? D.levels : []).slice().sort(function (a, b) { return Math.abs(a.price - D.c[n - 1].c) - Math.abs(b.price - D.c[n - 1].c); }).forEach(function (L) {
         var y = py(L.price);
         if (y < 2 || y > PH - 2 || Math.abs(y - lastYp) < 9) return;                       // too close to the live price line: would look like a double line
-        for (var u = 0; u < usedY.length; u++) if (Math.abs(usedY[u] - y) < 17) return;    // too close to another level: skip
+        for (var u = 0; u < usedY.length; u++) if (Math.abs(usedY[u] - y) < 22) return;    // too close to another level: skip
         usedY.push(y);
         var col = L.kind === 'support' ? C.sup : C.res;
-        mx.strokeStyle = 'rgba(' + col + ',.85)'; mx.lineWidth = 1.2; mx.setLineDash([6, 4]); mx.beginPath(); mx.moveTo(0, y); mx.lineTo(plotW(), y); mx.stroke(); mx.setLineDash([]);
-        var t = L.kind + ' ' + nice(L.price), tw = mx.measureText(t).width + 10;
-        mx.fillStyle = 'rgba(11,18,14,.85)'; mx.fillRect(4, y - 16, tw, 14);
-        mx.fillStyle = 'rgba(' + col + ',1)'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(t, 9, y - 9);
+        mx.strokeStyle = 'rgba(' + col + ',.6)'; mx.lineWidth = 1; mx.setLineDash([6, 4]); mx.beginPath(); mx.moveTo(0, y); mx.lineTo(plotW(), y); mx.stroke(); mx.setLineDash([]);
+        labs.push({ y: y, t: (L.kind === 'support' ? 'S ' : 'R ') + nice(L.price), col: col });
       });
       // volume + candles
       var bw = Math.max(1, V.bw * 0.7);
@@ -111,6 +109,13 @@
         var a = D[m[0]], started = false; mx.strokeStyle = m[1]; mx.lineWidth = 1.6; mx.beginPath();
         for (var j = Math.max(0, s - 1); j <= Math.min(n - 1, e + 1); j++) { if (a[j] == null) continue; var xx = xOf(j), yy = py(a[j]); if (!started) { mx.moveTo(xx, yy); started = true; } else mx.lineTo(xx, yy); }
         mx.stroke();
+      });
+      // level labels: small solid pill sitting on the line, drawn on top of candles and MAs so nothing runs through the text
+      labs.forEach(function (b) {
+        var tw = mx.measureText(b.t).width + 12;
+        mx.fillStyle = '#0b120e'; mx.fillRect(4, b.y - 8, tw, 16);
+        mx.strokeStyle = 'rgba(' + b.col + ',.9)'; mx.lineWidth = 1; mx.setLineDash([]); mx.strokeRect(4.5, b.y - 7.5, tw - 1, 15);
+        mx.fillStyle = 'rgba(' + b.col + ',1)'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(b.t, 10, b.y + 0.5);
       });
       mx.restore();
       // last price tag
