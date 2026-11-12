@@ -20,6 +20,23 @@
         return new Intl.DateTimeFormat('en-US', { timeZone: tz, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
       } catch (e) { return ''; }
     };
+    var DR = [], tool = 'cursor', draft = null, sel = -1, ruler = null, sc = null, downPos = null, held = false;
+    var DC = '#4da3ff';
+    function stepMs() { var n = D.c.length; return n > 1 ? (D.c[n - 1].t - D.c[0].t) / (n - 1) : 1; }
+    function tIdx(t) { return (t - D.c[0].t) / stepMs(); }
+    function idxT(i) { return D.c[0].t + i * stepMs(); }
+    function priceAt(y) { return sc.hi - (y - 4) / (sc.PH - sc.volH - 6) * (sc.hi - sc.lo); }
+    function pointAt(x, y) { return { t: idxT((x - V.bw / 2) / V.bw + V.start), p: priceAt(y) }; }
+    function px(pt) { return { x: xOf(tIdx(pt.t)), y: sc.py(pt.p) }; }
+    function segDist(x, y, a, b) { var dx = b.x - a.x, dy = b.y - a.y, l = dx * dx + dy * dy, t = l ? Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / l)) : 0; return Math.hypot(x - a.x - t * dx, y - a.y - t * dy); }
+    function hitTest(x, y) {
+      for (var k = DR.length - 1; k >= 0; k--) { var d = DR[k];
+        if (d.type === 'hline') { if (Math.abs(y - sc.py(d.a.p)) < 12) return k; }
+        else { var a = px(d.a), b = px(d.b); if (segDist(x, y, a, b) < 14) return k; } }
+      return -1;
+    }
+    function emitDraw() { if (opts.onDraw) opts.onDraw(DR.slice()); }
+    function setTool(t) { tool = t; draft = null; if (t !== 'cursor') sel = -1; if (opts.onTool) opts.onTool(t); draw(); }
     var iv = '4h', raf = 0, show = { ma50: true, ma200: true, levels: true };
 
 
@@ -67,6 +84,7 @@
       for (i = s; i <= e; i++) { var k = D.c[i]; if (k.h > hi) hi = k.h; if (k.l < lo) lo = k.l; if (k.v > vmax) vmax = k.v; }
       var pad = (hi - lo) * 0.08 || hi * 0.01; hi += pad; lo -= pad;
       var py = function (v) { return (hi - v) / (hi - lo) * (PH - volH - 6) + 4; };
+      sc = { hi: hi, lo: lo, PH: PH, volH: volH, py: py };
       // grid + price axis
       mx.font = '11px system-ui,sans-serif'; mx.textBaseline = 'middle';
       axisSteps(lo, hi, 6).forEach(function (v) {
@@ -117,7 +135,28 @@
         mx.strokeStyle = 'rgba(' + b.col + ',.9)'; mx.lineWidth = 1; mx.setLineDash([]); mx.strokeRect(4.5, b.y - 7.5, tw - 1, 15);
         mx.fillStyle = 'rgba(' + b.col + ',1)'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(b.t, 10, b.y + 0.5);
       });
+      // drawings (trend lines, horizontal lines, ruler)
+      var all = DR.map(function (d, k) { return { d: d, sel: k === sel }; }); if (draft && draft.type !== 'ruler') all.push({ d: draft, sel: true, tmp: true });
+      all.forEach(function (o) {
+        var d = o.d; mx.strokeStyle = DC; mx.fillStyle = DC; mx.lineWidth = o.sel ? 2.2 : 1.6; mx.setLineDash([]);
+        if (d.type === 'hline') { var yh = py(d.a.p); mx.beginPath(); mx.moveTo(0, yh); mx.lineTo(plotW(), yh); mx.stroke(); }
+        else { var a = px(d.a), b = px(d.b); mx.beginPath(); mx.moveTo(a.x, a.y); mx.lineTo(b.x, b.y); mx.stroke();
+          if (o.sel) [a, b].forEach(function (q) { mx.fillStyle = '#0b120e'; mx.beginPath(); mx.arc(q.x, q.y, 5, 0, 7); mx.fill(); mx.stroke(); }); }
+      });
+      var rl = (draft && draft.type === 'ruler') ? draft : ruler;
+      if (rl) {
+        var ra = px(rl.a), rb = px(rl.b), up2 = rl.b.p >= rl.a.p, rcol = up2 ? '22,199,132' : '234,57,67';
+        mx.fillStyle = 'rgba(' + rcol + ',.14)'; mx.fillRect(Math.min(ra.x, rb.x), Math.min(ra.y, rb.y), Math.abs(rb.x - ra.x), Math.abs(rb.y - ra.y));
+        mx.strokeStyle = 'rgba(' + rcol + ',.9)'; mx.lineWidth = 1.2; mx.setLineDash([5, 4]); mx.beginPath(); mx.moveTo(ra.x, ra.y); mx.lineTo(rb.x, rb.y); mx.stroke(); mx.setLineDash([]);
+        var dp = rl.b.p - rl.a.p, pc = dp / rl.a.p * 100, bars = Math.round(tIdx(rl.b.t) - tIdx(rl.a.t)), ms = Math.abs(rl.b.t - rl.a.t), dd = Math.floor(ms / 864e5), hh = Math.floor(ms % 864e5 / 36e5), mm = Math.floor(ms % 36e5 / 6e4);
+        var tx1 = (dp >= 0 ? '+' : '-') + nice(Math.abs(dp)) + ' (' + (dp >= 0 ? '+' : '') + pc.toFixed(2) + '%)', tx2 = Math.abs(bars) + ' bars, ' + (dd ? dd + 'd ' : '') + (hh || dd ? hh + 'h ' : '') + (!dd ? mm + 'm' : '');
+        mx.font = '600 11px system-ui,sans-serif'; var bw2 = Math.max(mx.measureText(tx1).width, mx.measureText(tx2).width) + 16, cx0 = Math.max(4, Math.min(plotW() - bw2 - 4, (ra.x + rb.x) / 2 - bw2 / 2)), cy0 = Math.max(4, Math.min(PH - 44, (ra.y + rb.y) / 2 - 17));
+        mx.fillStyle = 'rgb(' + rcol + ')'; mx.fillRect(cx0, cy0, bw2, 34); mx.fillStyle = '#04100a'; mx.textAlign = 'center'; mx.textBaseline = 'middle'; mx.fillText(tx1, cx0 + bw2 / 2, cy0 + 10); mx.fillText(tx2, cx0 + bw2 / 2, cy0 + 24);
+        mx.font = '11px system-ui,sans-serif';
+      }
       mx.restore();
+      // price tags for horizontal lines
+      all.forEach(function (o) { if (o.d.type !== 'hline') return; var yh = py(o.d.a.p); if (yh < 0 || yh > PH) return; mx.fillStyle = DC; mx.fillRect(plotW(), yh - 9, AX, 18); mx.fillStyle = '#04100a'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(nice(o.d.a.p), plotW() + 6, yh); });
       // last price tag
       var last = D.c[n - 1], yl = py(last.c), upL = last.c >= last.o;
       mx.setLineDash([3, 3]); mx.strokeStyle = upL ? C.up : C.dn; mx.beginPath(); mx.moveTo(0, yl); mx.lineTo(plotW(), yl); mx.stroke(); mx.setLineDash([]);
@@ -152,11 +191,16 @@
     mc.addEventListener('pointerdown', function (ev) {
       mc.setPointerCapture(ev.pointerId); ptrs[ev.pointerId] = { x: ev.offsetX, y: ev.offsetY }; moved = false;
       var ids = Object.keys(ptrs);
+      downPos = { x: ev.offsetX, y: ev.offsetY }; held = false;
+      if (ruler) { ruler = null; draw(); }
+      if (ids.length === 1 && tool !== 'cursor' && ev.offsetX < plotW() && sc) {
+        var pt0 = pointAt(ev.offsetX, ev.offsetY); draft = { type: tool, a: pt0, b: pt0 }; dragX = null; draw(); return;
+      }
       if (ids.length === 1) {
         dragX = ev.offsetX; var ox = ev.offsetX;
-        holdT = setTimeout(function () { if (!moved && ev.offsetX < plotW()) { cross = idxAt(ox); dragX = null; draw(); } }, 380);
+        holdT = setTimeout(function () { if (!moved && ev.offsetX < plotW()) { held = true; cross = idxAt(ox); dragX = null; draw(); } }, 380);
       } else if (ids.length === 2) {
-        clearTimeout(holdT); var a = ptrs[ids[0]], b = ptrs[ids[1]];
+        clearTimeout(holdT); if (draft) { draft = null; draw(); } var a = ptrs[ids[0]], b = ptrs[ids[1]];
         startDist = Math.abs(a.x - b.x) || 1; startBw = V.bw; anchorIdx = idxAt((a.x + b.x) / 2); dragX = null;
       }
     });
@@ -164,6 +208,7 @@
       if (!ptrs[ev.pointerId]) { if (ev.pointerType === 'mouse' && ev.offsetX < plotW()) { cross = idxAt(ev.offsetX); draw(); } return; }
       ptrs[ev.pointerId] = { x: ev.offsetX, y: ev.offsetY };
       var ids = Object.keys(ptrs);
+      if (draft && ids.length === 1) { draft.b = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY); if (draft.type === 'hline') draft.a = draft.b; draw(); return; }
       if (ids.length === 2) {
         var a = ptrs[ids[0]], b = ptrs[ids[1]], d = Math.abs(a.x - b.x) || 1, mid = (a.x + b.x) / 2;
         V.bw = startBw * d / startDist; V.start = anchorIdx - (mid - V.bw / 2) / V.bw; clampView(); draw(); return;
@@ -175,6 +220,14 @@
       }
     });
     function up(ev) {
+      var wasDrag = ev.type !== 'pointercancel' && !!ptrs[ev.pointerId];
+      if (draft && wasDrag) {
+        var a0 = px(draft.a), b0 = px(draft.b), far = Math.hypot(a0.x - b0.x, a0.y - b0.y) > 8;
+        if (draft.type === 'hline') { DR.push({ type: 'hline', a: draft.a }); sel = DR.length - 1; emitDraw(); setTool('cursor'); }
+        else if (far) { if (draft.type === 'ruler') ruler = draft; else { DR.push({ type: 'trend', a: draft.a, b: draft.b }); sel = DR.length - 1; emitDraw(); } setTool('cursor'); }
+        else { draft = null; draw(); }
+      } else if (draft) { draft = null; draw(); }
+      else if (wasDrag && tool === 'cursor' && !moved && !held && downPos && sc && D.c.length) { var h = hitTest(downPos.x, downPos.y); if (h !== sel) { sel = h; draw(); } }
       delete ptrs[ev.pointerId]; clearTimeout(holdT);
       var ids = Object.keys(ptrs);
       if (ids.length === 1) dragX = ptrs[ids[0]].x; else if (!ids.length) { dragX = null; if (ev.pointerType !== 'mouse') { cross = null; draw(); } }
@@ -208,6 +261,11 @@
         D.ma50 = smaArr(cl, 50); D.ma200 = smaArr(cl, 200); D.rsi = rsiArr(cl, 14);
         if (!raf) raf = requestAnimationFrame(function () { raf = 0; draw(); });
       },
+      setTool: setTool,
+      setDrawings: function (a) { DR = (a || []).slice(); sel = -1; draft = null; ruler = null; draw(); },
+      deleteSelected: function () { if (sel < 0) return false; DR.splice(sel, 1); sel = -1; emitDraw(); draw(); return true; },
+      clearDrawings: function () { DR = []; sel = -1; ruler = null; emitDraw(); draw(); },
+      hasSelection: function () { return sel >= 0; }, count: function () { return DR.length; },
       setShow: function (o) { for (var k in o) show[k] = !!o[k]; draw(); },
       last: function () { return D.c[D.c.length - 1]; },
       setZones: function (z) { D.levels = z || []; draw(); },
