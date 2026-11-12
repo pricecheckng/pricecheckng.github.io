@@ -98,6 +98,8 @@
 
   #agent { flex:0 0 auto; display:flex; flex-direction:column; background:var(--panel); border-top:1px solid var(--line); border-radius:16px 16px 0 0; position:relative; }
   #agent.open { height:var(--ag-h, 46%); }
+  #agent.full { position:fixed; left:8px; right:8px; top:64px; bottom:calc(66px + env(safe-area-inset-bottom)); height:auto; z-index:15; border:1px solid var(--line); border-radius:16px; box-shadow:0 0 0 100vmax rgba(0,0,0,.55), 0 12px 40px rgba(0,0,0,.6); }
+  #agent.full .aghandle { display:none; } #agent.full .aghead { padding-top:12px; }
   #vChart.agopen #rsiWrap { display:none; }
   .aghandle { height:18px; display:flex; align-items:center; justify-content:center; cursor:ns-resize; touch-action:none; flex:none; } .aghandle i { width:44px; height:4px; border-radius:2px; background:#3a5446; }
   .aghead { display:none; align-items:center; justify-content:space-between; padding:2px 14px 8px; font-weight:800; font-size:14px; flex:none; }
@@ -160,7 +162,7 @@
   <div id="rsiWrap"><span class="lbl">RSI 14</span><div class="c" id="cRsi"></div></div>
   <div id="agent">
     <div class="aghandle" id="agHandle"><i></i></div>
-    <div class="aghead"><span>Chat with PCN AI</span><span><button id="agNew" aria-label="New chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v5a3 3 0 0 1-3 3H9l-5 3V7a3 3 0 0 1 3-3h6"/><path d="M18 3v6M15 6h6"/></svg></button><button id="agHist" aria-label="Past chats"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></button><button id="agClose" aria-label="Hide chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></span></div>
+    <div class="aghead"><span>Chat with PCN AI</span><span><button id="agNew" aria-label="New chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v5a3 3 0 0 1-3 3H9l-5 3V7a3 3 0 0 1 3-3h6"/><path d="M18 3v6M15 6h6"/></svg></button><button id="agHist" aria-label="Past chats"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></button><button id="agFull" aria-label="Full screen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button id="agClose" aria-label="Hide chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></span></div>
     <div id="agMsgs"></div>
     <div id="agModeMenu"><button data-m="quick">Quick<small>Short answer, uses your Quick questions</small></button><button data-m="pro">Pro<small>More detail, uses your Pro questions</small></button><button data-m="deep">Deep<small>Full analysis with news, uses your Deep questions</small></button></div>
     <form id="agForm" autocomplete="off">
@@ -421,7 +423,9 @@ function md(t) {
   t.split('\n').forEach(l => { const m = l.match(/^\s*(?:[-*•]|\d+\.)\s+(.*)/); if (m) { if (!list) { out.push('<ul>'); list = true; } out.push('<li>' + m[1] + '</li>'); return; } if (list) { out.push('</ul>'); list = false; } const hd = l.match(/^#{1,3}\s+(.*)/); if (hd) out.push('<h3>' + hd[1] + '</h3>'); else if (l.trim()) out.push('<p>' + l + '</p>'); });
   if (list) out.push('</ul>'); return out.join('');
 }
-function setOpen(o) { agent.classList.toggle('open', o); $('vChart').classList.toggle('agopen', o); if (o && !msgsEl.children.length) intro(); setTimeout(() => chart.resize(), 50); }
+function setFull(f) { agent.classList.toggle('full', f); if (f) setOpen(true); $('agFull').innerHTML = f ? '<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5\"/></svg>' : '<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5\"/></svg>'; setTimeout(() => chart.resize(), 50); msgsEl.scrollTop = msgsEl.scrollHeight; }
+$('agFull').onclick = () => setFull(!agent.classList.contains('full'));
+function setOpen(o) { if (!o) { agent.classList.remove('full'); } agent.classList.toggle('open', o); $('vChart').classList.toggle('agopen', o); if (o && !msgsEl.children.length) intro(); setTimeout(() => chart.resize(), 50); }
 const SUGG = [['Analyze', ['What is the current trend?', 'Where are support and resistance?', 'Is RSI overbought or oversold?', 'Summarize this chart']], ['Find a setup', ['What is the current setup?', 'Outline the upside and downside levels', 'Is price above or below the moving averages?']], ['Add to chart', ['Mark the support and resistance.', 'Draw the current range.', 'Add the 50 and 200 averages.', 'Clear the lines you drew.']]];
 function intro() { msgsEl.innerHTML = '<div class="ag-a"><p>Ask me about the chart you are looking at. I read its price, trend, RSI and support and resistance.</p></div><div class="ag-chips"></div>'; const c = msgsEl.querySelector('.ag-chips'); c.className = 'ag-sug'; SUGG.forEach(g => { c.insertAdjacentHTML('beforeend', '<div class="ag-grp">' + g[0] + '</div>'); const r = document.createElement('div'); r.className = 'ag-row'; g[1].forEach(q => { const b = document.createElement('button'); b.type = 'button'; b.textContent = q; b.onclick = () => ask(q); r.appendChild(b); }); c.appendChild(r); }); }
 // saved chats (this phone only)
@@ -473,11 +477,12 @@ const IC = { eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" s
 function mkSteps(host) {
   const el = document.createElement('div'); el.className = 'ag-steps open';
   el.innerHTML = '<button class="ags-h" type="button"><span class="chev">&#8964;</span><span class="ags-t"></span></button><div class="ags-b"></div>'; host.appendChild(el);
-  const body = el.querySelector('.ags-b'), t0 = performance.now(); let n = 0, run = true;
-  const upd = () => { el.querySelector('.ags-t').textContent = (run ? 'working' : 'done') + ' \u00b7 ' + n + ' tool' + (n === 1 ? '' : 's') + ' \u00b7 ' + Math.round((performance.now() - t0) / 1000) + 's'; };
+  const body = el.querySelector('.ags-b'), t0 = performance.now(); let n = 0, run = true, extra = '';
+  const upd = () => { const sec = Math.round((performance.now() - t0) / 1000); el.querySelector('.ags-t').textContent = (run ? 'working' : 'thought for ' + sec + 's') + ' \u00b7 ' + n + ' tool' + (n === 1 ? '' : 's') + (run ? ' \u00b7 ' + sec + 's' : '') + (extra ? ' \u00b7 ' + extra : ''); };
   const timer = setInterval(upd, 400); upd();
   return {
     add(icon, name, detail, desc) { n++; const r = document.createElement('div'); r.className = 'ags-r'; r.innerHTML = '<i class="ags-i">' + IC[icon] + '</i><div><div class="ags-l"><b>' + name + '</b><span class="d">' + detail + '</span></div><div class="ags-s">' + desc + '</div></div>'; body.prepend(r); upd(); return { set(d) { r.querySelector('.d').textContent = d; } }; },
+    extra(t) { extra = t; upd(); },
     end() { run = false; clearInterval(timer); upd(); }
   };
 }
@@ -521,7 +526,7 @@ async function ask(q) {
   const a = document.createElement('div'); a.className = 'ag-a'; msgsEl.appendChild(a); const box = mkSteps(a);
   const act = chartAction(q, box);
   agIn.value = ''; agIn.style.height = 'auto';
-  if (act) { box.end(); a.insertAdjacentHTML('beforeend', act); saveTurn(q, a.innerHTML); msgsEl.scrollTop = msgsEl.scrollHeight; return; }
+  if (act) { box.extra('free'); box.end(); a.insertAdjacentHTML('beforeend', act); saveTurn(q, a.innerHTML); msgsEl.scrollTop = msgsEl.scrollHeight; return; }
   const tR = performance.now(); box.add('eye', 'read_data', (lastD ? lastD.candles.length : 0) + ' candles \u00b7 ' + loadMs + 'ms', 'loaded the requested history');
   const tAn = performance.now(); const ctxText = chartContext(); box.add('pulse', 'analyze', 'swings, trend, levels \u00b7 ' + ms1(tAn), 'analyzed swings, trend, levels, volatility');
   const tAi = performance.now(); const aiStep = box.add('chat', 'ask_ai', 'running', 'writing the answer from the chart numbers (' + MN[agMode] + ')');
@@ -536,7 +541,7 @@ async function ask(q) {
     if (r.status === 429) return done('<p>You have used your ' + (j.limit || '') + ' ' + MN[agMode] + ' questions for today. They reset at 1:00 AM Nigeria time. You can switch mode below.</p>');
     if (!r.ok || !j.answer) return done('<p>PCN AI could not answer right now. Please try again in a moment.</p>');
     let ans = String(j.answer).replace(/\n+\s*Sources:[\s\S]*$/, '').replace(/\(?https?:\/\/[^\s<)]+\)?/g, '').replace(/\[([^\]]+)\]\(\)/g, '$1').trim();
-    const outHtml = md(ans) + '<div class="ag-note">' + (j.left != null ? j.left + ' ' + MN[agMode] + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '') + 'AI answers can be wrong. Not financial advice.</div>'; done(outHtml); saveTurn(q, a.innerHTML);
+    const outHtml = md(ans) + '<div class="ag-note">' + (j.left != null ? j.left + ' ' + MN[agMode] + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '') + 'AI answers can be wrong. Not financial advice.</div>'; if (j.left != null) box.extra(j.left + ' ' + MN[agMode] + ' left'); done(outHtml); saveTurn(q, a.innerHTML);
   } catch (err) { console.warn('pcn agent', err); done('<p>No connection. Please check your network and try again.</p>'); }
 }
 $('agForm').addEventListener('submit', e => { e.preventDefault(); ask(agIn.value); });
