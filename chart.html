@@ -482,15 +482,17 @@ agIn.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && 
   hd.addEventListener('pointermove', e => { if (!drag) return; const vh = $('vChart').getBoundingClientRect().height, nh = Math.max(120, Math.min(vh * 0.8, h0 + (y0 - e.clientY))); if (!agent.classList.contains('open')) setOpen(true); agent.style.setProperty('--ag-h', nh + 'px'); });
   hd.addEventListener('pointerup', () => { drag = false; }); hd.addEventListener('dblclick', () => setOpen(!agent.classList.contains('open')));
 })();
-function chartContext() {
+function chartContext(q) {
   const d = lastD; if (!d) return '';
   const a = d.analysis, t = a.today, c = chart.last(), n = v => v == null ? 'n/a' : fmt(v), cs = d.candles.slice(-5);
-  const lv = (a.levels || []).map(l => l.kind + ' ' + n(l.price) + (l.touches ? ' (' + l.touches + ' touches)' : '')).join('; ') || 'none found';
+  const lp = c ? c.c : a.price, lv = (a.levels || []).map(l => l.kind + ' ' + n(l.price) + ' (' + (l.price >= lp ? '+' : '') + ((l.price / lp - 1) * 100).toFixed(1) + '% from price' + (l.touches ? ', ' + l.touches + ' touches' : '') + ')').join('; ') || 'none found';
+  const full = /(summar|setup|outline|analy|upside|downside|scenario|overview|outlook|what do you think|how does|look)/i.test(q || '');
   const tf = TFN[interval];
   return `Pair: ${symbol}/USDT on Binance, timeframe ${tf}. Live price: ${n(c ? c.c : a.price)}.\n` +
     (t && t.open ? `Today (viewer's day): open ${n(t.open)}, high ${n(t.high)}, low ${n(t.low)}, change ${(((c ? c.c : a.price) / t.open - 1) * 100).toFixed(2)}%, volume ${n(t.volume)}.\n` : '') +
     `RSI14 ${a.rsi14 == null ? 'n/a' : (+a.rsi14).toFixed(1)}; SMA50 ${n(a.sma50)}; SMA200 ${n(a.sma200)}; EMA50 ${n(a.ema50)}; EMA200 ${n(a.ema200)}.\nLevels: ${lv}.\n` +
-    'INSTRUCTION: Answer from this chart data. Stay on the chart: price, trend, moving averages, RSI, support and resistance. If no support level is listed, say price is near its recent lows. Do not add news, ETF, whale or stablecoin context unless the question asks for it.\n' +
+    'INSTRUCTION: Answer from this chart data. Stay on the chart: price, trend, moving averages, RSI, support and resistance. If no support level is listed, say price is near its recent lows. Do not add news, ETF, whale or stablecoin context unless the question asks for it. Use only numbers given here and never invent a level.\n' +
+    (full ? 'FORMAT: Write about 120 to 170 words in plain short paragraphs, no bullet lists, no headings. First paragraph: one or two sentences on the pair, timeframe, live price, trend and RSI. Then three paragraphs that each start with a label: "Upside case:" (what price must close above, using the listed resistance and moving averages, and how far away it is), "Downside case:" (what price must close below, using the listed support or recent lows, and how far away it is), "What changes the read:" (the one level or RSI move that would flip the view). End there. Do not give financial advice.\n' : 'FORMAT: Answer the question directly in 2 to 5 short sentences. No headings. Do not repeat the whole chart summary.\n') +
     'Last 5 candles (UTC time, open/high/low/close): ' + cs.map(k => new Date(k.t).toISOString().slice(5, 16).replace('T', ' ') + ' ' + n(k.o) + '/' + n(k.h) + '/' + n(k.l) + '/' + n(k.c)).join(' | ');
 }
 // chart actions: the agent changes the chart itself (free, no question used; numbers come from the engine)
@@ -550,7 +552,7 @@ async function ask(q) {
   agIn.value = ''; agIn.style.height = 'auto';
   if (act) { box.extra('free'); box.end(); a.insertAdjacentHTML('beforeend', act); saveTurn(q, a.innerHTML); msgsEl.scrollTop = msgsEl.scrollHeight; return; }
   const tR = performance.now(); box.add('eye', 'read_data', (lastD ? lastD.candles.length : 0) + ' candles \u00b7 ' + loadMs + 'ms', 'loaded the requested history');
-  const tAn = performance.now(); const ctxText = chartContext(); box.add('pulse', 'analyze', 'swings, trend, levels \u00b7 ' + ms1(tAn), 'analyzed swings, trend, levels, volatility');
+  const tAn = performance.now(); const ctxText = chartContext(q); box.add('pulse', 'analyze', 'swings, trend, levels \u00b7 ' + ms1(tAn), 'analyzed swings, trend, levels, volatility');
   const tAi = performance.now(); const aiStep = box.add('chat', 'ask_ai', 'running', 'writing the answer from the chart numbers (' + MN[agMode] + ')');
   msgsEl.scrollTop = msgsEl.scrollHeight; busy = true; $('agSend').disabled = true;
   const done = html => { aiStep.set(ms1(tAi)); box.end(); a.insertAdjacentHTML('beforeend', html); msgsEl.scrollTop = msgsEl.scrollHeight; busy = false; $('agSend').disabled = false; };
@@ -562,7 +564,7 @@ async function ask(q) {
     if (r.status === 401) return done('<p>Your sign-in has expired. Please sign in again.</p>');
     if (r.status === 429) return done('<p>You have used your ' + (j.limit || '') + ' ' + MN[agMode] + ' questions for today. They reset at 1:00 AM Nigeria time. You can switch mode below.</p>');
     if (!r.ok || !j.answer) return done('<p>PCN AI could not answer right now. Please try again in a moment.</p>');
-    let ans = String(j.answer).replace(/\n+\s*Sources:[\s\S]*$/, '').replace(/\(?https?:\/\/[^\s<)]+\)?/g, '').replace(/\[([^\]]+)\]\(\)/g, '$1').trim();
+    let ans = String(j.answer).replace(/\n+\s*Sources:[\s\S]*$/, '').replace(/\(?https?:\/\/[^\s<)]+\)?/g, '').replace(/\[([^\]]+)\]\(\)/g, '$1').trim().replace(/^\s*(Upside case|Downside case|What changes the read)\s*:/gmi, '**$1:**');
     const outHtml = md(ans) + '<div class="ag-note">' + (j.left != null ? j.left + ' ' + MN[agMode] + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '') + 'AI answers can be wrong. Not financial advice.</div>'; if (j.left != null) box.extra(j.left + ' ' + MN[agMode] + ' left'); done(outHtml); saveTurn(q, a.innerHTML);
   } catch (err) { console.warn('pcn agent', err); done('<p>No connection. Please check your network and try again.</p>'); }
 }
