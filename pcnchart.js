@@ -25,7 +25,8 @@
     function stepMs() { var n = D.c.length; return n > 1 ? (D.c[n - 1].t - D.c[0].t) / (n - 1) : 1; }
     function tIdx(t) { return (t - D.c[0].t) / stepMs(); }
     function idxT(i) { return D.c[0].t + i * stepMs(); }
-    function priceAt(y) { return sc.hi - (y - 4) / (sc.PH - sc.volH - 6) * (sc.hi - sc.lo); }
+    function priceAt(y) { return sc.fromY(y); }
+    var SC = { mode: 'regular', invert: false, countdown: false, grid: true, lastLine: true }, cdTimer = 0;
     function pointAt(x, y) { return { t: idxT((x - V.bw / 2) / V.bw + V.start), p: priceAt(y) }; }
     function px(pt) { return { x: xOf(tIdx(pt.t)), y: sc.py(pt.p) }; }
     function segDist(x, y, a, b) { var dx = b.x - a.x, dy = b.y - a.y, l = dx * dx + dy * dy, t = l ? Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / l)) : 0; return Math.hypot(x - a.x - t * dx, y - a.y - t * dy); }
@@ -103,23 +104,27 @@
       mx.clearRect(0, 0, W, H); rx.clearRect(0, 0, W, RH);
       if (!n) return;
       var r = range(), s = r[0], e = r[1], PH = H - 22, volH = PH * 0.16;      // 22px for the time axis
-      var hi = -Infinity, lo = Infinity, vmax = 0, i;
-      for (i = s; i <= e; i++) { var k = D.c[i]; if (k.h > hi) hi = k.h; if (k.l < lo) lo = k.l; if (k.v > vmax) vmax = k.v; }
-      var pad = (hi - lo) * 0.08 || hi * 0.01; hi += pad; lo -= pad;
-      var py = function (v) { return (hi - v) / (hi - lo) * (PH - volH - 6) + 4; };
-      sc = { hi: hi, lo: lo, PH: PH, volH: volH, py: py };
+      var hi = -Infinity, lo = Infinity, vmax = 0, i, base = D.c[s].c, md = SC.mode;
+      var T = function (v) { return md === 'log' ? Math.log(Math.max(v, 1e-12)) : md === 'percent' ? (v / base - 1) * 100 : md === 'index' ? v / base * 100 : v; };
+      var TI = function (t) { return md === 'log' ? Math.exp(t) : md === 'percent' ? base * (1 + t / 100) : md === 'index' ? base * t / 100 : t; };
+      for (i = s; i <= e; i++) { var k = D.c[i], th = T(k.h), tl = T(k.l); if (th > hi) hi = th; if (tl < lo) lo = tl; if (k.v > vmax) vmax = k.v; }
+      var pad = (hi - lo) * 0.08 || Math.abs(hi) * 0.01 || 1; hi += pad; lo -= pad;
+      var py = function (v) { var f = (hi - T(v)) / (hi - lo); if (SC.invert) f = 1 - f; return f * (PH - volH - 6) + 4; };
+      sc = { hi: hi, lo: lo, PH: PH, volH: volH, py: py, fromY: function (y) { var f = (y - 4) / (PH - volH - 6); if (SC.invert) f = 1 - f; return TI(hi - f * (hi - lo)); } };
+      var lab = function (v) { return md === 'percent' ? (T(v) > 0 ? '+' : '') + T(v).toFixed(2) + '%' : md === 'index' ? T(v).toFixed(2) : nice(v); };
       // grid + price axis
       mx.font = '11px system-ui,sans-serif'; mx.textBaseline = 'middle';
-      axisSteps(lo, hi, 6).forEach(function (v) {
-        var y = py(v); mx.strokeStyle = C.grid; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(0, y); mx.lineTo(plotW(), y); mx.stroke();
-        mx.fillStyle = C.txt; mx.textAlign = 'left'; mx.fillText(nice(v), plotW() + 6, y);
+      var ticks = (md === 'regular' || md === 'log') ? axisSteps(Math.min(TI(lo), TI(hi)), Math.max(TI(lo), TI(hi)), 6) : axisSteps(Math.min(lo, hi), Math.max(lo, hi), 6).map(TI);
+      ticks.forEach(function (v) {
+        var y = py(v); if (SC.grid) { mx.strokeStyle = C.grid; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(0, y); mx.lineTo(plotW(), y); mx.stroke(); }
+        mx.fillStyle = C.txt; mx.textAlign = 'left'; mx.fillText(lab(v), plotW() + 6, y);
       });
       // time axis
       mx.textAlign = 'center'; mx.textBaseline = 'alphabetic';
       var every = Math.max(1, Math.round(90 / V.bw));
       for (i = Math.ceil(s / every) * every; i <= e; i += every) {
         var x = xOf(i); if (x < 20 || x > plotW() - 20) continue;
-        mx.strokeStyle = C.grid; mx.beginPath(); mx.moveTo(x, 0); mx.lineTo(x, PH); mx.stroke();
+        if (SC.grid) { mx.strokeStyle = C.grid; mx.beginPath(); mx.moveTo(x, 0); mx.lineTo(x, PH); mx.stroke(); }
         mx.fillStyle = C.txt; mx.fillText(tfmt(D.c[i].t, iv), x, H - 6);
       }
       mx.save(); mx.beginPath(); mx.rect(0, 0, plotW(), H); mx.clip();
@@ -201,8 +206,10 @@
       all.forEach(function (o) { var ty = o.d.type; if (ty !== 'hline' && ty !== 'hray' && ty !== 'cross') return; var yh = py(o.d.a.p); if (yh < 0 || yh > PH) return; mx.fillStyle = o.d.col ? 'rgb(' + o.d.col + ')' : DC; mx.fillRect(plotW(), yh - 9, AX, 18); mx.fillStyle = '#04100a'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(nice(o.d.a.p), plotW() + 6, yh); });
       // last price tag
       var last = D.c[n - 1], yl = py(last.c), upL = last.c >= last.o;
-      mx.setLineDash([3, 3]); mx.strokeStyle = upL ? C.up : C.dn; mx.beginPath(); mx.moveTo(0, yl); mx.lineTo(plotW(), yl); mx.stroke(); mx.setLineDash([]);
-      mx.fillStyle = upL ? C.up : C.dn; mx.fillRect(plotW(), yl - 9, AX, 18); mx.fillStyle = '#04100a'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(nice(last.c), plotW() + 6, yl);
+      if (SC.lastLine) { mx.setLineDash([3, 3]); mx.strokeStyle = upL ? C.up : C.dn; mx.beginPath(); mx.moveTo(0, yl); mx.lineTo(plotW(), yl); mx.stroke(); mx.setLineDash([]); }
+      var hasCd = SC.countdown && iv, cdTxt = '';
+      if (hasCd) { var rem = Math.max(0, last.t + stepMs() - Date.now()) / 1000, hh2 = Math.floor(rem / 3600), mm2 = Math.floor(rem % 3600 / 60), ss2 = Math.floor(rem % 60), z2 = function (x) { return (x < 10 ? '0' : '') + x; }; cdTxt = (hh2 ? z2(hh2) + ':' : '') + z2(mm2) + ':' + z2(ss2); }
+      mx.fillStyle = upL ? C.up : C.dn; mx.fillRect(plotW(), yl - 9, AX, hasCd ? 32 : 18); mx.fillStyle = '#04100a'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(lab(last.c), plotW() + 6, yl); if (hasCd) mx.fillText(cdTxt, plotW() + 6, yl + 14);
       // crosshair
       if (cross != null && cross >= 0 && cross < n) {
         var cx = xOf(cross), k2 = D.c[cross];
@@ -210,7 +217,7 @@
         if (cur === 'dot') { mx.fillStyle = '#e8f1ec'; mx.beginPath(); mx.arc(cx, yc2, 4, 0, 7); mx.fill(); }
         else { mx.strokeStyle = 'rgba(138,163,150,.6)'; mx.setLineDash([4, 4]); mx.beginPath(); mx.moveTo(cx, 0); mx.lineTo(cx, PH); mx.stroke(); mx.setLineDash([]);
         mx.beginPath(); mx.moveTo(0, yc2); mx.lineTo(plotW(), yc2); mx.setLineDash([4, 4]); mx.stroke(); mx.setLineDash([]); }
-        mx.fillStyle = '#2a3b32'; mx.fillRect(plotW(), yc2 - 9, AX, 18); mx.fillStyle = '#e8f1ec'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(nice(k2.c), plotW() + 6, yc2);
+        mx.fillStyle = '#2a3b32'; mx.fillRect(plotW(), yc2 - 9, AX, 18); mx.fillStyle = '#e8f1ec'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(lab(k2.c), plotW() + 6, yc2);
       }
       // RSI panel
       var ry = function (v) { return (100 - v) / 100 * (RH - 14) + 7; };
@@ -308,6 +315,7 @@
       addAI: function (arr) { var tl = D.c.length ? D.c[D.c.length - 1].t : Date.now(); DR = DR.filter(function (d) { return !d.ai; }); (arr || []).forEach(function (x) { DR.push({ type: 'hline', ai: true, a: { t: tl, p: x.price }, label: x.label, col: x.kind === 'support' ? C.sup : x.kind === 'resistance' ? C.res : '77,163,255' }); }); sel = -1; emitDraw(); draw(); },
       clearAI: function () { var n0 = DR.length; DR = DR.filter(function (d) { return !d.ai; }); sel = -1; emitDraw(); draw(); return n0 - DR.length; },
       setCursor: function (m) { cur = m; cross = null; draw(); },
+      setScale: function (o) { for (var k in o) SC[k] = o[k]; clearInterval(cdTimer); if (SC.countdown) cdTimer = setInterval(function () { if (!document.hidden) draw(); }, 1000); draw(); },
       setTool: setTool,
       setDrawings: function (a) { DR = (a || []).slice(); sel = -1; draft = null; ruler = null; draw(); },
       deleteSelected: function () { if (sel < 0) return false; DR.splice(sel, 1); sel = -1; emitDraw(); draw(); return true; },
