@@ -369,6 +369,7 @@ function chartContext() {
   return `Pair: ${symbol}/USDT on Binance, timeframe ${tf}. Live price: ${n(c ? c.c : a.price)}.\n` +
     (t && t.open ? `Today (viewer's day): open ${n(t.open)}, high ${n(t.high)}, low ${n(t.low)}, change ${(((c ? c.c : a.price) / t.open - 1) * 100).toFixed(2)}%, volume ${n(t.volume)}.\n` : '') +
     `RSI14 ${a.rsi14 == null ? 'n/a' : (+a.rsi14).toFixed(1)}; SMA50 ${n(a.sma50)}; SMA200 ${n(a.sma200)}; EMA50 ${n(a.ema50)}; EMA200 ${n(a.ema200)}.\nLevels: ${lv}.\n` +
+    'INSTRUCTION: Answer from this chart data. Stay on the chart: price, trend, moving averages, RSI, support and resistance. If no support level is listed, say price is near its recent lows. Do not add news, ETF, whale or stablecoin context unless the question asks for it.\n' +
     'Last 5 candles (UTC time, open/high/low/close): ' + cs.map(k => new Date(k.t).toISOString().slice(5, 16).replace('T', ' ') + ' ' + n(k.o) + '/' + n(k.h) + '/' + n(k.l) + '/' + n(k.c)).join(' | ');
 }
 let busy = false;
