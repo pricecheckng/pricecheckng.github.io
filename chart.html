@@ -78,6 +78,32 @@
   .wrow .nm { flex:1; font-weight:700; } .wrow .nm small { display:block; color:var(--mut); font-weight:500; font-size:12px; }
   .wrow .pr { text-align:right; font-weight:700; } .wrow .pr small { display:block; font-size:12px; font-weight:700; }
   .addb { margin:18px 16px; display:block; width:calc(100% - 32px); background:var(--acc); color:#fff; border:0; border-radius:12px; padding:13px; font:inherit; font-weight:800; cursor:pointer; }
+
+  #agent { flex:0 0 auto; display:flex; flex-direction:column; background:var(--panel); border-top:1px solid var(--line); border-radius:16px 16px 0 0; position:relative; }
+  #agent.open { height:var(--ag-h, 46%); }
+  #vChart.agopen #rsiWrap { display:none; }
+  .aghandle { height:18px; display:flex; align-items:center; justify-content:center; cursor:ns-resize; touch-action:none; flex:none; } .aghandle i { width:44px; height:4px; border-radius:2px; background:#3a5446; }
+  .aghead { display:none; align-items:center; justify-content:space-between; padding:2px 14px 8px; font-weight:800; font-size:14px; flex:none; }
+  #agent.open .aghead { display:flex; }
+  .aghead button { background:none; border:0; color:var(--mut); font:inherit; font-size:12px; font-weight:700; padding:4px 6px; cursor:pointer; }
+  #agMsgs { display:none; flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:0 14px 8px; }
+  #agent.open #agMsgs { display:block; }
+  .ag-u { margin:8px 0 8px auto; max-width:85%; width:fit-content; background:var(--acc); color:#fff; padding:8px 12px; border-radius:14px 14px 4px 14px; font-size:14px; }
+  .ag-a { margin:8px 0; font-size:14px; line-height:1.5; } .ag-a p { margin:0 0 8px; } .ag-a ul { margin:0 0 8px; padding-left:18px; } .ag-a h3 { font-size:15px; margin:10px 0 4px; }
+  .ag-st { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; } .ag-st span { font-size:11px; color:var(--mut); background:#16241d; border:1px solid var(--line); border-radius:8px; padding:3px 8px; }
+  .ag-note { font-size:11px; color:var(--mut); margin-top:6px; }
+  .ag-chips { display:flex; flex-wrap:wrap; gap:8px; padding:6px 0 10px; } .ag-chips button { background:#16241d; border:1px solid var(--line); color:var(--txt); border-radius:16px; font:inherit; font-size:13px; padding:8px 12px; cursor:pointer; }
+  .ag-dots span { display:inline-block; width:6px; height:6px; margin-right:4px; border-radius:50%; background:var(--mut); animation:agb 1s infinite; } .ag-dots span:nth-child(2){animation-delay:.15s} .ag-dots span:nth-child(3){animation-delay:.3s}
+  @keyframes agb { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
+  #agForm { display:flex; align-items:flex-end; gap:8px; padding:4px 12px 10px; flex:none; }
+  #agForm .box { flex:1; display:flex; flex-direction:column; background:#16241d; border:1px solid var(--line); border-radius:14px; padding:8px 10px 6px; }
+  #agIn { background:none; border:0; outline:0; resize:none; color:var(--txt); font:inherit; font-size:15px; line-height:1.35; max-height:96px; width:100%; }
+  .agrow { display:flex; align-items:center; gap:8px; margin-top:4px; }
+  #agMode { background:#101a15; border:1px solid var(--line); color:var(--txt); border-radius:10px; font:inherit; font-size:12px; font-weight:700; padding:5px 9px; cursor:pointer; }
+  #agSend { margin-left:auto; width:36px; height:36px; border-radius:10px; border:0; background:var(--acc); color:#fff; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; } #agSend:disabled { opacity:.5; }
+  #agUp { width:44px; height:44px; flex:none; border-radius:12px; border:1px solid var(--line); background:#16241d; color:var(--txt); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
+  #agModeMenu { display:none; position:absolute; left:20px; bottom:70px; z-index:12; background:#14211a; border:1px solid var(--line); border-radius:12px; padding:6px; min-width:190px; box-shadow:0 10px 30px rgba(0,0,0,.5); } #agModeMenu.on { display:block; }
+  #agModeMenu button { display:block; width:100%; text-align:left; background:none; border:0; color:var(--txt); font:inherit; font-size:14px; font-weight:700; padding:9px 10px; border-radius:8px; cursor:pointer; } #agModeMenu button small { display:block; color:var(--mut); font-weight:500; font-size:11px; } #agModeMenu button.on { background:#1b2e24; }
 </style>
 </head>
 <body>
@@ -95,6 +121,17 @@
   <div class="leg"><span><i style="background:#f5a524"></i>MA 50</span><span><i style="background:#5b8def"></i>MA 200</span></div>
   <div id="main"><div id="cMain"></div><div class="msg" id="msg">Loading chart…</div></div>
   <div id="rsiWrap"><span class="lbl">RSI 14</span><div class="c" id="cRsi"></div></div>
+  <div id="agent">
+    <div class="aghandle" id="agHandle"><i></i></div>
+    <div class="aghead"><span>Chat with PCN AI</span><span><button id="agNew">New chat</button><button id="agClose">Hide</button></span></div>
+    <div id="agMsgs"></div>
+    <div id="agModeMenu"><button data-m="quick">Quick<small>Short answer, uses your Quick questions</small></button><button data-m="pro">Pro<small>More detail, uses your Pro questions</small></button><button data-m="deep">Deep<small>Full analysis with news, uses your Deep questions</small></button></div>
+    <form id="agForm" autocomplete="off">
+      <div class="box"><textarea id="agIn" rows="1" placeholder="Ask your agent..." maxlength="380"></textarea>
+        <div class="agrow"><button type="button" id="agMode">Quick &#9662;</button><button type="submit" id="agSend" aria-label="Send"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M3 20.5v-6.8l9-1.7-9-1.7V3.5L22 12z"/></svg></button></div></div>
+      <button type="button" id="agUp" aria-label="Expand chat"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l5-5 5 5"/></svg></button>
+    </form>
+  </div>
   </div>
   <div id="vWatch" class="view pg" style="display:none">
     <div class="pgh">Watchlist</div>
@@ -142,7 +179,7 @@ let meta = {};                       // symbol -> {name, img}
 const sg = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (_) { return d; } };
 const ss = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
 const fmt = n => n >= 100 ? n.toLocaleString('en-US', { maximumFractionDigits: 2 }) : n >= 1 ? n.toFixed(3) : n.toPrecision(4);
-let lastPx = '', dayOpen = null, source = '', ws = null, wsTimer = 0, poll = 0, token = 0;
+let lastD = null; let lastPx = '', dayOpen = null, source = '', ws = null, wsTimer = 0, poll = 0, token = 0;
 const TFN = { '15m': '15m', '1h': '1h', '4h': '4h', '1d': '1D', '1w': '1W' };
 const syncTf = () => { document.querySelectorAll('#tfMenu .tf').forEach(b => b.classList.toggle('on', b.dataset.i === interval)); $('tfTxt').textContent = TFN[interval]; };
 syncTf();
@@ -194,7 +231,7 @@ async function load() {
     if (my !== token) return;
     if (!r.ok || d.error) throw new Error(d.error || r.status);
     chart.setData({ candles: d.candles, sma50: d.series.sma50, sma200: d.series.sma200, rsi14: d.series.rsi14, levels: (d.analysis.levels || []) }, interval);
-    source = d.source; dayOpen = d.analysis.today ? d.analysis.today.open : null;
+    lastD = d; source = d.source; dayOpen = d.analysis.today ? d.analysis.today.open : null;
     $('px').classList.remove('hv'); setPrice(d.analysis.price);
     $('msg').style.display = 'none';
     startLive(my);
@@ -293,6 +330,69 @@ async function renderWatch() {
   });
   const add = document.createElement('button'); add.className = 'addb'; add.textContent = 'Add pairs'; add.onclick = () => { showView('vChart'); $('pairBtn').click(); }; box.appendChild(add);
 }
+
+// ---------- chat sheet under the chart ----------
+const agent = $('agent'), msgsEl = $('agMsgs'), agIn = $('agIn');
+const getToken = () => { try { for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k)) { const v = JSON.parse(localStorage.getItem(k)); const se = v && (v.access_token ? v : v.currentSession); if (se && se.access_token) return se.access_token; } } } catch (_) {} return null; };
+let agMode = (() => { try { const m = localStorage.getItem('pcn_ai_mode'); return m === 'pro' || m === 'deep' ? m : 'quick'; } catch (_) { return 'quick'; } })();
+const MN = { quick: 'Quick', pro: 'Pro', deep: 'Deep' };
+function paintAgMode() { $('agMode').innerHTML = MN[agMode] + ' &#9662;'; document.querySelectorAll('#agModeMenu button').forEach(b => b.classList.toggle('on', b.dataset.m === agMode)); }
+paintAgMode();
+$('agMode').onclick = e => { e.stopPropagation(); $('agModeMenu').classList.toggle('on'); };
+document.querySelectorAll('#agModeMenu button').forEach(b => b.onclick = () => { agMode = b.dataset.m; try { localStorage.setItem('pcn_ai_mode', agMode); } catch (_) {} paintAgMode(); $('agModeMenu').classList.remove('on'); });
+document.addEventListener('click', () => $('agModeMenu').classList.remove('on'));
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+function md(t) {
+  t = esc(t).replace(/\*\*([^*\n]+)\*\*/g, '<b>$1</b>'); const out = []; let list = false;
+  t.split('\n').forEach(l => { const m = l.match(/^\s*(?:[-*•]|\d+\.)\s+(.*)/); if (m) { if (!list) { out.push('<ul>'); list = true; } out.push('<li>' + m[1] + '</li>'); return; } if (list) { out.push('</ul>'); list = false; } const hd = l.match(/^#{1,3}\s+(.*)/); if (hd) out.push('<h3>' + hd[1] + '</h3>'); else if (l.trim()) out.push('<p>' + l + '</p>'); });
+  if (list) out.push('</ul>'); return out.join('');
+}
+function setOpen(o) { agent.classList.toggle('open', o); $('vChart').classList.toggle('agopen', o); if (o && !msgsEl.children.length) intro(); setTimeout(() => chart.resize(), 50); }
+function intro() { msgsEl.innerHTML = '<div class="ag-a"><p>Ask me about the chart you are looking at. I read its price, trend, RSI and support and resistance.</p></div><div class="ag-chips"></div>'; const c = msgsEl.querySelector('.ag-chips'); ['Summarize this chart', 'Where are support and resistance?', 'Is RSI overbought or oversold?', 'What is the trend?'].forEach(q => { const b = document.createElement('button'); b.textContent = q; b.onclick = () => ask(q); c.appendChild(b); }); }
+$('agUp').onclick = () => setOpen(!agent.classList.contains('open'));
+$('agClose').onclick = () => setOpen(false);
+$('agNew').onclick = () => { msgsEl.innerHTML = ''; intro(); };
+agIn.addEventListener('input', () => { agIn.style.height = 'auto'; agIn.style.height = Math.min(agIn.scrollHeight, 96) + 'px'; });
+agIn.addEventListener('focus', () => { if (!agent.classList.contains('open')) setOpen(true); });
+agIn.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && window.innerWidth >= 700) { e.preventDefault(); $('agForm').requestSubmit(); } });
+// drag the handle to resize the sheet
+(() => { const hd = $('agHandle'); let y0 = 0, h0 = 0, drag = false;
+  hd.addEventListener('pointerdown', e => { drag = true; y0 = e.clientY; h0 = agent.getBoundingClientRect().height; hd.setPointerCapture(e.pointerId); });
+  hd.addEventListener('pointermove', e => { if (!drag) return; const vh = $('vChart').getBoundingClientRect().height, nh = Math.max(120, Math.min(vh * 0.8, h0 + (y0 - e.clientY))); if (!agent.classList.contains('open')) setOpen(true); agent.style.setProperty('--ag-h', nh + 'px'); });
+  hd.addEventListener('pointerup', () => { drag = false; }); hd.addEventListener('dblclick', () => setOpen(!agent.classList.contains('open')));
+})();
+function chartContext() {
+  const d = lastD; if (!d) return '';
+  const a = d.analysis, t = a.today, c = chart.last(), n = v => v == null ? 'n/a' : fmt(v), cs = d.candles.slice(-5);
+  const lv = (a.levels || []).map(l => l.kind + ' ' + n(l.price) + (l.touches ? ' (' + l.touches + ' touches)' : '')).join('; ') || 'none found';
+  const tf = TFN[interval];
+  return `Pair: ${symbol}/USDT on Binance, timeframe ${tf}. Live price: ${n(c ? c.c : a.price)}.\n` +
+    (t && t.open ? `Today (viewer's day): open ${n(t.open)}, high ${n(t.high)}, low ${n(t.low)}, change ${(((c ? c.c : a.price) / t.open - 1) * 100).toFixed(2)}%, volume ${n(t.volume)}.\n` : '') +
+    `RSI14 ${a.rsi14 == null ? 'n/a' : (+a.rsi14).toFixed(1)}; SMA50 ${n(a.sma50)}; SMA200 ${n(a.sma200)}; EMA50 ${n(a.ema50)}; EMA200 ${n(a.ema200)}.\nLevels: ${lv}.\n` +
+    'Last 5 candles (UTC time, open/high/low/close): ' + cs.map(k => new Date(k.t).toISOString().slice(5, 16).replace('T', ' ') + ' ' + n(k.o) + '/' + n(k.h) + '/' + n(k.l) + '/' + n(k.c)).join(' | ');
+}
+let busy = false;
+async function ask(q) {
+  q = (q || '').trim(); if (q.length < 2 || busy) return;
+  if (!agent.classList.contains('open')) setOpen(true);
+  if (msgsEl.querySelector('.ag-chips')) msgsEl.innerHTML = '';
+  msgsEl.insertAdjacentHTML('beforeend', '<div class="ag-u">' + esc(q) + '</div>');
+  const a = document.createElement('div'); a.className = 'ag-a'; a.innerHTML = '<div class="ag-st"><span>read chart</span><span>' + (lastD ? lastD.candles.length : 0) + ' candles loaded</span></div><div class="ag-dots"><span></span><span></span><span></span></div>'; msgsEl.appendChild(a);
+  msgsEl.scrollTop = msgsEl.scrollHeight; agIn.value = ''; agIn.style.height = 'auto'; busy = true; $('agSend').disabled = true;
+  const done = html => { a.querySelector('.ag-dots')?.remove(); a.insertAdjacentHTML('beforeend', html); msgsEl.scrollTop = msgsEl.scrollHeight; busy = false; $('agSend').disabled = false; };
+  const tok = getToken();
+  if (!tok) return done('<p>Please <a href="index.html#account" style="color:#16c784;font-weight:700">sign in with Google</a> to ask questions. It is free.</p>');
+  try {
+    const r = await fetch(SUPABASE_URL + '/functions/v1/pcn-chat2', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + tok }, body: JSON.stringify({ question: q, mode: agMode, chart: chartContext() }) });
+    let j = {}; try { j = await r.json(); } catch (_) {}
+    if (r.status === 401) return done('<p>Your sign-in has expired. Please sign in again.</p>');
+    if (r.status === 429) return done('<p>You have used your ' + (j.limit || '') + ' ' + MN[agMode] + ' questions for today. They reset at 1:00 AM Nigeria time. You can switch mode below.</p>');
+    if (!r.ok || !j.answer) return done('<p>PCN AI could not answer right now. Please try again in a moment.</p>');
+    let ans = String(j.answer).replace(/\n+\s*Sources:[\s\S]*$/, '').replace(/\(?https?:\/\/[^\s<)]+\)?/g, '').replace(/\[([^\]]+)\]\(\)/g, '$1').trim();
+    done(md(ans) + '<div class="ag-note">' + (j.left != null ? j.left + ' ' + MN[agMode] + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '') + 'AI answers can be wrong. Not financial advice.</div>');
+  } catch (err) { console.warn('pcn agent', err); done('<p>No connection. Please check your network and try again.</p>'); }
+}
+$('agForm').addEventListener('submit', e => { e.preventDefault(); ask(agIn.value); });
 
 setPair(); load();
 loadPairs().then(setPair);
