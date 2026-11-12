@@ -46,11 +46,19 @@
       return out;
     }
     var FIB = { fib: 1, fibext: 1, fibtz: 1, fibch: 1 };
+    var RECT = { longpos: 1, shortpos: 1, prange: 1, drange: 1, dprange: 1 };
+    function posGeom(d) {
+      var a = px(d.a), b = px(d.b), up = d.type === 'longpos', rew = Math.abs(d.b.p - d.a.p), tp = d.a.p + (up ? rew : -rew), sp = d.a.p + (up ? -rew : rew) / 2,
+        x0 = Math.min(a.x, b.x), x1 = Math.max(a.x, b.x, x0 + 24);
+      return { x0: x0, x1: x1, ye: sc.py(d.a.p), yt: sc.py(tp), ys: sc.py(sp), tp: tp, sp: sp, rew: rew, up: up };
+    }
+    function rectBox(d) { var a = px(d.a), b = px(d.b); if (d.type === 'longpos' || d.type === 'shortpos') { var g = posGeom(d); return { x0: g.x0, x1: g.x1, y0: Math.min(g.yt, g.ys, g.ye), y1: Math.max(g.yt, g.ys, g.ye) }; } return { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), y0: Math.min(a.y, b.y), y1: Math.max(a.y, b.y) }; }
     function hitTest(x, y) {
       for (var k = DR.length - 1; k >= 0; k--) { var d = DR[k], a = px(d.a), t = d.type;
         if (t === 'hline' || t === 'cross') { if (Math.abs(y - a.y) < 12) return k; }
         if (t === 'hray') { if (Math.abs(y - a.y) < 12 && x > a.x - 12) return k; }
         if (t === 'vline' || t === 'cross') { if (Math.abs(x - a.x) < 12) return k; }
+        if (RECT[t]) { var rb0 = rectBox(d); if (x > rb0.x0 - 14 && x < rb0.x1 + 14 && y > rb0.y0 - 14 && y < rb0.y1 + 14) return k; continue; }
         if (FIB[t]) { var gs = fibGeom(d); for (var gi = 0; gi < gs.length; gi++) if (segDist(x, y, gs[gi].p, gs[gi].q) < 12) return k; if (t === 'fib' && segDist(x, y, a, px(d.b)) < 12) return k; continue; }
         if (!ONE[t]) { var b = px(d.b), e = t === 'ray' ? ext(a, b, 1, 0) : t === 'extended' ? ext(a, b, 1, 1) : [a, b]; if (segDist(x, y, e[0], e[1]) < 14) return k; } }
       return -1;
@@ -177,6 +185,33 @@
         if (t === 'hray') line({ x: a.x, y: a.y }, { x: plotW(), y: a.y });
         if (t === 'vline' || t === 'cross') line({ x: a.x, y: 0 }, { x: a.x, y: PH });
         mx.setLineDash([]);
+        if (RECT[t]) {
+          var bx = px(d.b), F11 = '600 11px system-ui,sans-serif', pill = function (txt, cx, cy, fg, bg) { mx.font = F11; var w = mx.measureText(txt).width + 14, x = Math.max(4, Math.min(plotW() - w - 4, cx - w / 2)), y = Math.max(4, Math.min(PH - 24, cy - 10)); mx.fillStyle = bg; mx.fillRect(x, y, w, 20); mx.fillStyle = fg; mx.textAlign = 'center'; mx.textBaseline = 'middle'; mx.fillText(txt, x + w / 2, y + 10.5); mx.font = '11px system-ui,sans-serif'; };
+          if (t === 'longpos' || t === 'shortpos') {
+            var g = posGeom(d), w0 = g.x1 - g.x0, pe = d.a.p, rr = g.rew ? (g.rew / (g.rew / 2)) : 0;
+            mx.fillStyle = 'rgba(22,199,132,.2)'; mx.fillRect(g.x0, Math.min(g.ye, g.yt), w0, Math.abs(g.yt - g.ye));
+            mx.fillStyle = 'rgba(234,57,67,.2)'; mx.fillRect(g.x0, Math.min(g.ye, g.ys), w0, Math.abs(g.ys - g.ye));
+            mx.lineWidth = o.sel ? 2 : 1.4; mx.strokeStyle = '#16c784'; mx.beginPath(); mx.moveTo(g.x0, g.yt); mx.lineTo(g.x1, g.yt); mx.stroke();
+            mx.strokeStyle = '#ea3943'; mx.beginPath(); mx.moveTo(g.x0, g.ys); mx.lineTo(g.x1, g.ys); mx.stroke();
+            mx.strokeStyle = 'rgba(138,163,150,.9)'; mx.beginPath(); mx.moveTo(g.x0, g.ye); mx.lineTo(g.x1, g.ye); mx.stroke();
+            var pc = function (p) { var v = (p - pe) / pe * 100; return (v >= 0 ? '+' : '') + v.toFixed(2) + '%'; }, cxm = (g.x0 + g.x1) / 2;
+            pill('Target: ' + nice(g.tp) + ' (' + pc(g.tp) + ')', cxm, g.yt + (g.yt < g.ye ? 14 : -14), '#04100a', '#16c784');
+            pill('Stop: ' + nice(g.sp) + ' (' + pc(g.sp) + ')', cxm, g.ys + (g.ys > g.ye ? -14 : 14), '#fff', '#ea3943');
+            pill((g.up ? 'Long' : 'Short') + '  R/R ' + rr.toFixed(2), cxm, g.ye, '#e8f1ec', '#2a3b32');
+            if (o.sel) [{ x: g.x0, y: g.ye }, { x: g.x1, y: g.yt }].forEach(function (q) { mx.strokeStyle = DC; mx.lineWidth = 2; mx.fillStyle = '#0b120e'; mx.beginPath(); mx.arc(q.x, q.y, 5, 0, 7); mx.fill(); mx.stroke(); });
+            return;
+          }
+          var up3 = d.b.p >= d.a.p, rc3 = up3 ? '22,199,132' : '234,57,67', x0m = Math.min(a.x, bx.x), x1m = Math.max(a.x, bx.x), y0m = Math.min(a.y, bx.y), y1m = Math.max(a.y, bx.y), mt = measTxt(d.a, d.b), dp3 = d.b.p - d.a.p, pc3 = dp3 / d.a.p * 100;
+          var priceTx = (dp3 >= 0 ? '+' : '-') + nice(Math.abs(dp3)) + ' (' + (dp3 >= 0 ? '+' : '') + pc3.toFixed(2) + '%)', dateTx = mt[1];
+          mx.fillStyle = 'rgba(' + rc3 + ',.14)'; mx.strokeStyle = 'rgba(' + rc3 + ',.95)'; mx.lineWidth = o.sel ? 2 : 1.4;
+          var arrow = function (p, q) { mx.beginPath(); mx.moveTo(p.x, p.y); mx.lineTo(q.x, q.y); mx.stroke(); var an = Math.atan2(q.y - p.y, q.x - p.x); mx.beginPath(); mx.moveTo(q.x, q.y); mx.lineTo(q.x - 8 * Math.cos(an - .45), q.y - 8 * Math.sin(an - .45)); mx.moveTo(q.x, q.y); mx.lineTo(q.x - 8 * Math.cos(an + .45), q.y - 8 * Math.sin(an + .45)); mx.stroke(); };
+          var xm = (x0m + x1m) / 2, ym = (y0m + y1m) / 2;
+          if (t === 'prange') { var xw = Math.max(x1m - x0m, 40); mx.fillRect(x0m, y0m, xw, y1m - y0m); mx.beginPath(); mx.moveTo(x0m, a.y); mx.lineTo(x0m + xw, a.y); mx.moveTo(x0m, bx.y); mx.lineTo(x0m + xw, bx.y); mx.stroke(); arrow({ x: x0m + xw / 2, y: a.y }, { x: x0m + xw / 2, y: bx.y }); pill(priceTx, x0m + xw / 2, bx.y + (bx.y < a.y ? -16 : 16), '#04100a', 'rgb(' + rc3 + ')'); }
+          if (t === 'drange') { var yh = Math.max(y1m - y0m, 40); mx.fillRect(x0m, y0m, x1m - x0m, yh); mx.beginPath(); mx.moveTo(a.x, y0m); mx.lineTo(a.x, y0m + yh); mx.moveTo(bx.x, y0m); mx.lineTo(bx.x, y0m + yh); mx.stroke(); arrow({ x: a.x, y: y0m + yh / 2 }, { x: bx.x, y: y0m + yh / 2 }); pill(dateTx, xm, y0m + yh / 2 - 16, '#04100a', 'rgb(' + rc3 + ')'); }
+          if (t === 'dprange') { mx.fillRect(x0m, y0m, x1m - x0m, y1m - y0m); mx.strokeRect(x0m, y0m, x1m - x0m, y1m - y0m); arrow({ x: x0m, y: ym }, { x: x1m, y: ym }); arrow({ x: xm, y: a.y }, { x: xm, y: bx.y }); var ty = y0m - 26; pill(priceTx, xm, y0m < 40 ? y1m + 18 : y0m - 36, '#04100a', 'rgb(' + rc3 + ')'); pill(dateTx, xm, y0m < 40 ? y1m + 42 : y0m - 12, '#04100a', 'rgb(' + rc3 + ')'); }
+          if (o.sel) [a, bx].forEach(function (q) { mx.strokeStyle = DC; mx.lineWidth = 2; mx.fillStyle = '#0b120e'; mx.beginPath(); mx.arc(q.x, q.y, 5, 0, 7); mx.fill(); mx.stroke(); });
+          return;
+        }
         if (FIB[t]) {
           var bb = px(d.b), gs2 = fibGeom(d);
           if (t !== 'fibtz') { mx.strokeStyle = 'rgba(138,163,150,.7)'; mx.lineWidth = 1; mx.setLineDash([4, 4]); line(a, bb); mx.setLineDash([]); }
@@ -213,10 +248,10 @@
       all.forEach(function (o) { var ty = o.d.type; if (ty !== 'hline' && ty !== 'hray' && ty !== 'cross') return; var yh = py(o.d.a.p); if (yh < 0 || yh > PH) return; mx.fillStyle = o.d.col ? 'rgb(' + o.d.col + ')' : DC; mx.fillRect(plotW(), yh - 9, AX, 18); mx.fillStyle = '#04100a'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(nice(o.d.a.p), plotW() + 6, yh); });
       // last price tag
       var last = D.c[n - 1], yl = py(last.c), upL = last.c >= last.o;
-      if (SC.lastLine && yl >= 0 && yl <= PH) { mx.setLineDash([3, 3]); mx.strokeStyle = upL ? C.up : C.dn; mx.beginPath(); mx.moveTo(0, yl); mx.lineTo(plotW(), yl); mx.stroke(); mx.setLineDash([]); }
+      if (SC.lastLine) { var yll = Math.max(1, Math.min(PH - 1, yl)); mx.setLineDash([3, 3]); mx.strokeStyle = upL ? C.up : C.dn; mx.beginPath(); mx.moveTo(0, yll); mx.lineTo(plotW(), yll); mx.stroke(); mx.setLineDash([]); }
       var hasCd = SC.countdown && iv, cdTxt = '';
       if (hasCd) { var rem = Math.max(0, last.t + stepMs() - Date.now()) / 1000, hh2 = Math.floor(rem / 3600), mm2 = Math.floor(rem % 3600 / 60), ss2 = Math.floor(rem % 60), z2 = function (x) { return (x < 10 ? '0' : '') + x; }; cdTxt = (hh2 ? z2(hh2) + ':' : '') + z2(mm2) + ':' + z2(ss2); }
-      if (yl >= 9 && yl <= PH - 9) { mx.fillStyle = upL ? C.up : C.dn; mx.fillRect(plotW(), yl - 9, AX, hasCd ? 32 : 18); mx.fillStyle = '#04100a'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(lab(last.c), plotW() + 6, yl); if (hasCd) mx.fillText(cdTxt, plotW() + 6, yl + 14); }
+      { var ylt = Math.max(9, Math.min(PH - (hasCd ? 23 : 9), yl)); mx.fillStyle = upL ? C.up : C.dn; mx.fillRect(plotW(), ylt - 9, AX, hasCd ? 32 : 18); mx.fillStyle = '#04100a'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(lab(last.c), plotW() + 6, ylt); if (hasCd) mx.fillText(cdTxt, plotW() + 6, ylt + 14); }
       // crosshair
       if (cross != null && cross >= 0 && cross < n) {
         var cx = xOf(cross), k2 = D.c[cross];
