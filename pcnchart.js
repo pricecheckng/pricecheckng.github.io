@@ -31,11 +31,26 @@
     function segDist(x, y, a, b) { var dx = b.x - a.x, dy = b.y - a.y, l = dx * dx + dy * dy, t = l ? Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / l)) : 0; return Math.hypot(x - a.x - t * dx, y - a.y - t * dy); }
     var ONE = { hline: 1, hray: 1, vline: 1, cross: 1 };
     function ext(a, b, fwd, back) { var dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l; return [back ? { x: a.x - ux * 6000, y: a.y - uy * 6000 } : a, fwd ? { x: b.x + ux * 6000, y: b.y + uy * 6000 } : b]; }
+    var FC = ['138,163,150', '234,57,67', '245,165,36', '22,199,132', '45,212,191', '77,163,255', '138,163,150', '167,139,250'];
+    function fibGeom(d) {
+      var a = px(d.a), b = px(d.b), t = d.type, out = [], R = plotW(), i;
+      if (t === 'fib' || t === 'fibext') {
+        var lv = t === 'fib' ? [0, .236, .382, .5, .618, .786, 1] : [0, .618, 1, 1.618, 2.618], x0 = t === 'fib' ? Math.min(a.x, b.x) : b.x;
+        lv.forEach(function (l, k) { var pr = t === 'fib' ? d.b.p + (d.a.p - d.b.p) * l : d.b.p + (d.b.p - d.a.p) * l, y = sc.py(pr); out.push({ p: { x: x0, y: y }, q: { x: R, y: y }, label: l + ' (' + nice(pr) + ')', col: FC[k % FC.length] }); });
+      } else if (t === 'fibtz') {
+        var u = tIdx(d.b.t) - tIdx(d.a.t); [0, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89].forEach(function (nn, k) { var x = xOf(tIdx(d.a.t) + nn * u); out.push({ p: { x: x, y: 0 }, q: { x: x, y: sc.PH }, label: String(nn), col: FC[(k % 6) + 1], v: 1 }); });
+      } else if (t === 'fibch') {
+        var len = Math.hypot(b.x - a.x, b.y - a.y); [0, .236, .382, .5, .618, .786, 1, 1.618].forEach(function (l, k) { var sh = -l * len * 0.5; out.push({ p: { x: a.x, y: a.y + sh }, q: { x: b.x, y: b.y + sh }, label: String(l), col: FC[k % FC.length] }); });
+      }
+      return out;
+    }
+    var FIB = { fib: 1, fibext: 1, fibtz: 1, fibch: 1 };
     function hitTest(x, y) {
       for (var k = DR.length - 1; k >= 0; k--) { var d = DR[k], a = px(d.a), t = d.type;
         if (t === 'hline' || t === 'cross') { if (Math.abs(y - a.y) < 12) return k; }
         if (t === 'hray') { if (Math.abs(y - a.y) < 12 && x > a.x - 12) return k; }
         if (t === 'vline' || t === 'cross') { if (Math.abs(x - a.x) < 12) return k; }
+        if (FIB[t]) { var gs = fibGeom(d); for (var gi = 0; gi < gs.length; gi++) if (segDist(x, y, gs[gi].p, gs[gi].q) < 12) return k; if (t === 'fib' && segDist(x, y, a, px(d.b)) < 12) return k; continue; }
         if (!ONE[t]) { var b = px(d.b), e = t === 'ray' ? ext(a, b, 1, 0) : t === 'extended' ? ext(a, b, 1, 1) : [a, b]; if (segDist(x, y, e[0], e[1]) < 14) return k; } }
       return -1;
     }
@@ -152,6 +167,16 @@
         if (t === 'hray') line({ x: a.x, y: a.y }, { x: plotW(), y: a.y });
         if (t === 'vline' || t === 'cross') line({ x: a.x, y: 0 }, { x: a.x, y: PH });
         mx.setLineDash([]);
+        if (FIB[t]) {
+          var bb = px(d.b), gs2 = fibGeom(d);
+          if (t !== 'fibtz') { mx.strokeStyle = 'rgba(138,163,150,.7)'; mx.lineWidth = 1; mx.setLineDash([4, 4]); line(a, bb); mx.setLineDash([]); }
+          if (t === 'fib') for (var q = 0; q + 1 < gs2.length; q++) { mx.fillStyle = 'rgba(' + gs2[q].col + ',.07)'; mx.fillRect(gs2[q].p.x, Math.min(gs2[q].p.y, gs2[q + 1].p.y), gs2[q].q.x - gs2[q].p.x, Math.abs(gs2[q + 1].p.y - gs2[q].p.y)); }
+          mx.font = '600 10px system-ui,sans-serif';
+          gs2.forEach(function (g) { mx.strokeStyle = 'rgb(' + g.col + ')'; mx.lineWidth = o.sel ? 1.6 : 1.2; line(g.p, g.q); mx.fillStyle = 'rgb(' + g.col + ')'; mx.textBaseline = g.v ? 'top' : 'bottom'; mx.textAlign = g.v ? 'left' : 'left'; if (g.v) mx.fillText(g.label, g.p.x + 3, 3); else mx.fillText(g.label, Math.min(g.p.x, g.q.x) + 4, g.p.y - 2); });
+          mx.font = '11px system-ui,sans-serif'; mx.textBaseline = 'middle';
+          if (o.sel) [a, bb].forEach(function (q2) { mx.strokeStyle = DC; mx.lineWidth = 2; mx.fillStyle = '#0b120e'; mx.beginPath(); mx.arc(q2.x, q2.y, 5, 0, 7); mx.fill(); mx.stroke(); });
+          return;
+        }
         if (!ONE[t]) {
           var b = px(d.b), e = t === 'ray' ? ext(a, b, 1, 0) : t === 'extended' ? ext(a, b, 1, 1) : [a, b]; line(e[0], e[1]);
           if (t === 'info') { var m2 = measTxt(d.a, d.b); mx.font = '600 11px system-ui,sans-serif'; var iw = Math.max(mx.measureText(m2[0]).width, mx.measureText(m2[1]).width) + 14, ix = Math.max(4, Math.min(plotW() - iw - 4, b.x + 8)), iy = Math.max(4, Math.min(PH - 40, b.y - 17)); mx.fillStyle = '#0b120e'; mx.fillRect(ix, iy, iw, 32); mx.strokeStyle = DC; mx.lineWidth = 1; mx.strokeRect(ix + .5, iy + .5, iw - 1, 31); mx.fillStyle = DC; mx.textAlign = 'center'; mx.textBaseline = 'middle'; mx.fillText(m2[0], ix + iw / 2, iy + 10); mx.fillText(m2[1], ix + iw / 2, iy + 23); mx.font = '11px system-ui,sans-serif'; }
