@@ -21,7 +21,7 @@
       } catch (e) { return ''; }
     };
     var DR = [], tool = 'cursor', draft = null, sel = -1, ruler = null, sc = null, downPos = null, held = false;
-    var DC = '#4da3ff';
+    var DC = '#4da3ff', cur = 'cross';
     function stepMs() { var n = D.c.length; return n > 1 ? (D.c[n - 1].t - D.c[0].t) / (n - 1) : 1; }
     function tIdx(t) { return (t - D.c[0].t) / stepMs(); }
     function idxT(i) { return D.c[0].t + i * stepMs(); }
@@ -181,8 +181,10 @@
       // crosshair
       if (cross != null && cross >= 0 && cross < n) {
         var cx = xOf(cross), k2 = D.c[cross];
-        mx.strokeStyle = 'rgba(138,163,150,.6)'; mx.setLineDash([4, 4]); mx.beginPath(); mx.moveTo(cx, 0); mx.lineTo(cx, PH); mx.stroke(); mx.setLineDash([]);
-        var yc2 = py(k2.c); mx.beginPath(); mx.moveTo(0, yc2); mx.lineTo(plotW(), yc2); mx.setLineDash([4, 4]); mx.stroke(); mx.setLineDash([]);
+        var yc2 = py(k2.c);
+        if (cur === 'dot') { mx.fillStyle = '#e8f1ec'; mx.beginPath(); mx.arc(cx, yc2, 4, 0, 7); mx.fill(); }
+        else { mx.strokeStyle = 'rgba(138,163,150,.6)'; mx.setLineDash([4, 4]); mx.beginPath(); mx.moveTo(cx, 0); mx.lineTo(cx, PH); mx.stroke(); mx.setLineDash([]);
+        mx.beginPath(); mx.moveTo(0, yc2); mx.lineTo(plotW(), yc2); mx.setLineDash([4, 4]); mx.stroke(); mx.setLineDash([]); }
         mx.fillStyle = '#2a3b32'; mx.fillRect(plotW(), yc2 - 9, AX, 18); mx.fillStyle = '#e8f1ec'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(nice(k2.c), plotW() + 6, yc2);
       }
       // RSI panel
@@ -215,14 +217,14 @@
       }
       if (ids.length === 1) {
         dragX = ev.offsetX; var ox = ev.offsetX;
-        holdT = setTimeout(function () { if (!moved && ev.offsetX < plotW()) { held = true; cross = idxAt(ox); dragX = null; draw(); } }, 380);
+        holdT = setTimeout(function () { if (!moved && ev.offsetX < plotW() && cur !== 'arrow' && cur !== 'eraser') { held = true; cross = idxAt(ox); dragX = null; draw(); } }, 380);
       } else if (ids.length === 2) {
         clearTimeout(holdT); if (draft) { draft = null; draw(); } var a = ptrs[ids[0]], b = ptrs[ids[1]];
         startDist = Math.abs(a.x - b.x) || 1; startBw = V.bw; anchorIdx = idxAt((a.x + b.x) / 2); dragX = null;
       }
     });
     mc.addEventListener('pointermove', function (ev) {
-      if (!ptrs[ev.pointerId]) { if (ev.pointerType === 'mouse' && ev.offsetX < plotW()) { cross = idxAt(ev.offsetX); draw(); } return; }
+      if (!ptrs[ev.pointerId]) { if (ev.pointerType === 'mouse' && ev.offsetX < plotW() && cur !== 'arrow' && cur !== 'eraser') { cross = idxAt(ev.offsetX); draw(); } return; }
       ptrs[ev.pointerId] = { x: ev.offsetX, y: ev.offsetY };
       var ids = Object.keys(ptrs);
       if (draft && ids.length === 1) { draft.b = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY); if (ONE[draft.type]) draft.a = draft.b; draw(); return; }
@@ -244,7 +246,7 @@
         else if (far) { if (draft.type === 'ruler') ruler = draft; else { DR.push({ type: draft.type, a: draft.a, b: draft.b }); sel = DR.length - 1; emitDraw(); } setTool('cursor'); }
         else { draft = null; draw(); }
       } else if (draft) { draft = null; draw(); }
-      else if (wasDrag && tool === 'cursor' && !moved && !held && downPos && sc && D.c.length) { var h = hitTest(downPos.x, downPos.y); if (h !== sel) { sel = h; draw(); } }
+      else if (wasDrag && tool === 'cursor' && !moved && !held && downPos && sc && D.c.length) { var h = hitTest(downPos.x, downPos.y); if (cur === 'eraser') { if (h >= 0) { DR.splice(h, 1); sel = -1; emitDraw(); draw(); } } else if (h !== sel) { sel = h; draw(); } }
       delete ptrs[ev.pointerId]; clearTimeout(holdT);
       var ids = Object.keys(ptrs);
       if (ids.length === 1) dragX = ptrs[ids[0]].x; else if (!ids.length) { dragX = null; if (ev.pointerType !== 'mouse') { cross = null; draw(); } }
@@ -280,6 +282,7 @@
       },
       addAI: function (arr) { var tl = D.c.length ? D.c[D.c.length - 1].t : Date.now(); DR = DR.filter(function (d) { return !d.ai; }); (arr || []).forEach(function (x) { DR.push({ type: 'hline', ai: true, a: { t: tl, p: x.price }, label: x.label, col: x.kind === 'support' ? C.sup : x.kind === 'resistance' ? C.res : '77,163,255' }); }); sel = -1; emitDraw(); draw(); },
       clearAI: function () { var n0 = DR.length; DR = DR.filter(function (d) { return !d.ai; }); sel = -1; emitDraw(); draw(); return n0 - DR.length; },
+      setCursor: function (m) { cur = m; cross = null; draw(); },
       setTool: setTool,
       setDrawings: function (a) { DR = (a || []).slice(); sel = -1; draft = null; ruler = null; draw(); },
       deleteSelected: function () { if (sel < 0) return false; DR.splice(sel, 1); sel = -1; emitDraw(); draw(); return true; },
