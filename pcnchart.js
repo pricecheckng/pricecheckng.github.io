@@ -46,6 +46,50 @@
       return out;
     }
     var FIB = { fib: 1, fibext: 1, fibtz: 1, fibch: 1 };
+
+    var CHAN = { pchan: 1, regr: 1, flat: 1, djoint: 1 }, PITCH = { pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 }, SHAPE = { pchan: 1, regr: 1, flat: 1, djoint: 1, pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
+    function shapeGeom(d) {
+      var t = d.type, out = { lines: [], fills: [], pts: [] }, A = d.a, B = d.b, i, n = D.c.length;
+      if (PITCH[t]) {
+        var a = px(d.a), b = px(d.b), c = px(d.c || d.b), M = { x: (b.x + c.x) / 2, y: (b.y + c.y) / 2 }, O = a;
+        if (t === 'schiff') O = { x: a.x, y: (a.y + b.y) / 2 }; else if (t === 'mschiff') O = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        var b2 = b, c2 = c; if (t === 'inpitch') { b2 = { x: M.x + (b.x - M.x) / 2, y: M.y + (b.y - M.y) / 2 }; c2 = { x: M.x + (c.x - M.x) / 2, y: M.y + (c.y - M.y) / 2 }; }
+        var dx = M.x - O.x, dy = M.y - O.y, l = Math.hypot(dx, dy); if (l < 1) { dx = 1; dy = 0; l = 1; } var ux = dx / l * 6000, uy = dy / l * 6000, F = function (p) { return { x: p.x + ux, y: p.y + uy }; };
+        out.fills.push({ pts: [b2, F(b2), F(M), M], col: '22,199,132' }, { pts: [c2, F(c2), F(M), M], col: '234,57,67' });
+        out.lines.push({ p: O, q: F(O), col: '245,165,36', w: 1.8 }, { p: b2, q: F(b2), col: '22,199,132' }, { p: c2, q: F(c2), col: '234,57,67' },
+          { p: a, q: b, dash: 1, col: '138,163,150' }, { p: b, q: c, dash: 1, col: '138,163,150' });
+        out.pts = d.c ? [a, b, c] : [a, b]; return out;
+      }
+      if (tIdx(A.t) > tIdx(B.t)) { A = d.b; B = d.a; }
+      var ia = tIdx(A.t), ib = tIdx(B.t), span = (ib - ia) || 1, lo = Math.max(0, Math.ceil(ia)), hi = Math.min(n - 1, Math.floor(ib)), P = function (ix, p) { return { x: xOf(ix), y: sc.py(p) }; },
+        lp = function (ix) { return A.p + (B.p - A.p) * (ix - ia) / span; }, base = [P(ia, A.p), P(ib, B.p)];
+      out.pts = [px(d.a), px(d.b)];
+      if (t === 'regr') {
+        if (hi - lo < 1) { lo = Math.max(0, Math.floor(ia)); hi = Math.min(n - 1, lo + 1); }
+        var m = hi - lo + 1, sx = 0, sy = 0, sxx = 0, sxy = 0; for (i = lo; i <= hi; i++) { sx += i; sy += D.c[i].c; sxx += i * i; sxy += i * D.c[i].c; }
+        var den = m * sxx - sx * sx, be = den ? (m * sxy - sx * sy) / den : 0, al = (sy - be * sx) / m, ss = 0; for (i = lo; i <= hi; i++) { var r = D.c[i].c - (al + be * i); ss += r * r; }
+        var sd = Math.sqrt(ss / m) * 2, f = function (ix, k) { return P(ix, al + be * ix + k * sd); };
+        out.fills.push({ pts: [f(ia, 1), f(ib, 1), f(ib, -1), f(ia, -1)], col: '77,163,255' });
+        out.lines.push({ p: f(ia, 0), q: f(ib, 0), col: '77,163,255', w: 1.6 }, { p: f(ia, 1), q: f(ib, 1), col: '77,163,255' }, { p: f(ia, -1), q: f(ib, -1), col: '77,163,255' });
+        return out;
+      }
+      var up = 0, dn = 0, upH = 0, upL = 0, dnH = 0, dnL = 0, mid = (lo + hi) / 2, mxH = -1e18, mnL = 1e18;
+      for (i = lo; i <= hi; i++) { var k = D.c[i], u = k.h - lp(i), w = lp(i) - k.l; if (u > up) up = u; if (w > dn) dn = w; if (i <= mid) { if (u > upH) upH = u; if (w > dnH) dnH = w; } else { if (u > upL) upL = u; if (w > dnL) dnL = w; } if (k.h > mxH) mxH = k.h; if (k.l < mnL) mnL = k.l; }
+      var minOff = Math.max(A.p, B.p) * 0.003, above = up >= dn;
+      if (t === 'pchan') {
+        var off = above ? Math.max(up, minOff) : -Math.max(dn, minOff), l2 = [P(ia, A.p + off), P(ib, B.p + off)];
+        out.fills.push({ pts: [base[0], base[1], l2[1], l2[0]], col: '77,163,255' }); out.lines.push({ p: base[0], q: base[1], col: '77,163,255', w: 1.6 }, { p: l2[0], q: l2[1], col: '77,163,255', w: 1.6 });
+        out.lines.push({ p: P(ia, A.p + off / 2), q: P(ib, B.p + off / 2), dash: 1, col: '138,163,150' });
+      } else if (t === 'flat') {
+        var rising = B.p >= A.p, fy = rising ? Math.max(mxH, A.p, B.p) : Math.min(mnL, A.p, B.p), f1 = P(ia, fy), f2 = P(ib, fy);
+        out.fills.push({ pts: [base[0], base[1], f2, f1], col: rising ? '234,57,67' : '22,199,132' }); out.lines.push({ p: base[0], q: base[1], col: '77,163,255', w: 1.6 }, { p: f1, q: f2, col: '77,163,255', w: 1.6 });
+      } else if (t === 'djoint') {
+        var o1 = above ? Math.max(upH, minOff) : -Math.max(dnH, minOff), o2 = above ? Math.max(upL, minOff) : -Math.max(dnL, minOff), s1 = P(ia, A.p + o1), s2 = P(ib, B.p + o2);
+        out.fills.push({ pts: [base[0], base[1], s2, s1], col: '77,163,255' }); out.lines.push({ p: base[0], q: base[1], col: '77,163,255', w: 1.6 }, { p: s1, q: s2, col: '77,163,255', w: 1.6 });
+      }
+      return out;
+    }
+    var THREE = { pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
     var RECT = { longpos: 1, shortpos: 1, prange: 1, drange: 1, dprange: 1 };
     function posGeom(d) {
       var a = px(d.a), b = px(d.b), up = d.type === 'longpos', rew = Math.abs(d.b.p - d.a.p), tp = d.a.p + (up ? rew : -rew), sp = d.a.p + (up ? -rew : rew) / 2,
@@ -58,6 +102,7 @@
         if (t === 'hline' || t === 'cross') { if (Math.abs(y - a.y) < 12) return k; }
         if (t === 'hray') { if (Math.abs(y - a.y) < 12 && x > a.x - 12) return k; }
         if (t === 'vline' || t === 'cross') { if (Math.abs(x - a.x) < 12) return k; }
+        if (SHAPE[t]) { var sg = shapeGeom(d); for (var si = 0; si < sg.lines.length; si++) if (!sg.lines[si].dash && segDist(x, y, sg.lines[si].p, sg.lines[si].q) < 14) return k; continue; }
         if (RECT[t]) { var rb0 = rectBox(d); if (x > rb0.x0 - 14 && x < rb0.x1 + 14 && y > rb0.y0 - 14 && y < rb0.y1 + 14) return k; continue; }
         if (FIB[t]) { var gs = fibGeom(d); for (var gi = 0; gi < gs.length; gi++) if (segDist(x, y, gs[gi].p, gs[gi].q) < 12) return k; if (t === 'fib' && segDist(x, y, a, px(d.b)) < 12) return k; continue; }
         if (!ONE[t]) { var b = px(d.b), e = t === 'ray' ? ext(a, b, 1, 0) : t === 'extended' ? ext(a, b, 1, 1) : [a, b]; if (segDist(x, y, e[0], e[1]) < 14) return k; } }
@@ -185,6 +230,13 @@
         if (t === 'hray') line({ x: a.x, y: a.y }, { x: plotW(), y: a.y });
         if (t === 'vline' || t === 'cross') line({ x: a.x, y: 0 }, { x: a.x, y: PH });
         mx.setLineDash([]);
+        if (SHAPE[t]) {
+          var sg2 = shapeGeom(d);
+          sg2.fills.forEach(function (f) { mx.fillStyle = 'rgba(' + f.col + ',.12)'; mx.beginPath(); f.pts.forEach(function (p, ix) { if (ix) mx.lineTo(p.x, p.y); else mx.moveTo(p.x, p.y); }); mx.closePath(); mx.fill(); });
+          sg2.lines.forEach(function (ln) { mx.strokeStyle = 'rgb(' + ln.col + ')'; mx.lineWidth = (ln.w || 1.3) + (o.sel ? .6 : 0); mx.setLineDash(ln.dash ? [4, 4] : []); line(ln.p, ln.q); }); mx.setLineDash([]);
+          if (o.sel) sg2.pts.forEach(function (q) { mx.strokeStyle = DC; mx.lineWidth = 2; mx.fillStyle = '#0b120e'; mx.beginPath(); mx.arc(q.x, q.y, 5, 0, 7); mx.fill(); mx.stroke(); });
+          return;
+        }
         if (RECT[t]) {
           var bx = px(d.b), F11 = '600 11px system-ui,sans-serif', pill = function (txt, cx, cy, fg, bg) { mx.font = F11; var w = mx.measureText(txt).width + 14, x = Math.max(4, Math.min(plotW() - w - 4, cx - w / 2)), y = Math.max(4, Math.min(PH - 24, cy - 10)); mx.fillStyle = bg; mx.fillRect(x, y, w, 20); mx.fillStyle = fg; mx.textAlign = 'center'; mx.textBaseline = 'middle'; mx.fillText(txt, x + w / 2, y + 10.5); mx.font = '11px system-ui,sans-serif'; };
           if (t === 'longpos' || t === 'shortpos') {
@@ -286,6 +338,7 @@
       var ids = Object.keys(ptrs);
       downPos = { x: ev.offsetX, y: ev.offsetY }; held = false;
       if (ruler) { ruler = null; draw(); }
+      if (ids.length === 1 && draft && draft.stage === 2 && ev.offsetX < plotW() && sc) { draft.c = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY); dragX = null; draw(); return; }
       if (ids.length === 1 && tool !== 'cursor' && ev.offsetX < plotW() && sc) {
         var pt0 = pointAt(ev.offsetX, ev.offsetY); draft = { type: tool, a: pt0, b: pt0 }; dragX = null; draw(); return;
       }
@@ -301,6 +354,7 @@
       if (!ptrs[ev.pointerId]) { if (ev.pointerType === 'mouse' && ev.offsetX < plotW() && cur !== 'arrow' && cur !== 'eraser') { cross = idxAt(ev.offsetX); draw(); } return; }
       ptrs[ev.pointerId] = { x: ev.offsetX, y: ev.offsetY };
       var ids = Object.keys(ptrs);
+      if (draft && ids.length === 1 && draft.stage === 2) { draft.c = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY); draw(); return; }
       if (draft && ids.length === 1) { draft.b = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY); if (ONE[draft.type]) draft.a = draft.b; draw(); return; }
       if (ids.length === 2) {
         var a = ptrs[ids[0]], b = ptrs[ids[1]], d = Math.abs(a.x - b.x) || 1, mid = (a.x + b.x) / 2;
@@ -316,6 +370,8 @@
       var wasDrag = ev.type !== 'pointercancel' && !!ptrs[ev.pointerId];
       if (draft && wasDrag) {
         var a0 = px(draft.a), b0 = px(draft.b), far = Math.hypot(a0.x - b0.x, a0.y - b0.y) > 8;
+        if (draft.stage === 2) { DR.push({ type: draft.type, a: draft.a, b: draft.b, c: draft.c }); sel = DR.length - 1; emitDraw(); setTool('cursor'); delete ptrs[ev.pointerId]; clearTimeout(holdT); return; }
+        if (THREE[draft.type] && far) { draft.stage = 2; draft.c = draft.b; if (opts.onStage) opts.onStage(2); delete ptrs[ev.pointerId]; clearTimeout(holdT); draw(); return; }
         if (ONE[draft.type]) { DR.push({ type: draft.type, a: draft.a }); sel = DR.length - 1; emitDraw(); setTool('cursor'); }
         else if (far) { if (draft.type === 'ruler') ruler = draft; else { DR.push({ type: draft.type, a: draft.a, b: draft.b }); sel = DR.length - 1; emitDraw(); } setTool('cursor'); }
         else { draft = null; draw(); }
@@ -362,7 +418,7 @@
       setDrawings: function (a) { DR = (a || []).slice(); sel = -1; draft = null; ruler = null; draw(); },
       deleteSelected: function () { if (sel < 0) return false; DR.splice(sel, 1); sel = -1; emitDraw(); draw(); return true; },
       clearDrawings: function () { DR = []; sel = -1; ruler = null; emitDraw(); draw(); },
-      hasSelection: function () { return sel >= 0; }, count: function () { return DR.length; },
+      hasSelection: function () { return sel >= 0; }, stage: function () { return draft && draft.stage || 0; }, count: function () { return DR.length; },
       setShow: function (o) { for (var k in o) show[k] = !!o[k]; draw(); },
       last: function () { return D.c[D.c.length - 1]; },
       setZones: function (z) { D.levels = z || []; draw(); },
