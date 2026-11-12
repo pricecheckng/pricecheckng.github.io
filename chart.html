@@ -93,6 +93,13 @@
   .ag-st { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; } .ag-st span { font-size:11px; color:var(--mut); background:#16241d; border:1px solid var(--line); border-radius:8px; padding:3px 8px; }
   .ag-note { font-size:11px; color:var(--mut); margin-top:6px; }
   .ag-chips { display:flex; flex-wrap:wrap; gap:8px; padding:6px 0 10px; } .ag-chips button { background:#16241d; border:1px solid var(--line); color:var(--txt); border-radius:16px; font:inherit; font-size:13px; padding:8px 12px; cursor:pointer; }
+  .ag-grp { font-size:12px; color:var(--mut); margin:10px 0 6px; font-weight:700; }
+  .ag-row { display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; -webkit-overflow-scrolling:touch; scrollbar-width:none; } .ag-row::-webkit-scrollbar { display:none; }
+  .ag-row button { flex:none; white-space:nowrap; background:#16241d; border:1px solid var(--line); color:var(--txt); border-radius:18px; font:inherit; font-size:13px; padding:9px 14px; cursor:pointer; }
+  .hv-top { display:flex; align-items:center; justify-content:space-between; padding:4px 0 10px; font-weight:800; } .hv-top button { background:none; border:0; color:var(--acc2,#16c784); font:inherit; font-size:13px; font-weight:700; cursor:pointer; padding:4px 0; }
+  .hv-item { display:block; width:100%; text-align:left; background:#16241d; border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:8px; color:var(--txt); font:inherit; cursor:pointer; }
+  .hv-item .m { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--mut); margin-bottom:4px; } .hv-item .q { font-size:14px; font-weight:600; }
+  .hv-del { background:none; border:0; color:var(--mut); padding:2px 4px; cursor:pointer; }
   .ag-dots span { display:inline-block; width:6px; height:6px; margin-right:4px; border-radius:50%; background:var(--mut); animation:agb 1s infinite; } .ag-dots span:nth-child(2){animation-delay:.15s} .ag-dots span:nth-child(3){animation-delay:.3s}
   @keyframes agb { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
   #agForm { display:flex; align-items:flex-end; gap:8px; padding:4px 12px 10px; flex:none; }
@@ -123,7 +130,7 @@
   <div id="rsiWrap"><span class="lbl">RSI 14</span><div class="c" id="cRsi"></div></div>
   <div id="agent">
     <div class="aghandle" id="agHandle"><i></i></div>
-    <div class="aghead"><span>Chat with PCN AI</span><span><button id="agNew">New chat</button><button id="agClose">Hide</button></span></div>
+    <div class="aghead"><span>Chat with PCN AI</span><span><button id="agNew" aria-label="New chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v5a3 3 0 0 1-3 3H9l-5 3V7a3 3 0 0 1 3-3h6"/><path d="M18 3v6M15 6h6"/></svg></button><button id="agHist" aria-label="Past chats"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></button><button id="agClose" aria-label="Hide chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></span></div>
     <div id="agMsgs"></div>
     <div id="agModeMenu"><button data-m="quick">Quick<small>Short answer, uses your Quick questions</small></button><button data-m="pro">Pro<small>More detail, uses your Pro questions</small></button><button data-m="deep">Deep<small>Full analysis with news, uses your Deep questions</small></button></div>
     <form id="agForm" autocomplete="off">
@@ -348,10 +355,31 @@ function md(t) {
   if (list) out.push('</ul>'); return out.join('');
 }
 function setOpen(o) { agent.classList.toggle('open', o); $('vChart').classList.toggle('agopen', o); if (o && !msgsEl.children.length) intro(); setTimeout(() => chart.resize(), 50); }
-function intro() { msgsEl.innerHTML = '<div class="ag-a"><p>Ask me about the chart you are looking at. I read its price, trend, RSI and support and resistance.</p></div><div class="ag-chips"></div>'; const c = msgsEl.querySelector('.ag-chips'); ['Summarize this chart', 'Where are support and resistance?', 'Is RSI overbought or oversold?', 'What is the trend?'].forEach(q => { const b = document.createElement('button'); b.textContent = q; b.onclick = () => ask(q); c.appendChild(b); }); }
+const SUGG = [['Analyze', ['What is the current trend?', 'Where are support and resistance?', 'Is RSI overbought or oversold?', 'Summarize this chart']], ['Find a setup', ['What is the current setup?', 'Outline the upside and downside levels', 'Is price above or below the moving averages?']]];
+function intro() { msgsEl.innerHTML = '<div class="ag-a"><p>Ask me about the chart you are looking at. I read its price, trend, RSI and support and resistance.</p></div><div class="ag-chips"></div>'; const c = msgsEl.querySelector('.ag-chips'); c.className = 'ag-sug'; SUGG.forEach(g => { c.insertAdjacentHTML('beforeend', '<div class="ag-grp">' + g[0] + '</div>'); const r = document.createElement('div'); r.className = 'ag-row'; g[1].forEach(q => { const b = document.createElement('button'); b.type = 'button'; b.textContent = q; b.onclick = () => ask(q); r.appendChild(b); }); c.appendChild(r); }); }
+// saved chats (this phone only)
+const HK = 'pcn_chart_hist'; let cur = null;
+const hLoad = () => { try { return JSON.parse(localStorage.getItem(HK)) || []; } catch (_) { return []; } };
+const hSave = a => { try { localStorage.setItem(HK, JSON.stringify(a.slice(0, 20))); } catch (_) {} };
+function saveTurn(q, ansHtml) {
+  const a = hLoad(); if (!cur) cur = { id: Date.now(), t: Date.now(), sym: symbol, msgs: [] };
+  cur.msgs.push({ r: 'u', h: esc(q) }, { r: 'a', h: ansHtml }); cur.t = Date.now();
+  const k = a.findIndex(x => x.id === cur.id); if (k >= 0) a.splice(k, 1); a.unshift(cur); hSave(a);
+}
+const ago = t => { const m = Math.max(1, Math.round((Date.now() - t) / 60000)); return m < 60 ? m + 'm ago' : m < 1440 ? Math.round(m / 60) + 'h ago' : Math.round(m / 1440) + 'd ago'; };
+function showHist() {
+  setOpen(true); const a = hLoad();
+  msgsEl.innerHTML = '<div class="hv-top"><button id="hvBack">&larr; conversations</button><button id="hvNew">new chat</button></div>' + (a.length ? '' : '<p style="color:var(--mut);font-size:14px">No saved chats yet. Ask a question and it will be saved here.</p>');
+  a.forEach(x => { const b = document.createElement('div'); b.className = 'hv-item'; b.setAttribute('role', 'button'); b.innerHTML = '<div class="m"><span>' + ago(x.t) + ' &middot; ' + esc(x.sym || '') + '</span><span>' + (x.msgs.length / 2) + ' message' + (x.msgs.length > 2 ? 's' : '') + ' <button class="hv-del" aria-label="Delete">&#128465;</button></span></div><div class="q">' + x.msgs[0].h + '</div>';
+    b.onclick = () => { cur = x; msgsEl.innerHTML = x.msgs.map(m => '<div class="' + (m.r === 'u' ? 'ag-u' : 'ag-a') + '">' + m.h + '</div>').join(''); msgsEl.scrollTop = msgsEl.scrollHeight; };
+    b.querySelector('.hv-del').onclick = e => { e.stopPropagation(); hSave(hLoad().filter(y => y.id !== x.id)); if (cur && cur.id === x.id) cur = null; showHist(); };
+    msgsEl.appendChild(b); });
+  const back = () => { cur = null; intro(); }; $('hvBack').onclick = back; $('hvNew').onclick = back;
+}
+$('agHist').onclick = showHist;
 $('agUp').onclick = () => setOpen(!agent.classList.contains('open'));
 $('agClose').onclick = () => setOpen(false);
-$('agNew').onclick = () => { msgsEl.innerHTML = ''; intro(); };
+$('agNew').onclick = () => { cur = null; intro(); };
 agIn.addEventListener('input', () => { agIn.style.height = 'auto'; agIn.style.height = Math.min(agIn.scrollHeight, 96) + 'px'; });
 agIn.addEventListener('focus', () => { if (!agent.classList.contains('open')) setOpen(true); });
 agIn.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && window.innerWidth >= 700) { e.preventDefault(); $('agForm').requestSubmit(); } });
@@ -376,7 +404,7 @@ let busy = false;
 async function ask(q) {
   q = (q || '').trim(); if (q.length < 2 || busy) return;
   if (!agent.classList.contains('open')) setOpen(true);
-  if (msgsEl.querySelector('.ag-chips')) msgsEl.innerHTML = '';
+  if (msgsEl.querySelector('.ag-sug') || msgsEl.querySelector('.hv-top')) msgsEl.innerHTML = '';
   msgsEl.insertAdjacentHTML('beforeend', '<div class="ag-u">' + esc(q) + '</div>');
   const a = document.createElement('div'); a.className = 'ag-a'; a.innerHTML = '<div class="ag-st"><span>read chart</span><span>' + (lastD ? lastD.candles.length : 0) + ' candles loaded</span></div><div class="ag-dots"><span></span><span></span><span></span></div>'; msgsEl.appendChild(a);
   msgsEl.scrollTop = msgsEl.scrollHeight; agIn.value = ''; agIn.style.height = 'auto'; busy = true; $('agSend').disabled = true;
@@ -390,7 +418,7 @@ async function ask(q) {
     if (r.status === 429) return done('<p>You have used your ' + (j.limit || '') + ' ' + MN[agMode] + ' questions for today. They reset at 1:00 AM Nigeria time. You can switch mode below.</p>');
     if (!r.ok || !j.answer) return done('<p>PCN AI could not answer right now. Please try again in a moment.</p>');
     let ans = String(j.answer).replace(/\n+\s*Sources:[\s\S]*$/, '').replace(/\(?https?:\/\/[^\s<)]+\)?/g, '').replace(/\[([^\]]+)\]\(\)/g, '$1').trim();
-    done(md(ans) + '<div class="ag-note">' + (j.left != null ? j.left + ' ' + MN[agMode] + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '') + 'AI answers can be wrong. Not financial advice.</div>');
+    const outHtml = md(ans) + '<div class="ag-note">' + (j.left != null ? j.left + ' ' + MN[agMode] + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '') + 'AI answers can be wrong. Not financial advice.</div>'; saveTurn(q, outHtml); done(outHtml);
   } catch (err) { console.warn('pcn agent', err); done('<p>No connection. Please check your network and try again.</p>'); }
 }
 $('agForm').addEventListener('submit', e => { e.preventDefault(); ask(agIn.value); });
