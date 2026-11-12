@@ -110,6 +110,12 @@
   .hv-item { display:block; width:100%; text-align:left; background:#16241d; border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:8px; color:var(--txt); font:inherit; cursor:pointer; }
   .hv-item .m { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--mut); margin-bottom:4px; } .hv-item .q { font-size:14px; font-weight:600; }
   .hv-del { background:none; border:0; color:var(--mut); padding:2px 4px; cursor:pointer; }
+  .ag-steps { margin:6px 0 10px; font-family:ui-monospace,Menlo,Consolas,monospace; }
+  .ags-h { display:flex; align-items:center; gap:8px; background:none; border:0; color:var(--mut); font:inherit; font-size:13px; padding:4px 0; cursor:pointer; } .ags-h .chev { display:inline-block; transition:transform .15s; transform:rotate(-90deg); } .ag-steps.open .chev { transform:none; }
+  .ags-b { display:none; background:#16241d; border:1px solid var(--line); border-radius:12px; padding:8px 12px; margin-top:4px; } .ag-steps.open .ags-b { display:block; }
+  .ags-r { display:flex; gap:12px; position:relative; padding:8px 0; } .ags-r + .ags-r::before { content:''; position:absolute; left:13px; top:-14px; height:24px; border-left:1px solid #2c4337; }
+  .ags-i { flex:none; width:28px; height:28px; border-radius:50%; border:1px solid #2c4337; background:#0f1a14; display:inline-flex; align-items:center; justify-content:center; color:var(--acc2,#16c784); font-style:normal; z-index:1; }
+  .ags-r > div { flex:1; min-width:0; } .ags-l { display:flex; justify-content:space-between; gap:8px; font-size:13px; } .ags-l b { font-weight:700; } .ags-l .d { color:var(--mut); font-size:12px; text-align:right; } .ags-s { color:var(--mut); font-size:12px; margin-top:2px; }
   .ag-dots span { display:inline-block; width:6px; height:6px; margin-right:4px; border-radius:50%; background:var(--mut); animation:agb 1s infinite; } .ag-dots span:nth-child(2){animation-delay:.15s} .ag-dots span:nth-child(3){animation-delay:.3s}
   @keyframes agb { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
   #agForm { display:flex; align-items:flex-end; gap:8px; padding:4px 12px 10px; flex:none; }
@@ -203,7 +209,7 @@ let meta = {};                       // symbol -> {name, img}
 const sg = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (_) { return d; } };
 const ss = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
 const fmt = n => n >= 100 ? n.toLocaleString('en-US', { maximumFractionDigits: 2 }) : n >= 1 ? n.toFixed(3) : n.toPrecision(4);
-let lastD = null; let lastPx = '', dayOpen = null, source = '', ws = null, wsTimer = 0, poll = 0, token = 0;
+let loadMs = 0; let lastD = null; let lastPx = '', dayOpen = null, source = '', ws = null, wsTimer = 0, poll = 0, token = 0;
 const TFN = { '15m': '15m', '1h': '1h', '4h': '4h', '1d': '1D', '1w': '1W' };
 const syncTf = () => { document.querySelectorAll('#tfMenu .tf').forEach(b => b.classList.toggle('on', b.dataset.i === interval)); $('tfTxt').textContent = TFN[interval]; };
 syncTf();
@@ -272,8 +278,8 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && so
 async function load() {
   const my = ++token; stopLive(); liveState(false, 'connecting'); fail('Loading chart…'); setPair();
   try {
-    const r = await fetch(`${SUPABASE_URL}/functions/v1/pcn-chart?symbol=${symbol}&interval=${interval}&limit=500&tz=${encodeURIComponent(tz)}`);
-    const d = await r.json();
+    const tL = performance.now(); const r = await fetch(`${SUPABASE_URL}/functions/v1/pcn-chart?symbol=${symbol}&interval=${interval}&limit=500&tz=${encodeURIComponent(tz)}`);
+    const d = await r.json(); loadMs = Math.round(performance.now() - tL);
     if (my !== token) return;
     if (!r.ok || d.error) throw new Error(d.error || r.status);
     chart.setData({ candles: d.candles, sma50: d.series.sma50, sma200: d.series.sma200, rsi14: d.series.rsi14, levels: (d.analysis.levels || []) }, interval);
@@ -442,30 +448,46 @@ function chartContext() {
 }
 // chart actions: the agent changes the chart itself (free, no question used; numbers come from the engine)
 function setSet(k, v) { SET[k] = v; ss('pcn_chart_set', SET); applySet(); const i = document.querySelector('#vSet input[data-k="' + k + '"]'); if (i) i.checked = v; }
+const IC = { eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>', pulse: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>', pen: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg>', chat: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.5 7L4 20l1.2-4.3A8 8 0 1 1 21 12z"/></svg>' };
+function mkSteps(host) {
+  const el = document.createElement('div'); el.className = 'ag-steps open';
+  el.innerHTML = '<button class="ags-h" type="button"><span class="chev">&#8964;</span><span class="ags-t"></span></button><div class="ags-b"></div>'; host.appendChild(el);
+  const body = el.querySelector('.ags-b'), t0 = performance.now(); let n = 0, run = true;
+  const upd = () => { el.querySelector('.ags-t').textContent = (run ? 'working' : 'done') + ' \u00b7 ' + n + ' tool' + (n === 1 ? '' : 's') + ' \u00b7 ' + Math.round((performance.now() - t0) / 1000) + 's'; };
+  const timer = setInterval(upd, 400); upd();
+  return {
+    add(icon, name, detail, desc) { n++; const r = document.createElement('div'); r.className = 'ags-r'; r.innerHTML = '<i class="ags-i">' + IC[icon] + '</i><div><div class="ags-l"><b>' + name + '</b><span class="d">' + detail + '</span></div><div class="ags-s">' + desc + '</div></div>'; body.prepend(r); upd(); return { set(d) { r.querySelector('.d').textContent = d; } }; },
+    end() { run = false; clearInterval(timer); upd(); }
+  };
+}
+const ms1 = t => { const d = performance.now() - t; return d < 10 ? d.toFixed(1) + 'ms' : d < 1000 ? Math.round(d) + 'ms' : (d / 1000).toFixed(1) + 's'; };
+msgsEl.addEventListener('click', e => { const h = e.target.closest('.ags-h'); if (h) h.parentElement.classList.toggle('open'); });
 const stp = a => '<div class="ag-st">' + a.map(x => '<span>' + x + '</span>').join('') + '</div>';
-function chartAction(q) {
+function chartAction(q, box) {
   if (!lastD) return null;
+  const nC = lastD.candles.length, readStep = () => box.add('eye', 'read_data', nC + ' candles \u00b7 ' + loadMs + 'ms', 'loaded the requested history');
   const t = q.toLowerCase(), c = chart.last(), px = c ? c.c : lastD.analysis.price, lv = lastD.analysis.levels || [];
   const draw = /\b(draw|mark|plot|show|add|put|highlight|outline|turn on)\b/.test(t);
-  if (/\b(clear|remove|erase|delete)\b/.test(t) && /(draw|line|level|mark)/.test(t)) { const n = chart.clearAI(); return stp(['looked at chart', n ? 'removed ' + n + ' line' + (n > 1 ? 's' : '') : 'nothing to remove']) + '<p>' + (n ? 'Done. I removed the lines I drew. Your own drawings are still there.' : 'I have no lines on the chart right now. Your own drawings stay until you delete them.') + '</p>'; }
+  if (/\b(clear|remove|erase|delete)\b/.test(t) && /(draw|line|level|mark)/.test(t)) { const n = chart.clearAI(); box.add('pen', 'clear_lines', n + ' removed \u00b7 ' + ms1(tC), 'removed the lines the agent drew'); return '<p>' + (n ? 'Done. I removed the lines I drew. Your own drawings are still there.' : 'I have no lines on the chart right now. Your own drawings stay until you delete them.') + '</p>'; }
   if (draw && /(support|resistance|level)/.test(t)) {
-    setSet('levels', true);
+    const tA = performance.now(); readStep(); const tl = performance.now(); setSet('levels', true);
     const rs = lv.filter(l => l.kind === 'resistance').sort((a, b) => a.price - b.price), su = lv.filter(l => l.kind === 'support').sort((a, b) => b.price - a.price);
     const pc = v => ((v / px - 1) * 100).toFixed(1) + '%';
     const li = a => a.map(l => '<li>' + fmt(l.price) + ' (' + pc(l.price) + ' from price' + (l.touches ? ', touched ' + l.touches + ' times' : '') + ')</li>').join('');
-    if (!lv.length) return stp(['read chart', '0 levels found']) + '<p>I did not find a clear support or resistance level on the ' + TFN[interval] + ' chart. Try another timeframe, or ask me to draw the current range.</p>';
-    return stp(['read ' + lastD.candles.length + ' candles', lv.length + ' level' + (lv.length > 1 ? 's' : '') + ' found', 'drawn on chart']) + '<p>I marked the levels on the chart. Price is ' + fmt(px) + ' on the ' + TFN[interval] + ' chart.</p>' +
+    box.add('pulse', 'analyze', '0 levels \u00b7 ' + ms1(tA), 'looked for swings and levels'); if (!lv.length) return '<p>I did not find a clear support or resistance level on the ' + TFN[interval] + ' chart. Try another timeframe, or ask me to draw the current range.</p>';
+    box.add('pulse', 'analyze', lv.length + ' level' + (lv.length > 1 ? 's' : '') + ' \u00b7 ' + ms1(tA), 'analyzed swings, trend, levels'); box.add('pen', 'draw_levels', lv.length + ' lines \u00b7 ' + ms1(tl), 'marked the levels on the chart');
+    return '<p>I marked the levels on the chart. Price is ' + fmt(px) + ' on the ' + TFN[interval] + ' chart.</p>' +
       (rs.length ? '<h3>Resistance (above)</h3><ul>' + li(rs) + '</ul>' : '') + (su.length ? '<h3>Support (below)</h3><ul>' + li(su) + '</ul>' : '<p>There is no support level below. Price is near its recent lows.</p>') + '<div class="ag-note">Levels come from swing highs and lows that price has touched at least twice. Not financial advice.</div>';
   }
   if (draw && /(range|high and low|highs and lows|high\/low)/.test(t)) {
-    const cs = lastD.candles.slice(-50); let hi = -Infinity, lo = Infinity; cs.forEach(k => { if (k.h > hi) hi = k.h; if (k.l < lo) lo = k.l; });
-    chart.addAI([{ price: hi, kind: 'resistance', label: 'High ' + fmt(hi) }, { price: lo, kind: 'support', label: 'Low ' + fmt(lo) }]);
-    const pos = Math.round((px - lo) / (hi - lo) * 100);
-    return stp(['read ' + cs.length + ' candles', 'found high and low', 'drawn on chart']) + '<p>I drew the range of the last ' + cs.length + ' candles on the ' + TFN[interval] + ' chart.</p><ul><li>High: ' + fmt(hi) + '</li><li>Low: ' + fmt(lo) + '</li><li>Price: ' + fmt(px) + ', about ' + pos + '% of the way up the range</li></ul><div class="ag-note">Say "clear the lines you drew" to remove them.</div>';
+    const tA = performance.now(); readStep(); const cs = lastD.candles.slice(-50); let hi = -Infinity, lo = Infinity; cs.forEach(k => { if (k.h > hi) hi = k.h; if (k.l < lo) lo = k.l; });
+    box.add('pulse', 'analyze', cs.length + ' bars analyzed \u00b7 ' + ms1(tA), 'found the high and low of the range'); const tD = performance.now(); chart.addAI([{ price: hi, kind: 'resistance', label: 'High ' + fmt(hi) }, { price: lo, kind: 'support', label: 'Low ' + fmt(lo) }]);
+    box.add('pen', 'draw_range', '2 lines \u00b7 ' + ms1(tD), 'drew the high and low on the chart'); const pos = Math.round((px - lo) / (hi - lo) * 100);
+    return '<p>I drew the range of the last ' + cs.length + ' candles on the ' + TFN[interval] + ' chart.</p><ul><li>High: ' + fmt(hi) + '</li><li>Low: ' + fmt(lo) + '</li><li>Price: ' + fmt(px) + ', about ' + pos + '% of the way up the range</li></ul><div class="ag-note">Say "clear the lines you drew" to remove them.</div>';
   }
   if (draw && /(average|moving|\bma\b|\bema\b|\bsma\b|\b50\b|\b200\b)/.test(t)) {
-    setSet('ma50', true); setSet('ma200', true); const a = lastD.analysis, rel = v => v == null ? 'not enough data' : (px > v ? 'above' : 'below') + ' at ' + fmt(v);
-    return stp(['read chart', 'added 2 averages']) + '<p>I turned on the 50 and 200 moving averages.</p><ul><li>50: price is ' + rel(a.sma50) + '</li><li>200: price is ' + rel(a.sma200) + '</li></ul>';
+    const tM = performance.now(); readStep(); setSet('ma50', true); setSet('ma200', true); box.add('pen', 'add_indicators', '2 averages \u00b7 ' + ms1(tM), 'turned on the 50 and 200 moving averages'); const a = lastD.analysis, rel = v => v == null ? 'not enough data' : (px > v ? 'above' : 'below') + ' at ' + fmt(v);
+    return '<p>I turned on the 50 and 200 moving averages.</p><ul><li>50: price is ' + rel(a.sma50) + '</li><li>200: price is ' + rel(a.sma200) + '</li></ul>';
   }
   return null;
 }
@@ -475,21 +497,25 @@ async function ask(q) {
   if (!agent.classList.contains('open')) setOpen(true);
   if (msgsEl.querySelector('.ag-sug') || msgsEl.querySelector('.hv-top')) msgsEl.innerHTML = '';
   msgsEl.insertAdjacentHTML('beforeend', '<div class="ag-u">' + esc(q) + '</div>');
-  const act = chartAction(q);
-  if (act) { msgsEl.insertAdjacentHTML('beforeend', '<div class="ag-a">' + act + '</div>'); saveTurn(q, act); agIn.value = ''; agIn.style.height = 'auto'; msgsEl.scrollTop = msgsEl.scrollHeight; return; }
-  const a = document.createElement('div'); a.className = 'ag-a'; a.innerHTML = '<div class="ag-st"><span>read chart</span><span>' + (lastD ? lastD.candles.length : 0) + ' candles loaded</span></div><div class="ag-dots"><span></span><span></span><span></span></div>'; msgsEl.appendChild(a);
-  msgsEl.scrollTop = msgsEl.scrollHeight; agIn.value = ''; agIn.style.height = 'auto'; busy = true; $('agSend').disabled = true;
-  const done = html => { a.querySelector('.ag-dots')?.remove(); a.insertAdjacentHTML('beforeend', html); msgsEl.scrollTop = msgsEl.scrollHeight; busy = false; $('agSend').disabled = false; };
+  const a = document.createElement('div'); a.className = 'ag-a'; msgsEl.appendChild(a); const box = mkSteps(a);
+  const act = chartAction(q, box);
+  agIn.value = ''; agIn.style.height = 'auto';
+  if (act) { box.end(); a.insertAdjacentHTML('beforeend', act); saveTurn(q, a.innerHTML); msgsEl.scrollTop = msgsEl.scrollHeight; return; }
+  const tR = performance.now(); box.add('eye', 'read_data', (lastD ? lastD.candles.length : 0) + ' candles \u00b7 ' + loadMs + 'ms', 'loaded the requested history');
+  const tAn = performance.now(); const ctxText = chartContext(); box.add('pulse', 'analyze', 'swings, trend, levels \u00b7 ' + ms1(tAn), 'analyzed swings, trend, levels, volatility');
+  const tAi = performance.now(); const aiStep = box.add('chat', 'ask_ai', 'running', 'writing the answer from the chart numbers (' + MN[agMode] + ')');
+  msgsEl.scrollTop = msgsEl.scrollHeight; busy = true; $('agSend').disabled = true;
+  const done = html => { aiStep.set(ms1(tAi)); box.end(); a.insertAdjacentHTML('beforeend', html); msgsEl.scrollTop = msgsEl.scrollHeight; busy = false; $('agSend').disabled = false; };
   const tok = getToken();
   if (!tok) return done('<p>Please <a href="index.html#account" style="color:#16c784;font-weight:700">sign in with Google</a> to ask questions. It is free.</p>');
   try {
-    const r = await fetch(SUPABASE_URL + '/functions/v1/pcn-chat2', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + tok }, body: JSON.stringify({ question: q, mode: agMode, chart: chartContext() }) });
+    const r = await fetch(SUPABASE_URL + '/functions/v1/pcn-chat2', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + tok }, body: JSON.stringify({ question: q, mode: agMode, chart: ctxText }) });
     let j = {}; try { j = await r.json(); } catch (_) {}
     if (r.status === 401) return done('<p>Your sign-in has expired. Please sign in again.</p>');
     if (r.status === 429) return done('<p>You have used your ' + (j.limit || '') + ' ' + MN[agMode] + ' questions for today. They reset at 1:00 AM Nigeria time. You can switch mode below.</p>');
     if (!r.ok || !j.answer) return done('<p>PCN AI could not answer right now. Please try again in a moment.</p>');
     let ans = String(j.answer).replace(/\n+\s*Sources:[\s\S]*$/, '').replace(/\(?https?:\/\/[^\s<)]+\)?/g, '').replace(/\[([^\]]+)\]\(\)/g, '$1').trim();
-    const outHtml = md(ans) + '<div class="ag-note">' + (j.left != null ? j.left + ' ' + MN[agMode] + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '') + 'AI answers can be wrong. Not financial advice.</div>'; saveTurn(q, outHtml); done(outHtml);
+    const outHtml = md(ans) + '<div class="ag-note">' + (j.left != null ? j.left + ' ' + MN[agMode] + ' question' + (j.left === 1 ? '' : 's') + ' left today. ' : '') + 'AI answers can be wrong. Not financial advice.</div>'; done(outHtml); saveTurn(q, a.innerHTML);
   } catch (err) { console.warn('pcn agent', err); done('<p>No connection. Please check your network and try again.</p>'); }
 }
 $('agForm').addEventListener('submit', e => { e.preventDefault(); ask(agIn.value); });
