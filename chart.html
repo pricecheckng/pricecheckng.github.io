@@ -29,6 +29,10 @@
   #dtools button { flex:none; width:38px; height:38px; border:0; border-radius:10px; background:none; color:var(--mut); display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
   #dtools button.on { background:#1b2e24; color:var(--acc2,#16c784); } #dtools button.dis { opacity:.35; }
   #dtools hr { width:24px; border:0; border-top:1px solid var(--line); margin:4px 0; }
+  #lnBg { position:fixed; inset:0; z-index:19; display:none; background:rgba(0,0,0,.45); } #lnBg.on { display:block; }
+  #lnSheet { position:absolute; left:0; right:0; bottom:0; background:#101a15; border-top:1px solid var(--line); border-radius:16px 16px 0 0; padding:6px 0 14px; max-height:70%; overflow-y:auto; }
+  #lnSheet .lnh { font-size:11px; letter-spacing:.08em; color:var(--mut); font-weight:700; padding:12px 18px 6px; }
+  #lnSheet button { display:flex; align-items:center; gap:16px; width:100%; background:none; border:0; color:var(--txt); font:inherit; font-size:16px; padding:13px 18px; cursor:pointer; text-align:left; } #lnSheet button.on { background:#1b2e24; color:var(--acc2,#16c784); } #lnSheet button svg { flex:none; }
   #dhint { position:absolute; left:50%; top:8px; transform:translateX(-50%); z-index:5; background:rgba(11,18,14,.92); border:1px solid var(--line); color:var(--txt); font-size:12px; font-weight:600; padding:6px 12px; border-radius:14px; display:none; white-space:nowrap; pointer-events:none; } #dhint.on { display:block; }
   #rsiWrap .lbl { position:absolute; left:8px; top:4px; z-index:3; font-size:11px; color:var(--mut); font-weight:700; }
   #main > div:not(#dtools):not(#dhint), #rsiWrap > div.c { position:absolute; inset:0; }
@@ -134,8 +138,7 @@
   <div class="leg"><span><i style="background:#f5a524"></i>MA 50</span><span><i style="background:#5b8def"></i>MA 200</span></div>
   <div id="main"><div id="dtools" role="toolbar" aria-label="Drawing tools">
       <button type="button" data-tool="cursor" class="on" aria-label="Cursor"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/></svg></button>
-      <button type="button" data-tool="trend" aria-label="Trend line"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6.5 17.5l11-11"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/></svg></button>
-      <button type="button" data-tool="hline" aria-label="Horizontal line"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 12h18"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg></button>
+      <button type="button" id="lnBtn" data-tool="line" aria-label="Lines"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 17.5l11-11"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/></svg></button>
       <button type="button" data-tool="ruler" aria-label="Measure"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8" width="19" height="8" rx="1.5" transform="rotate(-35 12 12)"/><path d="M8 13l1.5 1.2M11 11l1.5 1.2M14 9l1.5 1.2"/></svg></button>
       <hr>
       <button type="button" id="dDel" class="dis" aria-label="Delete drawing"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button>
@@ -177,6 +180,7 @@
   </nav>
 </div>
 
+<div id="lnBg"><div id="lnSheet"><div class="lnh">LINES</div><button type="button" data-ln="trend"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 17.5l11-11"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/></svg><span>Trend Line</span></button><button type="button" data-ln="ray"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 17.5L21 3" stroke-dasharray="2 2.5"/><path d="M6.5 17.5l8-8"/><circle cx="5" cy="19" r="2"/></svg><span>Ray</span></button><button type="button" data-ln="info"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 17.5l9-9"/><circle cx="5" cy="19" r="2"/><circle cx="17" cy="7" r="1.6"/><rect x="14" y="14" width="7" height="5" rx="1.5"/></svg><span>Info Line</span></button><button type="button" data-ln="extended"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l18-18" stroke-dasharray="2 2.5"/><path d="M8 16l8-8"/><circle cx="8" cy="16" r="1.8"/><circle cx="16" cy="8" r="1.8"/></svg><span>Extended Line</span></button><button type="button" data-ln="angle"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M4 20L17 7"/><path d="M11 20a7 7 0 0 0-2-5"/><circle cx="18" cy="6" r="1.8"/></svg><span>Trend Angle</span></button><button type="button" data-ln="hline"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg><span>Horizontal Line</span></button><button type="button" data-ln="hray"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12h14"/><circle cx="5" cy="12" r="2"/></svg><span>Horizontal Ray</span></button><button type="button" data-ln="vline"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg><span>Vertical Line</span></button><button type="button" data-ln="cross"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M12 3v18"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg><span>Cross Line</span></button></div></div>
 <div id="sheetBg">
   <div class="sh-top"><button class="back" id="shBack" aria-label="Close"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3L5 9l6 6"/></svg></button><input id="shQ" placeholder="Search Binance pairs" autocomplete="off" autocapitalize="characters"></div>
   <div class="tabs"><button class="on">Crypto</button><button disabled style="opacity:.45">TradFi <sup style="font-size:9px">soon</sup></button></div>
@@ -221,15 +225,21 @@ const chart = new window.PCNChart($('cMain'), $('cRsi'), { tz, onHover: c => {
 
 // ---------- drawing tools ----------
 const DK = 'pcn_chart_draw';
-const HINT = { trend: 'Drag on the chart to draw a line', hline: 'Touch the chart and slide to place a line, then lift', ruler: 'Drag on the chart to measure' };
+const LN = {"trend": "Trend Line", "ray": "Ray", "info": "Info Line", "extended": "Extended Line", "angle": "Trend Angle", "hline": "Horizontal Line", "hray": "Horizontal Ray", "vline": "Vertical Line", "cross": "Cross Line"};
+const LNI = {'trend': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 17.5l11-11"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/></svg>', 'ray': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 17.5L21 3" stroke-dasharray="2 2.5"/><path d="M6.5 17.5l8-8"/><circle cx="5" cy="19" r="2"/></svg>', 'info': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 17.5l9-9"/><circle cx="5" cy="19" r="2"/><circle cx="17" cy="7" r="1.6"/><rect x="14" y="14" width="7" height="5" rx="1.5"/></svg>', 'extended': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l18-18" stroke-dasharray="2 2.5"/><path d="M8 16l8-8"/><circle cx="8" cy="16" r="1.8"/><circle cx="16" cy="8" r="1.8"/></svg>', 'angle': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16M4 20L17 7"/><path d="M11 20a7 7 0 0 0-2-5"/><circle cx="18" cy="6" r="1.8"/></svg>', 'hline': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>', 'hray': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12h14"/><circle cx="5" cy="12" r="2"/></svg>', 'vline': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>', 'cross': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M12 3v18"/><circle cx="12" cy="12" r="2.2" fill="currentColor"/></svg>'};
+const HINT = { ruler: 'Drag on the chart to measure' }; Object.keys(LN).forEach(k => { HINT[k] = ['hline', 'hray', 'vline', 'cross'].includes(k) ? 'Touch the chart, slide to place it, then lift' : 'Drag on the chart to draw'; });
+let lnType = (() => { try { const v = localStorage.getItem('pcn_chart_ln'); return LN[v] ? v : 'trend'; } catch (_) { return 'trend'; } })();
 let curTool = 'cursor';
 function paintTool(t) {
   if (t) curTool = t;
-  document.querySelectorAll('#dtools [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === curTool));
+  document.querySelectorAll('#dtools [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === curTool || (b.dataset.tool === 'line' && !!LN[curTool])));
+  $('lnBtn').innerHTML = LNI[LN[curTool] ? curTool : lnType];
   const h = $('dhint'); h.textContent = HINT[curTool] || ''; h.classList.toggle('on', !!HINT[curTool]);
   $('dDel').classList.toggle('dis', !(chart.hasSelection && chart.hasSelection()) && !(chart.count && chart.count()));
 }
-document.querySelectorAll('#dtools [data-tool]').forEach(b => b.onclick = () => { const t = b.dataset.tool; chart.setTool(curTool === t && t !== 'cursor' ? 'cursor' : t); });
+document.querySelectorAll('#dtools [data-tool]').forEach(b => b.onclick = () => { const t = b.dataset.tool; if (t === 'line') { document.querySelectorAll('#lnSheet [data-ln]').forEach(x => x.classList.toggle('on', x.dataset.ln === (LN[curTool] ? curTool : lnType))); $('lnBg').classList.add('on'); return; } chart.setTool(curTool === t && t !== 'cursor' ? 'cursor' : t); });
+document.querySelectorAll('#lnSheet [data-ln]').forEach(b => b.onclick = () => { lnType = b.dataset.ln; try { localStorage.setItem('pcn_chart_ln', lnType); } catch (_) {} $('lnBg').classList.remove('on'); chart.setTool(lnType); });
+$('lnBg').onclick = e => { if (e.target === $('lnBg')) $('lnBg').classList.remove('on'); };
 $('dDel').onclick = () => { if (chart.hasSelection()) { chart.deleteSelected(); } else if (chart.count() && confirm('Remove all your drawings on ' + symbol + '?')) chart.clearDrawings(); paintTool(); };
 $('main').addEventListener('pointerup', () => setTimeout(() => paintTool(), 30));
 function loadDrawings() { try { const m = JSON.parse(localStorage.getItem(DK) || '{}'); chart.setDrawings(m[symbol] || []); } catch (_) { chart.setDrawings([]); } paintTool(); }
@@ -385,7 +395,7 @@ function md(t) {
   if (list) out.push('</ul>'); return out.join('');
 }
 function setOpen(o) { agent.classList.toggle('open', o); $('vChart').classList.toggle('agopen', o); if (o && !msgsEl.children.length) intro(); setTimeout(() => chart.resize(), 50); }
-const SUGG = [['Analyze', ['What is the current trend?', 'Where are support and resistance?', 'Is RSI overbought or oversold?', 'Summarize this chart']], ['Find a setup', ['What is the current setup?', 'Outline the upside and downside levels', 'Is price above or below the moving averages?']]];
+const SUGG = [['Analyze', ['What is the current trend?', 'Where are support and resistance?', 'Is RSI overbought or oversold?', 'Summarize this chart']], ['Find a setup', ['What is the current setup?', 'Outline the upside and downside levels', 'Is price above or below the moving averages?']], ['Add to chart', ['Mark the support and resistance.', 'Draw the current range.', 'Add the 50 and 200 averages.', 'Clear the lines you drew.']]];
 function intro() { msgsEl.innerHTML = '<div class="ag-a"><p>Ask me about the chart you are looking at. I read its price, trend, RSI and support and resistance.</p></div><div class="ag-chips"></div>'; const c = msgsEl.querySelector('.ag-chips'); c.className = 'ag-sug'; SUGG.forEach(g => { c.insertAdjacentHTML('beforeend', '<div class="ag-grp">' + g[0] + '</div>'); const r = document.createElement('div'); r.className = 'ag-row'; g[1].forEach(q => { const b = document.createElement('button'); b.type = 'button'; b.textContent = q; b.onclick = () => ask(q); r.appendChild(b); }); c.appendChild(r); }); }
 // saved chats (this phone only)
 const HK = 'pcn_chart_hist'; let cur = null;
@@ -430,12 +440,43 @@ function chartContext() {
     'INSTRUCTION: Answer from this chart data. Stay on the chart: price, trend, moving averages, RSI, support and resistance. If no support level is listed, say price is near its recent lows. Do not add news, ETF, whale or stablecoin context unless the question asks for it.\n' +
     'Last 5 candles (UTC time, open/high/low/close): ' + cs.map(k => new Date(k.t).toISOString().slice(5, 16).replace('T', ' ') + ' ' + n(k.o) + '/' + n(k.h) + '/' + n(k.l) + '/' + n(k.c)).join(' | ');
 }
+// chart actions: the agent changes the chart itself (free, no question used; numbers come from the engine)
+function setSet(k, v) { SET[k] = v; ss('pcn_chart_set', SET); applySet(); const i = document.querySelector('#vSet input[data-k="' + k + '"]'); if (i) i.checked = v; }
+const stp = a => '<div class="ag-st">' + a.map(x => '<span>' + x + '</span>').join('') + '</div>';
+function chartAction(q) {
+  if (!lastD) return null;
+  const t = q.toLowerCase(), c = chart.last(), px = c ? c.c : lastD.analysis.price, lv = lastD.analysis.levels || [];
+  const draw = /\b(draw|mark|plot|show|add|put|highlight|outline|turn on)\b/.test(t);
+  if (/\b(clear|remove|erase|delete)\b/.test(t) && /(draw|line|level|mark)/.test(t)) { const n = chart.clearAI(); return stp(['looked at chart', n ? 'removed ' + n + ' line' + (n > 1 ? 's' : '') : 'nothing to remove']) + '<p>' + (n ? 'Done. I removed the lines I drew. Your own drawings are still there.' : 'I have no lines on the chart right now. Your own drawings stay until you delete them.') + '</p>'; }
+  if (draw && /(support|resistance|level)/.test(t)) {
+    setSet('levels', true);
+    const rs = lv.filter(l => l.kind === 'resistance').sort((a, b) => a.price - b.price), su = lv.filter(l => l.kind === 'support').sort((a, b) => b.price - a.price);
+    const pc = v => ((v / px - 1) * 100).toFixed(1) + '%';
+    const li = a => a.map(l => '<li>' + fmt(l.price) + ' (' + pc(l.price) + ' from price' + (l.touches ? ', touched ' + l.touches + ' times' : '') + ')</li>').join('');
+    if (!lv.length) return stp(['read chart', '0 levels found']) + '<p>I did not find a clear support or resistance level on the ' + TFN[interval] + ' chart. Try another timeframe, or ask me to draw the current range.</p>';
+    return stp(['read ' + lastD.candles.length + ' candles', lv.length + ' level' + (lv.length > 1 ? 's' : '') + ' found', 'drawn on chart']) + '<p>I marked the levels on the chart. Price is ' + fmt(px) + ' on the ' + TFN[interval] + ' chart.</p>' +
+      (rs.length ? '<h3>Resistance (above)</h3><ul>' + li(rs) + '</ul>' : '') + (su.length ? '<h3>Support (below)</h3><ul>' + li(su) + '</ul>' : '<p>There is no support level below. Price is near its recent lows.</p>') + '<div class="ag-note">Levels come from swing highs and lows that price has touched at least twice. Not financial advice.</div>';
+  }
+  if (draw && /(range|high and low|highs and lows|high\/low)/.test(t)) {
+    const cs = lastD.candles.slice(-50); let hi = -Infinity, lo = Infinity; cs.forEach(k => { if (k.h > hi) hi = k.h; if (k.l < lo) lo = k.l; });
+    chart.addAI([{ price: hi, kind: 'resistance', label: 'High ' + fmt(hi) }, { price: lo, kind: 'support', label: 'Low ' + fmt(lo) }]);
+    const pos = Math.round((px - lo) / (hi - lo) * 100);
+    return stp(['read ' + cs.length + ' candles', 'found high and low', 'drawn on chart']) + '<p>I drew the range of the last ' + cs.length + ' candles on the ' + TFN[interval] + ' chart.</p><ul><li>High: ' + fmt(hi) + '</li><li>Low: ' + fmt(lo) + '</li><li>Price: ' + fmt(px) + ', about ' + pos + '% of the way up the range</li></ul><div class="ag-note">Say "clear the lines you drew" to remove them.</div>';
+  }
+  if (draw && /(average|moving|\bma\b|\bema\b|\bsma\b|\b50\b|\b200\b)/.test(t)) {
+    setSet('ma50', true); setSet('ma200', true); const a = lastD.analysis, rel = v => v == null ? 'not enough data' : (px > v ? 'above' : 'below') + ' at ' + fmt(v);
+    return stp(['read chart', 'added 2 averages']) + '<p>I turned on the 50 and 200 moving averages.</p><ul><li>50: price is ' + rel(a.sma50) + '</li><li>200: price is ' + rel(a.sma200) + '</li></ul>';
+  }
+  return null;
+}
 let busy = false;
 async function ask(q) {
   q = (q || '').trim(); if (q.length < 2 || busy) return;
   if (!agent.classList.contains('open')) setOpen(true);
   if (msgsEl.querySelector('.ag-sug') || msgsEl.querySelector('.hv-top')) msgsEl.innerHTML = '';
   msgsEl.insertAdjacentHTML('beforeend', '<div class="ag-u">' + esc(q) + '</div>');
+  const act = chartAction(q);
+  if (act) { msgsEl.insertAdjacentHTML('beforeend', '<div class="ag-a">' + act + '</div>'); saveTurn(q, act); agIn.value = ''; agIn.style.height = 'auto'; msgsEl.scrollTop = msgsEl.scrollHeight; return; }
   const a = document.createElement('div'); a.className = 'ag-a'; a.innerHTML = '<div class="ag-st"><span>read chart</span><span>' + (lastD ? lastD.candles.length : 0) + ' candles loaded</span></div><div class="ag-dots"><span></span><span></span><span></span></div>'; msgsEl.appendChild(a);
   msgsEl.scrollTop = msgsEl.scrollHeight; agIn.value = ''; agIn.style.height = 'auto'; busy = true; $('agSend').disabled = true;
   const done = html => { a.querySelector('.ag-dots')?.remove(); a.insertAdjacentHTML('beforeend', html); msgsEl.scrollTop = msgsEl.scrollHeight; busy = false; $('agSend').disabled = false; };
