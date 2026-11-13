@@ -137,6 +137,7 @@
   .ags-b { display:none; background:#16241d; border:1px solid var(--line); border-radius:12px; padding:8px 12px; margin-top:4px; } .ag-steps.open .ags-b { display:block; }
   .ags-r { display:flex; gap:12px; position:relative; padding:8px 0; } .ags-r + .ags-r::before { content:''; position:absolute; left:13px; top:-14px; height:24px; border-left:1px solid #2c4337; }
   .ags-i { flex:none; width:28px; height:28px; border-radius:50%; border:1px solid #2c4337; background:#0f1a14; display:inline-flex; align-items:center; justify-content:center; color:var(--acc2,#16c784); font-style:normal; z-index:1; }
+  li.lvl { cursor:pointer; } li.lvl::after { content:' \203A show'; color:var(--acc2,#16c784); font-size:12px; font-weight:700; white-space:nowrap; } li.lvl:active { opacity:.6; }
   .ags-i.run { animation:agp 1s infinite; } @keyframes agp { 50% { box-shadow:0 0 0 4px rgba(22,199,132,.22); } }
   .ags-img { margin-top:8px; max-width:230px; } .ags-img img { width:100%; display:block; border:1px solid #2c4337; border-radius:10px; } .ags-img a { display:inline-block; margin-top:6px; font-size:12px; color:var(--mut); text-decoration:none; }
   .ags-r > div { flex:1; min-width:0; } .ags-l { display:flex; justify-content:space-between; gap:8px; font-size:13px; } .ags-l b { font-weight:700; } .ags-l .d { color:var(--mut); font-size:12px; text-align:right; } .ags-s { color:var(--mut); font-size:12px; margin-top:2px; }
@@ -540,6 +541,12 @@ function mkSteps(host) {
 }
 const ms1 = t => { const d = performance.now() - t; return d < 10 ? d.toFixed(1) + 'ms' : d < 1000 ? Math.round(d) + 'ms' : (d / 1000).toFixed(1) + 's'; };
 msgsEl.addEventListener('click', e => { const h = e.target.closest('.ags-h'); if (h) h.parentElement.classList.toggle('open'); });
+msgsEl.addEventListener('click', e => {
+  const li = e.target.closest('li.lvl'); if (!li) return; const p = parseFloat(li.dataset.p); if (!(p > 0)) return;
+  if (!chart.vis) return; if (!SET.levels && !chart.count()) tempLevels();
+  setFull(false); setOpen(false);
+  setTimeout(() => { if (!chart.flash(p)) { const hh = $('dhint'); hh.textContent = 'That line is outside the current view. Zoom out or scroll to see it.'; hh.classList.add('on'); setTimeout(() => hh.classList.remove('on'), 2600); } }, 380);
+});
 const stp = a => '<div class="ag-st">' + a.map(x => '<span>' + x + '</span>').join('') + '</div>';
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const raf2 = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
@@ -572,7 +579,7 @@ async function chartAction(q, box) {
     const nv = await stg(box, 'eye', 'read_chart', 'read the chart back to check the lines', () => lv.filter(l => chart.vis(l.price) === 0).length, n => lv.length + ' lines · ' + n + ' visible');
     const rs = lv.filter(l => l.kind === 'resistance').sort((a, b) => a.price - b.price), su = lv.filter(l => l.kind === 'support').sort((a, b) => b.price - a.price);
     const pc = v => ((v / px - 1) * 100).toFixed(1) + '%';
-    const li = a => a.map(l => '<li>' + fmt(l.price) + ' (' + pc(l.price) + ' from price' + (l.touches ? ', touched ' + l.touches + ' times' : '') + ') – ' + visTxt(l.price) + '</li>').join('');
+    const li = a => a.map(l => '<li class="lvl" data-p="' + l.price + '">' + fmt(l.price) + ' (' + pc(l.price) + ' from price' + (l.touches ? ', touched ' + l.touches + ' times' : '') + ') – ' + visTxt(l.price) + '</li>').join('');
     return '<p>I marked ' + lv.length + ' level' + (lv.length === 1 ? '' : 's') + ' on the ' + TFN[interval] + ' chart. Price is ' + fmt(px) + '. ' + (nv === lv.length ? 'All of them are inside the current view.' : (nv ? nv + ' of them ' + (nv === 1 ? 'is' : 'are') + ' inside the current view. The rest are outside it, so zoom out or scroll to see them.' : 'None are inside the current view. Zoom out or scroll to see them.')) + '</p>' +
       (rs.length ? '<h3>Resistance (above)</h3><ul>' + li(rs) + '</ul>' : '') + (su.length ? '<h3>Support (below)</h3><ul>' + li(su) + '</ul>' : '<p>There is no support level below. Price is near its recent lows.</p>') + '<div class="ag-note">Levels come from swing highs and lows that price has touched at least twice. Not financial advice.</div>';
   }
@@ -584,7 +591,7 @@ async function chartAction(q, box) {
     await shotStep(box);
     await stg(box, 'eye', 'read_chart', 'read the chart back to check the lines', () => [hi, lo].filter(p => chart.vis(p) === 0).length, n => '2 lines · ' + n + ' visible');
     const pos = Math.round((px - lo) / (hi - lo) * 100);
-    return '<p>I drew the range of the last ' + cs.length + ' candles on the ' + TFN[interval] + ' chart.</p><ul><li>High: ' + fmt(hi) + ' – ' + visTxt(hi) + '</li><li>Low: ' + fmt(lo) + ' – ' + visTxt(lo) + '</li><li>Price: ' + fmt(px) + ', about ' + pos + '% of the way up the range</li></ul><div class="ag-note">Say "clear the lines you drew" to remove them.</div>';
+    return '<p>I drew the range of the last ' + cs.length + ' candles on the ' + TFN[interval] + ' chart.</p><ul><li class="lvl" data-p="' + hi + '">High: ' + fmt(hi) + ' – ' + visTxt(hi) + '</li><li class="lvl" data-p="' + lo + '">Low: ' + fmt(lo) + ' – ' + visTxt(lo) + '</li><li>Price: ' + fmt(px) + ', about ' + pos + '% of the way up the range</li></ul><div class="ag-note">Say "clear the lines you drew" to remove them.</div>';
   }
   if (draw && /(average|moving|\bma\b|\bema\b|\bsma\b|\b50\b|\b200\b)/.test(t)) {
     await readChart(); await readData();

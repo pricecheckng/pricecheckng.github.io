@@ -20,7 +20,7 @@
         return new Intl.DateTimeFormat('en-US', { timeZone: tz, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
       } catch (e) { return ''; }
     };
-    var zoomed = false, scanX = null, lastCh = null, fitBw = 0, lastAt = null, DR = [], tool = 'cursor', draft = null, sel = -1, ruler = null, sc = null, downPos = null, held = false;
+    var flashP = null, flashT = 0, zoomed = false, scanX = null, lastCh = null, fitBw = 0, lastAt = null, DR = [], tool = 'cursor', draft = null, sel = -1, ruler = null, sc = null, downPos = null, held = false;
     var DC = '#4da3ff', cur = 'cross';
     function stepMs() { var n = D.c.length; return n > 1 ? (D.c[n - 1].t - D.c[0].t) / (n - 1) : 1; }
     function tIdx(t) { return (t - D.c[0].t) / stepMs(); }
@@ -192,7 +192,7 @@
         for (var q0 = 0; q0 < n; q0++) { if (D.c[q0].l <= lp * 1.0015 && D.c[q0].h >= lp * 0.9985) { oi = q0; break; } }
         var ox = Math.max(0, xOf(oi));
         mx.strokeStyle = 'rgba(' + col + ',.55)'; mx.lineWidth = 1; mx.setLineDash([2, 3]); mx.beginPath(); mx.moveTo(ox, y); mx.lineTo(plotW(), y); mx.stroke(); mx.setLineDash([]);
-        labs.push({ y: y, t: nice(L.price), col: col });
+        labs.push({ y: y, t: (L.kind === 'support' ? 'S ' : 'R ') + nice(L.price), col: col });
       });
       // volume + candles
       var bw = Math.max(1, V.bw * 0.7);
@@ -306,6 +306,7 @@
       if (hasCd) { var rem = Math.max(0, last.t + stepMs() - Date.now()) / 1000, hh2 = Math.floor(rem / 3600), mm2 = Math.floor(rem % 3600 / 60), ss2 = Math.floor(rem % 60), z2 = function (x) { return (x < 10 ? '0' : '') + x; }; cdTxt = (hh2 ? z2(hh2) + ':' : '') + z2(mm2) + ':' + z2(ss2); }
       { var ylt = Math.max(9, Math.min(PH - (hasCd ? 23 : 9), yl)); mx.fillStyle = upL ? C.up : C.dn; mx.fillRect(plotW(), ylt - 9, AX, hasCd ? 32 : 18); mx.fillStyle = '#04100a'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(lab(last.c), plotW() + 6, ylt); if (hasCd) mx.fillText(cdTxt, plotW() + 6, ylt + 14); }
       if (scanX != null) { var sg0 = mx.createLinearGradient(scanX - 46, 0, scanX, 0); sg0.addColorStop(0, 'rgba(22,199,132,0)'); sg0.addColorStop(1, 'rgba(22,199,132,.16)'); mx.fillStyle = sg0; mx.fillRect(Math.max(0, scanX - 46), 0, Math.min(46, scanX), PH); mx.strokeStyle = 'rgba(22,199,132,.95)'; mx.lineWidth = 1.5; mx.setLineDash([]); mx.beginPath(); mx.moveTo(scanX, 0); mx.lineTo(scanX, PH); mx.stroke(); }
+      if (flashP != null && sc) { var fy = sc.py(flashP), fk = (performance.now() - flashT) / 1900, fa = Math.max(0, 1 - fk) * (0.55 + 0.45 * Math.sin(fk * 26)); if (fy >= 0 && fy <= PH && fk < 1) { mx.save(); mx.fillStyle = 'rgba(255,214,102,' + (fa * 0.22).toFixed(3) + ')'; mx.fillRect(0, fy - 9, plotW(), 18); mx.strokeStyle = 'rgba(255,214,102,' + Math.min(1, fa + 0.25).toFixed(3) + ')'; mx.lineWidth = 2.5; mx.setLineDash([]); mx.beginPath(); mx.moveTo(0, fy); mx.lineTo(plotW(), fy); mx.stroke(); mx.restore(); } }
       var atL = (n - 1) < V.start + plotW() / V.bw - 0.5; var vch = !atL || zoomed; if (atL !== lastAt || vch !== lastCh) { lastAt = atL; lastCh = vch; if (opts.onView) opts.onView(atL, vch); }
       // crosshair
       if (cross != null && cross >= 0 && cross < n) {
@@ -421,7 +422,7 @@
       setDrawings: function (a) { DR = (a || []).slice(); sel = -1; draft = null; ruler = null; draw(); },
       deleteSelected: function () { if (sel < 0) return false; DR.splice(sel, 1); sel = -1; emitDraw(); draw(); return true; },
       clearDrawings: function () { DR = []; sel = -1; ruler = null; emitDraw(); draw(); },
-      hasSelection: function () { return sel >= 0; }, scan: function (ms) { var t0 = performance.now(); function stp(now) { var k = (now - t0) / ms; if (k >= 1) { scanX = null; draw(); return; } scanX = k * plotW(); draw(); requestAnimationFrame(stp); } requestAnimationFrame(stp); }, resetView: function () { fit(); draw(); }, toLatest: function () { V.start = Math.max(0, D.c.length - plotW() / V.bw + 4); clampView(); draw(); }, stage: function () { return draft && draft.stage || 0; }, count: function () { return DR.length; }, vis: function (p) { if (!sc) return 0; var y = sc.py(p), PHh = H - 22; return y < 0 ? 1 : y > PHh ? -1 : 0; }, snapshot: function (w) { var cv = document.createElement('canvas'); cv.width = w; cv.height = Math.round(w * mc.height / mc.width); var g = cv.getContext('2d'); g.fillStyle = '#0b120e'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(mc, 0, 0, cv.width, cv.height); try { return cv.toDataURL('image/jpeg', 0.72); } catch (_) { return ''; } },
+      hasSelection: function () { return sel >= 0; }, flash: function (p) { if (!sc) return false; var y = sc.py(p); if (!(y >= 0 && y <= H - 22)) return false; flashP = p; flashT = performance.now(); function stp() { if (performance.now() - flashT >= 1900) { flashP = null; draw(); return; } draw(); requestAnimationFrame(stp); } requestAnimationFrame(stp); return true; }, scan: function (ms) { var t0 = performance.now(); function stp(now) { var k = (now - t0) / ms; if (k >= 1) { scanX = null; draw(); return; } scanX = k * plotW(); draw(); requestAnimationFrame(stp); } requestAnimationFrame(stp); }, resetView: function () { fit(); draw(); }, toLatest: function () { V.start = Math.max(0, D.c.length - plotW() / V.bw + 4); clampView(); draw(); }, stage: function () { return draft && draft.stage || 0; }, count: function () { return DR.length; }, vis: function (p) { if (!sc) return 0; var y = sc.py(p), PHh = H - 22; return y < 0 ? 1 : y > PHh ? -1 : 0; }, snapshot: function (w) { var cv = document.createElement('canvas'); cv.width = w; cv.height = Math.round(w * mc.height / mc.width); var g = cv.getContext('2d'); g.fillStyle = '#0b120e'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(mc, 0, 0, cv.width, cv.height); try { return cv.toDataURL('image/jpeg', 0.72); } catch (_) { return ''; } },
       setShow: function (o) { for (var k in o) show[k] = !!o[k]; draw(); },
       last: function () { return D.c[D.c.length - 1]; },
       setZones: function (z) { D.levels = z || []; draw(); },
