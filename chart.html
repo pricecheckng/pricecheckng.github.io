@@ -410,16 +410,18 @@ $('shBack').onclick = closeSheet; $('shQ').oninput = renderList;
 
 // ---------- footer: Chart / Watchlist / Settings ----------
 const DEF = { ma50: true, ma200: true, levels: false, rsi: false, hl: true, tf: '4h' };
+let tmpLv = false;   // levels turned on by the agent: shown now, not saved for the next visit
+const saveSet = () => ss('pcn_chart_set', tmpLv ? Object.assign({}, SET, { levels: false }) : SET);
 const _s0 = sg('pcn_chart_set', {}); if (_s0.v !== 3) { delete _s0.rsi; delete _s0.levels; _s0.v = 3; }
-let SET = Object.assign({}, DEF, _s0); ss('pcn_chart_set', SET);
+let SET = Object.assign({}, DEF, _s0); saveSet();
 function applySet() {
   chart.setShow({ ma50: SET.ma50, ma200: SET.ma200, levels: SET.levels, hl: SET.hl });
   $('rsiWrap').style.display = SET.rsi ? '' : 'none';
   const leg = document.querySelectorAll('.leg')[1]; if (leg) { const sp = leg.querySelectorAll('span'); sp[0].style.display = SET.ma50 ? '' : 'none'; sp[1].style.display = SET.ma200 ? '' : 'none'; }
   requestAnimationFrame(() => chart.resize());
 }
-document.querySelectorAll('#vSet input[data-k]').forEach(i => { i.checked = !!SET[i.dataset.k]; i.onchange = () => { SET[i.dataset.k] = i.checked; ss('pcn_chart_set', SET); applySet(); }; });
-$('setTf').value = SET.tf; $('setTf').onchange = e => { SET.tf = e.target.value; ss('pcn_chart_set', SET); };
+document.querySelectorAll('#vSet input[data-k]').forEach(i => { i.checked = !!SET[i.dataset.k]; i.onchange = () => { if (i.dataset.k === 'levels') tmpLv = false; SET[i.dataset.k] = i.checked; saveSet(); applySet(); }; });
+$('setTf').value = SET.tf; $('setTf').onchange = e => { SET.tf = e.target.value; saveSet(); };
 if (!qs.get('i') && SET.tf !== interval) { interval = SET.tf; syncTf(); load(); }
 applySet();
 
@@ -521,7 +523,8 @@ function chartContext(q) {
     'Last 5 candles (UTC time, open/high/low/close): ' + cs.map(k => new Date(k.t).toISOString().slice(5, 16).replace('T', ' ') + ' ' + n(k.o) + '/' + n(k.h) + '/' + n(k.l) + '/' + n(k.c)).join(' | ');
 }
 // chart actions: the agent changes the chart itself (free, no question used; numbers come from the engine)
-function setSet(k, v) { SET[k] = v; ss('pcn_chart_set', SET); applySet(); const i = document.querySelector('#vSet input[data-k="' + k + '"]'); if (i) i.checked = v; }
+function tempLevels() { if (!SET.levels) tmpLv = true; SET.levels = true; applySet(); const i = document.querySelector('#vSet input[data-k="levels"]'); if (i) i.checked = true; }
+function setSet(k, v) { SET[k] = v; saveSet(); applySet(); const i = document.querySelector('#vSet input[data-k="' + k + '"]'); if (i) i.checked = v; }
 const IC = { cam: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>', eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>', pulse: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>', pen: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg>', chat: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.5 7L4 20l1.2-4.3A8 8 0 1 1 21 12z"/></svg>' };
 function mkSteps(host) {
   const el = document.createElement('div'); el.className = 'ag-steps open';
@@ -564,7 +567,7 @@ async function chartAction(q, box) {
     await stg(box, 'pulse', 'analyze', 'analyzed swings, trend and levels', () => { chart.scan(1100); return lv.length; }, n => n + ' level' + (n === 1 ? '' : 's'), null, 1100);
     await readData();
     if (!lv.length) return '<p>I did not find a clear support or resistance level on the ' + TFN[interval] + ' chart. Try another timeframe, or ask me to draw the current range.</p>';
-    await stg(box, 'pen', 'create', 'marked ' + lv.length + ' level' + (lv.length === 1 ? '' : 's') + ' on the chart', () => setSet('levels', true), () => lv.length + ' line' + (lv.length === 1 ? '' : 's'));
+    await stg(box, 'pen', 'create', 'marked ' + lv.length + ' level' + (lv.length === 1 ? '' : 's') + ' on the chart', () => tempLevels(), () => lv.length + ' line' + (lv.length === 1 ? '' : 's'));
     await shotStep(box);
     const nv = await stg(box, 'eye', 'read_chart', 'read the chart back to check the lines', () => lv.filter(l => chart.vis(l.price) === 0).length, n => lv.length + ' lines · ' + n + ' visible');
     const rs = lv.filter(l => l.kind === 'resistance').sort((a, b) => a.price - b.price), su = lv.filter(l => l.kind === 'support').sort((a, b) => b.price - a.price);
