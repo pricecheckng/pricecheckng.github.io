@@ -47,7 +47,7 @@
     }
     var FIB = { fib: 1, fibext: 1, fibtz: 1, fibch: 1 };
 
-    var CHAN = { pchan: 1, regr: 1, flat: 1, djoint: 1 }, PITCH = { pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 }, SHAPE = { fibfan: 1, fibtime: 1, fibcirc: 1, fibspiral: 1, fibarcs: 1, fibwedge: 1, pitchfan: 1, pchan: 1, regr: 1, flat: 1, djoint: 1, pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
+    var CHAN = { pchan: 1, regr: 1, flat: 1, djoint: 1 }, PITCH = { pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 }, SHAPE = { xabcd: 1, cypher: 1, hnsh: 1, abcd: 1, trip: 1, drives: 1, eimp: 1, ecor: 1, etri: 1, edbl: 1, etrp: 1, fibfan: 1, fibtime: 1, fibcirc: 1, fibspiral: 1, fibarcs: 1, fibwedge: 1, pitchfan: 1, pchan: 1, regr: 1, flat: 1, djoint: 1, pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
 
     var NEWF = { fibfan: 1, fibtime: 1, fibcirc: 1, fibspiral: 1, fibarcs: 1, fibwedge: 1, pitchfan: 1 };
     function fibShape(d, out) {
@@ -85,9 +85,38 @@
       }
       return out;
     }
+
+    var MULTI = { xabcd: 5, cypher: 5, hnsh: 7, abcd: 4, trip: 4, drives: 7, eimp: 6, ecor: 4, etri: 6, edbl: 4, etrp: 6 };
+    var WL = { eimp: ['0', '(1)', '(2)', '(3)', '(4)', '(5)'], ecor: ['0', '(A)', '(B)', '(C)'], etri: ['0', '(A)', '(B)', '(C)', '(D)', '(E)'], edbl: ['0', '(W)', '(X)', '(Y)'], etrp: ['0', '(W)', '(X)', '(Y)', '(X)', '(Z)'],
+      xabcd: ['X', 'A', 'B', 'C', 'D'], cypher: ['X', 'A', 'B', 'C', 'D'], abcd: ['A', 'B', 'C', 'D'], trip: ['A', 'B', 'C', 'D'], hnsh: ['', 'Left Shoulder', '', 'Head', '', 'Right Shoulder', ''], drives: ['', 'Drive 1', 'Corr 1', 'Drive 2', 'Corr 2', 'Drive 3', ''] };
+    function patShape(d, out) {
+      var t = d.type, raw = d.pts || [d.a, d.b], pts = raw.map(px), n = pts.length, G = '138,163,150', C = t.charAt(0) === 'e' ? '167,139,250' : '77,163,255', i;
+      out.pts = pts;
+      for (i = 0; i + 1 < n; i++) out.lines.push({ p: pts[i], q: pts[i + 1], col: C, w: 1.7 });
+      var dash = function (i, j) { if (pts[i] && pts[j]) out.lines.push({ p: pts[i], q: pts[j], dash: 1, col: G }); };
+      var fill = function (ix, col) { var q = ix.map(function (k) { return pts[k]; }); if (q.every(Boolean)) out.fills.push({ pts: q, col: col }); };
+      var mid = function (i, j, txt) { if (pts[i] && pts[j] && txt) out.labels.push({ x: (pts[i].x + pts[j].x) / 2, y: (pts[i].y + pts[j].y) / 2, txt: txt, col: G, c: 1 }); };
+      var rt = function (a, b, c, e) { if (!raw[a] || !raw[b] || !raw[c] || !raw[e]) return ''; var den = Math.abs(raw[b].p - raw[a].p); return den ? (Math.abs(raw[e].p - raw[c].p) / den).toFixed(3) : ''; };
+      var wl = WL[t] || [];
+      for (i = 0; i < n; i++) if (wl[i]) { var nb = [pts[i - 1], pts[i + 1]].filter(Boolean), up = nb.every(function (q) { return pts[i].y <= q.y; }); out.labels.push({ x: pts[i].x, y: pts[i].y + (up ? -12 : 12), txt: wl[i], col: t.charAt(0) === 'e' ? C : '232,241,236', c: 1, b: 1 }); }
+      if (t === 'xabcd' || t === 'cypher') {
+        fill([0, 1, 2], C); fill([2, 3, 4], C); dash(0, 2); dash(2, 4); dash(1, 3);
+        if (t === 'xabcd') { dash(0, 4); mid(0, 2, rt(0, 1, 1, 2)); mid(1, 3, rt(1, 2, 2, 3)); mid(2, 4, rt(2, 3, 3, 4)); mid(0, 4, rt(0, 1, 1, 4)); }
+        else { dash(0, 3); mid(0, 2, rt(0, 1, 1, 2)); mid(1, 3, rt(0, 1, 1, 3)); mid(0, 3, rt(0, 3, 3, 4)); }
+      } else if (t === 'abcd') { dash(0, 2); dash(1, 3); mid(0, 2, rt(0, 1, 1, 2)); mid(1, 3, rt(1, 2, 2, 3)); }
+      else if (t === 'trip') {
+        if (pts[2]) { var X = Math.max(pts[2].x, pts[3] ? pts[3].x : 0), ex = function (p, q) { return q.x === p.x ? q : { x: X, y: p.y + (q.y - p.y) * (X - p.x) / (q.x - p.x) }; }, e1 = ex(pts[0], pts[2]);
+          out.lines.push({ p: pts[0], q: e1, col: G }); if (pts[3]) { var e2 = ex(pts[1], pts[3]); out.lines.push({ p: pts[1], q: e2, col: G }); out.fills.push({ pts: [pts[0], e1, e2, pts[1]], col: C }); } }
+      } else if (t === 'hnsh') {
+        if (pts[2] && pts[4]) { var Xn = Math.max(pts[4].x, pts[6] ? pts[6].x : 0), q4 = pts[4].x === pts[2].x ? pts[4] : { x: Xn, y: pts[2].y + (pts[4].y - pts[2].y) * (Xn - pts[2].x) / (pts[4].x - pts[2].x) }; out.lines.push({ p: pts[2], q: q4, col: '245,165,36', w: 1.5 }); }
+        fill([2, 3, 4], '234,57,67'); fill([0, 1, 2], C); fill([4, 5, 6], C);
+      }
+      return out;
+    }
     function shapeGeom(d) {
       var t = d.type, out = { lines: [], fills: [], pts: [], labels: [] }, A = d.a, B = d.b, i, n = D.c.length;
       if (NEWF[t]) return fibShape(d, out);
+      if (MULTI[t]) return patShape(d, out);
       if (PITCH[t]) {
         var a = px(d.a), b = px(d.b), c = px(d.c || d.b), M = { x: (b.x + c.x) / 2, y: (b.y + c.y) / 2 }, O = a;
         if (t === 'schiff') O = { x: a.x, y: (a.y + b.y) / 2 }; else if (t === 'mschiff') O = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
@@ -151,6 +180,7 @@
       return [(dp >= 0 ? '+' : '-') + nice(Math.abs(dp)) + ' (' + (dp >= 0 ? '+' : '') + pc.toFixed(2) + '%)', Math.abs(bars) + ' bars, ' + (dd ? dd + 'd ' : '') + (hh || dd ? hh + 'h ' : '') + (!dd ? mm + 'm' : '')];
     }
     function emitDraw() { if (opts.onDraw) opts.onDraw(DR.slice()); }
+    function setLive(pt) { if (draft.pts) draft.pts[draft.stage] = pt; else draft.c = pt; }
     function setTool(t) { tool = t; draft = null; if (t !== 'cursor') sel = -1; if (opts.onTool) opts.onTool(t); draw(); }
     var iv = '4h', raf = 0, show = { ma50: true, ma200: true, levels: false, hl: true };
 
@@ -272,7 +302,7 @@
           var sg2 = shapeGeom(d);
           sg2.fills.forEach(function (f) { mx.fillStyle = 'rgba(' + f.col + ',.12)'; mx.beginPath(); f.pts.forEach(function (p, ix) { if (ix) mx.lineTo(p.x, p.y); else mx.moveTo(p.x, p.y); }); mx.closePath(); mx.fill(); });
           sg2.lines.forEach(function (ln) { mx.strokeStyle = 'rgb(' + ln.col + ')'; mx.lineWidth = (ln.w || 1.3) + (o.sel ? .6 : 0); mx.setLineDash(ln.dash ? [4, 4] : []); line(ln.p, ln.q); }); mx.setLineDash([]);
-          if (sg2.labels && sg2.labels.length) { mx.font = '600 10px system-ui,sans-serif'; mx.textBaseline = 'middle'; mx.textAlign = 'left'; var llast = []; sg2.labels.forEach(function (lb) { if (lb.x < 2 || lb.x > plotW() - 16 || lb.y < 4 || lb.y > PH - 4) return; for (var z = 0; z < llast.length; z++) if (Math.abs(llast[z].x - lb.x) < 22 && Math.abs(llast[z].y - lb.y) < 11) return; llast.push(lb); mx.fillStyle = 'rgb(' + lb.col + ')'; mx.fillText(lb.txt, lb.x + 3, lb.y); }); mx.font = '11px system-ui,sans-serif'; }
+          if (sg2.labels && sg2.labels.length) { mx.font = '600 10px system-ui,sans-serif'; mx.textBaseline = 'middle'; mx.textAlign = 'left'; var llast = []; sg2.labels.forEach(function (lb) { if (lb.x < 2 || lb.x > plotW() - 16 || lb.y < 4 || lb.y > PH - 4) return; if (!lb.c) for (var z = 0; z < llast.length; z++) if (Math.abs(llast[z].x - lb.x) < 22 && Math.abs(llast[z].y - lb.y) < 11) return; llast.push(lb); mx.fillStyle = 'rgb(' + lb.col + ')'; mx.font = (lb.b ? '700 11px' : '600 10px') + ' system-ui,sans-serif'; mx.textAlign = lb.c ? 'center' : 'left'; mx.fillText(lb.txt, lb.c ? lb.x : lb.x + 3, lb.y); }); mx.textAlign = 'left'; mx.font = '11px system-ui,sans-serif'; }
           if (o.sel) sg2.pts.forEach(function (q) { mx.strokeStyle = DC; mx.lineWidth = 2; mx.fillStyle = '#0b120e'; mx.beginPath(); mx.arc(q.x, q.y, 5, 0, 7); mx.fill(); mx.stroke(); });
           return;
         }
@@ -381,9 +411,9 @@
       var ids = Object.keys(ptrs);
       downPos = { x: ev.offsetX, y: ev.offsetY }; held = false;
       if (ruler) { ruler = null; draw(); }
-      if (ids.length === 1 && draft && draft.stage === 2 && ev.offsetX < plotW() && sc) { draft.c = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY); dragX = null; draw(); return; }
+      if (ids.length === 1 && draft && draft.stage >= 2 && ev.offsetX < plotW() && sc) { setLive(pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY)); dragX = null; draw(); return; }
       if (ids.length === 1 && tool !== 'cursor' && ev.offsetX < plotW() && sc) {
-        var pt0 = pointAt(ev.offsetX, ev.offsetY); draft = { type: tool, a: pt0, b: pt0 }; dragX = null; draw(); return;
+        var pt0 = pointAt(ev.offsetX, ev.offsetY); draft = { type: tool, a: pt0, b: pt0 }; if (MULTI[tool]) draft.pts = [pt0, pt0]; dragX = null; draw(); return;
       }
       if (ids.length === 1) {
         dragX = ev.offsetX; var ox = ev.offsetX;
@@ -397,8 +427,8 @@
       if (!ptrs[ev.pointerId]) { if (ev.pointerType === 'mouse' && ev.offsetX < plotW() && cur !== 'arrow' && cur !== 'eraser') { cross = idxAt(ev.offsetX); draw(); } return; }
       ptrs[ev.pointerId] = { x: ev.offsetX, y: ev.offsetY };
       var ids = Object.keys(ptrs);
-      if (draft && ids.length === 1 && draft.stage === 2) { draft.c = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY); draw(); return; }
-      if (draft && ids.length === 1) { draft.b = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY); if (ONE[draft.type]) draft.a = draft.b; draw(); return; }
+      if (draft && ids.length === 1 && draft.stage >= 2) { setLive(pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY)); draw(); return; }
+      if (draft && ids.length === 1) { draft.b = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY); if (draft.pts) draft.pts[1] = draft.b; if (ONE[draft.type]) draft.a = draft.b; draw(); return; }
       if (ids.length === 2) {
         var a = ptrs[ids[0]], b = ptrs[ids[1]], d = Math.abs(a.x - b.x) || 1, mid = (a.x + b.x) / 2;
         zoomed = true; V.bw = startBw * d / startDist; V.start = anchorIdx - (mid - V.bw / 2) / V.bw; clampView(); draw(); return;
@@ -413,8 +443,9 @@
       var wasDrag = ev.type !== 'pointercancel' && !!ptrs[ev.pointerId];
       if (draft && wasDrag) {
         var a0 = px(draft.a), b0 = px(draft.b), far = Math.hypot(a0.x - b0.x, a0.y - b0.y) > 8;
-        if (draft.stage === 2) { DR.push({ type: draft.type, a: draft.a, b: draft.b, c: draft.c }); sel = DR.length - 1; emitDraw(); setTool('cursor'); delete ptrs[ev.pointerId]; clearTimeout(holdT); return; }
-        if (THREE[draft.type] && far) { draft.stage = 2; draft.c = draft.b; if (opts.onStage) opts.onStage(2); delete ptrs[ev.pointerId]; clearTimeout(holdT); draw(); return; }
+        if (draft.stage >= 2 && draft.pts && draft.stage < MULTI[draft.type] - 1) { draft.stage++; draft.pts.push(draft.pts[draft.stage - 1]); if (opts.onStage) opts.onStage(draft.stage); delete ptrs[ev.pointerId]; clearTimeout(holdT); draw(); return; }
+        if (draft.stage >= 2) { DR.push(draft.pts ? { type: draft.type, a: draft.pts[0], b: draft.pts[1], pts: draft.pts.slice() } : { type: draft.type, a: draft.a, b: draft.b, c: draft.c }); sel = DR.length - 1; emitDraw(); setTool('cursor'); delete ptrs[ev.pointerId]; clearTimeout(holdT); return; }
+        if ((THREE[draft.type] || MULTI[draft.type]) && far) { draft.stage = 2; if (draft.pts) draft.pts[2] = draft.pts[1]; else draft.c = draft.b; if (opts.onStage) opts.onStage(2); delete ptrs[ev.pointerId]; clearTimeout(holdT); draw(); return; }
         if (ONE[draft.type]) { DR.push({ type: draft.type, a: draft.a }); sel = DR.length - 1; emitDraw(); setTool('cursor'); }
         else if (far) { if (draft.type === 'ruler') ruler = draft; else { DR.push({ type: draft.type, a: draft.a, b: draft.b }); sel = DR.length - 1; emitDraw(); } setTool('cursor'); }
         else { draft = null; draw(); }
