@@ -179,7 +179,7 @@
       <button type="button" data-tool="ruler" aria-label="Measure"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="8" width="19" height="8" rx="1.5" transform="rotate(-35 12 12)"/><path d="M8 13l1.5 1.2M11 11l1.5 1.2M14 9l1.5 1.2"/></svg></button>
       <hr>
       <button type="button" id="dDel" class="dis" aria-label="Delete drawing"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button>
-    </div><div id="dhint"></div><div id="cMain"></div><button type="button" id="jumpBtn" aria-label="Jump to latest"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l6 6-6 6M13 6l6 6-6 6"/></svg></button><button type="button" id="scBtn" aria-label="Scale settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z"/><circle cx="12" cy="12" r="3"/></svg></button><div class="msg" id="msg">Loading chart…</div></div>
+    </div><div id="dhint"></div><div id="cMain"></div><button type="button" id="jumpBtn" aria-label="Reset chart view"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button><button type="button" id="scBtn" aria-label="Scale settings"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.5l8.2 4.75v9.5L12 21.5l-8.2-4.75v-9.5z"/><circle cx="12" cy="12" r="3"/></svg></button><div class="msg" id="msg">Loading chart…</div></div>
   <div id="rsiWrap"><span class="lbl">RSI 14</span><div class="c" id="cRsi"></div></div>
   <div id="agent">
     <div class="aghandle" id="agHandle"><i></i></div>
@@ -271,7 +271,7 @@ function setPrice(p) {
 const chart = new window.PCNChart($('cMain'), $('cRsi'), { tz, onHover: c => {
   if (c) { $('px').classList.add('hv'); $('px').textContent = 'O ' + fmt(c.o) + ' H ' + fmt(c.h) + ' L ' + fmt(c.l) + ' C ' + fmt(c.c); }
   else if (lastPx) { $('px').classList.remove('hv'); $('px').textContent = lastPx; } },
-  onView: (atL, ch) => { $('jumpBtn').classList.toggle('on', !atL); }, onTool: t => paintTool(t), onStage: () => { const h = $('dhint'); h.textContent = 'Now touch where the 3rd point goes, then lift'; h.classList.add('on'); }, onDraw: a => { try { const m = JSON.parse(localStorage.getItem(DK) || '{}'); if (a.length) m[symbol] = a; else delete m[symbol]; localStorage.setItem(DK, JSON.stringify(m)); } catch (_) {} paintTool(); } });
+  onView: (atL, ch) => { $('jumpBtn').classList.toggle('on', !atL || !!ch); }, onTool: t => paintTool(t), onStage: () => { const h = $('dhint'); h.textContent = 'Now touch where the 3rd point goes, then lift'; h.classList.add('on'); }, onDraw: a => { try { const m = JSON.parse(localStorage.getItem(DK) || '{}'); if (a.length) m[symbol] = a; else delete m[symbol]; localStorage.setItem(DK, JSON.stringify(m)); } catch (_) {} paintTool(); } });
 
 // ---------- drawing tools ----------
 const DK = 'pcn_chart_draw';
@@ -322,7 +322,7 @@ document.querySelectorAll('#prjSheet [data-pj]').forEach(b => b.onclick = () => 
 $('prjBg').onclick = e => { if (e.target === $('prjBg')) $('prjBg').classList.remove('on'); };
 $('fibBg').onclick = e => { if (e.target === $('fibBg')) $('fibBg').classList.remove('on'); };
 $('lnBg').onclick = e => { if (e.target === $('lnBg')) $('lnBg').classList.remove('on'); };
-$('jumpBtn').onclick = () => chart.toLatest();
+$('jumpBtn').onclick = () => { chart.resetView(); chart.toLatest(); };
 const IND = ['ma50', 'ma200', 'rsi', 'levels', 'hl'];
 const indCount = () => IND.filter(k => SET[k]).length;
 function delPaint() { const d = chart.count(), n = indCount(); $('delD').textContent = 'Remove ' + d + ' drawing' + (d === 1 ? '' : 's'); $('delI').textContent = 'Remove ' + n + ' indicator' + (n === 1 ? '' : 's'); $('delB').textContent = 'Remove ' + d + ' drawing' + (d === 1 ? '' : 's') + ' & ' + n + ' indicator' + (n === 1 ? '' : 's'); $('delD').disabled = !d; $('delI').disabled = !n; $('delB').disabled = !d && !n; }
