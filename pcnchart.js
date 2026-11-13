@@ -47,7 +47,7 @@
     }
     var FIB = { fib: 1, fibext: 1, fibtz: 1, fibch: 1 };
 
-    var CHAN = { pchan: 1, regr: 1, flat: 1, djoint: 1 }, PITCH = { pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 }, SHAPE = { xabcd: 1, cypher: 1, hnsh: 1, abcd: 1, trip: 1, drives: 1, eimp: 1, ecor: 1, etri: 1, edbl: 1, etrp: 1, fibfan: 1, fibtime: 1, fibcirc: 1, fibspiral: 1, fibarcs: 1, fibwedge: 1, pitchfan: 1, pchan: 1, regr: 1, flat: 1, djoint: 1, pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
+    var CHAN = { pchan: 1, regr: 1, flat: 1, djoint: 1 }, PITCH = { pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 }, SHAPE = { gbox: 1, gsqf: 1, gsq: 1, gfan: 1, cyc: 1, tcyc: 1, sine: 1, xabcd: 1, cypher: 1, hnsh: 1, abcd: 1, trip: 1, drives: 1, eimp: 1, ecor: 1, etri: 1, edbl: 1, etrp: 1, fibfan: 1, fibtime: 1, fibcirc: 1, fibspiral: 1, fibarcs: 1, fibwedge: 1, pitchfan: 1, pchan: 1, regr: 1, flat: 1, djoint: 1, pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
 
     var NEWF = { fibfan: 1, fibtime: 1, fibcirc: 1, fibspiral: 1, fibarcs: 1, fibwedge: 1, pitchfan: 1 };
     function fibShape(d, out) {
@@ -113,10 +113,45 @@
       }
       return out;
     }
+
+    var GANN = { gbox: 1, gsqf: 1, gsq: 1, gfan: 1, cyc: 1, tcyc: 1, sine: 1 };
+    function gannShape(d, out) {
+      var t = d.type, a = px(d.a), b = px(d.b), G = '138,163,150', W = plotW(), H2 = sc.PH, i, k, dx = b.x - a.x, dy = b.y - a.y;
+      var L = function (p, q, col, dash, w) { out.lines.push({ p: p, q: q, col: col || G, dash: dash, w: w }); };
+      var C1 = '77,163,255', OR = '245,165,36';
+      out.pts = [a, b];
+      if (t === 'gbox' || t === 'gsq' || t === 'gsqf') {
+        var sx = dx, sy = dy, n = 8;
+        if (t === 'gsq') { var s = Math.max(Math.abs(dx), Math.abs(dy)) || 1; sx = (dx < 0 ? -s : s); sy = (dy < 0 ? -s : s); }
+        if (t === 'gsqf') { var cell = 30; sx = (dx < 0 ? -1 : 1) * cell * n; sy = (dy < 0 ? -1 : 1) * cell * n; }
+        var x0 = a.x, y0 = a.y, x1 = a.x + sx, y1 = a.y + sy, lv = t === 'gbox' ? [0, .25, .382, .5, .618, .75, 1] : [0, .125, .25, .375, .5, .625, .75, .875, 1];
+        out.fills.push({ pts: [{ x: x0, y: y0 }, { x: x1, y: y0 }, { x: x1, y: y1 }, { x: x0, y: y1 }], col: C1 });
+        lv.forEach(function (l, j) { var col = (l === 0 || l === 1) ? C1 : (FC[(j % 6) + 1]), yy = y0 + sy * l, xx = x0 + sx * l;
+          L({ x: x0, y: yy }, { x: x1, y: yy }, col, l !== 0 && l !== 1 ? 1 : 0); L({ x: xx, y: y0 }, { x: xx, y: y1 }, col, l !== 0 && l !== 1 ? 1 : 0);
+          if (l > 0) { out.labels.push({ x: x1 + (sx < 0 ? -3 : 3), y: yy, txt: String(l), col: col, c: 0 }); } });
+        L({ x: x0, y: y0 }, { x: x1, y: y1 }, OR, 0, 1.6); L({ x: x1, y: y0 }, { x: x0, y: y1 }, OR, 0, 1.6);
+        L({ x: x0, y: y0 }, { x: x1, y: (y0 + y1) / 2 }, G, 1); L({ x: x0, y: y0 }, { x: (x0 + x1) / 2, y: y1 }, G, 1); L({ x: x1, y: y1 }, { x: x0, y: (y0 + y1) / 2 }, G, 1); L({ x: x1, y: y1 }, { x: (x0 + x1) / 2, y: y0 }, G, 1);
+        out.pts = [{ x: x0, y: y0 }, { x: x1, y: y1 }];
+      } else if (t === 'gfan') {
+        var far = function (q) { var l = Math.hypot(q.x, q.y) || 1, f = 6000 / l; return { x: a.x + q.x * f, y: a.y + q.y * f }; };
+        [[8, 1], [4, 1], [3, 1], [2, 1], [1, 1], [1, 2], [1, 3], [1, 4], [1, 8]].forEach(function (r, j) { var v = { x: dx * r[0], y: dy * r[1] }, col = r[0] === 1 && r[1] === 1 ? OR : FC[(j % 6) + 1];
+          L(a, far(v), col, 0, r[0] === 1 && r[1] === 1 ? 1.8 : 1.2); var u = Math.hypot(v.x, v.y) || 1, m = Math.hypot(dx, dy) * 1.25; out.labels.push({ x: a.x + v.x / u * m, y: a.y + v.y / u * m, txt: r[1] + 'x' + r[0], col: col, c: 1 }); });
+      } else if (t === 'cyc' || t === 'tcyc') {
+        var ax = Math.abs(dx); if (ax < 3) return out;
+        var k0 = Math.ceil((0 - a.x) / ax) - 1, k1 = Math.floor((W - a.x) / ax) + 1; if (k1 - k0 > 400) return out;
+        for (k = k0; k <= k1; k++) { var xx = a.x + k * ax; if (t === 'cyc') L({ x: xx, y: 0 }, { x: xx, y: H2 }, k === 0 ? C1 : G, k === 0 ? 0 : 1);
+          else { var r = ax / 2, pv = null; if (k >= 0) { for (i = 0; i <= 24; i++) { var an = Math.PI + Math.PI * i / 24, q = { x: xx + r + r * Math.cos(an), y: a.y + r * Math.sin(an) }; if (pv) L(pv, q, C1, 0, 1.4); pv = q; } L({ x: xx, y: a.y }, { x: xx + ax, y: a.y }, G, 1); } } }
+      } else if (t === 'sine') {
+        var h = Math.abs(dx) || 1, cy = (a.y + b.y) / 2, amp = a.y - cy, pv2 = null;
+        for (var x = -10; x <= W + 10; x += 4) { var q2 = { x: x, y: cy + amp * Math.cos(Math.PI * (x - a.x) / h) }; if (pv2) L(pv2, q2, C1, 0, 1.6); pv2 = q2; }
+      }
+      return out;
+    }
     function shapeGeom(d) {
       var t = d.type, out = { lines: [], fills: [], pts: [], labels: [] }, A = d.a, B = d.b, i, n = D.c.length;
       if (NEWF[t]) return fibShape(d, out);
       if (MULTI[t]) return patShape(d, out);
+      if (GANN[t]) return gannShape(d, out);
       if (PITCH[t]) {
         var a = px(d.a), b = px(d.b), c = px(d.c || d.b), M = { x: (b.x + c.x) / 2, y: (b.y + c.y) / 2 }, O = a;
         if (t === 'schiff') O = { x: a.x, y: (a.y + b.y) / 2 }; else if (t === 'mschiff') O = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
