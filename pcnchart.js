@@ -20,7 +20,7 @@
         return new Intl.DateTimeFormat('en-US', { timeZone: tz, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
       } catch (e) { return ''; }
     };
-    var lastAt = null, DR = [], tool = 'cursor', draft = null, sel = -1, ruler = null, sc = null, downPos = null, held = false;
+    var zoomed = false, scanX = null, lastCh = null, fitBw = 0, lastAt = null, DR = [], tool = 'cursor', draft = null, sel = -1, ruler = null, sc = null, downPos = null, held = false;
     var DC = '#4da3ff', cur = 'cross';
     function stepMs() { var n = D.c.length; return n > 1 ? (D.c[n - 1].t - D.c[0].t) / (n - 1) : 1; }
     function tIdx(t) { return (t - D.c[0].t) / stepMs(); }
@@ -139,7 +139,7 @@
       var minS = -vis * 0.6, maxS = Math.max(0, n - vis * 0.4);        // allow a little empty space on both sides
       V.start = Math.max(minS, Math.min(V.start, maxS));
     }
-    function fit() { var n = D.c.length; V.bw = Math.max(3, Math.min(18, plotW() / Math.min(n, 45))); V.start = Math.max(0, n - plotW() / V.bw + 4); clampView(); }
+    function fit() { zoomed = false; var n = D.c.length; V.bw = Math.max(3, Math.min(18, plotW() / Math.min(n, 45))); V.start = Math.max(0, n - plotW() / V.bw + 4); clampView(); }
     function range() { var s = Math.max(0, Math.floor(V.start)), e = Math.min(D.c.length - 1, Math.ceil(V.start + plotW() / V.bw)); return [s, e]; }
     function nice(v) { return v >= 1000 ? v.toLocaleString('en-US', { maximumFractionDigits: 0 }) : v >= 100 ? v.toFixed(1) : v >= 1 ? v.toFixed(3) : v.toPrecision(3); }
     function xOf(i) { return (i - V.start) * V.bw + V.bw / 2; }
@@ -304,7 +304,8 @@
       var hasCd = SC.countdown && iv, cdTxt = '';
       if (hasCd) { var rem = Math.max(0, last.t + stepMs() - Date.now()) / 1000, hh2 = Math.floor(rem / 3600), mm2 = Math.floor(rem % 3600 / 60), ss2 = Math.floor(rem % 60), z2 = function (x) { return (x < 10 ? '0' : '') + x; }; cdTxt = (hh2 ? z2(hh2) + ':' : '') + z2(mm2) + ':' + z2(ss2); }
       { var ylt = Math.max(9, Math.min(PH - (hasCd ? 23 : 9), yl)); mx.fillStyle = upL ? C.up : C.dn; mx.fillRect(plotW(), ylt - 9, AX, hasCd ? 32 : 18); mx.fillStyle = '#04100a'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(lab(last.c), plotW() + 6, ylt); if (hasCd) mx.fillText(cdTxt, plotW() + 6, ylt + 14); }
-      var atL = (n - 1) < V.start + plotW() / V.bw - 0.5; if (atL !== lastAt) { lastAt = atL; if (opts.onView) opts.onView(atL); }
+      if (scanX != null) { var sg0 = mx.createLinearGradient(scanX - 46, 0, scanX, 0); sg0.addColorStop(0, 'rgba(22,199,132,0)'); sg0.addColorStop(1, 'rgba(22,199,132,.16)'); mx.fillStyle = sg0; mx.fillRect(Math.max(0, scanX - 46), 0, Math.min(46, scanX), PH); mx.strokeStyle = 'rgba(22,199,132,.95)'; mx.lineWidth = 1.5; mx.setLineDash([]); mx.beginPath(); mx.moveTo(scanX, 0); mx.lineTo(scanX, PH); mx.stroke(); }
+      var atL = (n - 1) < V.start + plotW() / V.bw - 0.5; var vch = !atL || zoomed; if (atL !== lastAt || vch !== lastCh) { lastAt = atL; lastCh = vch; if (opts.onView) opts.onView(atL, vch); }
       // crosshair
       if (cross != null && cross >= 0 && cross < n) {
         var cx = xOf(cross), k2 = D.c[cross];
@@ -359,7 +360,7 @@
       if (draft && ids.length === 1) { draft.b = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY); if (ONE[draft.type]) draft.a = draft.b; draw(); return; }
       if (ids.length === 2) {
         var a = ptrs[ids[0]], b = ptrs[ids[1]], d = Math.abs(a.x - b.x) || 1, mid = (a.x + b.x) / 2;
-        V.bw = startBw * d / startDist; V.start = anchorIdx - (mid - V.bw / 2) / V.bw; clampView(); draw(); return;
+        zoomed = true; V.bw = startBw * d / startDist; V.start = anchorIdx - (mid - V.bw / 2) / V.bw; clampView(); draw(); return;
       }
       if (cross != null && dragX == null) { cross = Math.max(0, Math.min(D.c.length - 1, idxAt(ev.offsetX))); draw(); return; }
       if (dragX != null) {
@@ -385,7 +386,7 @@
     mc.addEventListener('pointerup', up); mc.addEventListener('pointercancel', up);
     mc.addEventListener('pointerleave', function (ev) { if (ev.pointerType === 'mouse') { cross = null; draw(); } });
     mc.addEventListener('wheel', function (ev) {
-      ev.preventDefault(); var ai = idxAt(ev.offsetX); V.bw *= ev.deltaY < 0 ? 1.12 : 1 / 1.12; V.start = ai - (ev.offsetX - V.bw / 2) / V.bw; clampView(); draw();
+      ev.preventDefault(); zoomed = true; var ai = idxAt(ev.offsetX); V.bw *= ev.deltaY < 0 ? 1.12 : 1 / 1.12; V.start = ai - (ev.offsetX - V.bw / 2) / V.bw; clampView(); draw();
     }, { passive: false });
     // RSI panel mirrors the same pan/zoom
     rc.addEventListener('pointerdown', function (ev) { rc.setPointerCapture(ev.pointerId); dragX = ev.offsetX; });
@@ -419,7 +420,7 @@
       setDrawings: function (a) { DR = (a || []).slice(); sel = -1; draft = null; ruler = null; draw(); },
       deleteSelected: function () { if (sel < 0) return false; DR.splice(sel, 1); sel = -1; emitDraw(); draw(); return true; },
       clearDrawings: function () { DR = []; sel = -1; ruler = null; emitDraw(); draw(); },
-      hasSelection: function () { return sel >= 0; }, toLatest: function () { V.start = Math.max(0, D.c.length - plotW() / V.bw + 4); clampView(); draw(); }, stage: function () { return draft && draft.stage || 0; }, count: function () { return DR.length; }, vis: function (p) { if (!sc) return 0; var y = sc.py(p), PHh = H - 22; return y < 0 ? 1 : y > PHh ? -1 : 0; }, snapshot: function (w) { var cv = document.createElement('canvas'); cv.width = w; cv.height = Math.round(w * mc.height / mc.width); var g = cv.getContext('2d'); g.fillStyle = '#0b120e'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(mc, 0, 0, cv.width, cv.height); try { return cv.toDataURL('image/jpeg', 0.72); } catch (_) { return ''; } },
+      hasSelection: function () { return sel >= 0; }, scan: function (ms) { var t0 = performance.now(); function stp(now) { var k = (now - t0) / ms; if (k >= 1) { scanX = null; draw(); return; } scanX = k * plotW(); draw(); requestAnimationFrame(stp); } requestAnimationFrame(stp); }, resetView: function () { fit(); draw(); }, toLatest: function () { V.start = Math.max(0, D.c.length - plotW() / V.bw + 4); clampView(); draw(); }, stage: function () { return draft && draft.stage || 0; }, count: function () { return DR.length; }, vis: function (p) { if (!sc) return 0; var y = sc.py(p), PHh = H - 22; return y < 0 ? 1 : y > PHh ? -1 : 0; }, snapshot: function (w) { var cv = document.createElement('canvas'); cv.width = w; cv.height = Math.round(w * mc.height / mc.width); var g = cv.getContext('2d'); g.fillStyle = '#0b120e'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(mc, 0, 0, cv.width, cv.height); try { return cv.toDataURL('image/jpeg', 0.72); } catch (_) { return ''; } },
       setShow: function (o) { for (var k in o) show[k] = !!o[k]; draw(); },
       last: function () { return D.c[D.c.length - 1]; },
       setZones: function (z) { D.levels = z || []; draw(); },
