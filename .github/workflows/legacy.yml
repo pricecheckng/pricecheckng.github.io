@@ -1,0 +1,36 @@
+name: Legacy scripts
+# Rebuilds the old-browser copies in /legacy whenever the main scripts or styles change.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "app.js"
+      - "market-bar.js"
+      - "search.js"
+      - "pcnai.js"
+      - "i18n.js"
+      - "menu.js"
+      - "styles.css"
+      - "scripts/build-legacy.mjs"
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Build legacy copies
+        run: |
+          npm install --no-save esbuild
+          node scripts/build-legacy.mjs
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add legacy
+          git diff --cached --quiet || git commit -m "Rebuild legacy scripts"
+          git push

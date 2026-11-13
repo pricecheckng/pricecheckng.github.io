@@ -91,6 +91,27 @@
 
   <div id="toast" role="status" aria-live="polite"></div>
   <script>try{var vk=navigator.virtualKeyboard;if(vk){vk.overlaysContent=true;document.addEventListener("focusin",function(e){var t=e.target;if(!t||!/^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName)||t.closest(".sheet"))return;setTimeout(function(){try{var kh=vk.boundingRect.height,r=t.getBoundingClientRect(),lim=innerHeight-kh-16;if(kh>0&&r.bottom>lim)scrollBy(0,r.bottom-lim)}catch(_){}},350)})}}catch(e){}</script>
+  <script>(function(){
+    /* Old browsers (before about 2020) cannot read the modern scripts, so they get the /legacy copies. Modern browsers return here and nothing changes. */
+    var old = false, shown = false;
+    try { new Function("var a={};return a?.b??1"); } catch (e) { old = true; }
+    if (!old && !/[?&]legacy=1/.test(location.search)) return;
+    function bar() {
+      if (shown) return; shown = true;
+      var d = document.createElement("div");
+      d.style.cssText = "position:fixed;left:0;right:0;top:0;z-index:99999;background:#fff3cd;color:#664d03;padding:10px 14px;font:14px/1.4 sans-serif;border-bottom:1px solid #e0c36a";
+      d.innerHTML = "Your browser is too old to show live prices here. Please open <b>pricecheckng.com.ng</b> in Chrome, or update your browser.";
+      (document.body || document.documentElement).appendChild(d);
+    }
+    window.addEventListener("error", function (e) { var f = (e && e.filename) || ""; if (f.indexOf("/legacy/") > -1 || f.indexOf("supabase") > -1) bar(); });
+    function go() {
+      ["https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js", "legacy/app.js", "legacy/market-bar.js", "legacy/search.js", "legacy/menu.js", "legacy/i18n.js", "legacy/pcnai.js"].forEach(function (u) {
+        var s = document.createElement("script"); s.src = u; s.async = false; s.onerror = bar; document.head.appendChild(s);
+      });
+      var l = document.createElement("link"); l.rel = "stylesheet"; l.href = "legacy/styles.css"; document.head.appendChild(l);
+    }
+    if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", go); else go();
+  })();</script>
   <script type="module" src="app.js"></script>
   <script src="market-bar.js" defer></script>
   <script src="search.js" defer></script>
