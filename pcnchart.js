@@ -30,7 +30,7 @@
     function pointAt(x, y) { return { t: idxT((x - V.bw / 2) / V.bw + V.start), p: priceAt(y) }; }
     function px(pt) { return { x: xOf(tIdx(pt.t)), y: sc.py(pt.p) }; }
     function segDist(x, y, a, b) { var dx = b.x - a.x, dy = b.y - a.y, l = dx * dx + dy * dy, t = l ? Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / l)) : 0; return Math.hypot(x - a.x - t * dx, y - a.y - t * dy); }
-    var ONE = { hline: 1, hray: 1, vline: 1, cross: 1 };
+    var ONE = { avwap: 1, hline: 1, hray: 1, vline: 1, cross: 1 };
     function ext(a, b, fwd, back) { var dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l; return [back ? { x: a.x - ux * 6000, y: a.y - uy * 6000 } : a, fwd ? { x: b.x + ux * 6000, y: b.y + uy * 6000 } : b]; }
     var FC = ['138,163,150', '234,57,67', '245,165,36', '22,199,132', '45,212,191', '77,163,255', '138,163,150', '167,139,250'];
     function fibGeom(d) {
@@ -47,7 +47,7 @@
     }
     var FIB = { fib: 1, fibext: 1, fibtz: 1, fibch: 1 };
 
-    var CHAN = { pchan: 1, regr: 1, flat: 1, djoint: 1 }, PITCH = { pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 }, SHAPE = { gbox: 1, gsqf: 1, gsq: 1, gfan: 1, cyc: 1, tcyc: 1, sine: 1, xabcd: 1, cypher: 1, hnsh: 1, abcd: 1, trip: 1, drives: 1, eimp: 1, ecor: 1, etri: 1, edbl: 1, etrp: 1, fibfan: 1, fibtime: 1, fibcirc: 1, fibspiral: 1, fibarcs: 1, fibwedge: 1, pitchfan: 1, pchan: 1, regr: 1, flat: 1, djoint: 1, pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
+    var CHAN = { pchan: 1, regr: 1, flat: 1, djoint: 1 }, PITCH = { pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 }, SHAPE = { avwap: 1, fvp: 1, fcast: 1, bpat: 1, ghost: 1, proj: 1, gbox: 1, gsqf: 1, gsq: 1, gfan: 1, cyc: 1, tcyc: 1, sine: 1, xabcd: 1, cypher: 1, hnsh: 1, abcd: 1, trip: 1, drives: 1, eimp: 1, ecor: 1, etri: 1, edbl: 1, etrp: 1, fibfan: 1, fibtime: 1, fibcirc: 1, fibspiral: 1, fibarcs: 1, fibwedge: 1, pitchfan: 1, pchan: 1, regr: 1, flat: 1, djoint: 1, pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
 
     var NEWF = { fibfan: 1, fibtime: 1, fibcirc: 1, fibspiral: 1, fibarcs: 1, fibwedge: 1, pitchfan: 1 };
     function fibShape(d, out) {
@@ -147,11 +147,58 @@
       }
       return out;
     }
+
+    var PRJ = { avwap: 1, fvp: 1, fcast: 1, bpat: 1, ghost: 1, proj: 1 };
+    function prjShape(d, out) {
+      var t = d.type, a = px(d.a), b = d.b ? px(d.b) : a, c = d.c ? px(d.c) : b, n = D.c.length, i, G = '138,163,150', OR = '245,165,36', UP = '22,199,132', DN = '234,57,67', C1 = '77,163,255';
+      var L = function (p, q, col, dash, w) { out.lines.push({ p: p, q: q, col: col || G, dash: dash, w: w }); };
+      var cl = function (v) { return Math.max(0, Math.min(n - 1, Math.round(v))); };
+      var i0 = cl(Math.min(tIdx(d.a.t), d.b ? tIdx(d.b.t) : 0)), i1 = cl(Math.max(tIdx(d.a.t), d.b ? tIdx(d.b.t) : 0));
+      out.pts = [a];
+      var copy = function (j0, j1, dIdx, dp, dash, al) { for (var j = j0; j <= j1; j++) { var k = D.c[j], x = xOf(j + dIdx), hw = Math.max(1, V.bw * .32), col = k.c >= k.o ? UP : DN, yo = sc.py(k.o + dp), yc = sc.py(k.c + dp);
+        L({ x: x, y: sc.py(k.h + dp) }, { x: x, y: sc.py(k.l + dp) }, col, dash, 1);
+        out.fills.push({ pts: [{ x: x - hw, y: yo }, { x: x + hw, y: yo }, { x: x + hw, y: yc }, { x: x - hw, y: yc }], col: col, al: al }); } };
+      if (t === 'avwap') {
+        var j0 = cl(tIdx(d.a.t)), sv = 0, sp = 0, prev = null;
+        for (i = j0; i < n; i++) { var k = D.c[i]; sv += k.v || 0; sp += ((k.h + k.l + k.c) / 3) * (k.v || 0); var q = { x: xOf(i), y: sc.py(sv ? sp / sv : k.c) }; if (prev) L(prev, q, OR, 0, 1.8); prev = q; }
+        out.pts = [a]; if (prev) out.labels.push({ x: prev.x - 20, y: prev.y - 10, txt: 'AVWAP', col: OR, c: 1, b: 1 });
+      } else if (t === 'fvp') {
+        var lo = Infinity, hi = -Infinity; for (i = i0; i <= i1; i++) { lo = Math.min(lo, D.c[i].l); hi = Math.max(hi, D.c[i].h); }
+        var NB = 24, bins = [], step = (hi - lo) / NB || 1, tot = 0; for (i = 0; i < NB; i++) bins.push(0);
+        for (i = i0; i <= i1; i++) { var k2 = D.c[i], s0 = Math.max(0, Math.floor((k2.l - lo) / step)), s1 = Math.min(NB - 1, Math.floor((k2.h - lo) / step)), cnt = s1 - s0 + 1; for (var z = s0; z <= s1; z++) { bins[z] += (k2.v || 1) / cnt; tot += (k2.v || 1) / cnt; } }
+        var mxb = Math.max.apply(null, bins), poc = bins.indexOf(mxb), vl = poc, vh = poc, acc = bins[poc];
+        while (acc < tot * .7 && (vl > 0 || vh < NB - 1)) { var dn = vl > 0 ? bins[vl - 1] : -1, upv = vh < NB - 1 ? bins[vh + 1] : -1; if (upv >= dn) { vh++; acc += bins[vh]; } else { vl--; acc += bins[vl]; } }
+        var xL = xOf(i0) - V.bw / 2, xR = xOf(i1) + V.bw / 2, maxW = Math.max(20, (xR - xL) * .5);
+        for (i = 0; i < NB; i++) { var yT = sc.py(lo + step * (i + 1)), yB = sc.py(lo + step * i), w = maxW * bins[i] / (mxb || 1); out.fills.push({ pts: [{ x: xL, y: yT + 1 }, { x: xL + w, y: yT + 1 }, { x: xL + w, y: yB }, { x: xL, y: yB }], col: i >= vl && i <= vh ? C1 : G, al: i >= vl && i <= vh ? .5 : .35 }); }
+        var yP = sc.py(lo + step * (poc + .5)); L({ x: xL, y: yP }, { x: xR, y: yP }, OR, 1, 1.2);
+        var yT2 = sc.py(hi), yB2 = sc.py(lo); L({ x: xL, y: yT2 }, { x: xR, y: yT2 }, C1, 0, 1); L({ x: xL, y: yB2 }, { x: xR, y: yB2 }, C1, 0, 1); L({ x: xL, y: yT2 }, { x: xL, y: yB2 }, C1, 0, 1); L({ x: xR, y: yT2 }, { x: xR, y: yB2 }, C1, 0, 1);
+        out.pts = [a, b];
+      } else if (t === 'fcast') {
+        var up = d.b.p >= d.a.p, col = up ? UP : DN, dp = d.b.p - d.a.p, ang = Math.atan2(b.y - a.y, b.x - a.x), hl = 11;
+        L(a, b, col, 0, 1.8); L({ x: b.x, y: b.y }, { x: b.x - hl * Math.cos(ang - .45), y: b.y - hl * Math.sin(ang - .45) }, col, 0, 1.8); L({ x: b.x, y: b.y }, { x: b.x - hl * Math.cos(ang + .45), y: b.y - hl * Math.sin(ang + .45) }, col, 0, 1.8);
+        L(a, { x: b.x, y: a.y }, G, 1); L({ x: b.x, y: a.y }, b, G, 1);
+        out.labels.push({ x: b.x, y: b.y + (up ? -14 : 14), txt: (dp >= 0 ? '+' : '') + nice(dp) + ' (' + (dp >= 0 ? '+' : '') + (dp / d.a.p * 100).toFixed(2) + '%) ' + Math.round(tIdx(d.b.t) - tIdx(d.a.t)) + ' bars', col: col, c: 1, b: 1 });
+        out.pts = [a, b];
+      } else if (t === 'bpat') {
+        L({ x: xOf(i0) - V.bw / 2, y: Math.min(a.y, b.y) }, { x: xOf(i1) + V.bw / 2, y: Math.min(a.y, b.y) }, G, 1); L({ x: xOf(i0) - V.bw / 2, y: Math.max(a.y, b.y) }, { x: xOf(i1) + V.bw / 2, y: Math.max(a.y, b.y) }, G, 1);
+        var cc = d.c || d.b; copy(i0, i1, tIdx(cc.t) - i0, cc.p - D.c[i0].o, 0, .55); out.pts = [a, b, c];
+      } else if (t === 'ghost') {
+        var span = i1 - i0 + 1; copy(i0, i1, span, D.c[i1].c - D.c[i0].o, 0, .3);
+        L({ x: xOf(i0) - V.bw / 2, y: Math.min(a.y, b.y) }, { x: xOf(i1) + V.bw / 2, y: Math.min(a.y, b.y) }, G, 1); L({ x: xOf(i0) - V.bw / 2, y: Math.max(a.y, b.y) }, { x: xOf(i1) + V.bw / 2, y: Math.max(a.y, b.y) }, G, 1);
+        out.pts = [a, b];
+      } else if (t === 'proj') {
+        var e = { x: c.x + (b.x - a.x), y: c.y + (b.y - a.y) };
+        L(a, b, C1, 0, 1.7); L(c, e, C1, 0, 1.7); L(a, c, G, 1); L(b, e, G, 1); out.fills.push({ pts: [a, b, e, c], col: C1 });
+        out.pts = [a, b, c];
+      }
+      return out;
+    }
     function shapeGeom(d) {
       var t = d.type, out = { lines: [], fills: [], pts: [], labels: [] }, A = d.a, B = d.b, i, n = D.c.length;
       if (NEWF[t]) return fibShape(d, out);
       if (MULTI[t]) return patShape(d, out);
       if (GANN[t]) return gannShape(d, out);
+      if (PRJ[t]) return prjShape(d, out);
       if (PITCH[t]) {
         var a = px(d.a), b = px(d.b), c = px(d.c || d.b), M = { x: (b.x + c.x) / 2, y: (b.y + c.y) / 2 }, O = a;
         if (t === 'schiff') O = { x: a.x, y: (a.y + b.y) / 2 }; else if (t === 'mschiff') O = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
@@ -191,7 +238,7 @@
       }
       return out;
     }
-    var THREE = { fibtime: 1, fibwedge: 1, pitchfan: 1, pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
+    var THREE = { bpat: 1, proj: 1, fibtime: 1, fibwedge: 1, pitchfan: 1, pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
     var RECT = { longpos: 1, shortpos: 1, prange: 1, drange: 1, dprange: 1 };
     function posGeom(d) {
       var a = px(d.a), b = px(d.b), up = d.type === 'longpos', rew = Math.abs(d.b.p - d.a.p), tp = d.a.p + (up ? rew : -rew), sp = d.a.p + (up ? -rew : rew) / 2,
@@ -335,7 +382,7 @@
         mx.setLineDash([]);
         if (SHAPE[t]) {
           var sg2 = shapeGeom(d);
-          sg2.fills.forEach(function (f) { mx.fillStyle = 'rgba(' + f.col + ',.12)'; mx.beginPath(); f.pts.forEach(function (p, ix) { if (ix) mx.lineTo(p.x, p.y); else mx.moveTo(p.x, p.y); }); mx.closePath(); mx.fill(); });
+          sg2.fills.forEach(function (f) { mx.fillStyle = 'rgba(' + f.col + ',' + (f.al || .12) + ')'; mx.beginPath(); f.pts.forEach(function (p, ix) { if (ix) mx.lineTo(p.x, p.y); else mx.moveTo(p.x, p.y); }); mx.closePath(); mx.fill(); });
           sg2.lines.forEach(function (ln) { mx.strokeStyle = 'rgb(' + ln.col + ')'; mx.lineWidth = (ln.w || 1.3) + (o.sel ? .6 : 0); mx.setLineDash(ln.dash ? [4, 4] : []); line(ln.p, ln.q); }); mx.setLineDash([]);
           if (sg2.labels && sg2.labels.length) { mx.font = '600 10px system-ui,sans-serif'; mx.textBaseline = 'middle'; mx.textAlign = 'left'; var llast = []; sg2.labels.forEach(function (lb) { if (lb.x < 2 || lb.x > plotW() - 16 || lb.y < 4 || lb.y > PH - 4) return; if (!lb.c) for (var z = 0; z < llast.length; z++) if (Math.abs(llast[z].x - lb.x) < 22 && Math.abs(llast[z].y - lb.y) < 11) return; llast.push(lb); mx.fillStyle = 'rgb(' + lb.col + ')'; mx.font = (lb.b ? '700 11px' : '600 10px') + ' system-ui,sans-serif'; mx.textAlign = lb.c ? 'center' : 'left'; mx.fillText(lb.txt, lb.c ? lb.x : lb.x + 3, lb.y); }); mx.textAlign = 'left'; mx.font = '11px system-ui,sans-serif'; }
           if (o.sel) sg2.pts.forEach(function (q) { mx.strokeStyle = DC; mx.lineWidth = 2; mx.fillStyle = '#0b120e'; mx.beginPath(); mx.arc(q.x, q.y, 5, 0, 7); mx.fill(); mx.stroke(); });

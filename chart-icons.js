@@ -71,5 +71,12 @@ export const ICONS = {
   tcyc: S(P('M3 20a5.5 5.5 0 0111 0M14 20a5.5 5.5 0 0111 0M3 20h22', '') + D(3, 20, 1.8) + D(14, 20, 1.8)),
   sine: S(P('M3 14c3-12 8-12 11 0s8 12 11 0') + D(3, 14, 1.8) + D(14, 14, 1.8)),
   gnmenu: S('<rect x="5" y="5" width="18" height="18" rx="1"/>' + P('M5 5l18 18M23 5L5 23', ' stroke-width="1.2"') + D(5, 5, 1.8) + D(23, 23, 1.8)),
+  // volume-based + projection extras
+  avwap: S(P('M4 21l5-4 4 2 4-7 4 1 3-6') + D(4, 21, 1.9) + P('M4 8v10', DASH)),
+  fvp: S(P('M5 5h8v3H5zM5 9.5h14v3H5zM5 14h10v3H5zM5 18.5h6v3H5z', ' stroke-width="1.3"') + P('M5 3v21', '')),
+  fcast: S(P('M5 21L22 8M22 8l-5.2.6M22 8l-1.6 5') + D(5, 21, 2) + P('M5 21h17', DASH)),
+  bpat: S(P('M7 6v14M7 9h0M5 10h4v6H5z', ' stroke-width="1.3"') + P('M15 4v13M13 7h4v7h-4z', ' stroke-width="1.3"') + P('M20.5 9v12M19 12h3v6h-3z', ' stroke-width="1.3"') + D(4, 22, 1.6)),
+  ghost: S(P('M6 7v13M4.2 10h3.6v6H4.2z', ' stroke-width="1.3"') + P('M13 4v13M11.2 7h3.6v7h-3.6z', ' stroke-width="1.3"' + DASH) + P('M20 9v12M18.2 12h3.6v6h-3.6z', ' stroke-width="1.3"' + DASH)),
+  proj: S(P('M5 21l6-9') + P('M14 14l6-9') + P('M5 21l9-7M11 12l9-7', DASH) + D(5, 21, 1.9) + D(11, 12, 1.9) + D(14, 14, 1.9)),
   ruler: S('<rect x="3" y="10" width="22" height="8.5" rx="1.6" transform="rotate(-38 14 14)"/>' + P('M9 17.4l1.8 1.5M12.4 14.8l1.8 1.5M15.8 12.2l1.8 1.5')),
 };
