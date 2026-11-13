@@ -295,6 +295,7 @@
       }
       mx.restore();
       // support / resistance price tags on the right edge
+      labs.sort(function (p, q) { return p.y - q.y; }); for (var li2 = 1; li2 < labs.length; li2++) if (labs[li2].y - labs[li2 - 1].y < 17) labs[li2].y = labs[li2 - 1].y + 17;
       labs.forEach(function (b) { mx.fillStyle = '#0b120e'; mx.fillRect(plotW(), b.y - 8, AX, 16); mx.strokeStyle = 'rgba(' + b.col + ',.9)'; mx.lineWidth = 1; mx.setLineDash([]); mx.strokeRect(plotW() + .5, b.y - 7.5, AX - 1, 15); mx.fillStyle = 'rgb(' + b.col + ')'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(b.t, plotW() + 6, b.y + .5); });
       // price tags for horizontal lines
       all.forEach(function (o) { var ty = o.d.type; if (ty !== 'hline' && ty !== 'hray' && ty !== 'cross') return; var yh = py(o.d.a.p); if (yh < 0 || yh > PH) return; mx.fillStyle = o.d.col ? 'rgb(' + o.d.col + ')' : DC; mx.fillRect(plotW(), yh - 9, AX, 18); mx.fillStyle = '#04100a'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(nice(o.d.a.p), plotW() + 6, yh); });
