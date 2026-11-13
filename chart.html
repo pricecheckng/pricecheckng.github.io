@@ -564,7 +564,7 @@ async function chartAction(q, box) {
   }
   if (draw && /(support|resistance|level)/.test(t)) {
     await readChart();
-    await stg(box, 'pulse', 'analyze', 'analyzed swings, trend and levels', () => { chart.scan(1100); return lv.length; }, n => n + ' level' + (n === 1 ? '' : 's'), null, 1100);
+    await stg(box, 'pulse', 'analyze', 'analyzed swings, trend and levels', () => { if (chart.scan) chart.scan(1100); return lv.length; }, n => n + ' level' + (n === 1 ? '' : 's'), null, 1100);
     await readData();
     if (!lv.length) return '<p>I did not find a clear support or resistance level on the ' + TFN[interval] + ' chart. Try another timeframe, or ask me to draw the current range.</p>';
     await stg(box, 'pen', 'create', 'marked ' + lv.length + ' level' + (lv.length === 1 ? '' : 's') + ' on the chart', () => tempLevels(), () => lv.length + ' line' + (lv.length === 1 ? '' : 's'));
@@ -578,7 +578,7 @@ async function chartAction(q, box) {
   }
   if (draw && /(range|high and low|highs and lows|high\/low)/.test(t)) {
     await readChart(); const cs = lastD.candles.slice(-50); let hi = -Infinity, lo = Infinity; cs.forEach(k => { if (k.h > hi) hi = k.h; if (k.l < lo) lo = k.l; });
-    await stg(box, 'pulse', 'analyze', 'found the high and low of the range', () => { chart.scan(1100); return cs.length; }, n => n + ' bars analyzed', null, 1100);
+    await stg(box, 'pulse', 'analyze', 'found the high and low of the range', () => { if (chart.scan) chart.scan(1100); return cs.length; }, n => n + ' bars analyzed', null, 1100);
     await readData();
     await stg(box, 'pen', 'create', 'drew the high and low on the chart', () => chart.addAI([{ price: hi, kind: 'resistance', label: 'High ' + fmt(hi) }, { price: lo, kind: 'support', label: 'Low ' + fmt(lo) }]), () => '2 lines');
     await shotStep(box);
@@ -611,7 +611,7 @@ async function ask(q) {
   if (act) { box.extra('free'); done(act); saveTurn(q, a.innerHTML); return; }
   await stg(box, 'eye', 'read_chart', 'read the current view and drawings', () => chart.count(), n => n + ' drawing' + (n === 1 ? '' : 's'), null, 300);
   await stg(box, 'eye', 'read_data', 'loaded the requested history', () => lastD ? lastD.candles.length : 0, n => n + ' candles', null, 300);
-  const ctxText = await stg(box, 'pulse', 'analyze', 'analyzed swings, trend, levels and volatility', () => { chart.scan(1100); return chartContext(q); }, () => 'levels, trend, RSI', null, 1100);
+  const ctxText = await stg(box, 'pulse', 'analyze', 'analyzed swings, trend, levels and volatility', () => { if (chart.scan) chart.scan(1100); return chartContext(q); }, () => 'levels, trend, RSI', null, 1100);
   tAi0 = performance.now(); aiRow = box.add('chat', 'ask_ai', 'running', 'writing the answer from the chart numbers (' + MN[agMode] + ')', true);
   const tok = getToken();
   if (!tok) return done('<p>Please <a href="index.html#account" style="color:#16c784;font-weight:700">sign in with Google</a> to ask questions. It is free.</p>');
