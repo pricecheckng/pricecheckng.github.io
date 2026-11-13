@@ -325,11 +325,11 @@ $('lnBg').onclick = e => { if (e.target === $('lnBg')) $('lnBg').classList.remov
 $('jumpBtn').onclick = () => { chart.resetView(); chart.toLatest(); };
 const IND = ['ma50', 'ma200', 'rsi', 'levels', 'hl'];
 const indCount = () => IND.filter(k => SET[k]).length;
-function delPaint() { $('delS').style.display = chart.hasSelection() ? 'block' : 'none'; const d = chart.count(), n = indCount(); $('delD').textContent = 'Remove ' + d + ' drawing' + (d === 1 ? '' : 's'); $('delI').textContent = 'Remove ' + n + ' indicator' + (n === 1 ? '' : 's'); $('delB').textContent = 'Remove ' + d + ' drawing' + (d === 1 ? '' : 's') + ' & ' + n + ' indicator' + (n === 1 ? '' : 's'); $('delD').disabled = !d; $('delI').disabled = !n; $('delB').disabled = !d && !n; }
+function delPaint() { const dr = chart.inDraft && chart.inDraft(); $('delS').style.display = (dr || chart.hasSelection()) ? 'block' : 'none'; $('delS').textContent = dr ? 'Cancel the drawing in progress' : 'Remove selected drawing'; const d = chart.count(), n = indCount(); $('delD').textContent = 'Remove ' + d + ' drawing' + (d === 1 ? '' : 's'); $('delI').textContent = 'Remove ' + n + ' indicator' + (n === 1 ? '' : 's'); $('delB').textContent = 'Remove ' + d + ' drawing' + (d === 1 ? '' : 's') + ' & ' + n + ' indicator' + (n === 1 ? '' : 's'); $('delD').disabled = !d; $('delI').disabled = !n; $('delB').disabled = !d && !n; }
 const delDraw = () => { chart.clearDrawings(); };
 const delInd = () => { tmpLv = false; IND.forEach(k => setSet(k, false)); };
 $('dDel').onclick = () => { delPaint(); $('delBg').classList.add('on'); };
-$('delS').onclick = () => { chart.deleteSelected(); $('delBg').classList.remove('on'); paintTool(); };
+$('delS').onclick = () => { if (chart.inDraft && chart.inDraft()) chart.cancelDraft(); else chart.deleteSelected(); $('dhint').classList.remove('on'); $('delBg').classList.remove('on'); paintTool(); };
 $('delD').onclick = () => { delDraw(); $('delBg').classList.remove('on'); paintTool(); };
 $('delI').onclick = () => { delInd(); $('delBg').classList.remove('on'); };
 $('delB').onclick = () => { delDraw(); delInd(); $('delBg').classList.remove('on'); paintTool(); };
