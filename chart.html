@@ -130,12 +130,14 @@
   .hv-top { display:flex; align-items:center; justify-content:space-between; padding:4px 0 10px; font-weight:800; } .hv-top button { background:none; border:0; color:var(--acc2,#16c784); font:inherit; font-size:13px; font-weight:700; cursor:pointer; padding:4px 0; }
   .hv-item { display:block; width:100%; text-align:left; background:#16241d; border:1px solid var(--line); border-radius:12px; padding:12px; margin-bottom:8px; color:var(--txt); font:inherit; cursor:pointer; }
   .hv-item .m { display:flex; justify-content:space-between; align-items:center; font-size:12px; color:var(--mut); margin-bottom:4px; } .hv-item .q { font-size:14px; font-weight:600; }
-  .hv-del { background:none; border:0; color:var(--mut); padding:2px 4px; cursor:pointer; }
+  .hv-del { display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; margin:-6px -6px -6px 4px; background:none; border:0; border-radius:50%; color:var(--mut); padding:0; cursor:pointer; vertical-align:middle; } .hv-del:active { background:rgba(234,57,67,.15); color:#ea3943; }
   .ag-steps { margin:6px 0 10px; font-family:ui-monospace,Menlo,Consolas,monospace; }
   .ags-h { display:flex; align-items:center; gap:8px; background:none; border:0; color:var(--mut); font:inherit; font-size:13px; padding:4px 0; cursor:pointer; } .ags-h .chev { display:inline-block; transition:transform .15s; transform:rotate(-90deg); } .ag-steps.open .chev { transform:none; }
   .ags-b { display:none; background:#16241d; border:1px solid var(--line); border-radius:12px; padding:8px 12px; margin-top:4px; } .ag-steps.open .ags-b { display:block; }
   .ags-r { display:flex; gap:12px; position:relative; padding:8px 0; } .ags-r + .ags-r::before { content:''; position:absolute; left:13px; top:-14px; height:24px; border-left:1px solid #2c4337; }
   .ags-i { flex:none; width:28px; height:28px; border-radius:50%; border:1px solid #2c4337; background:#0f1a14; display:inline-flex; align-items:center; justify-content:center; color:var(--acc2,#16c784); font-style:normal; z-index:1; }
+  .ags-i.run { animation:agp 1s infinite; } @keyframes agp { 50% { box-shadow:0 0 0 4px rgba(22,199,132,.22); } }
+  .ags-img { margin-top:8px; max-width:230px; } .ags-img img { width:100%; display:block; border:1px solid #2c4337; border-radius:10px; } .ags-img a { display:inline-block; margin-top:6px; font-size:12px; color:var(--mut); text-decoration:none; }
   .ags-r > div { flex:1; min-width:0; } .ags-l { display:flex; justify-content:space-between; gap:8px; font-size:13px; } .ags-l b { font-weight:700; } .ags-l .d { color:var(--mut); font-size:12px; text-align:right; } .ags-s { color:var(--mut); font-size:12px; margin-top:2px; }
   .ag-dots span { display:inline-block; width:6px; height:6px; margin-right:4px; border-radius:50%; background:var(--mut); animation:agb 1s infinite; } .ag-dots span:nth-child(2){animation-delay:.15s} .ag-dots span:nth-child(3){animation-delay:.3s}
   @keyframes agb { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
@@ -484,7 +486,7 @@ const ago = t => { const m = Math.max(1, Math.round((Date.now() - t) / 60000)); 
 function showHist() {
   setOpen(true); const a = hLoad();
   msgsEl.innerHTML = '<div class="hv-top"><button id="hvBack">&larr; conversations</button><button id="hvNew">new chat</button></div>' + (a.length ? '' : '<p style="color:var(--mut);font-size:14px">No saved chats yet. Ask a question and it will be saved here.</p>');
-  a.forEach(x => { const b = document.createElement('div'); b.className = 'hv-item'; b.setAttribute('role', 'button'); b.innerHTML = '<div class="m"><span>' + ago(x.t) + ' &middot; ' + esc(x.sym || '') + '</span><span>' + (x.msgs.length / 2) + ' message' + (x.msgs.length > 2 ? 's' : '') + ' <button class="hv-del" aria-label="Delete">&#128465;</button></span></div><div class="q">' + x.msgs[0].h + '</div>';
+  a.forEach(x => { const b = document.createElement('div'); b.className = 'hv-item'; b.setAttribute('role', 'button'); b.innerHTML = '<div class="m"><span>' + ago(x.t) + ' &middot; ' + esc(x.sym || '') + '</span><span>' + (x.msgs.length / 2) + ' message' + (x.msgs.length > 2 ? 's' : '') + ' <button class="hv-del" aria-label="Delete"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button></span></div><div class="q">' + x.msgs[0].h + '</div>';
     b.onclick = () => { cur = x; msgsEl.innerHTML = x.msgs.map(m => '<div class="' + (m.r === 'u' ? 'ag-u' : 'ag-a') + '">' + m.h + '</div>').join(''); msgsEl.scrollTop = msgsEl.scrollHeight; };
     b.querySelector('.hv-del').onclick = e => { e.stopPropagation(); hSave(hLoad().filter(y => y.id !== x.id)); if (cur && cur.id === x.id) cur = null; showHist(); };
     msgsEl.appendChild(b); });
@@ -518,7 +520,7 @@ function chartContext(q) {
 }
 // chart actions: the agent changes the chart itself (free, no question used; numbers come from the engine)
 function setSet(k, v) { SET[k] = v; ss('pcn_chart_set', SET); applySet(); const i = document.querySelector('#vSet input[data-k="' + k + '"]'); if (i) i.checked = v; }
-const IC = { eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>', pulse: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>', pen: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg>', chat: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.5 7L4 20l1.2-4.3A8 8 0 1 1 21 12z"/></svg>' };
+const IC = { cam: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-3h6l2 3h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>', eye: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>', pulse: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg>', pen: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l4-1 11-11-3-3L5 16z"/></svg>', chat: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.5 7L4 20l1.2-4.3A8 8 0 1 1 21 12z"/></svg>' };
 function mkSteps(host) {
   const el = document.createElement('div'); el.className = 'ag-steps open';
   el.innerHTML = '<button class="ags-h" type="button"><span class="chev">&#8964;</span><span class="ags-t"></span></button><div class="ags-b"></div>'; host.appendChild(el);
@@ -526,7 +528,7 @@ function mkSteps(host) {
   const upd = () => { const sec = Math.round((performance.now() - t0) / 1000); el.querySelector('.ags-t').textContent = (run ? 'working' : 'thought for ' + sec + 's') + ' \u00b7 ' + n + ' tool' + (n === 1 ? '' : 's') + (run ? ' \u00b7 ' + sec + 's' : '') + (extra ? ' \u00b7 ' + extra : ''); };
   const timer = setInterval(upd, 400); upd();
   return {
-    add(icon, name, detail, desc) { n++; const r = document.createElement('div'); r.className = 'ags-r'; r.innerHTML = '<i class="ags-i">' + IC[icon] + '</i><div><div class="ags-l"><b>' + name + '</b><span class="d">' + detail + '</span></div><div class="ags-s">' + desc + '</div></div>'; body.prepend(r); upd(); return { set(d) { r.querySelector('.d').textContent = d; } }; },
+    add(icon, name, detail, desc, running) { n++; const r = document.createElement('div'); r.className = 'ags-r'; r.innerHTML = '<i class="ags-i' + (running ? ' run' : '') + '">' + IC[icon] + '</i><div><div class="ags-l"><b>' + name + '</b><span class="d">' + detail + '</span></div><div class="ags-s">' + desc + '</div></div>'; body.appendChild(r); upd(); msgsEl.scrollTop = msgsEl.scrollHeight; return { set(d) { r.querySelector('.d').textContent = d; }, done(d) { r.querySelector('.ags-i').classList.remove('run'); r.querySelector('.d').textContent = d; msgsEl.scrollTop = msgsEl.scrollHeight; }, img(u) { if (!u) return; const w = document.createElement('div'); w.className = 'ags-img'; w.innerHTML = '<img alt="chart screenshot" src="' + u + '"><a download="pcn-chart.jpg" href="' + u + '">\u2193 download</a>'; r.children[1].appendChild(w); msgsEl.scrollTop = msgsEl.scrollHeight; } }; },
     extra(t) { extra = t; upd(); },
     end() { run = false; clearInterval(timer); upd(); }
   };
@@ -534,30 +536,57 @@ function mkSteps(host) {
 const ms1 = t => { const d = performance.now() - t; return d < 10 ? d.toFixed(1) + 'ms' : d < 1000 ? Math.round(d) + 'ms' : (d / 1000).toFixed(1) + 's'; };
 msgsEl.addEventListener('click', e => { const h = e.target.closest('.ags-h'); if (h) h.parentElement.classList.toggle('open'); });
 const stp = a => '<div class="ag-st">' + a.map(x => '<span>' + x + '</span>').join('') + '</div>';
-function chartAction(q, box) {
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const raf2 = () => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+// one step of the agent: the row shows "running", the work runs, then the row shows its real result and time
+async function stg(box, icon, name, desc, work, det, fin, pause) {
+  const row = box.add(icon, name, 'running', desc, true), t = performance.now(); let res = null;
+  try { res = await work(); } catch (e) { console.warn('pcn step', name, e); }
+  const took = ms1(t); await sleep(pause == null ? 380 : pause);
+  row.done((det ? det(res) + ' · ' : '') + took); if (fin) fin(row, res); return res;
+}
+const visTxt = p => { const v = chart.vis(p); return v === 0 ? 'visible' : v > 0 ? 'above the visible range' : 'below the visible range'; };
+const shotStep = box => stg(box, 'cam', 'screenshot', 'captured a chart screenshot', async () => { await raf2(); return chart.snapshot(600); }, r => r ? 'ok' : 'failed', (row, r) => row.img(r), 250);
+async function chartAction(q, box) {
   if (!lastD) return null;
-  const nC = lastD.candles.length, readStep = () => box.add('eye', 'read_data', nC + ' candles \u00b7 ' + loadMs + 'ms', 'loaded the requested history');
-  const t = q.toLowerCase(), c = chart.last(), px = c ? c.c : lastD.analysis.price, lv = lastD.analysis.levels || [];
+  const nC = lastD.candles.length, t = q.toLowerCase(), c = chart.last(), px = c ? c.c : lastD.analysis.price, lv = lastD.analysis.levels || [];
   const draw = /\b(draw|mark|plot|show|add|put|highlight|outline|turn on)\b/.test(t);
-  if (/\b(clear|remove|erase|delete)\b/.test(t) && /(draw|line|level|mark)/.test(t)) { const n = chart.clearAI(); box.add('pen', 'clear_lines', n + ' removed \u00b7 ' + ms1(tC), 'removed the lines the agent drew'); return '<p>' + (n ? 'Done. I removed the lines I drew. Your own drawings are still there.' : 'I have no lines on the chart right now. Your own drawings stay until you delete them.') + '</p>'; }
+  const readChart = () => stg(box, 'eye', 'read_chart', 'read the current view and drawings', () => chart.count(), n => n + ' drawing' + (n === 1 ? '' : 's'), null, 320);
+  const readData = () => stg(box, 'eye', 'read_data', 'loaded the requested history', () => nC, n => n + ' candles', null, 300);
+  if (/\b(clear|remove|erase|delete)\b/.test(t) && /(draw|line|level|mark)/.test(t)) {
+    await readChart(); const n = await stg(box, 'pen', 'clear_lines', 'removed the lines the agent drew', () => chart.clearAI(), n => n + ' removed');
+    return '<p>' + (n ? 'Done. I removed the lines I drew. Your own drawings are still there.' : 'I have no lines on the chart right now. Your own drawings stay until you delete them.') + '</p>';
+  }
   if (draw && /(support|resistance|level)/.test(t)) {
-    const tA = performance.now(); readStep(); const tl = performance.now(); setSet('levels', true);
+    await readChart();
+    await stg(box, 'pulse', 'analyze', 'analyzed swings, trend and levels', () => lv.length, n => n + ' level' + (n === 1 ? '' : 's'));
+    await readData();
+    if (!lv.length) return '<p>I did not find a clear support or resistance level on the ' + TFN[interval] + ' chart. Try another timeframe, or ask me to draw the current range.</p>';
+    await stg(box, 'pen', 'create', 'marked ' + lv.length + ' level' + (lv.length === 1 ? '' : 's') + ' on the chart', () => setSet('levels', true), () => lv.length + ' line' + (lv.length === 1 ? '' : 's'));
+    await shotStep(box);
+    const nv = await stg(box, 'eye', 'read_chart', 'read the chart back to check the lines', () => lv.filter(l => chart.vis(l.price) === 0).length, n => lv.length + ' lines · ' + n + ' visible');
     const rs = lv.filter(l => l.kind === 'resistance').sort((a, b) => a.price - b.price), su = lv.filter(l => l.kind === 'support').sort((a, b) => b.price - a.price);
     const pc = v => ((v / px - 1) * 100).toFixed(1) + '%';
-    const li = a => a.map(l => '<li>' + fmt(l.price) + ' (' + pc(l.price) + ' from price' + (l.touches ? ', touched ' + l.touches + ' times' : '') + ')</li>').join('');
-    box.add('pulse', 'analyze', '0 levels \u00b7 ' + ms1(tA), 'looked for swings and levels'); if (!lv.length) return '<p>I did not find a clear support or resistance level on the ' + TFN[interval] + ' chart. Try another timeframe, or ask me to draw the current range.</p>';
-    box.add('pulse', 'analyze', lv.length + ' level' + (lv.length > 1 ? 's' : '') + ' \u00b7 ' + ms1(tA), 'analyzed swings, trend, levels'); box.add('pen', 'draw_levels', lv.length + ' lines \u00b7 ' + ms1(tl), 'marked the levels on the chart');
-    return '<p>I marked the levels on the chart. Price is ' + fmt(px) + ' on the ' + TFN[interval] + ' chart.</p>' +
+    const li = a => a.map(l => '<li>' + fmt(l.price) + ' (' + pc(l.price) + ' from price' + (l.touches ? ', touched ' + l.touches + ' times' : '') + ') – ' + visTxt(l.price) + '</li>').join('');
+    return '<p>I marked ' + lv.length + ' level' + (lv.length === 1 ? '' : 's') + ' on the ' + TFN[interval] + ' chart. Price is ' + fmt(px) + '. ' + (nv === lv.length ? 'All of them are inside the current view.' : (nv ? nv + ' of them ' + (nv === 1 ? 'is' : 'are') + ' inside the current view. The rest are outside it, so zoom out or scroll to see them.' : 'None are inside the current view. Zoom out or scroll to see them.')) + '</p>' +
       (rs.length ? '<h3>Resistance (above)</h3><ul>' + li(rs) + '</ul>' : '') + (su.length ? '<h3>Support (below)</h3><ul>' + li(su) + '</ul>' : '<p>There is no support level below. Price is near its recent lows.</p>') + '<div class="ag-note">Levels come from swing highs and lows that price has touched at least twice. Not financial advice.</div>';
   }
   if (draw && /(range|high and low|highs and lows|high\/low)/.test(t)) {
-    const tA = performance.now(); readStep(); const cs = lastD.candles.slice(-50); let hi = -Infinity, lo = Infinity; cs.forEach(k => { if (k.h > hi) hi = k.h; if (k.l < lo) lo = k.l; });
-    box.add('pulse', 'analyze', cs.length + ' bars analyzed \u00b7 ' + ms1(tA), 'found the high and low of the range'); const tD = performance.now(); chart.addAI([{ price: hi, kind: 'resistance', label: 'High ' + fmt(hi) }, { price: lo, kind: 'support', label: 'Low ' + fmt(lo) }]);
-    box.add('pen', 'draw_range', '2 lines \u00b7 ' + ms1(tD), 'drew the high and low on the chart'); const pos = Math.round((px - lo) / (hi - lo) * 100);
-    return '<p>I drew the range of the last ' + cs.length + ' candles on the ' + TFN[interval] + ' chart.</p><ul><li>High: ' + fmt(hi) + '</li><li>Low: ' + fmt(lo) + '</li><li>Price: ' + fmt(px) + ', about ' + pos + '% of the way up the range</li></ul><div class="ag-note">Say "clear the lines you drew" to remove them.</div>';
+    await readChart(); const cs = lastD.candles.slice(-50); let hi = -Infinity, lo = Infinity; cs.forEach(k => { if (k.h > hi) hi = k.h; if (k.l < lo) lo = k.l; });
+    await stg(box, 'pulse', 'analyze', 'found the high and low of the range', () => cs.length, n => n + ' bars analyzed');
+    await readData();
+    await stg(box, 'pen', 'create', 'drew the high and low on the chart', () => chart.addAI([{ price: hi, kind: 'resistance', label: 'High ' + fmt(hi) }, { price: lo, kind: 'support', label: 'Low ' + fmt(lo) }]), () => '2 lines');
+    await shotStep(box);
+    await stg(box, 'eye', 'read_chart', 'read the chart back to check the lines', () => [hi, lo].filter(p => chart.vis(p) === 0).length, n => '2 lines · ' + n + ' visible');
+    const pos = Math.round((px - lo) / (hi - lo) * 100);
+    return '<p>I drew the range of the last ' + cs.length + ' candles on the ' + TFN[interval] + ' chart.</p><ul><li>High: ' + fmt(hi) + ' – ' + visTxt(hi) + '</li><li>Low: ' + fmt(lo) + ' – ' + visTxt(lo) + '</li><li>Price: ' + fmt(px) + ', about ' + pos + '% of the way up the range</li></ul><div class="ag-note">Say "clear the lines you drew" to remove them.</div>';
   }
   if (draw && /(average|moving|\bma\b|\bema\b|\bsma\b|\b50\b|\b200\b)/.test(t)) {
-    const tM = performance.now(); readStep(); setSet('ma50', true); setSet('ma200', true); box.add('pen', 'add_indicators', '2 averages \u00b7 ' + ms1(tM), 'turned on the 50 and 200 moving averages'); const a = lastD.analysis, rel = v => v == null ? 'not enough data' : (px > v ? 'above' : 'below') + ' at ' + fmt(v);
+    await readChart(); await readData();
+    await stg(box, 'pen', 'create', 'turned on the 50 and 200 moving averages', () => { setSet('ma50', true); setSet('ma200', true); }, () => '2 averages');
+    await shotStep(box);
+    await stg(box, 'eye', 'read_chart', 'read the chart back to check the averages', () => 2, n => n + ' averages on');
+    const a = lastD.analysis, rel = v => v == null ? 'not enough data' : (px > v ? 'above' : 'below') + ' at ' + fmt(v);
     return '<p>I turned on the 50 and 200 moving averages.</p><ul><li>50: price is ' + rel(a.sma50) + '</li><li>200: price is ' + rel(a.sma200) + '</li></ul>';
   }
   return null;
@@ -565,18 +594,20 @@ function chartAction(q, box) {
 let busy = false;
 async function ask(q) {
   q = (q || '').trim(); if (q.length < 2 || busy) return;
+  busy = true; $('agSend').disabled = true;
   if (!agent.classList.contains('open')) setOpen(true);
   if (msgsEl.querySelector('.ag-sug') || msgsEl.querySelector('.hv-top')) msgsEl.innerHTML = '';
   msgsEl.insertAdjacentHTML('beforeend', '<div class="ag-u">' + esc(q) + '</div>');
   const a = document.createElement('div'); a.className = 'ag-a'; msgsEl.appendChild(a); const box = mkSteps(a);
-  const act = chartAction(q, box);
-  agIn.value = ''; agIn.style.height = 'auto';
-  if (act) { box.extra('free'); box.end(); a.insertAdjacentHTML('beforeend', act); saveTurn(q, a.innerHTML); msgsEl.scrollTop = msgsEl.scrollHeight; return; }
-  const tR = performance.now(); box.add('eye', 'read_data', (lastD ? lastD.candles.length : 0) + ' candles \u00b7 ' + loadMs + 'ms', 'loaded the requested history');
-  const tAn = performance.now(); const ctxText = chartContext(q); box.add('pulse', 'analyze', 'swings, trend, levels \u00b7 ' + ms1(tAn), 'analyzed swings, trend, levels, volatility');
-  const tAi = performance.now(); const aiStep = box.add('chat', 'ask_ai', 'running', 'writing the answer from the chart numbers (' + MN[agMode] + ')');
-  msgsEl.scrollTop = msgsEl.scrollHeight; busy = true; $('agSend').disabled = true;
-  const done = html => { aiStep.set(ms1(tAi)); box.end(); a.insertAdjacentHTML('beforeend', html); msgsEl.scrollTop = msgsEl.scrollHeight; busy = false; $('agSend').disabled = false; };
+  agIn.value = ''; agIn.style.height = 'auto'; msgsEl.scrollTop = msgsEl.scrollHeight;
+  const act = await chartAction(q, box);
+  let aiRow = null, tAi0 = 0;
+  const done = html => { if (aiRow) aiRow.done(ms1(tAi0)); box.end(); a.insertAdjacentHTML('beforeend', html); msgsEl.scrollTop = msgsEl.scrollHeight; busy = false; $('agSend').disabled = false; };
+  if (act) { box.extra('free'); done(act); saveTurn(q, a.innerHTML); return; }
+  await stg(box, 'eye', 'read_chart', 'read the current view and drawings', () => chart.count(), n => n + ' drawing' + (n === 1 ? '' : 's'), null, 300);
+  await stg(box, 'eye', 'read_data', 'loaded the requested history', () => lastD ? lastD.candles.length : 0, n => n + ' candles', null, 300);
+  const ctxText = await stg(box, 'pulse', 'analyze', 'analyzed swings, trend, levels and volatility', () => chartContext(q), () => 'levels, trend, RSI', null, 300);
+  tAi0 = performance.now(); aiRow = box.add('chat', 'ask_ai', 'running', 'writing the answer from the chart numbers (' + MN[agMode] + ')', true);
   const tok = getToken();
   if (!tok) return done('<p>Please <a href="index.html#account" style="color:#16c784;font-weight:700">sign in with Google</a> to ask questions. It is free.</p>');
   try {

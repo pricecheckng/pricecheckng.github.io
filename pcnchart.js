@@ -419,7 +419,7 @@
       setDrawings: function (a) { DR = (a || []).slice(); sel = -1; draft = null; ruler = null; draw(); },
       deleteSelected: function () { if (sel < 0) return false; DR.splice(sel, 1); sel = -1; emitDraw(); draw(); return true; },
       clearDrawings: function () { DR = []; sel = -1; ruler = null; emitDraw(); draw(); },
-      hasSelection: function () { return sel >= 0; }, toLatest: function () { V.start = Math.max(0, D.c.length - plotW() / V.bw + 4); clampView(); draw(); }, stage: function () { return draft && draft.stage || 0; }, count: function () { return DR.length; },
+      hasSelection: function () { return sel >= 0; }, toLatest: function () { V.start = Math.max(0, D.c.length - plotW() / V.bw + 4); clampView(); draw(); }, stage: function () { return draft && draft.stage || 0; }, count: function () { return DR.length; }, vis: function (p) { if (!sc) return 0; var y = sc.py(p), PHh = H - 22; return y < 0 ? 1 : y > PHh ? -1 : 0; }, snapshot: function (w) { var cv = document.createElement('canvas'); cv.width = w; cv.height = Math.round(w * mc.height / mc.width); var g = cv.getContext('2d'); g.fillStyle = '#0b120e'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(mc, 0, 0, cv.width, cv.height); try { return cv.toDataURL('image/jpeg', 0.72); } catch (_) { return ''; } },
       setShow: function (o) { for (var k in o) show[k] = !!o[k]; draw(); },
       last: function () { return D.c[D.c.length - 1]; },
       setZones: function (z) { D.levels = z || []; draw(); },
