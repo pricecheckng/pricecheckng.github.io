@@ -18,7 +18,8 @@
   .tfs { display:flex; gap:0; margin-left:auto; }
   .tf { background:none; border:0; color:var(--mut); font:inherit; font-size:12px; font-weight:700; padding:7px 6px; border-radius:9px; cursor:pointer; }
   .tf.on { background:#16241d; color:var(--txt); }
-  .info { padding:8px 12px 2px; font-size:13px; white-space:nowrap; overflow:hidden; display:flex; gap:12px; flex-wrap:wrap; align-items:baseline; }
+  .info { padding:0 12px; height:34px; box-sizing:border-box; font-size:13px; white-space:nowrap; overflow:hidden; display:flex; gap:12px; flex-wrap:nowrap; align-items:center; }
+  .info.hvm #chg, .info.hvm .live { display:none; } #px { overflow:hidden; text-overflow:ellipsis; }
   .info b { font-size:20px; } #px.hv { font-size:12px; font-weight:700; } .info .mut { color:var(--mut); }
   .leg { padding:0 12px 4px; font-size:11px; color:var(--mut); display:flex; gap:12px; }
   .leg i { display:inline-block; width:10px; height:3px; border-radius:2px; margin-right:5px; vertical-align:middle; }
@@ -280,8 +281,8 @@ function setPrice(p) {
   if (dayOpen) { const c = (p / dayOpen - 1) * 100; $('chg').textContent = (c >= 0 ? '+' : '') + c.toFixed(2) + '% today'; $('chg').style.color = c >= 0 ? '#16c784' : '#ea3943'; }
 }
 const chart = new window.PCNChart($('cMain'), $('cRsi'), { tz, onHover: c => {
-  if (c) { $('px').classList.add('hv'); $('px').textContent = 'O ' + fmt(c.o) + ' H ' + fmt(c.h) + ' L ' + fmt(c.l) + ' C ' + fmt(c.c); }
-  else if (lastPx) { $('px').classList.remove('hv'); $('px').textContent = lastPx; } },
+  if (c) { $('px').parentNode.classList.add('hvm'); $('px').classList.add('hv'); $('px').textContent = 'O ' + fmt(c.o) + ' H ' + fmt(c.h) + ' L ' + fmt(c.l) + ' C ' + fmt(c.c); }
+  else if (lastPx) { $('px').parentNode.classList.remove('hvm'); $('px').classList.remove('hv'); $('px').textContent = lastPx; } },
   onHist: () => { try { paintHist(); } catch (_) {} }, onView: (atL, ch) => { $('jumpBtn').classList.toggle('on', !atL || !!ch); }, onTool: t => { if (eyeOff && t !== 'cursor' && t !== 'ruler') setEye(false); paintTool(t); }, onStage: () => { const h = $('dhint'); h.textContent = 'Now touch where point ' + (chart.stage() + 1) + ' goes, then lift'; h.classList.add('on'); }, onDraw: a => { try { const m = JSON.parse(localStorage.getItem(DK) || '{}'); if (a.length) m[symbol] = a; else delete m[symbol]; localStorage.setItem(DK, JSON.stringify(m)); } catch (_) {} paintTool(); } });
 
 // ---------- drawing tools ----------
