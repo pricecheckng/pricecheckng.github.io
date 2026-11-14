@@ -106,5 +106,6 @@ export const ICONS = {
   emoji: S('<circle cx="14" cy="14" r="9.5"/>' + P('M10 16.5a5 5 0 008 0') + F(10.8, 11.6, 1.2) + F(17.2, 11.6, 1.2)),
   zoom: S('<circle cx="12" cy="12" r="7.5"/>' + P('M17.6 17.6L24 24M12 8.5v7M8.5 12h7')),
   magnet: S(P('M7 5v9a7 7 0 0014 0V5h-4.5v9a2.5 2.5 0 01-5 0V5z') + P('M7 9h4.5M16.5 9H21')),
+  layers: S('<path d="M14 5l9 4.6-9 4.6-9-4.6z"/><path d="M5 14l9 4.6 9-4.6"/><path d="M5 18.4l9 4.6 9-4.6"/>'),
   ruler: S('<rect x="3" y="10" width="22" height="8.5" rx="1.6" transform="rotate(-38 14 14)"/>' + P('M9 17.4l1.8 1.5M12.4 14.8l1.8 1.5M15.8 12.2l1.8 1.5')),
 };

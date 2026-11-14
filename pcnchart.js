@@ -261,7 +261,7 @@
     function rectBox(d) { var a = px(d.a), b = px(d.b); if (d.type === 'longpos' || d.type === 'shortpos') { var g = posGeom(d); return { x0: g.x0, x1: g.x1, y0: Math.min(g.yt, g.ys, g.ye), y1: Math.max(g.yt, g.ys, g.ye) }; } return { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), y0: Math.min(a.y, b.y), y1: Math.max(a.y, b.y) }; }
     function hitTest(x, y) {
       if (hiddenD || lockedD) return -1;
-      for (var k = DR.length - 1; k >= 0; k--) { var d = DR[k], a = px(d.a), t = d.type;
+      for (var k = DR.length - 1; k >= 0; k--) { var d = DR[k], a = px(d.a), t = d.type; if (d.hid || d.lk) continue;
         if (t === 'hline' || t === 'cross') { if (Math.abs(y - a.y) < 12) return k; }
         if (t === 'hray') { if (Math.abs(y - a.y) < 12 && x > a.x - 12) return k; }
         if (t === 'vline' || t === 'cross') { if (Math.abs(x - a.x) < 12) return k; }
@@ -506,7 +506,7 @@
         });
       }
       // drawings (trend lines, horizontal lines, ruler)
-      var all = hiddenD ? [] : DR.map(function (d, k) { return { d: d, sel: k === sel }; }); if (draft && draft.type !== 'ruler') all.push({ d: draft, sel: true, tmp: true });
+      var all = hiddenD ? [] : DR.map(function (d, k) { return { d: d, sel: k === sel }; }).filter(function (o) { return !o.d.hid; }); if (draft && draft.type !== 'ruler') all.push({ d: draft, sel: true, tmp: true });
       all.forEach(function (o) {
         var d = o.d, t = d.type, a = px(d.a), col = d.col ? 'rgb(' + d.col + ')' : DC; mx.strokeStyle = col; mx.fillStyle = col; mx.lineWidth = o.sel ? 2.2 : (d.ai ? 1.3 : 1.6); mx.setLineDash(d.ai ? [6, 4] : []);
         var line = function (p, q) { mx.beginPath(); mx.moveTo(p.x, p.y); mx.lineTo(q.x, q.y); mx.stroke(); };
@@ -724,6 +724,9 @@
       redo: function () { if (!redoS.length) return false; var s = redoS.pop(); hist.push(s); applyHist(s); return true; },
       canUndo: function () { return hist.length > 1; }, canRedo: function () { return redoS.length > 0; },
       setHidden: function (v) { hiddenD = !!v; sel = -1; draw(); }, setLocked: function (v) { lockedD = !!v; sel = -1; draw(); },
+      listDrawings: function () { return DR.map(function (d, k) { return { i: k, type: d.type, hid: !!d.hid, lk: !!d.lk, sel: k === sel, ai: !!d.ai }; }); },
+      setFlag: function (i, key, v) { if (!DR[i]) return; if (v) DR[i][key] = 1; else delete DR[i][key]; if (key === 'hid' && v && sel === i) sel = -1; histPush(); emitDraw(); draw(); },
+      selectAt: function (i) { if (DR[i] && !DR[i].hid && !DR[i].lk) { sel = i; draw(); return true; } return false; },
       deleteSelected: function () { if (sel < 0) return false; DR.splice(sel, 1); sel = -1; emitDraw(); draw(); return true; },
       clearDrawings: function () { DR = []; sel = -1; ruler = null; emitDraw(); draw(); },
       hasSelection: function () { return sel >= 0; }, inDraft: function () { return !!draft; }, cancelDraft: function () { if (draft) { draft = null; draw(); if (opts.onTool) opts.onTool(tool); } }, flash: function (p) { if (!sc) return false; var y = sc.py(p); if (!(y >= 0 && y <= H - 22)) return false; flashP = p; flashT = performance.now(); function stp() { if (performance.now() - flashT >= 1900) { flashP = null; draw(); return; } draw(); requestAnimationFrame(stp); } requestAnimationFrame(stp); return true; }, scan: function (ms) { var t0 = performance.now(); function stp(now) { var k = (now - t0) / ms; if (k >= 1) { scanX = null; draw(); return; } scanX = k * plotW(); draw(); requestAnimationFrame(stp); } requestAnimationFrame(stp); }, resetView: function () { fit(); draw(); }, toLatest: function () { V.start = Math.max(0, D.c.length - plotW() / V.bw + 4); clampView(); draw(); }, stage: function () { return draft && draft.stage || 0; }, count: function () { return DR.length; }, vis: function (p) { if (!sc) return 0; var y = sc.py(p), PHh = H - 22; return y < 0 ? 1 : y > PHh ? -1 : 0; }, snapshot: function (w) { var cv = document.createElement('canvas'); cv.width = w; cv.height = Math.round(w * mc.height / mc.width); var g = cv.getContext('2d'); g.fillStyle = '#0b120e'; g.fillRect(0, 0, cv.width, cv.height); g.drawImage(mc, 0, 0, cv.width, cv.height); try { return cv.toDataURL('image/jpeg', 0.72); } catch (_) { return ''; } },
