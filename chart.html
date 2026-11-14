@@ -811,7 +811,7 @@ async function saveAlert(al) {
 }
 let pendingAlert = null;
 function showAlert(j, host, q) {
-  pendingAlert = j.coin && (j.status === 'clarify' || j.status === 'nonsense') ? { coin: 'id:' + j.coin, dir: j.dir || null, cur: j.cur || 'usd' } : null;
+  pendingAlert = j.coin && (j.status === 'clarify' || j.status === 'nonsense') ? { coin: 'id:' + j.coin, dir: j.dir || null, cur: j.cur || 'usd', image: j.image || '', sym: j.cur === 'ngn' ? '₦' : '$' } : null;
   const sym = j.alert && j.alert.currency === 'ngn' ? '₦' : '$';
   const logo = (j.alert && j.alert.image) || (j.suggest && j.suggest.image) || j.image || '';
   host.innerHTML = cardHtml(j.text || '', logo);
@@ -851,6 +851,13 @@ async function ask(q) {
   if (act) { box.extra('free'); done(act); saveTurn(q, a.innerHTML); return; }
   const numM = pendingAlert && q.match(/^[$₦]?\s*(\d[\d,]*\.?\d*|\.\d+)\s*([km])?$/i);
   const pend = pendingAlert; pendingAlert = null;
+  if (pend && !numM && (/^\s*(cancel|no|nope|stop|never ?mind|forget it|leave it)\b/i.test(q) || (q.length <= 30 && /%|\d/.test(q)))) {
+    const cn = /^\s*(cancel|no|nope|stop|never ?mind|forget it|leave it)\b/i.test(q);
+    if (!cn) pendingAlert = pend;
+    box.extra('free'); box.end(); const host = document.createElement('div'); a.appendChild(host);
+    host.innerHTML = cardHtml(cn ? 'Okay, I did not set an alert.' : 'I need a price in ' + (pend.sym === '₦' ? 'Naira' : 'dollars') + ' for the alert, for example ' + pend.sym + '0.09. Send the price, or say cancel.', pend.image);
+    saveTurn(q, a.innerHTML); busy = false; $('agSend').disabled = false; msgsEl.scrollTop = msgsEl.scrollHeight; return;
+  }
   if ((numM || ALERT_RE.test(q)) && getToken()) {
     const t0 = performance.now(), arow = box.add('pulse', 'alert_check', 'running', 'checking if you want to set an alert', true);
     let tv = 0; if (numM) { tv = parseFloat(numM[1].replace(/,/g, '')) * (/k/i.test(numM[2] || '') ? 1e3 : /m/i.test(numM[2] || '') ? 1e6 : 1); }
