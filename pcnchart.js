@@ -27,10 +27,15 @@
     function idxT(i) { return D.c[0].t + i * stepMs(); }
     function priceAt(y) { return sc.fromY(y); }
     var SC = { mode: 'regular', invert: false, countdown: false, grid: true, lastLine: true }, cdTimer = 0;
-    function pointAt(x, y) { return { t: idxT((x - V.bw / 2) / V.bw + V.start), p: priceAt(y) }; }
+    var magnet = false, emojiSel = '🙂';
+    function pointAt(x, y) {
+      var fi = (x - V.bw / 2) / V.bw + V.start;
+      if (magnet && sc && D.c.length) { var ii = Math.max(0, Math.min(D.c.length - 1, Math.round(fi))), k = D.c[ii], best = null, bd = 1e9; [k.o, k.h, k.l, k.c].forEach(function (v) { var dd = Math.abs(sc.py(v) - y); if (dd < bd) { bd = dd; best = v; } }); return { t: idxT(ii), p: bd < 40 ? best : priceAt(y) }; }
+      return { t: idxT(fi), p: priceAt(y) };
+    }
     function px(pt) { return { x: xOf(tIdx(pt.t)), y: sc.py(pt.p) }; }
     function segDist(x, y, a, b) { var dx = b.x - a.x, dy = b.y - a.y, l = dx * dx + dy * dy, t = l ? Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / l)) : 0; return Math.hypot(x - a.x - t * dx, y - a.y - t * dy); }
-    var ONE = { avwap: 1, hline: 1, hray: 1, vline: 1, cross: 1 };
+    var ONE = { text: 1, emoji: 1, avwap: 1, hline: 1, hray: 1, vline: 1, cross: 1 };
     function ext(a, b, fwd, back) { var dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l; return [back ? { x: a.x - ux * 6000, y: a.y - uy * 6000 } : a, fwd ? { x: b.x + ux * 6000, y: b.y + uy * 6000 } : b]; }
     var FC = ['138,163,150', '234,57,67', '245,165,36', '22,199,132', '45,212,191', '77,163,255', '138,163,150', '167,139,250'];
     function fibGeom(d) {
@@ -47,7 +52,7 @@
     }
     var FIB = { fib: 1, fibext: 1, fibtz: 1, fibch: 1 };
 
-    var CHAN = { pchan: 1, regr: 1, flat: 1, djoint: 1 }, PITCH = { pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 }, SHAPE = { avwap: 1, fvp: 1, fcast: 1, bpat: 1, ghost: 1, proj: 1, gbox: 1, gsqf: 1, gsq: 1, gfan: 1, cyc: 1, tcyc: 1, sine: 1, xabcd: 1, cypher: 1, hnsh: 1, abcd: 1, trip: 1, drives: 1, eimp: 1, ecor: 1, etri: 1, edbl: 1, etrp: 1, fibfan: 1, fibtime: 1, fibcirc: 1, fibspiral: 1, fibarcs: 1, fibwedge: 1, pitchfan: 1, pchan: 1, regr: 1, flat: 1, djoint: 1, pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
+    var CHAN = { pchan: 1, regr: 1, flat: 1, djoint: 1 }, PITCH = { pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 }, SHAPE = { zoom: 1, brush: 1, text: 1, emoji: 1, avwap: 1, fvp: 1, fcast: 1, bpat: 1, ghost: 1, proj: 1, gbox: 1, gsqf: 1, gsq: 1, gfan: 1, cyc: 1, tcyc: 1, sine: 1, xabcd: 1, cypher: 1, hnsh: 1, abcd: 1, trip: 1, drives: 1, eimp: 1, ecor: 1, etri: 1, edbl: 1, etrp: 1, fibfan: 1, fibtime: 1, fibcirc: 1, fibspiral: 1, fibarcs: 1, fibwedge: 1, pitchfan: 1, pchan: 1, regr: 1, flat: 1, djoint: 1, pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
 
     var NEWF = { fibfan: 1, fibtime: 1, fibcirc: 1, fibspiral: 1, fibarcs: 1, fibwedge: 1, pitchfan: 1 };
     function fibShape(d, out) {
@@ -148,7 +153,7 @@
       return out;
     }
 
-    var PRJ = { avwap: 1, fvp: 1, fcast: 1, bpat: 1, ghost: 1, proj: 1 };
+    var PRJ = { zoom: 1, brush: 1, text: 1, emoji: 1, avwap: 1, fvp: 1, fcast: 1, bpat: 1, ghost: 1, proj: 1 };
     function prjShape(d, out) {
       var t = d.type, a = px(d.a), b = d.b ? px(d.b) : a, c = d.c ? px(d.c) : b, n = D.c.length, i, G = '138,163,150', OR = '245,165,36', UP = '22,199,132', DN = '234,57,67', C1 = '77,163,255';
       var L = function (p, q, col, dash, w) { out.lines.push({ p: p, q: q, col: col || G, dash: dash, w: w }); };
@@ -158,7 +163,15 @@
       var copy = function (j0, j1, dIdx, dp, dash, al) { for (var j = j0; j <= j1; j++) { var k = D.c[j], x = xOf(j + dIdx), hw = Math.max(1, V.bw * .32), col = k.c >= k.o ? UP : DN, yo = sc.py(k.o + dp), yc = sc.py(k.c + dp);
         L({ x: x, y: sc.py(k.h + dp) }, { x: x, y: sc.py(k.l + dp) }, col, dash, 1);
         out.fills.push({ pts: [{ x: x - hw, y: yo }, { x: x + hw, y: yo }, { x: x + hw, y: yc }, { x: x - hw, y: yc }], col: col, al: al }); } };
-      if (t === 'avwap') {
+      if (t === 'zoom') {
+        var zx0 = Math.min(a.x, b.x), zx1 = Math.max(a.x, b.x), zy0 = Math.min(a.y, b.y), zy1 = Math.max(a.y, b.y);
+        L({ x: zx0, y: zy0 }, { x: zx1, y: zy0 }, C1, 1); L({ x: zx1, y: zy0 }, { x: zx1, y: zy1 }, C1, 1); L({ x: zx1, y: zy1 }, { x: zx0, y: zy1 }, C1, 1); L({ x: zx0, y: zy1 }, { x: zx0, y: zy0 }, C1, 1);
+        out.fills.push({ pts: [{ x: zx0, y: zy0 }, { x: zx1, y: zy0 }, { x: zx1, y: zy1 }, { x: zx0, y: zy1 }], col: C1, al: .15 }); out.pts = [];
+      } else if (t === 'brush') {
+        var bp = (d.pts || [d.a]).map(px); for (i = 0; i + 1 < bp.length; i++) L(bp[i], bp[i + 1], OR, 0, 2.2); out.pts = bp.length ? [bp[0], bp[bp.length - 1]] : [];
+      } else if (t === 'text' || t === 'emoji') {
+        out.labels.push({ x: a.x, y: a.y, txt: d.txt || (t === 'text' ? 'Text' : '🙂'), col: '232,241,236', c: 1, b: 1, sz: t === 'emoji' ? 26 : 14 }); out.pts = [a];
+      } else if (t === 'avwap') {
         var j0 = cl(tIdx(d.a.t)), sv = 0, sp = 0, prev = null;
         for (i = j0; i < n; i++) { var k = D.c[i]; sv += k.v || 0; sp += ((k.h + k.l + k.c) / 3) * (k.v || 0); var q = { x: xOf(i), y: sc.py(sv ? sp / sv : k.c) }; if (prev) L(prev, q, OR, 0, 1.8); prev = q; }
         out.pts = [a]; if (prev) out.labels.push({ x: prev.x - 20, y: prev.y - 10, txt: 'AVWAP', col: OR, c: 1, b: 1 });
@@ -252,6 +265,7 @@
         if (t === 'hline' || t === 'cross') { if (Math.abs(y - a.y) < 12) return k; }
         if (t === 'hray') { if (Math.abs(y - a.y) < 12 && x > a.x - 12) return k; }
         if (t === 'vline' || t === 'cross') { if (Math.abs(x - a.x) < 12) return k; }
+        if (t === 'text' || t === 'emoji') { if (Math.abs(x - a.x) < (t === 'text' ? 50 : 20) && Math.abs(y - a.y) < 18) return k; continue; }
         if (SHAPE[t]) { var sg = shapeGeom(d); for (var si = 0; si < sg.lines.length; si++) if (!sg.lines[si].dash && segDist(x, y, sg.lines[si].p, sg.lines[si].q) < 14) return k; continue; }
         if (RECT[t]) { var rb0 = rectBox(d); if (x > rb0.x0 - 14 && x < rb0.x1 + 14 && y > rb0.y0 - 14 && y < rb0.y1 + 14) return k; continue; }
         if (FIB[t]) { var gs = fibGeom(d); for (var gi = 0; gi < gs.length; gi++) if (segDist(x, y, gs[gi].p, gs[gi].q) < 12) return k; if (t === 'fib' && segDist(x, y, a, px(d.b)) < 12) return k; continue; }
@@ -443,7 +457,7 @@
           var sg2 = shapeGeom(d);
           sg2.fills.forEach(function (f) { mx.fillStyle = 'rgba(' + f.col + ',' + (f.al || .12) + ')'; mx.beginPath(); f.pts.forEach(function (p, ix) { if (ix) mx.lineTo(p.x, p.y); else mx.moveTo(p.x, p.y); }); mx.closePath(); mx.fill(); });
           sg2.lines.forEach(function (ln) { mx.strokeStyle = 'rgb(' + ln.col + ')'; mx.lineWidth = (ln.w || 1.3) + (o.sel ? .6 : 0); mx.setLineDash(ln.dash ? [4, 4] : []); line(ln.p, ln.q); }); mx.setLineDash([]);
-          if (sg2.labels && sg2.labels.length) { mx.font = '600 10px system-ui,sans-serif'; mx.textBaseline = 'middle'; mx.textAlign = 'left'; var llast = []; sg2.labels.forEach(function (lb) { if (lb.x < 2 || lb.x > plotW() - 16 || lb.y < 4 || lb.y > PH - 4) return; if (!lb.c) for (var z = 0; z < llast.length; z++) if (Math.abs(llast[z].x - lb.x) < 22 && Math.abs(llast[z].y - lb.y) < 11) return; llast.push(lb); mx.fillStyle = 'rgb(' + lb.col + ')'; mx.font = (lb.b ? '700 11px' : '600 10px') + ' system-ui,sans-serif'; mx.textAlign = lb.c ? 'center' : 'left'; mx.fillText(lb.txt, lb.c ? lb.x : lb.x + 3, lb.y); }); mx.textAlign = 'left'; mx.font = '11px system-ui,sans-serif'; }
+          if (sg2.labels && sg2.labels.length) { mx.font = '600 10px system-ui,sans-serif'; mx.textBaseline = 'middle'; mx.textAlign = 'left'; var llast = []; sg2.labels.forEach(function (lb) { if (lb.x < 2 || lb.x > plotW() - 16 || lb.y < 4 || lb.y > PH - 4) return; if (!lb.c) for (var z = 0; z < llast.length; z++) if (Math.abs(llast[z].x - lb.x) < 22 && Math.abs(llast[z].y - lb.y) < 11) return; llast.push(lb); mx.fillStyle = 'rgb(' + lb.col + ')'; mx.font = (lb.sz ? (lb.sz + 'px') : (lb.b ? '700 11px' : '600 10px')) + ' system-ui,sans-serif'; mx.textAlign = lb.c ? 'center' : 'left'; mx.fillText(lb.txt, lb.c ? lb.x : lb.x + 3, lb.y); }); mx.textAlign = 'left'; mx.font = '11px system-ui,sans-serif'; }
           if (o.sel) sg2.pts.forEach(function (q) { mx.strokeStyle = DC; mx.lineWidth = 2; mx.fillStyle = '#0b120e'; mx.beginPath(); mx.arc(q.x, q.y, 5, 0, 7); mx.fill(); mx.stroke(); });
           return;
         }
@@ -554,7 +568,7 @@
       if (ruler) { ruler = null; draw(); }
       if (ids.length === 1 && draft && draft.stage >= 2 && ev.offsetX < plotW() && sc) { setLive(pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY)); dragX = null; draw(); return; }
       if (ids.length === 1 && tool !== 'cursor' && ev.offsetX < plotW() && sc) {
-        var pt0 = pointAt(ev.offsetX, ev.offsetY); draft = { type: tool, a: pt0, b: pt0 }; if (MULTI[tool]) draft.pts = [pt0, pt0]; dragX = null; draw(); return;
+        var pt0 = pointAt(ev.offsetX, ev.offsetY); draft = { type: tool, a: pt0, b: pt0 }; if (MULTI[tool]) draft.pts = [pt0, pt0]; if (tool === 'brush') draft.pts = [pt0]; dragX = null; draw(); return;
       }
       if (ids.length === 1) {
         dragX = ev.offsetX; var ox = ev.offsetX;
@@ -569,6 +583,7 @@
       ptrs[ev.pointerId] = { x: ev.offsetX, y: ev.offsetY };
       var ids = Object.keys(ptrs);
       if (draft && ids.length === 1 && draft.stage >= 2) { setLive(pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY)); draw(); return; }
+      if (draft && ids.length === 1 && draft.type === 'brush') { var bpt = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY), lp = px(draft.pts[draft.pts.length - 1]), cp = px(bpt); if (Math.hypot(lp.x - cp.x, lp.y - cp.y) > 3) { draft.pts.push(bpt); draft.b = bpt; } draw(); return; }
       if (draft && ids.length === 1) { draft.b = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY); if (draft.pts) draft.pts[1] = draft.b; if (ONE[draft.type]) draft.a = draft.b; draw(); return; }
       if (ids.length === 2) {
         var a = ptrs[ids[0]], b = ptrs[ids[1]], d = Math.abs(a.x - b.x) || 1, mid = (a.x + b.x) / 2;
@@ -587,7 +602,9 @@
         if (draft.stage >= 2 && draft.pts && draft.stage < MULTI[draft.type] - 1) { draft.stage++; draft.pts.push(draft.pts[draft.stage - 1]); if (opts.onStage) opts.onStage(draft.stage); delete ptrs[ev.pointerId]; clearTimeout(holdT); draw(); return; }
         if (draft.stage >= 2) { DR.push(draft.pts ? { type: draft.type, a: draft.pts[0], b: draft.pts[1], pts: draft.pts.slice() } : { type: draft.type, a: draft.a, b: draft.b, c: draft.c }); sel = DR.length - 1; emitDraw(); setTool('cursor'); delete ptrs[ev.pointerId]; clearTimeout(holdT); return; }
         if ((THREE[draft.type] || MULTI[draft.type]) && far) { draft.stage = 2; if (draft.pts) draft.pts[2] = draft.pts[1]; else draft.c = draft.b; if (opts.onStage) opts.onStage(2); delete ptrs[ev.pointerId]; clearTimeout(holdT); draw(); return; }
-        if (ONE[draft.type]) { DR.push({ type: draft.type, a: draft.a }); sel = DR.length - 1; emitDraw(); setTool('cursor'); }
+        if (draft.type === 'brush') { if (draft.pts.length >= 3) { DR.push({ type: 'brush', a: draft.pts[0], b: draft.pts[draft.pts.length - 1], pts: draft.pts.slice() }); sel = DR.length - 1; emitDraw(); } setTool('cursor'); }
+        else if (draft.type === 'zoom') { if (far) { var zi0 = Math.min(tIdx(draft.a.t), tIdx(draft.b.t)), zi1 = Math.max(tIdx(draft.a.t), tIdx(draft.b.t)); V.bw = Math.max(2, Math.min(60, plotW() / Math.max(3, zi1 - zi0 + 2))); V.start = zi0 - .5; zoomed = true; if (opts.onView) opts.onView(false, true); } setTool('cursor'); }
+        else if (ONE[draft.type]) { var nd = { type: draft.type, a: draft.a }; if (draft.type === 'emoji') nd.txt = emojiSel; DR.push(nd); sel = DR.length - 1; emitDraw(); var nt = draft.type; setTool('cursor'); if (nt === 'text' && opts.onText) opts.onText(DR.length - 1); }
         else if (far) { if (draft.type === 'ruler') ruler = draft; else { DR.push({ type: draft.type, a: draft.a, b: draft.b }); sel = DR.length - 1; emitDraw(); } setTool('cursor'); }
         else { draft = null; draw(); }
       } else if (draft) { draft = null; draw(); }
@@ -631,6 +648,7 @@
       setScale: function (o) { for (var k in o) SC[k] = o[k]; clearInterval(cdTimer); if (SC.countdown) cdTimer = setInterval(function () { if (!document.hidden) draw(); }, 1000); draw(); },
       setTool: setTool,
       setDrawings: function (a) { DR = (a || []).slice(); sel = -1; draft = null; ruler = null; hist = [JSON.stringify(DR)]; redoS = []; if (opts.onHist) opts.onHist(); draw(); },
+      setMagnet: function (v) { magnet = !!v; }, setEmoji: function (e) { emojiSel = e; }, setText: function (i, t) { if (DR[i]) { DR[i].txt = t; emitDraw(); draw(); } }, deleteAt: function (i) { if (DR[i]) { DR.splice(i, 1); sel = -1; emitDraw(); draw(); } },
       setInds: function (a) { inds = (a || []).filter(function (k) { return IND_META[k]; }); draw(); }, indMeta: IND_META,
       setType: function (t) { ctype = t; draw(); }, getType: function () { return ctype; }, setColors: function (u, d) { if (u) C.up = u; if (d) C.dn = d; draw(); },
       undo: function () { if (hist.length < 2) return false; redoS.push(hist.pop()); applyHist(hist[hist.length - 1]); return true; },
