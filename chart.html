@@ -149,6 +149,7 @@
   .ag-a { margin:8px 0; font-size:14px; line-height:1.5; } .ag-a p { margin:0 0 8px; } .ag-a ul { margin:0 0 8px; padding-left:18px; } .ag-a h3 { font-size:15px; margin:10px 0 4px; }
   .ag-st { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0; } .ag-st span { font-size:11px; color:var(--mut); background:#16241d; border:1px solid var(--line); border-radius:8px; padding:3px 8px; }
   .ag-card { background:var(--card2,rgba(255,255,255,.04)); border:1px solid var(--line); border-radius:12px; padding:10px 12px; margin:6px 0; line-height:1.55; } .ag-card b.t { display:block; font-size:15px; margin-bottom:2px; }
+  .ag-logo { width:26px; height:26px; border-radius:50%; vertical-align:middle; margin-right:8px; background:#fff1; object-fit:cover; } .ag-btns button .ag-logo { width:20px; height:20px; margin-right:6px; }
   .ag-btns { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; } .ag-btns button { border:1px solid var(--line); background:transparent; color:inherit; border-radius:10px; padding:9px 14px; font-size:14px; font-weight:600; cursor:pointer; } .ag-btns button.pri { background:#16c784; border-color:#16c784; color:#06130c; } .ag-btns button:disabled { opacity:.5; } .ag-btns a { color:#16c784; font-weight:700; padding:9px 4px; text-decoration:none; }
   .ag-note { font-size:11px; color:var(--mut); margin-top:6px; }
   .ag-chips { display:flex; flex-wrap:wrap; gap:8px; padding:6px 0 10px; } .ag-chips button { background:#16241d; border:1px solid var(--line); color:var(--txt); border-radius:16px; font:inherit; font-size:13px; padding:8px 12px; cursor:pointer; }
@@ -766,7 +767,8 @@ async function alertCall(body) {
   const tok = getToken(); if (!tok) return null;
   try { const r = await fetch(SUPABASE_URL + '/functions/v1/pcn-alert', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + tok }, body: JSON.stringify(body) }); if (!r.ok) return null; return await r.json(); } catch (_) { return null; }
 }
-const cardHtml = t => { const L = String(t).split('\n'); return '<div class="ag-card"><b class="t">' + esc(L[0]) + '</b>' + L.slice(1).map(esc).join('<br>') + '</div>'; };
+const logoHtml = u => /^https?:\/\//i.test(u || '') ? '<img class="ag-logo" loading="lazy" referrerpolicy="no-referrer" alt="" src="' + esc(u) + '" onerror="this.remove()">' : '';
+const cardHtml = (t, img) => { const L = String(t).split('\n'); return '<div class="ag-card"><b class="t">' + logoHtml(img) + esc(L[0]) + '</b>' + L.slice(1).map(esc).join('<br>') + '</div>'; };
 async function saveAlert(al) {
   const tok = getToken(); if (!tok) return { ok: false, msg: 'Please sign in again.' };
   const H = { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + tok };
@@ -788,9 +790,10 @@ async function saveAlert(al) {
 }
 function showAlert(j, host, q) {
   const sym = j.alert && j.alert.currency === 'ngn' ? '₦' : '$';
-  host.innerHTML = cardHtml(j.text || '');
+  const logo = (j.alert && j.alert.image) || (j.suggest && j.suggest.image) || '';
+  host.innerHTML = cardHtml(j.text || '', logo);
   const row = document.createElement('div'); row.className = 'ag-btns'; host.querySelector('.ag-card').appendChild(row);
-  const btn = (label, cls, fn) => { const b = document.createElement('button'); b.type = 'button'; b.textContent = label; if (cls) b.className = cls; b.onclick = async () => { row.querySelectorAll('button').forEach(x => x.disabled = true); await fn(); }; row.appendChild(b); };
+  const btn = (label, cls, fn, img) => { const b = document.createElement('button'); b.type = 'button'; if (img) b.innerHTML = logoHtml(img); b.appendChild(document.createTextNode(label)); if (cls) b.className = cls; b.onclick = async () => { row.querySelectorAll('button').forEach(x => x.disabled = true); await fn(); }; row.appendChild(b); };
   const finish = () => { saveTurn(q, host.parentNode.innerHTML); msgsEl.scrollTop = msgsEl.scrollHeight; };
   const again = async body => { const r = await alertCall({ alert: body }); if (r && r.intent === 'alert') showAlert(r, host, q); else { host.innerHTML = cardHtml('Sorry, I could not check that alert. Please try again.'); finish(); } };
   if ((j.status === 'confirm' || j.status === 'flip') && j.alert) {
@@ -798,7 +801,7 @@ function showAlert(j, host, q) {
     btn(j.status === 'flip' ? 'Yes, set it' : 'Confirm', 'pri', async () => {
       const r = await saveAlert(al);
       if (!r.ok) host.innerHTML = cardHtml(r.msg);
-      else { host.innerHTML = cardHtml('Alert set ✅\n' + al.name + ' (' + al.symbol + ') ' + al.direction + ' ' + sym + Number(al.target).toLocaleString('en-US', { maximumFractionDigits: 8 }) + '\n' + r.n + ' of ' + r.lim + ' coin price alerts used.'); host.querySelector('.ag-card').insertAdjacentHTML('beforeend', '<div class="ag-btns"><a href="index.html#alerts">View my alerts</a></div>'); }
+      else { host.innerHTML = cardHtml('Alert set ✅\n' + al.name + ' (' + al.symbol + ') ' + al.direction + ' ' + sym + Number(al.target).toLocaleString('en-US', { maximumFractionDigits: 8 }) + '\n' + r.n + ' of ' + r.lim + ' coin price alerts used.', al.image); host.querySelector('.ag-card').insertAdjacentHTML('beforeend', '<div class="ag-btns"><a href="index.html#alerts">View my alerts</a></div>'); }
       finish();
     });
     btn('Cancel', '', async () => { host.innerHTML = cardHtml('Okay, I did not set the alert.'); finish(); });
@@ -806,7 +809,7 @@ function showAlert(j, host, q) {
     const sg = j.suggest; btn('Yes, ' + sg.label, 'pri', () => again({ coin: sg.coin_id, dir: null, target: sg.target, cur: sg.currency }));
     btn('No', '', async () => { host.innerHTML = cardHtml('Okay. Tell me the price you want.'); finish(); });
   } else if (j.status === 'pick' && j.options) {
-    j.options.forEach(o => btn(o.name + ' (' + o.symbol + ')' + (o.rank ? ' · #' + o.rank : ''), '', () => again({ coin: o.id, dir: j.dir, target: j.target, cur: j.cur })));
+    j.options.forEach(o => btn(o.name + ' (' + o.symbol + ')' + (o.rank ? ' · #' + o.rank : ''), '', () => again({ coin: o.id, dir: j.dir, target: j.target, cur: j.cur }), o.image));
   } else { row.remove(); finish(); }
   msgsEl.scrollTop = msgsEl.scrollHeight;
 }
