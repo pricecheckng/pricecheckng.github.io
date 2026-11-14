@@ -358,6 +358,8 @@
       var TI = function (t) { return md === 'log' ? Math.exp(t) : md === 'percent' ? base * (1 + t / 100) : md === 'index' ? base * t / 100 : t; };
       for (i = s; i <= e; i++) { var k = D.c[i], th = T(k.h), tl = T(k.l); if (th > hi) hi = th; if (tl < lo) lo = tl; if (k.v > vmax) vmax = k.v; }
       var pad = (hi - lo) * 0.08 || Math.abs(hi) * 0.01 || 1; hi += pad; lo -= pad;
+      if (manualR) { if (manualR.md !== md) manualR = null; else { hi = manualR.hi; lo = manualR.lo; } }
+      lastR = { hi: hi, lo: lo, h: PH - volH - 6, md: md };
       var py = function (v) { var f = (hi - T(v)) / (hi - lo); if (SC.invert) f = 1 - f; return f * (PH - volH - 6) + 4; };
       sc = { hi: hi, lo: lo, PH: PH, volH: volH, py: py, fromY: function (y) { var f = (y - 4) / (PH - volH - 6); if (SC.invert) f = 1 - f; return TI(hi - f * (hi - lo)); } };
       var lab = function (v) { return md === 'percent' ? (T(v) > 0 ? '+' : '') + T(v).toFixed(2) + '%' : md === 'index' ? T(v).toFixed(2) : nice(v); };
@@ -559,6 +561,7 @@
     }
 
     // ---- gestures ----
+    var manualR = null, lastR = null, dragY = 0, axisD = null;
     var ptrs = {}, dragX = null, startDist = 0, startBw = 0, holdT = null, moved = false, anchorIdx = 0;
     function idxAt(px) { return Math.round((px - V.bw / 2) / V.bw + V.start); }
     mc.addEventListener('pointerdown', function (ev) {
@@ -566,6 +569,8 @@
       var ids = Object.keys(ptrs);
       downPos = { x: ev.offsetX, y: ev.offsetY }; held = false;
       if (ruler) { ruler = null; draw(); }
+      dragY = ev.offsetY;
+      if (manualR && lastR && ev.offsetX >= plotW() && Object.keys(ptrs).length === 1) { axisD = { y: ev.offsetY, hi: manualR.hi, lo: manualR.lo }; return; }
       if (ids.length === 1 && draft && draft.stage >= 2 && ev.offsetX < plotW() && sc) { setLive(pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY)); dragX = null; draw(); return; }
       if (ids.length === 1 && tool !== 'cursor' && ev.offsetX < plotW() && sc) {
         var pt0 = pointAt(ev.offsetX, ev.offsetY); draft = { type: tool, a: pt0, b: pt0 }; if (MULTI[tool]) draft.pts = [pt0, pt0]; if (tool === 'brush') draft.pts = [pt0]; dragX = null; draw(); return;
@@ -590,12 +595,15 @@
         zoomed = true; V.bw = startBw * d / startDist; V.start = anchorIdx - (mid - V.bw / 2) / V.bw; clampView(); draw(); return;
       }
       if (cross != null && dragX == null) { cross = Math.max(0, Math.min(D.c.length - 1, idxAt(ev.offsetX))); draw(); return; }
+      if (axisD) { var f = Math.exp((ev.offsetY - axisD.y) / 160), mid = (axisD.hi + axisD.lo) / 2, hf = (axisD.hi - axisD.lo) / 2 * f; manualR.hi = mid + hf; manualR.lo = mid - hf; draw(); return; }
       if (dragX != null) {
         var dx = ev.offsetX - dragX; if (Math.abs(dx) > 3) { moved = true; clearTimeout(holdT); }
+        if (manualR && lastR && Math.abs(ev.offsetY - dragY) > 0) { var un = (lastR.hi - lastR.lo) / lastR.h, sh = (ev.offsetY - dragY) * un; manualR.hi += sh; manualR.lo += sh; dragY = ev.offsetY; }
         V.start -= dx / V.bw; dragX = ev.offsetX; clampView(); draw();
       }
     });
     function up(ev) {
+      if (axisD) { axisD = null; delete ptrs[ev.pointerId]; return; }
       var wasDrag = ev.type !== 'pointercancel' && !!ptrs[ev.pointerId];
       if (draft && wasDrag) {
         var a0 = px(draft.a), b0 = px(draft.b), far = Math.hypot(a0.x - b0.x, a0.y - b0.y) > 8;
@@ -648,6 +656,7 @@
       setScale: function (o) { for (var k in o) SC[k] = o[k]; clearInterval(cdTimer); if (SC.countdown) cdTimer = setInterval(function () { if (!document.hidden) draw(); }, 1000); draw(); },
       setTool: setTool,
       setDrawings: function (a) { DR = (a || []).slice(); sel = -1; draft = null; ruler = null; hist = [JSON.stringify(DR)]; redoS = []; if (opts.onHist) opts.onHist(); draw(); },
+      setAuto: function (v) { if (!v && lastR) manualR = { hi: lastR.hi, lo: lastR.lo, md: lastR.md }; else manualR = null; draw(); }, getAuto: function () { return !manualR; },
       setMagnet: function (v) { magnet = !!v; }, setEmoji: function (e) { emojiSel = e; }, setText: function (i, t) { if (DR[i]) { DR[i].txt = t; emitDraw(); draw(); } }, deleteAt: function (i) { if (DR[i]) { DR.splice(i, 1); sel = -1; emitDraw(); draw(); } },
       setInds: function (a) { inds = (a || []).filter(function (k) { return IND_META[k]; }); draw(); }, indMeta: IND_META,
       setType: function (t) { ctype = t; draw(); }, getType: function () { return ctype; }, setColors: function (u, d) { if (u) C.up = u; if (d) C.dn = d; draw(); },
