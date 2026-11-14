@@ -809,7 +809,9 @@ async function saveAlert(al) {
     return { ok: true, n, lim };
   } catch (_) { return { ok: false, msg: 'No connection. Please check your network and try again.' }; }
 }
+let pendingAlert = null;
 function showAlert(j, host, q) {
+  pendingAlert = j.coin && (j.status === 'clarify' || j.status === 'nonsense') ? { coin: 'id:' + j.coin, dir: j.dir || null, cur: j.cur || 'usd' } : null;
   const sym = j.alert && j.alert.currency === 'ngn' ? '₦' : '$';
   const logo = (j.alert && j.alert.image) || (j.suggest && j.suggest.image) || j.image || '';
   host.innerHTML = cardHtml(j.text || '', logo);
@@ -847,8 +849,12 @@ async function ask(q) {
   let aiRow = null, tAi0 = 0;
   const done = html => { if (aiRow) aiRow.done(ms1(tAi0)); box.end(); a.insertAdjacentHTML('beforeend', html); msgsEl.scrollTop = msgsEl.scrollHeight; busy = false; $('agSend').disabled = false; };
   if (act) { box.extra('free'); done(act); saveTurn(q, a.innerHTML); return; }
-  if (ALERT_RE.test(q) && getToken()) {
-    const t0 = performance.now(), arow = box.add('pulse', 'alert_check', 'running', 'checking if you want to set an alert', true), aj = await alertCall({ question: q });
+  const numM = pendingAlert && q.match(/^[$₦]?\s*(\d[\d,]*\.?\d*|\.\d+)\s*([km])?$/i);
+  const pend = pendingAlert; pendingAlert = null;
+  if ((numM || ALERT_RE.test(q)) && getToken()) {
+    const t0 = performance.now(), arow = box.add('pulse', 'alert_check', 'running', 'checking if you want to set an alert', true);
+    let tv = 0; if (numM) { tv = parseFloat(numM[1].replace(/,/g, '')) * (/k/i.test(numM[2] || '') ? 1e3 : /m/i.test(numM[2] || '') ? 1e6 : 1); }
+    const aj = await alertCall(numM ? { alert: { coin: pend.coin, dir: pend.dir, target: tv, cur: pend.cur } } : { question: q });
     arow.done(ms1(t0));
     if (aj && aj.intent === 'alert') { box.end(); const host = document.createElement('div'); a.appendChild(host); showAlert(aj, host, q); busy = false; $('agSend').disabled = false; return; }
   }
