@@ -811,7 +811,7 @@ async function saveAlert(al) {
 }
 function showAlert(j, host, q) {
   const sym = j.alert && j.alert.currency === 'ngn' ? '₦' : '$';
-  const logo = (j.alert && j.alert.image) || (j.suggest && j.suggest.image) || '';
+  const logo = (j.alert && j.alert.image) || (j.suggest && j.suggest.image) || j.image || '';
   host.innerHTML = cardHtml(j.text || '', logo);
   const row = document.createElement('div'); row.className = 'ag-btns'; host.querySelector('.ag-card').appendChild(row);
   const btn = (label, cls, fn, img) => { const b = document.createElement('button'); b.type = 'button'; if (img) b.innerHTML = logoHtml(img); b.appendChild(document.createTextNode(label)); if (cls) b.className = cls; b.onclick = async () => { row.querySelectorAll('button').forEach(x => x.disabled = true); await fn(); }; row.appendChild(b); };
@@ -827,10 +827,10 @@ function showAlert(j, host, q) {
     });
     btn('Cancel', '', async () => { host.innerHTML = cardHtml('Okay, I did not set the alert.'); finish(); });
   } else if (j.status === 'nonsense' && j.suggest) {
-    const sg = j.suggest; btn('Yes, ' + sg.label, 'pri', () => again({ coin: sg.coin_id, dir: null, target: sg.target, cur: sg.currency }));
+    const sg = j.suggest; btn('Yes, ' + sg.label, 'pri', () => again({ coin: 'id:' + sg.coin_id, dir: null, target: sg.target, cur: sg.currency }));
     btn('No', '', async () => { host.innerHTML = cardHtml('Okay. Tell me the price you want.'); finish(); });
   } else if (j.status === 'pick' && j.options) {
-    j.options.forEach(o => btn(o.name + ' (' + o.symbol + ')' + (o.rank ? ' · #' + o.rank : ''), '', () => again({ coin: o.id, dir: j.dir, target: j.target, cur: j.cur }), o.image));
+    j.options.forEach(o => btn(o.name + ' (' + o.symbol + ')' + (o.rank ? ' · #' + o.rank : ''), '', () => again({ coin: 'id:' + o.id, dir: j.dir, target: j.target, cur: j.cur }), o.image));
   } else { row.remove(); finish(); }
   msgsEl.scrollTop = msgsEl.scrollHeight;
 }
