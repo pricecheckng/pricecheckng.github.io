@@ -10,7 +10,8 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin:0; height:100%; background:var(--bg); color:var(--txt); font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
   #app { display:flex; flex-direction:column; height:100dvh; }
-  .top { display:flex; align-items:center; gap:6px; padding:10px 12px; border-bottom:1px solid var(--line); background:var(--panel); }
+  .top { display:flex; align-items:center; gap:6px; padding:8px 12px; overflow-x:auto; scrollbar-width:none; border-bottom:1px solid var(--line); background:var(--panel); }
+  .top::-webkit-scrollbar { display:none; } .top > * { flex:0 0 auto; } .top .hbtn, .top #ctBtn, .top #fxBtn, .top #setBtn, .top #fsBtn, .top #snBtn { width:38px; height:34px; background:none; border:0; color:var(--mut); display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; } .top button svg { width:22px; height:22px; } .top .hbtn { color:var(--txt); }
   .back { width:34px; height:34px; display:inline-flex; align-items:center; justify-content:center; border-radius:10px; color:var(--txt); text-decoration:none; background:#16241d; }
   .sym { display:flex; align-items:center; gap:8px; font-weight:800; font-size:16px; }
   .sym input { width:78px; background:#16241d; border:1px solid var(--line); border-radius:10px; color:var(--txt); font:inherit; padding:7px 9px; text-transform:uppercase; }
@@ -109,8 +110,8 @@
   .dd { position:relative; flex:none; }
   .ddb { display:flex; align-items:center; gap:5px; background:none; border:0; color:var(--mut); font:inherit; font-size:13px; font-weight:700; padding:8px 6px; cursor:pointer; white-space:nowrap; }
   .ddb.tfb { color:var(--txt); }
-  .ddm { display:none; position:absolute; top:100%; left:0; z-index:15; min-width:150px; background:#14211a; border:1px solid var(--line); border-radius:12px; padding:6px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
-  .ddm.r { left:auto; right:0; } .ddm.on { display:block; }
+  .ddm { display:none; position:fixed; top:56px; left:12px; z-index:15; min-width:150px; background:#14211a; border:1px solid var(--line); border-radius:12px; padding:6px; box-shadow:0 10px 30px rgba(0,0,0,.5); }
+  .ddm.r { left:auto; right:12px; } .ddm.on { display:block; }
   .ddm button { display:flex; width:100%; justify-content:space-between; align-items:center; gap:14px; background:none; border:0; color:var(--txt); font:inherit; font-size:14px; font-weight:600; padding:10px 10px; border-radius:8px; cursor:pointer; text-align:left; }
   .ddm button.on { background:#1b2e24; } .ddm button:disabled { color:var(--mut); opacity:.5; cursor:default; } .ddm em { font-style:normal; font-size:10px; color:var(--mut); }
 
@@ -183,11 +184,10 @@
     <button class="pair" id="pairBtn" aria-label="Choose pair"><span class="ico" id="pIco">B</span><span id="pTxt">BTC/USDT</span><small>&#9662;</small></button>
     <div class="dd"><button class="ddb" id="exBtn">Binance <span>&#9662;</span></button>
       <div class="ddm" id="exMenu"><button class="on">Binance<em>live</em></button><button disabled>OKX<em>soon</em></button><button disabled>Bybit<em>soon</em></button><button disabled>Aster<em>soon</em></button><button disabled>Bitget<em>soon</em></button><button disabled>Gate<em>soon</em></button><button disabled>MEXC<em>soon</em></button></div></div>
-    <div style="margin-left:auto;display:flex;align-items:center;gap:2px"><button type="button" id="undoBtn" class="hbtn dis" aria-label="Undo"><svg></svg></button><button type="button" id="redoBtn" class="hbtn dis" aria-label="Redo"><svg></svg></button><div class="dd"><button class="ddb tfb" id="tfBtn"><span id="tfTxt">4h</span> <span>&#9662;</span></button>
-      <div class="ddm r" id="tfMenu"><button class="tf" data-i="15m">15 minutes</button><button class="tf" data-i="1h">1 hour</button><button class="tf on" data-i="4h">4 hours</button><button class="tf" data-i="1d">1 day</button><button class="tf" data-i="1w">1 week</button></div></div></div>
+    <div class="dd"><button class="ddb tfb" id="tfBtn"><span id="tfTxt">4h</span> <span>&#9662;</span></button>
+      <div class="ddm r" id="tfMenu"><button class="tf" data-i="15m">15 minutes</button><button class="tf" data-i="1h">1 hour</button><button class="tf on" data-i="4h">4 hours</button><button class="tf" data-i="1d">1 day</button><button class="tf" data-i="1w">1 week</button></div></div><button type="button" id="ctBtn" aria-label="Chart type"><svg></svg></button><button type="button" id="fxBtn" aria-label="Indicators"><svg></svg></button><button type="button" id="undoBtn" class="hbtn dis" aria-label="Undo"><svg></svg></button><button type="button" id="redoBtn" class="hbtn dis" aria-label="Redo"><svg></svg></button><button type="button" id="setBtn" aria-label="Chart settings"><svg></svg></button><button type="button" id="fsBtn" aria-label="Full screen"><svg></svg></button><button type="button" id="snBtn" aria-label="Snapshot"><svg></svg></button>
   </div>
   <div id="vChart" class="view" style="display:flex">
-  <div id="tbar"><button type="button" id="ctBtn" aria-label="Chart type"><svg></svg></button><button type="button" id="fxBtn" aria-label="Indicators"><svg></svg></button><button type="button" id="setBtn" aria-label="Chart settings"><svg></svg></button><button type="button" id="fsBtn" aria-label="Full screen"><svg></svg></button><button type="button" id="snBtn" aria-label="Snapshot"><svg></svg></button></div>
   <div class="info"><b id="px">--</b><span id="chg" class="mut"></span><span class="live" id="live"><i></i><span id="liveT">connecting</span></span></div>
   <div class="leg"><span><i style="background:#f5a524"></i>MA 50</span><span><i style="background:#5b8def"></i>MA 200</span></div>
   <div id="main"><div id="dtools" role="toolbar" aria-label="Drawing tools">
@@ -471,8 +471,9 @@ async function load() {
 }
 const menus = ['exMenu', 'tfMenu'];
 const closeMenus = () => menus.forEach(m => $(m).classList.remove('on'));
-$('exBtn').onclick = e => { e.stopPropagation(); const o = $('exMenu').classList.contains('on'); closeMenus(); if (!o) $('exMenu').classList.add('on'); };
-$('tfBtn').onclick = e => { e.stopPropagation(); const o = $('tfMenu').classList.contains('on'); closeMenus(); if (!o) $('tfMenu').classList.add('on'); };
+const placeMenu = (btn, menu) => { const r = btn.getBoundingClientRect(); menu.style.top = (r.bottom + 4) + 'px'; menu.style.left = Math.max(8, Math.min(r.left, innerWidth - 170)) + 'px'; menu.style.right = 'auto'; };
+$('exBtn').onclick = e => { e.stopPropagation(); const o = $('exMenu').classList.contains('on'); closeMenus(); if (!o) { placeMenu($('exBtn'), $('exMenu')); $('exMenu').classList.add('on'); } };
+$('tfBtn').onclick = e => { e.stopPropagation(); const o = $('tfMenu').classList.contains('on'); closeMenus(); if (!o) { placeMenu($('tfBtn'), $('tfMenu')); $('tfMenu').classList.add('on'); } };
 document.addEventListener('click', closeMenus);
 document.querySelectorAll('#tfMenu .tf').forEach(b => b.onclick = () => { interval = b.dataset.i; syncTf(); closeMenus(); history.replaceState(null, '', `?s=${symbol}&i=${interval}`); load(); });
 
