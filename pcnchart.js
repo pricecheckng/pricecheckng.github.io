@@ -320,6 +320,65 @@
       for (i = n + 1; i < c.length; i++) { d = c[i] - c[i - 1]; g = (g * (n - 1) + Math.max(d, 0)) / n; l = (l * (n - 1) + Math.max(-d, 0)) / n; o[i] = l === 0 ? 100 : 100 - 100 / (1 + g / l); }
       return o;
     }
+    // ---- lower panes (MACD, Stochastic, ...) ----
+    var SUB_META = { macd: ['MACD 12 26 9', '#38bdf8'], stoch: ['Stochastic 14 3 3', '#f59e0b'], cci: ['CCI 20', '#a78bfa'], atr: ['ATR 14', '#f472b6'], obv: ['On Balance Volume', '#34d399'], roc: ['Rate of Change 12', '#fb923c'], willr: ['Williams %R 14', '#60a5fa'], mfi: ['Money Flow Index 14', '#e879f9'] };
+    var subs = [], subP = {}, subCache = {};
+    function sCalc(id) {
+      var c = D.c, n = c.length, key = id + n + (n ? c[n - 1].c + '' + c[n - 1].h : 0); if (subCache[key]) return subCache[key];
+      var cl = c.map(function (k) { return k.c; }), i, j, r, col = SUB_META[id][1];
+      var win = function (f, len) { return c.map(function (_, k) { return k < len - 1 ? null : f(k); }); };
+      var hh = function (k, len) { var m = -Infinity; for (var q = 0; q < len; q++) m = Math.max(m, c[k - q].h); return m; }, ll = function (k, len) { var m = Infinity; for (var q = 0; q < len; q++) m = Math.min(m, c[k - q].l); return m; };
+      if (id === 'macd') { var e1 = iEma(cl, 12), e2 = iEma(cl, 26), m = cl.map(function (_, k) { return k < 25 ? null : e1[k] - e2[k]; }), sg = iEma(m, 9); r = { lines: [{ a: m, col: col }, { a: sg, col: '#f59e0b' }], hist: m.map(function (v, k) { return v == null || sg[k] == null ? null : v - sg[k]; }), lv: [0] }; }
+      else if (id === 'stoch') { var k1 = win(function (k) { var h = hh(k, 14), l = ll(k, 14); return h === l ? 50 : (c[k].c - l) / (h - l) * 100; }, 14), kk = iSma(k1.map(function (v) { return v == null ? 0 : v; }), 3).map(function (v, k) { return k < 15 ? null : v; }), dd = iSma(kk.map(function (v) { return v == null ? 0 : v; }), 3).map(function (v, k) { return k < 17 ? null : v; }); r = { lines: [{ a: kk, col: col }, { a: dd, col: '#38bdf8' }], lv: [20, 80], rng: [0, 100] }; }
+      else if (id === 'cci') { var tp = c.map(function (k) { return (k.h + k.l + k.c) / 3; }), sm = iSma(tp, 20); r = { lines: [{ a: win(function (k) { var md = 0; for (var q = 0; q < 20; q++) md += Math.abs(tp[k - q] - sm[k]); md /= 20; return md ? (tp[k] - sm[k]) / (0.015 * md) : 0; }, 20), col: col }], lv: [-100, 0, 100] }; }
+      else if (id === 'atr') { var tr = c.map(function (k, q) { return q ? Math.max(k.h - k.l, Math.abs(k.h - c[q - 1].c), Math.abs(k.l - c[q - 1].c)) : k.h - k.l; }); r = { lines: [{ a: iEma(tr, 14).map(function (v, q) { return q < 13 ? null : v; }), col: col }], lv: [] }; }
+      else if (id === 'obv') { var o = 0; r = { lines: [{ a: c.map(function (k, q) { if (q) o += k.c > c[q - 1].c ? (k.v || 0) : k.c < c[q - 1].c ? -(k.v || 0) : 0; return o; }), col: col }], lv: [] }; }
+      else if (id === 'roc') r = { lines: [{ a: cl.map(function (v, q) { return q < 12 ? null : (v / cl[q - 12] - 1) * 100; }), col: col }], lv: [0] };
+      else if (id === 'willr') r = { lines: [{ a: win(function (k) { var h = hh(k, 14), l = ll(k, 14); return h === l ? -50 : (h - c[k].c) / (h - l) * -100; }, 14), col: col }], lv: [-20, -80], rng: [-100, 0] };
+      else { var tp2 = c.map(function (k) { return (k.h + k.l + k.c) / 3; }); r = { lines: [{ a: win(function (k) { var p = 0, ng = 0; for (var q = 0; q < 14; q++) { var t0 = k - q; if (t0 < 1) continue; var f = tp2[t0] * (c[t0].v || 0); if (tp2[t0] > tp2[t0 - 1]) p += f; else if (tp2[t0] < tp2[t0 - 1]) ng += f; } return ng === 0 ? 100 : 100 - 100 / (1 + p / ng); }, 15), col: col }], lv: [20, 80], rng: [0, 100] }; }
+      subCache = {}; subCache[key] = r; return r;
+    }
+    function subSync() {
+      if (!opts.subEl) return;
+      Object.keys(subP).forEach(function (id) { if (subs.indexOf(id) < 0) { subP[id].el.remove(); delete subP[id]; } });
+      subs.forEach(function (id) {
+        if (subP[id]) return;
+        var el = document.createElement('div'); el.className = 'sp'; var lb = document.createElement('span'); lb.className = 'lbl'; lb.textContent = SUB_META[id][0]; var cv = document.createElement('canvas'); cv.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;touch-action:pan-y';
+        el.appendChild(lb); el.appendChild(cv); opts.subEl.appendChild(el);
+        var p = { el: el, cv: cv, cx: cv.getContext('2d'), dx: null };
+        cv.addEventListener('pointerdown', function (ev) { cv.setPointerCapture(ev.pointerId); p.dx = ev.offsetX; });
+        cv.addEventListener('pointermove', function (ev) { if (p.dx == null) return; V.start -= (ev.offsetX - p.dx) / V.bw; p.dx = ev.offsetX; clampView(); draw(); });
+        cv.addEventListener('pointerup', function () { p.dx = null; }); cv.addEventListener('pointercancel', function () { p.dx = null; });
+        subP[id] = p;
+      });
+      subs.forEach(function (id) { opts.subEl.appendChild(subP[id].el); });
+      opts.subEl.style.display = subs.length ? '' : 'none';
+    }
+    function drawSubs() {
+      var n = D.c.length, r0 = range(), s = r0[0], e = r0[1];
+      subs.forEach(function (id) {
+        var p = subP[id]; if (!p) return; var w = p.el.clientWidth, h = p.el.clientHeight; if (!w || !h) return;
+        if (p.cv.width !== Math.round(w * dpr) || p.cv.height !== Math.round(h * dpr)) { p.cv.width = Math.round(w * dpr); p.cv.height = Math.round(h * dpr); }
+        var x = p.cx; x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, h);
+        var m = sCalc(id), lo = Infinity, hi = -Infinity, i, j, pw = w - AX;
+        if (m.rng) { lo = m.rng[0]; hi = m.rng[1]; } else {
+          for (i = s; i <= e; i++) { m.lines.forEach(function (L) { var v = L.a[i]; if (v != null) { lo = Math.min(lo, v); hi = Math.max(hi, v); } }); if (m.hist && m.hist[i] != null) { lo = Math.min(lo, m.hist[i]); hi = Math.max(hi, m.hist[i]); } }
+          (m.lv || []).forEach(function (v) { lo = Math.min(lo, v); hi = Math.max(hi, v); });
+          if (!isFinite(lo)) { lo = 0; hi = 1; } if (hi === lo) { hi = lo + 1; } var pad = (hi - lo) * .12; lo -= pad; hi += pad;
+        }
+        var yy = function (v) { return (hi - v) / (hi - lo) * (h - 14) + 7; }, fmt = function (v) { var a = Math.abs(v); return a >= 1e9 ? (v / 1e9).toFixed(2) + 'B' : a >= 1e6 ? (v / 1e6).toFixed(2) + 'M' : a >= 1e4 ? (v / 1e3).toFixed(1) + 'K' : a >= 100 ? v.toFixed(1) : a >= 1 ? v.toFixed(2) : v.toFixed(4); };
+        x.font = '10px system-ui,sans-serif'; x.textAlign = 'left'; x.textBaseline = 'middle';
+        (m.lv || []).forEach(function (v) { x.strokeStyle = v === 0 ? C.grid : '#2c4337'; x.setLineDash(v === 0 ? [] : [4, 4]); x.lineWidth = 1; x.beginPath(); x.moveTo(0, yy(v)); x.lineTo(pw, yy(v)); x.stroke(); x.setLineDash([]); x.fillStyle = C.txt; x.fillText(String(v), pw + 6, yy(v)); });
+        x.save(); x.beginPath(); x.rect(0, 0, pw, h); x.clip();
+        if (m.hist) { var z = yy(0), bw = Math.max(1, V.bw * .6); for (i = Math.max(0, s - 1); i <= Math.min(n - 1, e + 1); i++) { var hv = m.hist[i]; if (hv == null) continue; var pv = m.hist[i - 1]; x.fillStyle = hv >= 0 ? (pv != null && hv < pv ? 'rgba(22,199,132,.45)' : 'rgba(22,199,132,.9)') : (pv != null && hv > pv ? 'rgba(234,57,67,.45)' : 'rgba(234,57,67,.9)'); x.fillRect(xOf(i) - bw / 2, Math.min(z, yy(hv)), bw, Math.max(1, Math.abs(yy(hv) - z))); } }
+        m.lines.forEach(function (L) { x.strokeStyle = L.col; x.lineWidth = 1.5; x.beginPath(); var st = false; for (i = Math.max(0, s - 1); i <= Math.min(n - 1, e + 1); i++) { var v = L.a[i]; if (v == null) continue; if (!st) { x.moveTo(xOf(i), yy(v)); st = true; } else x.lineTo(xOf(i), yy(v)); } x.stroke(); });
+        if (cross != null && cross >= 0 && cross < n) { x.strokeStyle = 'rgba(138,163,150,.6)'; x.setLineDash([4, 4]); x.beginPath(); x.moveTo(xOf(cross), 0); x.lineTo(xOf(cross), h); x.stroke(); x.setLineDash([]); }
+        x.restore();
+        var li = cross != null && cross < n ? cross : n - 1, txt = [];
+        m.lines.forEach(function (L) { var v = L.a[li]; if (v != null) { txt.push([fmt(v), L.col]); x.fillStyle = L.col; var ty = Math.max(8, Math.min(h - 8, yy(v))); x.fillRect(pw, ty - 8, AX, 16); x.fillStyle = '#0b120e'; x.fillText(fmt(v), pw + 4, ty); } });
+        var vl = p.el.querySelector('.val'); if (!vl) { vl = document.createElement('span'); vl.className = 'val'; p.el.appendChild(vl); } vl.innerHTML = txt.map(function (t) { return '<b style="color:' + t[1] + '">' + t[0] + '</b>'; }).join(' ');
+      });
+    }
     function size() {
       var r = mainEl.getBoundingClientRect(), r2 = rsiEl.getBoundingClientRect();
       W = Math.max(1, r.width); H = Math.max(1, r.height); RH = Math.max(1, r2.height);
@@ -557,6 +616,7 @@
       rx.restore();
       var lr = D.rsi[cross != null && cross < n ? cross : n - 1];
       if (lr != null) { rx.fillStyle = C.rsi; rx.fillRect(plotW(), ry(lr) - 8, AX, 16); rx.fillStyle = '#0b120e'; rx.textAlign = 'left'; rx.textBaseline = 'middle'; rx.font = '11px system-ui,sans-serif'; rx.fillText(lr.toFixed(2), plotW() + 6, ry(lr)); }
+      drawSubs();
       if (opts.onHover) opts.onHover(cross != null && cross < n ? D.c[cross] : null);
     }
 
@@ -658,7 +718,7 @@
       setDrawings: function (a) { DR = (a || []).slice(); sel = -1; draft = null; ruler = null; hist = [JSON.stringify(DR)]; redoS = []; if (opts.onHist) opts.onHist(); draw(); },
       setAuto: function (v) { if (!v && lastR) manualR = { hi: lastR.hi, lo: lastR.lo, md: lastR.md }; else manualR = null; draw(); }, getAuto: function () { return !manualR; },
       setMagnet: function (v) { magnet = !!v; }, setEmoji: function (e) { emojiSel = e; }, setText: function (i, t) { if (DR[i]) { DR[i].txt = t; emitDraw(); draw(); } }, deleteAt: function (i) { if (DR[i]) { DR.splice(i, 1); sel = -1; emitDraw(); draw(); } },
-      setInds: function (a) { inds = (a || []).filter(function (k) { return IND_META[k]; }); draw(); }, indMeta: IND_META,
+      setInds: function (a) { a = a || []; inds = a.filter(function (k) { return IND_META[k]; }); subs = a.filter(function (k) { return SUB_META[k]; }); subSync(); size(); }, indMeta: (function () { var o = {}, k; for (k in IND_META) o[k] = IND_META[k]; for (k in SUB_META) o[k] = SUB_META[k]; return o; })(), subIds: Object.keys(SUB_META),
       setType: function (t) { ctype = t; draw(); }, getType: function () { return ctype; }, setColors: function (u, d) { if (u) C.up = u; if (d) C.dn = d; draw(); },
       undo: function () { if (hist.length < 2) return false; redoS.push(hist.pop()); applyHist(hist[hist.length - 1]); return true; },
       redo: function () { if (!redoS.length) return false; var s = redoS.pop(); hist.push(s); applyHist(s); return true; },
