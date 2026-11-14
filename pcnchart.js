@@ -268,6 +268,34 @@
     function applyHist(s) { DR = JSON.parse(s); sel = -1; draft = null; if (opts.onDraw) opts.onDraw(DR.slice()); if (opts.onHist) opts.onHist(); draw(); }
     function setLive(pt) { if (draft.pts) draft.pts[draft.stage] = pt; else draft.c = pt; }
     function setTool(t) { tool = t; draft = null; if (t !== 'cursor') sel = -1; if (opts.onTool) opts.onTool(t); draw(); }
+    var ctype = 'candles', LINEY = { line: 1, linem: 1, step: 1, area: 1, hlc: 1, baseline: 1 }, haC = null, haN = -1;
+    function haArr() { if (haC && haN === D.c.length && haC.last === D.c[D.c.length - 1].c) return haC; var out = [], i, p = null; for (i = 0; i < D.c.length; i++) { var k = D.c[i], cl = (k.o + k.h + k.l + k.c) / 4, op = p ? (p.o + p.c) / 2 : (k.o + k.c) / 2; var r = { o: op, c: cl, h: Math.max(k.h, op, cl), l: Math.min(k.l, op, cl) }; out.push(r); p = r; } out.last = D.c.length ? D.c[D.c.length - 1].c : 0; haC = out; haN = D.c.length; return out; }
+
+    var inds = [], indCache = {};
+    var IND_META = { sma20: ['Moving Average', '#facc15'], ema20: ['Moving Average Exponential', '#22d3ee'], wma20: ['Moving Average Weighted', '#fb923c'], hma20: ['Hull Moving Average', '#f472b6'], dema20: ['Double EMA', '#a3e635'], tema20: ['Triple EMA', '#2dd4bf'], bb: ['Bollinger Bands', '#60a5fa'], don: ['Donchian Channels', '#c084fc'], env: ['Envelopes', '#f87171'], kel: ['Keltner Channels', '#34d399'], vwap: ['VWAP', '#fbbf24'], avg: ['Average Price', '#94a3b8'], med: ['Median Price', '#e879f9'], typ: ['Typical Price', '#38bdf8'] };
+    function iSma(a, n) { var o = [], s = 0, i; for (i = 0; i < a.length; i++) { s += a[i]; if (i >= n) s -= a[i - n]; o.push(i >= n - 1 ? s / n : null); } return o; }
+    function iEma(a, n) { var o = [], k = 2 / (n + 1), p = null, i; for (i = 0; i < a.length; i++) { if (a[i] == null) { o.push(null); continue; } p = p == null ? a[i] : a[i] * k + p * (1 - k); o.push(p); } return o; }
+    function iWma(a, n) { var o = [], i, j; for (i = 0; i < a.length; i++) { if (i < n - 1 || a[i] == null) { o.push(null); continue; } var s = 0, w = 0; for (j = 0; j < n; j++) { s += a[i - j] * (n - j); w += n - j; } o.push(s / w); } return o; }
+    function iCalc(id) {
+      var c = D.c, n = c.length, key = id + n + (n ? c[n - 1].c : 0); if (indCache[key]) return indCache[key];
+      var col = IND_META[id][1], cl = c.map(function (k) { return k.c; }), r, i;
+      var L = function (a, dash, w) { return { a: a, col: col, dash: dash, w: w }; };
+      if (id === 'sma20') r = { lines: [L(iSma(cl, 20))] };
+      else if (id === 'ema20') r = { lines: [L(iEma(cl, 20))] };
+      else if (id === 'wma20') r = { lines: [L(iWma(cl, 20))] };
+      else if (id === 'hma20') { var w1 = iWma(cl, 10), w2 = iWma(cl, 20), df = cl.map(function (_, j) { return w1[j] == null || w2[j] == null ? null : 2 * w1[j] - w2[j]; }); r = { lines: [L(iWma(df.map(function (v) { return v == null ? 0 : v; }), 4).map(function (v, j) { return j < 19 + 3 ? null : v; }))] }; }
+      else if (id === 'dema20') { var e1 = iEma(cl, 20), e2 = iEma(e1, 20); r = { lines: [L(e1.map(function (v, j) { return 2 * v - e2[j]; }))] }; }
+      else if (id === 'tema20') { var f1 = iEma(cl, 20), f2 = iEma(f1, 20), f3 = iEma(f2, 20); r = { lines: [L(f1.map(function (v, j) { return 3 * v - 3 * f2[j] + f3[j]; }))] }; }
+      else if (id === 'bb') { var m = iSma(cl, 20), u = [], d = []; for (i = 0; i < n; i++) { if (m[i] == null) { u.push(null); d.push(null); continue; } var v = 0, j; for (j = 0; j < 20; j++) v += Math.pow(cl[i - j] - m[i], 2); v = Math.sqrt(v / 20); u.push(m[i] + 2 * v); d.push(m[i] - 2 * v); } r = { lines: [L(u), L(m, 1), L(d)], fill: [0, 2] }; }
+      else if (id === 'don') { var hi = [], lo = [], md = []; for (i = 0; i < n; i++) { if (i < 19) { hi.push(null); lo.push(null); md.push(null); continue; } var h = -Infinity, l = Infinity, j2; for (j2 = 0; j2 < 20; j2++) { h = Math.max(h, c[i - j2].h); l = Math.min(l, c[i - j2].l); } hi.push(h); lo.push(l); md.push((h + l) / 2); } r = { lines: [L(hi), L(md, 1), L(lo)], fill: [0, 2] }; }
+      else if (id === 'env') { var sm = iSma(cl, 20); r = { lines: [L(sm.map(function (v) { return v == null ? null : v * 1.025; })), L(sm, 1), L(sm.map(function (v) { return v == null ? null : v * .975; }))], fill: [0, 2] }; }
+      else if (id === 'kel') { var em = iEma(cl, 20), tr = c.map(function (k, j) { return j ? Math.max(k.h - k.l, Math.abs(k.h - c[j - 1].c), Math.abs(k.l - c[j - 1].c)) : k.h - k.l; }), at = iEma(tr, 10); r = { lines: [L(em.map(function (v, j) { return j < 20 ? null : v + 2 * at[j]; })), L(em.map(function (v, j) { return j < 20 ? null : v; }), 1), L(em.map(function (v, j) { return j < 20 ? null : v - 2 * at[j]; }))], fill: [0, 2] }; }
+      else if (id === 'vwap') { var sv = 0, sp = 0; r = { lines: [L(c.map(function (k) { sv += k.v || 0; sp += (k.v || 0) * (k.h + k.l + k.c) / 3; return sv ? sp / sv : k.c; }), 0, 1.8)] }; }
+      else if (id === 'avg') r = { lines: [L(c.map(function (k) { return (k.o + k.h + k.l + k.c) / 4; }))] };
+      else if (id === 'med') r = { lines: [L(c.map(function (k) { return (k.h + k.l) / 2; }))] };
+      else r = { lines: [L(c.map(function (k) { return (k.h + k.l + k.c) / 3; }))] };
+      indCache = {}; indCache[key] = r; return r;
+    }
     var iv = '4h', raf = 0, show = { ma50: true, ma200: true, levels: false, hl: true };
 
 
@@ -354,9 +382,30 @@
         var c = D.c[i], x2 = xOf(i), up = c.c >= c.o, col2 = up ? C.up : C.dn;
         mx.fillStyle = up ? 'rgba(22,199,132,.3)' : 'rgba(234,57,67,.3)';
         var vh = vmax ? c.v / vmax * volH : 0; mx.fillRect(x2 - bw / 2, PH - vh, bw, vh);
-        mx.strokeStyle = col2; mx.fillStyle = col2; mx.lineWidth = 1;
-        mx.beginPath(); mx.moveTo(x2, py(c.h)); mx.lineTo(x2, py(c.l)); mx.stroke();
-        var yo = py(c.o), yc = py(c.c); mx.fillRect(x2 - bw / 2, Math.min(yo, yc), bw, Math.max(1, Math.abs(yo - yc)));
+        if (LINEY[ctype]) continue;
+        var K = ctype === 'heikin' ? haArr()[i] : c, kup = K.c >= K.o, kcol = kup ? C.up : C.dn;
+        mx.strokeStyle = kcol; mx.fillStyle = kcol; mx.lineWidth = 1;
+        if (ctype === 'bars') { var tk = Math.max(2, bw / 2); mx.beginPath(); mx.moveTo(x2, py(K.h)); mx.lineTo(x2, py(K.l)); mx.moveTo(x2 - tk, py(K.o)); mx.lineTo(x2, py(K.o)); mx.moveTo(x2, py(K.c)); mx.lineTo(x2 + tk, py(K.c)); mx.stroke(); continue; }
+        if (ctype === 'highlow') { mx.fillRect(x2 - bw / 2, py(K.h), bw, Math.max(1, py(K.l) - py(K.h))); continue; }
+        if (ctype === 'columns') { var yb = PH - volH - 2, yc2 = py(K.c); mx.fillRect(x2 - bw / 2, yc2, bw, Math.max(1, yb - yc2)); continue; }
+        mx.beginPath(); mx.moveTo(x2, py(K.h)); mx.lineTo(x2, py(K.l)); mx.stroke();
+        var yo = py(K.o), yc = py(K.c), bh = Math.max(1, Math.abs(yo - yc));
+        if (ctype === 'hollow' && kup) { mx.lineWidth = 1.2; mx.strokeRect(x2 - bw / 2 + .5, Math.min(yo, yc), Math.max(1, bw - 1), bh); } else mx.fillRect(x2 - bw / 2, Math.min(yo, yc), bw, bh);
+      }
+      if (LINEY[ctype]) {
+        var LB = '77,163,255', pts = [], q;
+        for (i = Math.max(0, s - 1); i <= Math.min(n - 1, e + 1); i++) pts.push({ x: xOf(i), y: py(D.c[i].c), h: py(D.c[i].h), l: py(D.c[i].l), v: D.c[i].c });
+        var trace = function (arr, step) { mx.beginPath(); arr.forEach(function (a, j) { if (!j) mx.moveTo(a.x, a.y); else { if (step) mx.lineTo(a.x, arr[j - 1].y); mx.lineTo(a.x, a.y); } }); };
+        var yBot = PH - volH - 2;
+        if (pts.length > 1) {
+          if (ctype === 'area') { trace(pts); mx.lineTo(pts[pts.length - 1].x, yBot); mx.lineTo(pts[0].x, yBot); mx.closePath(); var gr = mx.createLinearGradient(0, 0, 0, yBot); gr.addColorStop(0, 'rgba(' + LB + ',.35)'); gr.addColorStop(1, 'rgba(' + LB + ',0)'); mx.fillStyle = gr; mx.fill(); }
+          if (ctype === 'hlc') { mx.beginPath(); pts.forEach(function (a, j) { if (!j) mx.moveTo(a.x, a.h); else mx.lineTo(a.x, a.h); }); for (q = pts.length - 1; q >= 0; q--) mx.lineTo(pts[q].x, pts[q].l); mx.closePath(); mx.fillStyle = 'rgba(' + LB + ',.18)'; mx.fill(); }
+          if (ctype === 'baseline') { var bv = D.c[Math.max(0, s)].c, yb2 = py(bv); mx.save(); mx.beginPath(); mx.rect(0, 0, plotW(), yb2); mx.clip(); trace(pts); mx.lineTo(pts[pts.length - 1].x, yb2); mx.lineTo(pts[0].x, yb2); mx.closePath(); mx.fillStyle = 'rgba(22,199,132,.2)'; mx.fill(); trace(pts); mx.strokeStyle = C.up; mx.lineWidth = 1.8; mx.stroke(); mx.restore();
+            mx.save(); mx.beginPath(); mx.rect(0, yb2, plotW(), PH); mx.clip(); trace(pts); mx.lineTo(pts[pts.length - 1].x, yb2); mx.lineTo(pts[0].x, yb2); mx.closePath(); mx.fillStyle = 'rgba(234,57,67,.2)'; mx.fill(); trace(pts); mx.strokeStyle = C.dn; mx.lineWidth = 1.8; mx.stroke(); mx.restore();
+            mx.setLineDash([4, 4]); mx.strokeStyle = 'rgba(138,163,150,.7)'; mx.lineWidth = 1; mx.beginPath(); mx.moveTo(0, yb2); mx.lineTo(plotW(), yb2); mx.stroke(); mx.setLineDash([]); }
+          else { trace(pts, ctype === 'step'); mx.strokeStyle = 'rgb(' + LB + ')'; mx.lineWidth = 1.8; mx.lineJoin = 'round'; mx.stroke(); }
+          if (ctype === 'linem' && bw > 3) { mx.fillStyle = 'rgb(' + LB + ')'; pts.forEach(function (a) { mx.beginPath(); mx.arc(a.x, a.y, 2.6, 0, 6.2832); mx.fill(); }); }
+        }
       }
       // MAs
       [['ma50', C.ma50], ['ma200', C.ma200]].forEach(function (m) {
@@ -364,6 +413,12 @@
         var a = D[m[0]], started = false; mx.strokeStyle = m[1]; mx.lineWidth = 1.6; mx.beginPath();
         for (var j = Math.max(0, s - 1); j <= Math.min(n - 1, e + 1); j++) { if (a[j] == null) continue; var xx = xOf(j), yy = py(a[j]); if (!started) { mx.moveTo(xx, yy); started = true; } else mx.lineTo(xx, yy); }
         mx.stroke();
+      });
+      inds.forEach(function (id) {
+        var r = iCalc(id), j, lj; mx.save(); mx.beginPath(); mx.rect(0, 0, plotW(), PH - volH); mx.clip();
+        if (r.fill) { var fa = r.lines[r.fill[0]].a, fb = r.lines[r.fill[1]].a; mx.beginPath(); var st = false; for (j = Math.max(0, s - 1); j <= Math.min(n - 1, e + 1); j++) { if (fa[j] == null) continue; if (!st) { mx.moveTo(xOf(j), py(fa[j])); st = true; } else mx.lineTo(xOf(j), py(fa[j])); } for (j = Math.min(n - 1, e + 1); j >= Math.max(0, s - 1); j--) { if (fb[j] == null) continue; mx.lineTo(xOf(j), py(fb[j])); } mx.closePath(); mx.fillStyle = IND_META[id][1] + '22'; mx.fill(); }
+        r.lines.forEach(function (ln) { var go = false; mx.beginPath(); mx.strokeStyle = ln.col; mx.lineWidth = ln.w || 1.4; mx.setLineDash(ln.dash ? [4, 4] : []); for (j = Math.max(0, s - 1); j <= Math.min(n - 1, e + 1); j++) { if (ln.a[j] == null) continue; var xx = xOf(j), yy = py(ln.a[j]); if (!go) { mx.moveTo(xx, yy); go = true; } else mx.lineTo(xx, yy); } mx.stroke(); mx.setLineDash([]); });
+        mx.restore();
       });
       // high and low of the candles on screen: thin short line and the number, like Bybit
       if (show.hl) {
@@ -576,6 +631,8 @@
       setScale: function (o) { for (var k in o) SC[k] = o[k]; clearInterval(cdTimer); if (SC.countdown) cdTimer = setInterval(function () { if (!document.hidden) draw(); }, 1000); draw(); },
       setTool: setTool,
       setDrawings: function (a) { DR = (a || []).slice(); sel = -1; draft = null; ruler = null; hist = [JSON.stringify(DR)]; redoS = []; if (opts.onHist) opts.onHist(); draw(); },
+      setInds: function (a) { inds = (a || []).filter(function (k) { return IND_META[k]; }); draw(); }, indMeta: IND_META,
+      setType: function (t) { ctype = t; draw(); }, getType: function () { return ctype; }, setColors: function (u, d) { if (u) C.up = u; if (d) C.dn = d; draw(); },
       undo: function () { if (hist.length < 2) return false; redoS.push(hist.pop()); applyHist(hist[hist.length - 1]); return true; },
       redo: function () { if (!redoS.length) return false; var s = redoS.pop(); hist.push(s); applyHist(s); return true; },
       canUndo: function () { return hist.length > 1; }, canRedo: function () { return redoS.length > 0; },
