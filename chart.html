@@ -590,7 +590,7 @@ chart.setMagnet(magnetOn);
   };
   let editOld = '';
   window.__pcnText = (i, ty, opt, existing) => {
-    chart.selectAt(i); const dd = chart.listDrawings ? null : null;
+    chart.selectAt(i);
     editing = i; editOpt = !!opt; editNew = !existing; editOld = existing ? (curD && curD.txt) || '' : '';
     ed.value = existing ? editOld : ''; ed.classList.add('on'); ed.placeholder = opt ? 'Add a label (optional)' : 'Add text';
     const inf = chart.noteInfo(i); if (inf) posEd(inf); setTimeout(() => { ed.focus(); place(); }, 60);
@@ -598,13 +598,38 @@ chart.setMagnet(magnetOn);
   ed.addEventListener('input', () => { if (editing < 0) return; chart.setTextLive(editing, ed.value); const inf = chart.noteInfo(editing); if (inf) posEd(inf); });
   ed.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') finish(false); });
   ed.addEventListener('blur', () => { setTimeout(() => { if (editing >= 0 && document.activeElement !== ed && !(bar.contains(document.activeElement)) && !pop.classList.contains('on')) finish(true); }, 120); });
+
+  const I = p => '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
+  const MI = { ord: ICONS.layers || I('<path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/>'), cl: I('<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>'), lk: I('<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>'), hd: I('<path d="M3 3l18 18M10.6 6.1A9.5 9.5 0 0 1 12 6c5 0 8.5 4 9.5 6a12 12 0 0 1-2.6 3.3M6.5 7.6C4.5 9 3.2 10.9 2.5 12c1 2 4.5 6 9.5 6 1.3 0 2.5-.3 3.5-.7"/>'), rm: I('<path d="M5 7h14M10 7V5h4v2M7 7l1 12h8l1-12M10 11v5M14 11v5"/>'), st: I('<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><circle cx="12" cy="12" r="3"/>'), ar: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>' };
+  const IVS = [['15m', '15 minutes'], ['1h', '1 hour'], ['4h', '4 hours'], ['1d', '1 day'], ['1w', '1 week']];
+  const mrow = (a, ic, t, arrow, cls) => '<div class="gi gr' + (cls ? ' ' + cls : '') + '" data-mo="' + a + '" role="button">' + (ic || '<span style="width:22px"></span>') + '<span style="flex:1">' + t + '</span>' + (arrow ? MI.ar : '') + '</div>';
+  const openMore = (pg) => {
+    if (cur < 0 || !curD) return; const i = cur, d = curD; bar.classList.remove('on'); gOpen('', false); const L = $('gL'); L.scrollTop = 0;
+    if (pg === 'main') L.innerHTML = mrow('ord', MI.ord, 'Visual order', 1) + mrow('iv', '', 'Visibility on intervals', 1) + mrow('tree', '', 'Object Tree…') + '<hr style="border:0;border-top:1px solid var(--line);margin:4px 0">' + mrow('clone', MI.cl, 'Clone') + '<hr style="border:0;border-top:1px solid var(--line);margin:4px 0">' + mrow('lock', MI.lk, 'Lock') + mrow('hide', MI.hd, 'Hide') + mrow('rm', MI.rm, 'Remove', 0, 'dl') + '<hr style="border:0;border-top:1px solid var(--line);margin:4px 0">' + mrow('set', MI.st, 'Edit text…');
+    else if (pg === 'ord') L.innerHTML = mrow('back0', '', '‹ Back') + mrow('front', '', 'Bring to front') + mrow('fwd', '', 'Bring forward') + mrow('bwd', '', 'Send backward') + mrow('back', '', 'Send to back');
+    else if (pg === 'iv') { const on = x => !d.iv || d.iv.includes(x); L.innerHTML = mrow('back0', '', '‹ Back') + mrow('ivall', '', 'All intervals' + (!d.iv ? ' ✓' : '')) + IVS.map(v => mrow('iv:' + v[0], '', v[1] + (d.iv && on(v[0]) ? ' ✓' : ''))).join(''); }
+    L.querySelectorAll('[data-mo]').forEach(r => r.onclick = () => {
+      const a = r.dataset.mo;
+      if (a === 'ord' || a === 'iv') return openMore(a); if (a === 'back0') return openMore('main');
+      if (a.startsWith('iv:')) { const x = a.slice(3); let cur2 = d.iv ? d.iv.slice() : IVS.map(v => v[0]); cur2 = cur2.includes(x) ? cur2.filter(y => y !== x) : cur2.concat(x); if (!cur2.length) cur2 = [x]; chart.setStyle(i, 'iv', cur2.length === IVS.length ? null : cur2); return openMore('iv'); }
+      if (a === 'ivall') { chart.setStyle(i, 'iv', null); return openMore('iv'); }
+      if (a === 'tree') { gOpen('Layers', false); lyList(); return; }
+      gClose();
+      if (a === 'front' || a === 'back' || a === 'fwd' || a === 'bwd') chart.reorder(i, a);
+      else if (a === 'clone') chart.cloneAt(i);
+      else if (a === 'lock') { chart.setFlag(i, 'lk', true); hide(); }
+      else if (a === 'hide') { chart.setFlag(i, 'hid', true); hide(); }
+      else if (a === 'rm') { hide(); chart.deleteAt(i); }
+      else if (a === 'set') setTimeout(() => window.__pcnText(i, d.type, !!({ plabel: 1, flag: 1, signpost: 1 })[d.type], true), 150);
+    });
+  };
   // toolbar actions
   const showPop = k => {
     if (popK === k) { pop.classList.remove('on'); popK = ''; return; } popK = k; const d = curD;
     if (k === 't' || k === 'f') { const key = k === 't' ? 'tc' : 'fc', ok = k === 't' ? 'to' : 'fo', cc = d[key], op = Math.round((d[ok] != null ? d[ok] : (k === 'f' ? .92 : 1)) * 100);
       pop.innerHTML = '<div class="pal">' + ROWS.map(r => '<div class="prow">' + r.map(c => '<span class="sw' + (cc === c ? ' on' : '') + '" data-c="' + c + '" style="background:' + c + '"></span>').join('') + '</div>').join('') + '<div class="hr"></div><div class="plus"><label aria-label="Custom colour">+<input type="color" id="ntCust" value="' + hex2(cc) + '"></label>' + (k === 'f' ? '<button type="button" class="nf" data-c="">No fill</button>' : '') + '</div><div class="cap">OPACITY</div><div class="op"><input type="range" id="ntOp" min="0" max="100" value="' + op + '"><b id="ntOpV">' + op + '%</b></div></div>'; pop.dataset.key = key; pop.dataset.ok = ok; }
     else if (k === 's') { pop.innerHTML = '<div style="max-height:240px;overflow:auto;width:110px">' + SZ.map(n => '<button class="opt' + (defFs(d) === n ? ' on' : '') + '" data-z="' + n + '">' + n + '</button>').join('') + '</div>'; }
-    else if (k === 'm') { pop.innerHTML = '<button class="opt" data-o="edit">Edit text</button><button class="opt" data-o="lock">Lock it</button><button class="opt" data-o="hide">Hide it</button>'; }
+    else if (k === 'm') { popK = ''; openMore('main'); return; }
     pop.classList.add('on'); place();
   };
   bar.addEventListener('pointerdown', e => e.preventDefault());

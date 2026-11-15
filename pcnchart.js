@@ -338,7 +338,7 @@
     function rectBox(d) { var a = px(d.a), b = px(d.b); if (d.type === 'longpos' || d.type === 'shortpos') { var g = posGeom(d); return { x0: g.x0, x1: g.x1, y0: Math.min(g.yt, g.ys, g.ye), y1: Math.max(g.yt, g.ys, g.ye) }; } return { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), y0: Math.min(a.y, b.y), y1: Math.max(a.y, b.y) }; }
     function hitTest(x, y) {
       if (hiddenD || lockedD) return -1;
-      for (var k = DR.length - 1; k >= 0; k--) { var d = DR[k], a = px(d.a), t = d.type; if (d.hid || d.lk) continue;
+      for (var k = DR.length - 1; k >= 0; k--) { var d = DR[k], a = px(d.a), t = d.type; if (d.hid || d.lk || (d.iv && d.iv.indexOf(iv) < 0)) continue;
         if (t === 'hline' || t === 'cross') { if (Math.abs(y - a.y) < 12) return k; }
         if (t === 'hray') { if (Math.abs(y - a.y) < 12 && x > a.x - 12) return k; }
         if (t === 'vline' || t === 'cross') { if (Math.abs(x - a.x) < 12) return k; }
@@ -586,7 +586,7 @@
         });
       }
       // drawings (trend lines, horizontal lines, ruler)
-      var all = hiddenD ? [] : DR.map(function (d, k) { return { d: d, sel: k === sel }; }).filter(function (o) { return !o.d.hid; }); if (draft && draft.type !== 'ruler') all.push({ d: draft, sel: true, tmp: true });
+      var all = hiddenD ? [] : DR.map(function (d, k) { return { d: d, sel: k === sel }; }).filter(function (o) { return !o.d.hid && !(o.d.iv && o.d.iv.indexOf(iv) < 0); }); if (draft && draft.type !== 'ruler') all.push({ d: draft, sel: true, tmp: true });
       all.forEach(function (o) {
         var d = o.d, t = d.type, a = px(d.a), col = d.col ? 'rgb(' + d.col + ')' : DC; mx.strokeStyle = col; mx.fillStyle = col; mx.lineWidth = o.sel ? 2.2 : (d.ai ? 1.3 : 1.6); mx.setLineDash(d.ai ? [6, 4] : []);
         var line = function (p, q) { mx.beginPath(); mx.moveTo(p.x, p.y); mx.lineTo(q.x, q.y); mx.stroke(); };
@@ -819,6 +819,8 @@
       listDrawings: function () { return DR.map(function (d, k) { return { i: k, type: d.type, hid: !!d.hid, lk: !!d.lk, sel: k === sel, ai: !!d.ai }; }); },
       setFlag: function (i, key, v) { if (!DR[i]) return; if (v) DR[i][key] = 1; else delete DR[i][key]; if (key === 'hid' && v && sel === i) sel = -1; histPush(); emitDraw(); draw(); },
       host: mainEl, noteInfo: function (i) { var d = DR[i]; if (!d || !d.a) return null; var g = shapeGeom(d), lb = (g.labels || [])[0], a = px(d.a); if (!lb) return { x: a.x, y: a.y, ax: a.x, ay: a.y }; return { x: lb.x, y: lb.y, ax: a.x, ay: a.y, sz: lb.sz || 12 }; }, setStyle: function (i, k, v) { if (!DR[i]) return; if (v == null) delete DR[i][k]; else DR[i][k] = v; emitDraw(); draw(); }, setTextLive: function (i, t) { if (DR[i]) { DR[i].txt = t; draw(); } },
+      reorder: function (i, m) { if (!DR[i]) return -1; var d = DR.splice(i, 1)[0], n = m === 'front' ? DR.length : m === 'back' ? 0 : m === 'fwd' ? Math.min(DR.length, i + 1) : Math.max(0, i - 1); DR.splice(n, 0, d); sel = n; emitDraw(); draw(); return n; },
+      cloneAt: function (i) { var d = DR[i]; if (!d) return -1; var c = JSON.parse(JSON.stringify(d)); delete c.ai; delete c.lk; delete c.hid; var mv = function (p) { if (!p || p.t == null) return p; var q = px(p); return pointAt(q.x + 18, q.y + 18) || p; }; if (c.a) c.a = mv(c.a); if (c.b) c.b = mv(c.b); if (c.c) c.c = mv(c.c); if (c.pts) c.pts = c.pts.map(mv); DR.push(c); sel = DR.length - 1; emitDraw(); draw(); return sel; },
       selectAt: function (i) { if (DR[i] && !DR[i].hid && !DR[i].lk) { sel = i; draw(); return true; } return false; },
       deleteSelected: function () { if (sel < 0) return false; DR.splice(sel, 1); sel = -1; emitDraw(); draw(); return true; },
       clearDrawings: function () { DR = []; sel = -1; ruler = null; emitDraw(); draw(); },
