@@ -195,6 +195,9 @@
   #lnBg, #fibBg, #prjBg, #patBg, #gnBg, #gBg { bottom:var(--dockH,0px) !important; }
   .stx { margin-left:auto; padding:4px 2px; color:var(--mut); display:flex; cursor:pointer; } .stx.on { color:var(--acc2,#16c784); }
   #lnSheet .lnh:not(:first-child), #fibSheet .lnh:not(:first-child), #prjSheet .lnh:not(:first-child), #patSheet .lnh:not(:first-child), #gnSheet .lnh:not(:first-child) { border-top:1px solid var(--line); margin-top:6px; padding-top:14px; }
+  #agRec { display:none; flex:1; align-items:center; gap:10px; background:var(--card,#101a15); border:1px solid var(--line); border-radius:16px; padding:8px 10px; min-height:52px; } #agForm.recing #agRec { display:flex; } #agForm.recing .box, #agForm.recing #agUp { display:none; }
+  #agRec button { width:36px; height:36px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--txt); font-size:17px; cursor:pointer; flex:none; } #agRec #recOk { background:var(--acc); border-color:var(--acc); color:#fff; font-weight:800; } #agForm.wait #recOk { opacity:.5; }
+  #agRec .wv { flex:1; height:30px; display:flex; align-items:center; gap:3px; overflow:hidden; } #agRec .wv i { flex:1; min-width:2px; max-width:5px; border-radius:2px; background:var(--acc); height:3px; opacity:.9; } #agForm.wait .wv i { opacity:.45; } #agRec #recT { font-size:13px; color:var(--mut); min-width:34px; text-align:right; font-variant-numeric:tabular-nums; } #agForm.wait .wv::after { content:'transcribing…'; position:absolute; font-size:13px; color:var(--mut); }
   #agMic { margin-left:auto; width:36px; height:36px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--acc); display:none; align-items:center; justify-content:center; cursor:pointer; } #agMic.rec { background:#ea3943; border-color:#ea3943; color:#fff; animation:micp 1s infinite; } @keyframes micp { 50% { opacity:.55; } }
   #agForm.hasmic #agMic { display:inline-flex; } #agForm.hasmic.empty #agSend { display:none; }
   #agSend { margin-left:auto; width:36px; height:36px; border-radius:10px; border:0; background:var(--acc); color:#fff; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; } #agSend:disabled { opacity:.5; }
@@ -292,9 +295,9 @@
 /* if the chart code could not start (a bad mobile connection can drop one file), reload once on its own */
 setTimeout(function () { try { if (!window.__pcnMod) { if (!sessionStorage.getItem('pcnRl')) { sessionStorage.setItem('pcnRl', '1'); location.reload(); } } else sessionStorage.removeItem('pcnRl'); } catch (e) {} }, 9000);
 </script>
-<script src="pcnchart.js?v=145"></script>
+<script src="pcnchart.js?v=146"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=145";
+import { ICONS } from "./chart-icons.js?v=146";
 window.__pcnMod = true; try { sessionStorage.removeItem("pcnRl"); } catch (_) {}
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
@@ -1104,23 +1107,30 @@ loadPairs().then(setPair);
 
 (() => {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition, f = $('agForm'), mic = $('agMic'), inp = $('agIn');
-  const sync = () => { f.classList.toggle('empty', !inp.value.trim() && !mic.classList.contains('rec')); };
+  const sync = () => { f.classList.toggle('empty', !inp.value.trim() && !f.classList.contains('recing')); };
   inp.addEventListener('input', sync);
+  f.addEventListener('submit', () => setTimeout(sync, 50));
   if (!SR) { sync(); return; }
   f.classList.add('hasmic'); sync();
-  let rec = null, base = '';
+  const bars = []; const rec$ = document.createElement('div'); rec$.id = 'agRec';
+  rec$.innerHTML = '<button type="button" id="recX" aria-label="Cancel">✕</button><div class="wv" id="recWv"></div><span id="recT">0:00</span><button type="button" id="recOk" aria-label="Done">✓</button>';
+  f.insertBefore(rec$, f.firstChild);
+  const wv = $('recWv'); for (let i = 0; i < 34; i++) { const i2 = document.createElement('i'); wv.appendChild(i2); bars.push(i2); }
+  let rec = null, base = '', t0 = 0, tick = null, lastVoice = 0, keep = true, wait = false, txt = '';
   const note = t => { const h = $('dhint'); h.textContent = t; h.classList.add('on'); setTimeout(() => h.classList.remove('on'), 2600); };
-  const stop = () => { mic.classList.remove('rec'); rec = null; sync(); inp.dispatchEvent(new Event('input')); };
-  mic.onclick = () => {
-    if (rec) { try { rec.stop(); } catch (_) {} return; }
-    rec = new SR(); rec.lang = 'en-NG'; rec.interimResults = true; rec.continuous = false; base = inp.value ? inp.value.trim() + ' ' : '';
-    rec.onresult = e => { let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; inp.value = (base + t).slice(0, 380); };
-    rec.onerror = e => { if (e.error === 'not-allowed' || e.error === 'service-not-allowed') note('Allow the microphone for this site to talk to your agent'); else if (e.error === 'no-speech') note('I did not hear anything, try again'); else if (e.error !== 'aborted') note('Voice did not work, try typing'); };
-    rec.onend = stop;
-    try { rec.start(); mic.classList.add('rec'); sync(); } catch (_) { stop(); }
+  const draw = () => { const s2 = Math.floor((Date.now() - t0) / 1000); $('recT').textContent = wait ? '' : Math.floor(s2 / 60) + ':' + String(s2 % 60).padStart(2, '0'); const loud = Date.now() - lastVoice < 700; bars.forEach((b, i) => { const h = wait ? 4 + 5 * (1 + Math.sin(Date.now() / 220 + i / 2)) : (loud ? 4 + Math.random() * 20 : 3 + Math.random() * 3); b.style.height = h + 'px'; }); };
+  const close = () => { clearInterval(tick); f.classList.remove('recing', 'wait'); wait = false; mic.classList.remove('rec'); rec = null; sync(); inp.dispatchEvent(new Event('input')); };
+  const start = () => {
+    rec = new SR(); rec.lang = 'en-NG'; rec.interimResults = true; rec.continuous = true; base = inp.value ? inp.value.trim() + ' ' : ''; keep = true; txt = '';
+    rec.onspeechstart = () => { lastVoice = Date.now(); };
+    rec.onresult = e => { lastVoice = Date.now(); let t = ''; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; txt = t; };
+    rec.onerror = e => { keep = false; if (e.error === 'not-allowed' || e.error === 'service-not-allowed') note('Allow the microphone for this site to talk to your agent'); else if (e.error === 'no-speech') note('I did not hear anything, try again'); else if (e.error !== 'aborted') note('Voice did not work, try typing'); };
+    rec.onend = () => { if (keep && txt) inp.value = (base + txt).slice(0, 380); close(); };
+    try { rec.start(); t0 = Date.now(); lastVoice = 0; f.classList.add('recing'); f.classList.remove('empty'); clearInterval(tick); tick = setInterval(draw, 90); draw(); } catch (_) { close(); }
   };
-  const orig = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
-  f.addEventListener('submit', () => setTimeout(sync, 50));
+  mic.onclick = () => { if (!rec) start(); };
+  $('recX').onclick = () => { keep = false; try { rec && rec.abort(); } catch (_) {} close(); };
+  $('recOk').onclick = () => { if (!rec) return; wait = true; f.classList.add('wait'); try { rec.stop(); } catch (_) { close(); } };
 })();
 
 
