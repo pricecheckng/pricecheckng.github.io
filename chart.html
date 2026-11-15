@@ -21,7 +21,7 @@
   .tf.on { background:#16241d; color:var(--txt); }
   .info { padding:0 12px; height:34px; box-sizing:border-box; font-size:13px; white-space:nowrap; overflow:hidden; display:flex; gap:12px; flex-wrap:nowrap; align-items:center; }
   .info.hvm #chg, .info.hvm .live { display:none; } #px { overflow:hidden; text-overflow:ellipsis; }
-  .info b { font-size:20px; } #px.hv { font-size:12px; font-weight:700; } .info .mut { color:var(--mut); }
+  .info b { font-size:20px; } #px.hv { font-size:11px; font-weight:700; white-space:pre-line; overflow:visible; text-overflow:clip; line-height:1.25; } .info .mut { color:var(--mut); }
   .leg { padding:0 12px 4px; font-size:11px; color:var(--mut); display:flex; gap:12px; white-space:nowrap; overflow-x:auto; height:22px; box-sizing:border-box; flex:0 0 auto; } .leg span { flex:0 0 auto; }
   .leg i { display:inline-block; width:10px; height:3px; border-radius:2px; margin-right:5px; vertical-align:middle; }
   #main { flex:1 1 62%; min-height:0; position:relative; margin-left:44px; }
@@ -295,9 +295,9 @@
 /* if the chart code could not start (a bad mobile connection can drop one file), reload once on its own */
 setTimeout(function () { try { if (!window.__pcnMod) { if (!sessionStorage.getItem('pcnRl')) { sessionStorage.setItem('pcnRl', '1'); location.reload(); } } else sessionStorage.removeItem('pcnRl'); } catch (e) {} }, 9000);
 </script>
-<script src="pcnchart.js?v=146"></script>
+<script src="pcnchart.js?v=147"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=146";
+import { ICONS } from "./chart-icons.js?v=147";
 window.__pcnMod = true; try { sessionStorage.removeItem("pcnRl"); } catch (_) {}
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
@@ -325,8 +325,8 @@ function setPrice(p) {
   if (dayOpen) { const c = (p / dayOpen - 1) * 100; $('chg').textContent = (c >= 0 ? '+' : '') + c.toFixed(2) + '% today'; $('chg').style.color = c >= 0 ? '#16c784' : '#ea3943'; }
 }
 const chart = new window.PCNChart($('cMain'), $('cRsi'), { subEl: $('subWrap'), tz, onHover: c => {
-  if (c) { $('px').parentNode.classList.add('hvm'); $('px').classList.add('hv'); $('px').textContent = 'O ' + fmt(c.o) + ' H ' + fmt(c.h) + ' L ' + fmt(c.l) + ' C ' + fmt(c.c); }
-  else if (lastPx) { $('px').parentNode.classList.remove('hvm'); $('px').classList.remove('hv'); $('px').textContent = lastPx; } },
+  if (c) { $('px').parentNode.classList.add('hvm'); $('px').classList.add('hv'); const d2 = c.c - c.o, pc = c.o ? d2 / c.o * 100 : 0; let cc = { up: '#16c784', dn: '#ea3943' }; try { cc = JSON.parse(localStorage.getItem('pcn_chart_cols') || 'null') || cc; } catch (_) {} $('px').textContent = 'O' + fmt(c.o) + ' H' + fmt(c.h) + ' L' + fmt(c.l) + ' C' + fmt(c.c) + '\n' + (d2 >= 0 ? '+' : '\u2212') + fmt(Math.abs(d2)) + ' (' + (d2 >= 0 ? '+' : '\u2212') + Math.abs(pc).toFixed(2) + '%)'; $('px').style.color = d2 >= 0 ? cc.up : cc.dn; }
+  else if (lastPx) { $('px').parentNode.classList.remove('hvm'); $('px').classList.remove('hv'); $('px').style.color = ''; $('px').textContent = lastPx; } },
   onText: (i, ty, opt) => window.__pcnText(i, ty, opt), onSel: (i, d) => { try { window.__ntSel && window.__ntSel(i, d); } catch (_) {} }, onHist: () => { try { paintHist(); } catch (_) {} }, onView: (atL, ch) => { $('jumpBtn').classList.toggle('on', !atL || !!ch); }, onTool: t => { if (eyeOff && t !== 'cursor' && t !== 'ruler') setEye(false); paintTool(t); }, onStage: () => { const h = $('dhint'); h.textContent = 'Now touch where point ' + (chart.stage() + 1) + ' goes, then lift'; h.classList.add('on'); }, onDraw: a => { try { const m = JSON.parse(localStorage.getItem(DK) || '{}'); if (a.length) m[symbol] = a; else delete m[symbol]; localStorage.setItem(DK, JSON.stringify(m)); } catch (_) {} paintTool(); } });
 
 // ---------- drawing tools ----------
