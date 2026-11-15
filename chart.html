@@ -220,7 +220,7 @@
     <a class="back" href="index.html" aria-label="Back"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3L5 9l6 6"/></svg></a>
     <button class="pair" id="pairBtn" aria-label="Choose pair"><span class="ico" id="pIco">B</span><span id="pTxt">BTC/USDT</span><small>&#9662;</small></button>
     <div class="dd"><button class="ddb" id="exBtn">Binance <span>&#9662;</span></button>
-      <div class="ddm" id="exMenu"><button class="on">Binance<em>live</em></button><button disabled>OKX<em>soon</em></button><button disabled>Bybit<em>soon</em></button><button disabled>Aster<em>soon</em></button><button disabled>Bitget<em>soon</em></button><button disabled>Gate<em>soon</em></button><button disabled>MEXC<em>soon</em></button></div></div>
+      <div class="ddm" id="exMenu"><button data-ex="binance">Binance<em>live</em></button><button data-ex="okx">OKX<em>live</em></button><button data-ex="bybit">Bybit<em>live</em></button><button disabled>Aster<em>soon</em></button><button disabled>Bitget<em>soon</em></button><button data-ex="gate">Gate<em>live</em></button><button data-ex="mexc">MEXC<em>live</em></button></div></div>
     <i class="vs"></i><div class="dd"><button class="ddb tfb" id="tfBtn"><span id="tfTxt">4h</span> <span>&#9662;</span></button>
       <div class="ddm r" id="tfMenu"><button class="tf" data-i="15m">15 minutes</button><button class="tf" data-i="1h">1 hour</button><button class="tf on" data-i="4h">4 hours</button><button class="tf" data-i="1d">1 day</button><button class="tf" data-i="1w">1 week</button></div></div><i class="vs"></i><button type="button" id="ctBtn" aria-label="Chart type"><svg></svg></button><i class="vs"></i><button type="button" id="fxBtn" aria-label="Indicators"><svg></svg></button><i class="vs"></i><button type="button" id="undoBtn" class="hbtn dis" aria-label="Undo"><svg></svg></button><button type="button" id="redoBtn" class="hbtn dis" aria-label="Redo"><svg></svg></button><i class="vs"></i><button type="button" id="setBtn" aria-label="Chart settings"><svg></svg></button><button type="button" id="fsBtn" aria-label="Full screen"><svg></svg></button><button type="button" id="snBtn" aria-label="Snapshot"><svg></svg></button>
   </div>
@@ -292,7 +292,7 @@
 <div id="sheetBg">
   <div class="sh-top"><button class="back" id="shBack" aria-label="Close"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3L5 9l6 6"/></svg></button><input id="shQ" placeholder="Search Binance pairs" autocomplete="off" autocapitalize="characters"></div>
   <div class="tabs"><button class="on">Crypto</button><button disabled style="opacity:.45">TradFi <sup style="font-size:9px">soon</sup></button></div>
-  <div class="exs"><button class="on">Binance</button><button class="soon" disabled>OKX<sup>soon</sup></button><button class="soon" disabled>Bybit<sup>soon</sup></button><button class="soon" disabled>Aster<sup>soon</sup></button><button class="soon" disabled>Bitget<sup>soon</sup></button><button class="soon" disabled>Gate<sup>soon</sup></button><button class="soon" disabled>MEXC<sup>soon</sup></button></div>
+  <div class="exs"><button data-ex="binance">Binance</button><button data-ex="okx">OKX</button><button data-ex="bybit">Bybit</button><button class="soon" disabled>Aster<sup>soon</sup></button><button class="soon" disabled>Bitget<sup>soon</sup></button><button data-ex="gate">Gate</button><button data-ex="mexc">MEXC</button></div>
   <div class="toolbar"><span id="pcount" style="color:var(--mut);font-size:13px"></span><button id="typeBtn" class="ddb" style="color:var(--txt)"><span id="typeTxt">all types</span> <span>&#9662;</span></button></div>
   <div id="plist"></div>
   <div id="typeBg" style="display:none;position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.55);align-items:flex-end"><div id="typeSheet" style="width:100%;background:#101a15;border-radius:18px 18px 0 0;padding:6px 8px 18px;border-top:1px solid var(--line)">
@@ -325,9 +325,10 @@ setTimeout(function(){var d=document.getElementById('dtools');if(d)d.classList.a
   }, 7000);
 })();
 </script>
-<script src="pcnchart.js?v=155"></script>
+<script src="pcnchart.js?v=156"></script>
+<script src="chart-ex.js?v=156"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=155";
+import { ICONS } from "./chart-icons.js?v=156";
 window.__pcnMod = true; try { sessionStorage.removeItem("pcnRl"); } catch (_) {}
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
@@ -335,6 +336,8 @@ const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 $('tz').textContent = tz.replace('_', ' ');
 const qs = new URLSearchParams(location.search);
 let symbol = (qs.get('s') || 'BTC').toUpperCase().replace(/[^A-Z0-9]/g, '') || 'BTC', interval = ['15m','1h','4h','1d','1w'].includes(qs.get('i')) ? qs.get('i') : '4h';
+const EXN = { binance: 'Binance', okx: 'OKX', bybit: 'Bybit', gate: 'Gate', mexc: 'MEXC' };
+let exch = (qs.get('x') || (function () { try { return JSON.parse(localStorage.getItem('pcn_chart_ex')); } catch (_) { return null; } })() || 'binance'); if (!EXN[exch] || (exch !== 'binance' && !(window.PCNEX && window.PCNEX[exch]))) exch = 'binance';
 let meta = {};                       // symbol -> {name, img}
 const sg = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (_) { return d; } };
 const ss = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
@@ -359,8 +362,10 @@ function setPrice(p) {
 }
 const cmp = n => n >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(2) + 'K' : n.toFixed(2);
 let tws = null, st24T = 0;
+function stop24() { clearTimeout(st24T); try { if (tws) { tws.onclose = null; tws.close(); } } catch (_) {} tws = null; }
+function paint24(h, l, v, q) { $('h24').textContent = fmt(h); $('l24').textContent = fmt(l); $('vb').textContent = (+v).toLocaleString('en-US', { maximumFractionDigits: 2 }); $('vu').textContent = cmp(+q); }
 function load24() {
-  clearTimeout(st24T); try { if (tws) { tws.onclose = null; tws.close(); } } catch (_) {} const sy = symbol; $('bq').textContent = sy;
+  stop24(); const sy = symbol; $('bq').textContent = sy;
   try {
     const w = new WebSocket('wss://stream.binance.com:9443/ws/' + sy.toLowerCase() + 'usdt@ticker'); tws = w;
     w.onmessage = ev => { try { const d = JSON.parse(ev.data); if (sy !== symbol || !d.h) return; $('h24').textContent = fmt(+d.h); $('l24').textContent = fmt(+d.l); $('vb').textContent = (+d.v).toLocaleString('en-US', { maximumFractionDigits: 2 }); $('vu').textContent = cmp(+d.q); } catch (_) {} };
@@ -721,6 +726,7 @@ function liveState(on, txt) { $('live').classList.toggle('on', on); $('liveT').t
 function stopLive() { clearTimeout(wsTimer); clearInterval(poll); poll = 0; if (ws) { ws.onclose = ws.onmessage = ws.onerror = null; try { ws.close(); } catch (_) {} ws = null; } }
 function startLive(my, tries = 0) {
   stopLive();
+  if (exch !== 'binance') return startExPoll(my);
   if (source !== 'binance') return startPoll(my);          // other sources: refresh by polling
   let opened = false;
   try { ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}usdt@kline_${interval}`); } catch (_) { return startPoll(my); }
@@ -729,6 +735,17 @@ function startLive(my, tries = 0) {
   ws.onmessage = ev => { try { const k = JSON.parse(ev.data).k; if (!k) return; chart.tick({ t: k.t, o: +k.o, h: +k.h, l: +k.l, c: +k.c, v: +k.v }); setPrice(+k.c); } catch (_) {} };
   ws.onclose = () => { clearTimeout(guard); if (my !== token) return; liveState(false, 'reconnecting'); wsTimer = setTimeout(() => startLive(my, tries + 1), Math.min(15000, 1500 * (tries + 1))); };
   ws.onerror = () => { try { ws.close(); } catch (_) {} };
+}
+function startExPoll(my) {
+  const A = window.PCNEX[exch], sy = symbol, iv = interval; liveState(true, 'live');
+  const tick = async () => {
+    if (document.hidden || my !== token) return;
+    try { const [cs, tk] = await Promise.all([A.candles(sy, iv), A.ticker(sy)]); if (my !== token) return;
+      cs.slice(-2).forEach(k => chart.tick(k)); const last = cs[cs.length - 1]; if (tk.last && last) chart.tick(Object.assign({}, last, { c: tk.last, h: Math.max(last.h, tk.last), l: Math.min(last.l, tk.last) }));
+      setPrice(tk.last || last.c); paint24(tk.high, tk.low, tk.vol, tk.qvol); liveState(true, 'live');
+    } catch (_) { if (my === token) liveState(false, 'offline'); }
+  };
+  poll = setInterval(tick, 4000);
 }
 function startPoll(my) {
   liveState(true, 'live');
@@ -743,6 +760,21 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && so
 // ---------- load ----------
 async function load() {
   const my = ++token; stopLive(); liveState(false, 'connecting'); fail('Loading chart…'); setPair();
+  if (exch !== 'binance') {
+    try {
+      const A = window.PCNEX[exch]; stop24(); $('bq').textContent = symbol;
+      const [cs, tk] = await Promise.all([A.candles(symbol, interval), A.ticker(symbol)]); if (my !== token) return;
+      if (!cs.length) throw new Error('no candles');
+      chart.setData({ candles: cs, sma50: [], sma200: [], rsi14: [], levels: [] }, interval);
+      chart.tick(Object.assign({}, cs[cs.length - 1]));   // makes the chart work out the MA lines and RSI
+      loadDrawings(); chart.setTool('cursor');
+      lastD = { candles: cs, series: { sma50: [], sma200: [], rsi14: [] }, analysis: { price: tk.last, today: { open: tk.open }, levels: [] }, source: exch };
+      source = exch; dayOpen = tk.open || null;
+      $('px').classList.remove('hv'); setPrice(tk.last || cs[cs.length - 1].c); paint24(tk.high, tk.low, tk.vol, tk.qvol);
+      $('msg').style.display = 'none'; startLive(my);
+    } catch (e) { if (my === token) fail('Could not load ' + symbol + '/USDT on ' + EXN[exch] + '. Pick another pair and try again.'); }
+    return;
+  }
   try {
     const tL = performance.now(); const r = await fetch(`${SUPABASE_URL}/functions/v1/pcn-chart?symbol=${symbol}&interval=${interval}&limit=500&tz=${encodeURIComponent(tz)}`);
     const d = await r.json(); loadMs = Math.round(performance.now() - tL);
@@ -762,7 +794,7 @@ const placeMenu = (btn, menu) => { const r = btn.getBoundingClientRect(); menu.s
 $('exBtn').onclick = e => { e.stopPropagation(); const o = $('exMenu').classList.contains('on'); closeMenus(); if (!o) { placeMenu($('exBtn'), $('exMenu')); $('exMenu').classList.add('on'); } };
 $('tfBtn').onclick = e => { e.stopPropagation(); const o = $('tfMenu').classList.contains('on'); closeMenus(); if (!o) { placeMenu($('tfBtn'), $('tfMenu')); $('tfMenu').classList.add('on'); } };
 document.addEventListener('click', closeMenus);
-document.querySelectorAll('#tfMenu .tf').forEach(b => b.onclick = () => { interval = b.dataset.i; syncTf(); closeMenus(); history.replaceState(null, '', `?s=${symbol}&i=${interval}`); load(); });
+document.querySelectorAll('#tfMenu .tf').forEach(b => b.onclick = () => { interval = b.dataset.i; syncTf(); closeMenus(); history.replaceState(null, '', `?s=${symbol}&i=${interval}&x=${exch}`); load(); });
 
 // ---------- pair picker (Binance live; other exchanges shown as coming soon) ----------
 let pairs = null, favs = sg('pcn_chart_favs', []);
@@ -771,7 +803,8 @@ async function loadPairs() {
   let rows = [];
   try { const r = await fetch(`${SUPABASE_URL}/rest/v1/coins?select=symbol,name,image_url,market_cap_rank&market_cap_rank=not.is.null&order=market_cap_rank.asc&limit=500`, { headers: { apikey: SUPABASE_KEY } }); rows = await r.json(); } catch (_) {}
   let ok = null;
-  try { const cached = sg('pcn_binance_usdt', null); if (cached && Date.now() - cached.t < 6 * 36e5) ok = new Set(cached.s); else { const r = await fetch('https://api.binance.com/api/v3/ticker/price'); const a = await r.json(); ok = new Set(a.filter(x => x.symbol.endsWith('USDT')).map(x => x.symbol.slice(0, -4))); ss('pcn_binance_usdt', { t: Date.now(), s: [...ok] }); } } catch (_) {}
+  if (exch !== 'binance') { try { const ck = 'pcn_pairs_' + exch, cached = sg(ck, null); if (cached && Date.now() - cached.t < 6 * 36e5) ok = new Set(cached.s); else { ok = await window.PCNEX[exch].list(); ss(ck, { t: Date.now(), s: [...ok] }); } } catch (_) { ok = null; } }
+  else try { const cached = sg('pcn_binance_usdt', null); if (cached && Date.now() - cached.t < 6 * 36e5) ok = new Set(cached.s); else { const r = await fetch('https://api.binance.com/api/v3/ticker/price'); const a = await r.json(); ok = new Set(a.filter(x => x.symbol.endsWith('USDT')).map(x => x.symbol.slice(0, -4))); ss('pcn_binance_usdt', { t: Date.now(), s: [...ok] }); } } catch (_) {}
   const seen = new Set(); pairs = [];
   (Array.isArray(rows) ? rows : []).forEach(c => { const s = String(c.symbol || '').toUpperCase(); if (!s || seen.has(s) || (ok && !ok.has(s))) return; seen.add(s); pairs.push({ s, name: c.name || s, img: c.image_url }); meta[s] = { name: c.name, img: c.image_url }; });
   if (!seen.has('BTC')) pairs.unshift({ s: 'BTC', name: 'Bitcoin' });
@@ -791,17 +824,34 @@ function renderList() {
   const q = $('shQ').value.trim().toUpperCase(), box = $('plist');
   let a = (pairs || []).filter(p => !q || p.s.includes(q) || p.name.toUpperCase().includes(q));
   a = [...a.filter(p => favs.includes(p.s)), ...a.filter(p => !favs.includes(p.s))].slice(0, 120);
-  box.innerHTML = a.length ? '' : '<div class="empty">No pair found on Binance.</div>';
+  box.innerHTML = a.length ? '' : '<div class="empty">No pair found on ' + EXN[exch] + '.</div>';
   a.forEach(p => {
     const r = document.createElement('div'); r.className = 'row';
     r.innerHTML = `<span class="st${favs.includes(p.s) ? ' on' : ''}">${favs.includes(p.s) ? '&#9733;' : '&#9734;'}</span><span class="ico"></span><span class="nm">${p.s}/USDT<small>${p.name.replace(/</g, '')}</small></span><span class="tp">spot</span>`;
     setIco(r.querySelector('.ico'), p.s);
     r.querySelector('.st').onclick = e => { e.stopPropagation(); favs = favs.includes(p.s) ? favs.filter(x => x !== p.s) : [p.s, ...favs]; ss('pcn_chart_favs', favs); renderList(); };
-    r.onclick = () => { symbol = p.s; closeSheet(); history.replaceState(null, '', `?s=${symbol}&i=${interval}`); load(); };
+    r.onclick = () => { symbol = p.s; closeSheet(); history.replaceState(null, '', `?s=${symbol}&i=${interval}&x=${exch}`); load(); };
     box.appendChild(r);
   });
 }
 function closeSheet() { $('sheetBg').classList.remove('on'); }
+// ---------- exchange switch ----------
+function paintEx() {
+  $('exBtn').innerHTML = EXN[exch] + ' <span>&#9662;</span>';
+  document.querySelectorAll('#exMenu [data-ex]').forEach(b => b.classList.toggle('on', b.dataset.ex === exch));
+  document.querySelectorAll('.exs [data-ex]').forEach(b => b.classList.toggle('on', b.dataset.ex === exch));
+  document.querySelectorAll('.set b').forEach(b => { if (b.previousElementSibling && b.previousElementSibling.textContent === 'Live data') b.textContent = EXN[exch]; });
+}
+async function setEx(k, fromPicker) {
+  if (k === exch || !EXN[k]) return; exch = k; ss('pcn_chart_ex', k); pairs = null; paintEx(); closeMenus();
+  if (fromPicker) { $('plist').innerHTML = '<div class="empty">Loading pairs…</div>'; await loadPairs(); renderList(); }
+  else { try { await loadPairs(); } catch (_) {} }
+  if (pairs && pairs.length && !pairs.some(p => p.s === symbol)) symbol = pairs.some(p => p.s === 'BTC') ? 'BTC' : pairs[0].s;
+  history.replaceState(null, '', `?s=${symbol}&i=${interval}&x=${exch}`); load();
+}
+document.querySelectorAll('#exMenu [data-ex]').forEach(b => b.onclick = e => { e.stopPropagation(); setEx(b.dataset.ex, false); });
+document.querySelectorAll('.exs [data-ex]').forEach(b => b.onclick = () => setEx(b.dataset.ex, true));
+paintEx();
 $('pairBtn').onclick = async () => { $('sheetBg').classList.add('on'); $('plist').innerHTML = '<div class="empty">Loading pairs…</div>'; await loadPairs(); renderList(); };
 $('shBack').onclick = closeSheet; $('shQ').oninput = renderList;
 
@@ -848,7 +898,7 @@ async function renderWatch() {
     setIco(row.querySelector('.ico'), sym);
     if (p != null && wprev[sym] != null && p !== wprev[sym]) flash(row.querySelector('.p'), p > wprev[sym] ? 1 : -1);
     if (p != null) wprev[sym] = p;
-    row.onclick = () => { symbol = sym; history.replaceState(null, '', `?s=${symbol}&i=${interval}`); showView('vChart'); load(); };
+    row.onclick = () => { symbol = sym; history.replaceState(null, '', `?s=${symbol}&i=${interval}&x=${exch}`); showView('vChart'); load(); };
     box.appendChild(row);
   });
   const add = document.createElement('button'); add.className = 'addb'; add.textContent = 'Add pairs'; add.onclick = () => { showView('vChart'); $('pairBtn').click(); }; box.appendChild(add);
@@ -934,7 +984,7 @@ function chartContext(q) {
   const lp = c ? c.c : a.price, lv = (a.levels || []).map(l => l.kind + ' ' + n(l.price) + ' (' + (l.price >= lp ? '+' : '') + ((l.price / lp - 1) * 100).toFixed(1) + '% from price' + (l.touches ? ', ' + l.touches + ' touches' : '') + ')').join('; ') || 'none found';
   const full = /(summar|setup|outline|analy|upside|downside|scenario|overview|outlook|what do you think|how does|look)/i.test(q || '');
   const tf = TFN[interval];
-  return `Pair: ${symbol}/USDT on Binance, timeframe ${tf}. Live price: ${n(c ? c.c : a.price)}.\n` +
+  return `Pair: ${symbol}/USDT on ${EXN[exch]}, timeframe ${tf}. Live price: ${n(c ? c.c : a.price)}.\n` +
     (t && t.open ? `Today (viewer's day): open ${n(t.open)}, high ${n(t.high)}, low ${n(t.low)}, change ${(((c ? c.c : a.price) / t.open - 1) * 100).toFixed(2)}%, volume ${n(t.volume)}.\n` : '') +
     `RSI14 ${a.rsi14 == null ? 'n/a' : (+a.rsi14).toFixed(1)}; SMA50 ${n(a.sma50)}; SMA200 ${n(a.sma200)}; EMA50 ${n(a.ema50)}; EMA200 ${n(a.ema200)}.\nLevels: ${lv}.\n` +
     'INSTRUCTION: Answer from this chart data. Stay on the chart: price, trend, moving averages, RSI, support and resistance. If no support level is listed, say price is near its recent lows. Do not add news, ETF, whale or stablecoin context unless the question asks for it. Use only numbers given here and never invent a level.\n' +
