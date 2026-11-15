@@ -181,6 +181,13 @@
   #agIn { background:none; border:0; outline:0; resize:none; color:var(--txt); font:inherit; font-size:15px; line-height:1.35; max-height:96px; width:100%; }
   .agrow { display:flex; align-items:center; gap:8px; margin-top:4px; }
   #agMode { background:#101a15; border:1px solid var(--line); color:var(--txt); border-radius:10px; font:inherit; font-size:12px; font-weight:700; padding:5px 9px; cursor:pointer; }
+  #ntBar { position:absolute; z-index:30; display:none; align-items:center; gap:2px; background:#16241d; border:1px solid var(--line); border-radius:12px; padding:4px 6px; box-shadow:0 6px 20px rgba(0,0,0,.5); touch-action:manipulation; } #ntBar.on { display:flex; }
+  #ntBar button { min-width:40px; height:38px; border:0; background:transparent; color:var(--txt); border-radius:8px; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; font:inherit; font-size:15px; cursor:pointer; gap:2px; } #ntBar button i { display:block; width:20px; height:3px; border-radius:2px; background:#fff; } #ntBar button.del { color:#ea3943; }
+  #ntPop { position:absolute; z-index:31; display:none; background:#16241d; border:1px solid var(--line); border-radius:12px; padding:8px; box-shadow:0 6px 20px rgba(0,0,0,.5); } #ntPop.on { display:block; }
+  #ntPop .sw { display:inline-block; width:30px; height:30px; margin:3px; border-radius:50%; border:2px solid transparent; vertical-align:middle; } #ntPop .sw.on { border-color:#fff; } #ntPop .sw.none { background:repeating-linear-gradient(45deg,#2c4337 0 4px,#16241d 4px 8px); }
+  #ntPop .opt { display:block; width:100%; text-align:left; padding:10px 14px; border:0; background:transparent; color:var(--txt); font:inherit; font-size:15px; border-radius:8px; } #ntPop .opt.on { background:#1f3329; color:var(--acc2,#16c784); }
+  #ntPop .grid { width:216px; }
+  #ntEd { position:absolute; z-index:29; display:none; transform:translate(-50%,-50%); border:2px solid #16c784; border-radius:14px; background:#12201a; color:#e8f1ec; font:600 12px system-ui,sans-serif; text-align:center; padding:0 10px; outline:none; box-sizing:border-box; } #ntEd.on { display:block; } #ntEd::placeholder { opacity:.6; }
   #agMic { margin-left:auto; width:36px; height:36px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--acc); display:none; align-items:center; justify-content:center; cursor:pointer; } #agMic.rec { background:#ea3943; border-color:#ea3943; color:#fff; animation:micp 1s infinite; } @keyframes micp { 50% { opacity:.55; } }
   #agForm.hasmic #agMic { display:inline-flex; } #agForm.hasmic.empty #agSend { display:none; }
   #agSend { margin-left:auto; width:36px; height:36px; border-radius:10px; border:0; background:var(--acc); color:#fff; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; } #agSend:disabled { opacity:.5; }
@@ -305,7 +312,7 @@ function setPrice(p) {
 const chart = new window.PCNChart($('cMain'), $('cRsi'), { subEl: $('subWrap'), tz, onHover: c => {
   if (c) { $('px').parentNode.classList.add('hvm'); $('px').classList.add('hv'); $('px').textContent = 'O ' + fmt(c.o) + ' H ' + fmt(c.h) + ' L ' + fmt(c.l) + ' C ' + fmt(c.c); }
   else if (lastPx) { $('px').parentNode.classList.remove('hvm'); $('px').classList.remove('hv'); $('px').textContent = lastPx; } },
-  onText: i => window.__pcnText(i), onHist: () => { try { paintHist(); } catch (_) {} }, onView: (atL, ch) => { $('jumpBtn').classList.toggle('on', !atL || !!ch); }, onTool: t => { if (eyeOff && t !== 'cursor' && t !== 'ruler') setEye(false); paintTool(t); }, onStage: () => { const h = $('dhint'); h.textContent = 'Now touch where point ' + (chart.stage() + 1) + ' goes, then lift'; h.classList.add('on'); }, onDraw: a => { try { const m = JSON.parse(localStorage.getItem(DK) || '{}'); if (a.length) m[symbol] = a; else delete m[symbol]; localStorage.setItem(DK, JSON.stringify(m)); } catch (_) {} paintTool(); } });
+  onText: (i, ty, opt) => window.__pcnText(i, ty, opt), onSel: (i, d) => { try { window.__ntSel && window.__ntSel(i, d); } catch (_) {} }, onHist: () => { try { paintHist(); } catch (_) {} }, onView: (atL, ch) => { $('jumpBtn').classList.toggle('on', !atL || !!ch); }, onTool: t => { if (eyeOff && t !== 'cursor' && t !== 'ruler') setEye(false); paintTool(t); }, onStage: () => { const h = $('dhint'); h.textContent = 'Now touch where point ' + (chart.stage() + 1) + ' goes, then lift'; h.classList.add('on'); }, onDraw: a => { try { const m = JSON.parse(localStorage.getItem(DK) || '{}'); if (a.length) m[symbol] = a; else delete m[symbol]; localStorage.setItem(DK, JSON.stringify(m)); } catch (_) {} paintTool(); } });
 
 // ---------- drawing tools ----------
 const DK = 'pcn_chart_draw';
@@ -533,8 +540,79 @@ function emojiPicker() {
 }
 $('emBtn').onclick = emojiPicker;
 chart.setMagnet(magnetOn);
-window.__pcnText = (i, ty, opt) => { gOpen(opt ? 'Add a label (optional)' : 'Add text', false); $('gL').innerHTML = '<div style="padding:10px 18px"><input id="txIn" maxlength="60" placeholder="Type your note" style="width:100%;padding:12px;background:#16241d;border:1px solid var(--line);border-radius:10px;color:var(--txt);font:inherit;font-size:16px"></div><div style="display:flex;gap:10px;padding:0 18px 10px"><button type="button" id="txNo" class="gi" style="justify-content:center;border:1px solid var(--line);border-radius:10px">Cancel</button><button type="button" id="txOk" class="gi on" style="justify-content:center;border:1px solid var(--acc2,#16c784);border-radius:10px">Add</button></div>';
-  const ok = () => { const v = $('txIn').value.trim(); if (v || opt) chart.setText(i, v); else chart.deleteAt(i); gClose(); }; $('txOk').onclick = ok; $('txNo').onclick = () => { if (opt) { chart.setText(i, ''); } else chart.deleteAt(i); gClose(); }; $('txIn').onkeydown = e => { if (e.key === 'Enter') ok(); }; setTimeout(() => $('txIn').focus(), 100); };
+
+(() => {
+  const host = chart.host; if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
+  const mk = (tag, id) => { const e = document.createElement(tag); e.id = id; host.appendChild(e); return e; };
+  const bar = mk('div', 'ntBar'), pop = mk('div', 'ntPop'), ed = mk('input', 'ntEd');
+  ed.maxLength = 60; ed.placeholder = 'Add text'; ed.autocomplete = 'off';
+  const ICN = { t: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 5h14M12 5v14M9 19h6"/></svg>', f: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13l6-8 6 8-6 6z"/><path d="M19 15c1 1.6 1.5 2.6 1.5 3.3a1.5 1.5 0 0 1-3 0c0-.7.5-1.7 1.5-3.3z" fill="currentColor"/></svg>', d: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>', m: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>' };
+  const COL = ['#e8f1ec', '#0b120e', '#16c784', '#ea3943', '#f5a524', '#5b8def', '#2962ff', '#a78bfa', '#ec4899', '#facc15'];
+  const SZ = [10, 12, 14, 16, 18, 20, 24, 28, 32, 40];
+  let cur = -1, curD = null, editing = -1, editOpt = false, editNew = false, popK = '';
+  const isTxt = d => d && (d.type === 'text' || NTN[d.type]);
+  const defFs = d => d.fs || (d.type === 'text' || d.type === 'atext' ? 14 : 12);
+  const hide = () => { bar.classList.remove('on'); pop.classList.remove('on'); popK = ''; };
+  const place = () => {
+    if (cur < 0 || !curD) return hide();
+    const inf = chart.noteInfo(cur); if (!inf) return hide();
+    const W = host.clientWidth, bw = bar.offsetWidth || 260;
+    let x = Math.max(6, Math.min(W - bw - 6, inf.x - bw / 2)), y = inf.y - 70; if (y < 4) y = inf.y + 40;
+    bar.style.left = x + 'px'; bar.style.top = y + 'px';
+    if (pop.classList.contains('on')) { pop.style.left = Math.max(6, Math.min(W - pop.offsetWidth - 6, inf.x - pop.offsetWidth / 2)) + 'px'; pop.style.top = (y + 48) + 'px'; }
+    if (editing === cur) posEd(inf);
+  };
+  const paintBar = () => { const d = curD; if (!d) return; bar.innerHTML = '<button data-a="t" aria-label="Text colour">' + ICN.t + '<i style="background:' + (d.tc || '#e8f1ec') + '"></i></button><button data-a="f" aria-label="Fill colour">' + ICN.f + '<i style="background:' + (d.fc || '#16c784') + '"></i></button><button data-a="s" aria-label="Text size">' + defFs(d) + '</button><button data-a="x" class="del" aria-label="Delete">' + ICN.d + '</button><button data-a="m" aria-label="More">' + ICN.m + '</button>'; };
+  window.__ntSel = (i, d) => {
+    if (i < 0 || !isTxt(d)) { cur = -1; curD = null; if (editing < 0) hide(); return; }
+    const first = cur !== i; cur = i; curD = d;
+    if (first) { pop.classList.remove('on'); popK = ''; }
+    if (first || !bar.firstChild) paintBar(); else { const sb = bar.querySelector('[data-a=s]'); if (sb && sb.textContent != defFs(d)) sb.textContent = defFs(d); }
+    bar.classList.add('on'); place();
+  };
+  const posEd = inf => {
+    const d = chart.noteInfo(editing) && curD; const fs = (curD && defFs(curD)) || 12, v = ed.value || ed.placeholder;
+    ed.style.fontSize = fs + 'px'; ed.style.height = (fs + 14) + 'px'; ed.style.width = Math.max(90, v.length * fs * .62 + 28) + 'px';
+    let y = inf.y; const vv = window.visualViewport; if (vv) { const r = host.getBoundingClientRect(), lim = vv.height - r.top - 70; if (y > lim) y = Math.max(70, lim); }
+    ed.style.left = inf.x + 'px'; ed.style.top = y + 'px';
+    ed.style.background = curD && curD.fc ? curD.fc : '#12201a'; ed.style.color = curD && curD.tc ? curD.tc : '#e8f1ec'; ed.style.borderColor = curD && curD.fc ? curD.fc : '#16c784';
+  };
+  const finish = (ok) => {
+    if (editing < 0) return; const i = editing, v = ed.value.trim(); editing = -1; ed.classList.remove('on'); ed.blur();
+    if (ok === false) { if (editNew && !editOpt) chart.deleteAt(i); else chart.setTextLive(i, editOld); return; }
+    if (v || editOpt) chart.setText(i, v); else if (editNew) chart.deleteAt(i); else chart.setText(i, editOld);
+  };
+  let editOld = '';
+  window.__pcnText = (i, ty, opt, existing) => {
+    chart.selectAt(i); const dd = chart.listDrawings ? null : null;
+    editing = i; editOpt = !!opt; editNew = !existing; editOld = existing ? (curD && curD.txt) || '' : '';
+    ed.value = existing ? editOld : ''; ed.classList.add('on'); ed.placeholder = opt ? 'Add a label (optional)' : 'Add text';
+    const inf = chart.noteInfo(i); if (inf) posEd(inf); setTimeout(() => { ed.focus(); place(); }, 60);
+  };
+  ed.addEventListener('input', () => { if (editing < 0) return; chart.setTextLive(editing, ed.value); const inf = chart.noteInfo(editing); if (inf) posEd(inf); });
+  ed.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') finish(false); });
+  ed.addEventListener('blur', () => { setTimeout(() => { if (editing >= 0 && document.activeElement !== ed && !(bar.contains(document.activeElement)) && !pop.classList.contains('on')) finish(true); }, 120); });
+  // toolbar actions
+  const showPop = k => {
+    if (popK === k) { pop.classList.remove('on'); popK = ''; return; } popK = k; const d = curD;
+    if (k === 't' || k === 'f') { const key = k === 't' ? 'tc' : 'fc'; pop.innerHTML = '<div class="grid">' + (k === 'f' ? '<span class="sw none' + (!d.fc ? ' on' : '') + '" data-c=""></span>' : '') + COL.map(c => '<span class="sw' + (d[key] === c ? ' on' : '') + '" data-c="' + c + '" style="background:' + c + '"></span>').join('') + '</div>'; pop.dataset.key = key; }
+    else if (k === 's') { pop.innerHTML = '<div style="max-height:240px;overflow:auto;width:110px">' + SZ.map(n => '<button class="opt' + (defFs(d) === n ? ' on' : '') + '" data-z="' + n + '">' + n + '</button>').join('') + '</div>'; }
+    else if (k === 'm') { pop.innerHTML = '<button class="opt" data-o="edit">Edit text</button><button class="opt" data-o="lock">Lock it</button><button class="opt" data-o="hide">Hide it</button>'; }
+    pop.classList.add('on'); place();
+  };
+  bar.addEventListener('pointerdown', e => e.preventDefault());
+  pop.addEventListener('pointerdown', e => e.preventDefault());
+  bar.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || cur < 0) return; const a = b.dataset.a;
+    if (a === 'x') { const i = cur; if (editing >= 0) { editing = -1; ed.classList.remove('on'); } hide(); chart.deleteAt(i); return; }
+    showPop(a); });
+  pop.addEventListener('click', e => {
+    const sw = e.target.closest('.sw'), z = e.target.closest('[data-z]'), o = e.target.closest('[data-o]'); if (cur < 0) return;
+    if (sw) { chart.setStyle(cur, pop.dataset.key, sw.dataset.c || null); paintBar(); pop.classList.remove('on'); popK = ''; }
+    else if (z) { chart.setStyle(cur, 'fs', +z.dataset.z); paintBar(); pop.classList.remove('on'); popK = ''; }
+    else if (o) { const i = cur; pop.classList.remove('on'); popK = ''; if (o.dataset.o === 'edit') window.__pcnText(i, curD.type, !!({ plabel: 1, flag: 1, signpost: 1 })[curD.type], true); else if (o.dataset.o === 'lock') { chart.setFlag(i, 'lk', true); hide(); } else { chart.setFlag(i, 'hid', true); hide(); } }
+    if (editing >= 0) setTimeout(() => ed.focus(), 30); place();
+  });
+})();
 paintTools2();
 
 function paintAL() { $('aBtn').classList.toggle('on', chart.getAuto()); $('lBtn2').classList.toggle('on', SCV.mode === 'log'); }
