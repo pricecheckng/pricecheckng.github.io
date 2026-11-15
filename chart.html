@@ -285,9 +285,9 @@
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 12px;font-weight:800;font-size:16px">type<button id="typeX" class="back" style="width:30px;height:30px" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></button></div>
     <div id="typeOpts"></div></div></div>
 </div>
-<script src="pcnchart.js"></script>
+<script src="pcnchart.js?v=139"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js";
+import { ICONS } from "./chart-icons.js?v=139";
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -530,7 +530,7 @@ const STICKERS = ['🚀 MOON', '🔥 HOT', '🐂 BULL', '🐻 BEAR', '💎 HODL'
 const ICONSET = ['↗', '↘', '⬆', '⬇', '➡', '⬅', '▲', '▼', '●', '■', '◆', '★', '✔', '✖', '⚑', '✚', '✪', '♥', '⚡', '☀', '☁', '∞', '$', '₿', 'Ξ', '₦', '€', '£', '¥', '%', '≈', '±', '⌛', '⚙', '✉', '☎', '✂', '✎', '☑', '☐', '①', '②', '③', '④', '⑤'];
 let magnetOn = false; try { magnetOn = localStorage.getItem('pcn_chart_mag') === '1'; } catch (_) {}
 let stayOn = (() => { try { return localStorage.getItem('pcn_chart_stay') === '1'; } catch (_) { return false; } })();
-function paintStay() { $('stBtn').innerHTML = ICONS.stay; $('stBtn').classList.toggle('on', stayOn); chart.setStay(stayOn); }
+function paintStay() { try { $('stBtn').innerHTML = ICONS.stay || ICONS.magnet; $('stBtn').classList.toggle('on', stayOn); if (chart.setStay) chart.setStay(stayOn); } catch (_) {} }
 $('stBtn').onclick = () => { stayOn = !stayOn; try { localStorage.setItem('pcn_chart_stay', stayOn ? '1' : '0'); } catch (_) {} paintStay(); const h = $('dhint'); h.textContent = stayOn ? 'Stay in drawing mode: the tool stays on after each drawing' : 'Stay in drawing mode off'; h.classList.add('on'); setTimeout(() => h.classList.remove('on'), 1800); };
 function paintTools2() { paintStay(); $('emBtn').innerHTML = ICONS.emoji; $('mgBtn').innerHTML = ICONS.magnet; $('mgBtn').classList.toggle('on', magnetOn); $('emBtn').classList.toggle('on', curTool === 'emoji'); }
 $('mgBtn').onclick = () => { magnetOn = !magnetOn; try { localStorage.setItem('pcn_chart_mag', magnetOn ? '1' : '0'); } catch (_) {} chart.setMagnet(magnetOn); try { paintAL(); } catch (_) {} paintTools2(); const h = $('dhint'); h.textContent = magnetOn ? 'Magnet on: points snap to candle prices' : 'Magnet off'; h.classList.add('on'); setTimeout(() => h.classList.remove('on'), 1500); };
@@ -548,7 +548,7 @@ function emojiPicker() {
 $('emBtn').onclick = emojiPicker;
 chart.setMagnet(magnetOn);
 
-(() => {
+try { (() => {
   const host = chart.host; if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
   const mk = (tag, id) => { const e = document.createElement(tag); e.id = id; host.appendChild(e); return e; };
   const bar = mk('div', 'ntBar'), pop = mk('div', 'ntPop'), ed = mk('textarea', 'ntEd');
@@ -652,7 +652,7 @@ chart.setMagnet(magnetOn);
     if (editing >= 0 && !(e.target.closest('input'))) setTimeout(() => ed.focus(), 30); place();
   });
   pop.addEventListener('input', e => { if (cur < 0) return; if (e.target.id === 'ntOp') { const v = +e.target.value; $('ntOpV').textContent = v + '%'; chart.setStyle(cur, pop.dataset.ok, v / 100); } else if (e.target.id === 'ntCust') { chart.setStyle(cur, pop.dataset.key, e.target.value); paintBar(); } });
-})();
+})(); } catch (e) { console.error('pcn note tools', e); window.__pcnText = (i) => { try { chart.deleteAt(i); } catch (_) {} }; }
 paintTools2();
 
 function paintAL() { $('aBtn').classList.toggle('on', chart.getAuto()); $('lBtn2').classList.toggle('on', SCV.mode === 'log'); }
