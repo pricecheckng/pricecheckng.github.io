@@ -118,5 +118,11 @@
     }
   };
 
+  /* if an exchange refuses the 24h numbers, work them out from the candles */
+  window.PCNEX_derive = function (cs, iv) {
+    var last = cs[cs.length - 1], from = last.t - 864e5, w = cs.filter(function (k) { return k.t >= from; }); if (!w.length) w = [last];
+    var hi = -Infinity, lo = Infinity, v = 0, q = 0; w.forEach(function (k) { hi = Math.max(hi, k.h); lo = Math.min(lo, k.l); v += k.v; q += k.v * k.c; });
+    return { last: last.c, open: w[0].o, high: hi, low: lo, vol: v, qvol: q };
+  };
   window.PCNEX = E;
 })();
