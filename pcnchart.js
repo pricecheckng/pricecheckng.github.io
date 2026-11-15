@@ -21,7 +21,7 @@
         return new Intl.DateTimeFormat('en-US', { timeZone: tz, month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }).format(d);
       } catch (e) { return ''; }
     };
-    var flashP = null, flashT = 0, zoomed = false, scanX = null, lastCh = null, fitBw = 0, lastAt = null, DR = [], tool = 'cursor', draft = null, sel = -1, ruler = null, sc = null, downPos = null, held = false;
+    var flashP = null, flashT = 0, zoomed = false, lastZ = false, scanX = null, lastCh = null, fitBw = 0, lastAt = null, DR = [], tool = 'cursor', draft = null, sel = -1, ruler = null, sc = null, downPos = null, held = false;
     var DC = '#4da3ff', cur = 'cross';
     function stepMs() { var n = D.c.length; return n > 1 ? (D.c[n - 1].t - D.c[0].t) / (n - 1) : 1; }
     function tIdx(t) { return (t - D.c[0].t) / stepMs(); }
@@ -676,7 +676,7 @@
       { var ylt = Math.max(9, Math.min(PH - (hasCd ? 23 : 9), yl)); mx.fillStyle = upL ? C.up : C.dn; mx.fillRect(plotW(), ylt - 9, AX, hasCd ? 32 : 18); mx.fillStyle = '#04100a'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(lab(last.c), plotW() + 6, ylt); if (hasCd) mx.fillText(cdTxt, plotW() + 6, ylt + 14); }
       if (scanX != null) { var sg0 = mx.createLinearGradient(scanX - 46, 0, scanX, 0); sg0.addColorStop(0, 'rgba(22,199,132,0)'); sg0.addColorStop(1, 'rgba(22,199,132,.16)'); mx.fillStyle = sg0; mx.fillRect(Math.max(0, scanX - 46), 0, Math.min(46, scanX), PH); mx.strokeStyle = 'rgba(22,199,132,.95)'; mx.lineWidth = 1.5; mx.setLineDash([]); mx.beginPath(); mx.moveTo(scanX, 0); mx.lineTo(scanX, PH); mx.stroke(); }
       if (flashP != null && sc) { var fy = sc.py(flashP), fk = (performance.now() - flashT) / 1900, fa = Math.max(0, 1 - fk) * (0.55 + 0.45 * Math.sin(fk * 26)); if (fy >= 0 && fy <= PH && fk < 1) { mx.save(); mx.fillStyle = 'rgba(255,214,102,' + (fa * 0.22).toFixed(3) + ')'; mx.fillRect(0, fy - 9, plotW(), 18); mx.strokeStyle = 'rgba(255,214,102,' + Math.min(1, fa + 0.25).toFixed(3) + ')'; mx.lineWidth = 2.5; mx.setLineDash([]); mx.beginPath(); mx.moveTo(0, fy); mx.lineTo(plotW(), fy); mx.stroke(); mx.restore(); } }
-      var atL = (n - 1) < V.start + plotW() / V.bw - 0.5; var vch = !atL || zoomed; if (atL !== lastAt || vch !== lastCh) { lastAt = atL; lastCh = vch; if (opts.onView) opts.onView(atL, vch); }
+      var atL = (n - 1) < V.start + plotW() / V.bw - 0.5; var vch = !atL || zoomed; if (atL !== lastAt || vch !== lastCh || zoomed !== lastZ) { lastAt = atL; lastCh = vch; lastZ = zoomed; if (opts.onView) opts.onView(atL, vch, zoomed); }
       // crosshair
       if (cross != null && cross >= 0 && cross < n) {
         var cx = xOf(cross), k2 = D.c[cross];
@@ -766,7 +766,7 @@
         if (draft.stage >= 2) { DR.push(draft.pts ? { type: draft.type, a: draft.pts[0], b: draft.pts[1], pts: draft.pts.slice() } : { type: draft.type, a: draft.a, b: draft.b, c: draft.c }); sel = DR.length - 1; emitDraw(); endTool(); delete ptrs[ev.pointerId]; clearTimeout(holdT); return; }
         if ((THREE[draft.type] || MULTI[draft.type]) && far) { draft.stage = 2; if (draft.pts) draft.pts[2] = draft.pts[1]; else draft.c = draft.b; if (opts.onStage) opts.onStage(2); delete ptrs[ev.pointerId]; clearTimeout(holdT); draw(); return; }
         if (FREE[draft.type]) { if (draft.pts.length >= 3) { DR.push({ type: draft.type, a: draft.pts[0], b: draft.pts[draft.pts.length - 1], pts: draft.pts.slice() }); sel = DR.length - 1; emitDraw(); } endTool(); }
-        else if (draft.type === 'zoom') { if (far) { var zi0 = Math.min(tIdx(draft.a.t), tIdx(draft.b.t)), zi1 = Math.max(tIdx(draft.a.t), tIdx(draft.b.t)); V.bw = Math.max(2, Math.min(60, plotW() / Math.max(3, zi1 - zi0 + 2))); V.start = zi0 - .5; zoomed = true; if (opts.onView) opts.onView(false, true); } endTool(); }
+        else if (draft.type === 'zoom') { if (far) { var zi0 = Math.min(tIdx(draft.a.t), tIdx(draft.b.t)), zi1 = Math.max(tIdx(draft.a.t), tIdx(draft.b.t)); V.bw = Math.max(2, Math.min(60, plotW() / Math.max(3, zi1 - zi0 + 2))); V.start = zi0 - .5; zoomed = true; lastZ = true; if (opts.onView) opts.onView(false, true, true); } endTool(); }
         else if (ONE[draft.type]) { var nd = { type: draft.type, a: draft.a }; if (draft.type === 'emoji') nd.txt = emojiSel; DR.push(nd); sel = DR.length - 1; emitDraw(); var nt = draft.type; endTool(); if ((nt === 'text' || NOTE[nt]) && opts.onText) opts.onText(DR.length - 1, nt, !!NOTE_OPT[nt]); }
         else if (far) { if (draft.type === 'ruler') ruler = draft; else { DR.push({ type: draft.type, a: draft.a, b: draft.b }); sel = DR.length - 1; emitDraw(); } endTool(); }
         else { draft = null; draw(); }
