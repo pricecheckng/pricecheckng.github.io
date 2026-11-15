@@ -192,6 +192,9 @@
   #ntPop .hr { height:1px; background:var(--line); margin:10px 0; } #ntPop .plus { display:flex; gap:10px; align-items:center; } #ntPop .plus label, #ntPop .plus button { width:34px; height:34px; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--txt); font-size:22px; display:inline-flex; align-items:center; justify-content:center; position:relative; overflow:hidden; } #ntPop .plus input[type=color] { position:absolute; inset:-6px; opacity:0; width:60px; height:60px; } #ntPop .plus .nf { width:auto; padding:0 12px; font-size:14px; }
   #ntPop .op { display:flex; align-items:center; gap:10px; margin-top:6px; } #ntPop .op input[type=range] { flex:1; height:22px; } #ntPop .op b { min-width:56px; text-align:center; border:1px solid var(--line); border-radius:8px; padding:6px 0; font-size:14px; font-weight:600; } #ntPop .cap { font-size:13px; color:var(--mut,#8aa396); margin-top:8px; letter-spacing:.04em; }
   #ntEd { position:absolute; z-index:29; display:none; transform:translate(-50%,-50%); border:2px solid #16c784; border-radius:14px; background:#12201a; color:#e8f1ec; font:600 12px system-ui,sans-serif; text-align:center; padding:7px 10px; outline:none; box-sizing:border-box; resize:none; overflow:hidden; white-space:pre; } #ntEd.on { display:block; } #ntEd::placeholder { opacity:.6; }
+  #lnBg, #fibBg, #prjBg, #patBg, #gnBg, #gBg { bottom:var(--dockH,0px) !important; }
+  .stx { margin-left:auto; padding:4px 2px; color:var(--mut); display:flex; cursor:pointer; } .stx.on { color:var(--acc2,#16c784); }
+  #lnSheet .lnh:not(:first-child), #fibSheet .lnh:not(:first-child), #prjSheet .lnh:not(:first-child), #patSheet .lnh:not(:first-child), #gnSheet .lnh:not(:first-child) { border-top:1px solid var(--line); margin-top:6px; padding-top:14px; }
   #agMic { margin-left:auto; width:36px; height:36px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--acc); display:none; align-items:center; justify-content:center; cursor:pointer; } #agMic.rec { background:#ea3943; border-color:#ea3943; color:#fff; animation:micp 1s infinite; } @keyframes micp { 50% { opacity:.55; } }
   #agForm.hasmic #agMic { display:inline-flex; } #agForm.hasmic.empty #agSend { display:none; }
   #agSend { margin-left:auto; width:36px; height:36px; border-radius:10px; border:0; background:var(--acc); color:#fff; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; } #agSend:disabled { opacity:.5; }
@@ -285,9 +288,9 @@
     <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 12px;font-weight:800;font-size:16px">type<button id="typeX" class="back" style="width:30px;height:30px" aria-label="Close"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 2l10 10M12 2L2 12"/></svg></button></div>
     <div id="typeOpts"></div></div></div>
 </div>
-<script src="pcnchart.js?v=139"></script>
+<script src="pcnchart.js?v=141"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=139";
+import { ICONS } from "./chart-icons.js?v=141";
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
@@ -1114,6 +1117,40 @@ loadPairs().then(setPair);
   const orig = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
   f.addEventListener('submit', () => setTimeout(sync, 50));
 })();
+
+
+// tool menus open above the ask-agent bar, like CMC
+try {
+  const setDock = () => { const a = $('agent'); if (a) document.documentElement.style.setProperty('--dockH', Math.max(0, Math.round(innerHeight - a.getBoundingClientRect().top)) + 'px'); };
+  setDock(); addEventListener('resize', setDock);
+  ['lnBg', 'fibBg', 'prjBg', 'patBg', 'gnBg', 'gBg'].forEach(id => { const e = $(id); if (e) new MutationObserver(() => { if (e.classList.contains('on')) setDock(); }).observe(e, { attributes: true, attributeFilter: ['class'] }); });
+} catch (e) { console.error('pcn dock', e); }
+// ---------- favourite stars on every tool menu (like CMC) ----------
+try {
+  [['lnSheet', 'data-ln', 'lnBg'], ['fibSheet', 'data-fb', 'fibBg'], ['prjSheet', 'data-pj', 'prjBg'], ['patSheet', 'data-pt', 'patBg'], ['gnSheet', 'data-gn', 'gnBg']].forEach(([sid, attr, bgid]) => {
+    const sheet = $(sid), bg = $(bgid), FK = 'pcn_chart_fav_' + attr; if (!sheet || !bg) return;
+    let favs = []; try { favs = JSON.parse(localStorage.getItem(FK) || '[]'); if (!Array.isArray(favs)) favs = []; } catch (_) {}
+    let busy = false;
+    const render = () => {
+      if (busy) return; busy = true;
+      sheet.querySelectorAll('.favrow, .favh').forEach(e => e.remove());
+      const rows = [...sheet.querySelectorAll('button[' + attr + ']')];
+      rows.forEach(b => {
+        const k = b.getAttribute(attr); let st = b.querySelector('.stx');
+        if (!st) { st = document.createElement('span'); st.className = 'stx'; st.setAttribute('role', 'button'); st.setAttribute('aria-label', 'Favourite'); b.appendChild(st); st.onclick = e => { e.stopPropagation(); e.preventDefault(); favs = favs.includes(k) ? favs.filter(x => x !== k) : favs.concat(k); try { localStorage.setItem(FK, JSON.stringify(favs)); } catch (_) {} const sc = sheet.scrollTop; render(); sheet.scrollTop = sc; }; }
+        const on = favs.includes(k); st.classList.toggle('on', on); st.innerHTML = on ? ICONS.star_on : ICONS.star_off;
+      });
+      const fr = favs.map(k => rows.find(b => b.getAttribute(attr) === k)).filter(Boolean);
+      if (fr.length) {
+        const h = document.createElement('div'); h.className = 'lnh favh'; h.textContent = 'FAVOURITES'; sheet.insertBefore(h, sheet.firstChild);
+        let ref = h; fr.forEach(b => { const c = b.cloneNode(true); c.classList.add('favrow'); const st = c.querySelector('.stx'); if (st) st.onclick = e => { e.stopPropagation(); e.preventDefault(); const k = b.getAttribute(attr); favs = favs.filter(x => x !== k); try { localStorage.setItem(FK, JSON.stringify(favs)); } catch (_) {} const sc = sheet.scrollTop; render(); sheet.scrollTop = sc; }; c.onclick = () => b.click(); ref.after(c); ref = c; });
+      }
+      busy = false;
+    };
+    new MutationObserver(() => { if (bg.classList.contains('on')) render(); }).observe(bg, { attributes: true, attributeFilter: ['class'] });
+    render();
+  });
+} catch (e) { console.error('pcn menu stars', e); }
 </script>
 </body>
 </html>
