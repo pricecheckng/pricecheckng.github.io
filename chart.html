@@ -111,7 +111,7 @@
   .topt { display:flex; justify-content:space-between; padding:14px 12px; border-radius:10px; font-weight:600; cursor:pointer; } .topt.on { background:#1b2e24; } .topt.off { opacity:.45; cursor:default; } .topt em { font-style:normal; color:var(--mut); }
   .empty { padding:30px 16px; color:var(--mut); text-align:center; }
 
-  @keyframes lfu{0%{background:rgba(22,199,132,.30)}100%{background:transparent}} @keyframes lfd{0%{background:rgba(234,57,67,.30)}100%{background:transparent}}
+  @keyframes lfu{0%,55%{color:#16c784}100%{color:inherit}} @keyframes lfd{0%,55%{color:#ea3943}100%{color:inherit}}
   .lf-u{animation:lfu 1.1s ease-out} .lf-d{animation:lfd 1.1s ease-out}
   .dd { position:relative; flex:none; }
   .ddb { display:flex; align-items:center; gap:5px; background:none; border:0; color:var(--mut); font:inherit; font-size:13px; font-weight:700; padding:8px 6px; cursor:pointer; white-space:nowrap; }
@@ -325,9 +325,9 @@ setTimeout(function(){var d=document.getElementById('dtools');if(d)d.classList.a
   }, 7000);
 })();
 </script>
-<script src="pcnchart.js?v=153"></script>
+<script src="pcnchart.js?v=154"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=153";
+import { ICONS } from "./chart-icons.js?v=154";
 window.__pcnMod = true; try { sessionStorage.removeItem("pcnRl"); } catch (_) {}
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
@@ -354,21 +354,23 @@ let dayUp = true; function dayCol() { const c = dayCols(); return dayUp ? c.up :
 function setPrice(p) {
   lastPx = fmt(p); $('px2').textContent = '$' + fmt(p);
   if (dayOpen) { const c = (p / dayOpen - 1) * 100; dayUp = c >= 0; $('chg').textContent = (c >= 0 ? '+' : '') + c.toFixed(2) + '%'; }
-  const col = dayCol(); $('chg').style.color = col; if (!$('px').classList.contains('hv')) { $('px').textContent = lastPx; $('px').style.color = col; if (prevP != null && p !== prevP) flash($('px'), p > prevP ? 1 : -1); }
+  const col = dayCol(); $('chg').style.color = col; if (!$('px').classList.contains('hv')) { $('px').textContent = lastPx; if (prevP != null && p !== prevP) flash($('px'), p > prevP ? 1 : -1); }
   prevP = p;
 }
 const cmp = n => n >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e3 ? (n / 1e3).toFixed(2) + 'K' : n.toFixed(2);
-let st24T = 0;
-async function load24() {
-  clearTimeout(st24T); const sy = symbol; $('bq').textContent = sy;
-  try { const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbol=' + sy + 'USDT'); const d = await r.json(); if (sy !== symbol || !d || d.code) throw 0;
-    $('h24').textContent = fmt(+d.highPrice); $('l24').textContent = fmt(+d.lowPrice); $('vb').textContent = (+d.volume).toLocaleString('en-US', { maximumFractionDigits: 2 }); $('vu').textContent = cmp(+d.quoteVolume);
-  } catch (_) { if (sy === symbol) { $('h24').textContent = $('l24').textContent = $('vb').textContent = $('vu').textContent = '--'; } }
-  st24T = setTimeout(load24, 20000);
+let tws = null, st24T = 0;
+function load24() {
+  clearTimeout(st24T); try { if (tws) { tws.onclose = null; tws.close(); } } catch (_) {} const sy = symbol; $('bq').textContent = sy;
+  try {
+    const w = new WebSocket('wss://stream.binance.com:9443/ws/' + sy.toLowerCase() + 'usdt@ticker'); tws = w;
+    w.onmessage = ev => { try { const d = JSON.parse(ev.data); if (sy !== symbol || !d.h) return; $('h24').textContent = fmt(+d.h); $('l24').textContent = fmt(+d.l); $('vb').textContent = (+d.v).toLocaleString('en-US', { maximumFractionDigits: 2 }); $('vu').textContent = cmp(+d.q); } catch (_) {} };
+    w.onclose = () => { if (sy === symbol) st24T = setTimeout(load24, 3000); };
+    w.onerror = () => { try { w.close(); } catch (_) {} };
+  } catch (_) {}
 }
 const chart = new window.PCNChart($('cMain'), $('cRsi'), { subEl: $('subWrap'), tz, onHover: c => {
   if (c) { $('px').closest('.info').classList.add('hvm'); $('px').classList.add('hv'); const d2 = c.c - c.o, pc = c.o ? d2 / c.o * 100 : 0; let cc = { up: '#16c784', dn: '#ea3943' }; try { cc = JSON.parse(localStorage.getItem('pcn_chart_cols') || 'null') || cc; } catch (_) {} $('px').textContent = 'O' + fmt(c.o) + ' H' + fmt(c.h) + ' L' + fmt(c.l) + ' C' + fmt(c.c) + '\n' + (d2 >= 0 ? '+' : '\u2212') + fmt(Math.abs(d2)) + ' (' + (d2 >= 0 ? '+' : '\u2212') + Math.abs(pc).toFixed(2) + '%)'; $('px').style.color = d2 >= 0 ? cc.up : cc.dn; }
-  else if (lastPx) { $('px').closest('.info').classList.remove('hvm'); $('px').classList.remove('hv'); $('px').style.color = dayCol(); $('px').textContent = lastPx; } },
+  else if (lastPx) { $('px').closest('.info').classList.remove('hvm'); $('px').classList.remove('hv'); $('px').style.color = ''; $('px').textContent = lastPx; } },
   onText: (i, ty, opt) => window.__pcnText(i, ty, opt), onSel: (i, d) => { try { window.__ntSel && window.__ntSel(i, d); } catch (_) {} }, onHist: () => { try { paintHist(); } catch (_) {} }, onView: (atL, ch) => { $('jumpBtn').classList.toggle('on', !atL || !!ch); }, onTool: t => { if (eyeOff && t !== 'cursor' && t !== 'ruler') setEye(false); paintTool(t); }, onStage: () => { const h = $('dhint'); h.textContent = 'Now touch where point ' + (chart.stage() + 1) + ' goes, then lift'; h.classList.add('on'); }, onDraw: a => { try { const m = JSON.parse(localStorage.getItem(DK) || '{}'); if (a.length) m[symbol] = a; else delete m[symbol]; localStorage.setItem(DK, JSON.stringify(m)); } catch (_) {} paintTool(); } });
 
 // ---------- drawing tools ----------
