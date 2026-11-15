@@ -1,4 +1,4 @@
-/* PriceCheck NG - PCN AI chat. BUILD 141 */
+/* PriceCheck NG - PCN AI chat. BUILD 142 */
 (function () {
   // 1. Inject Chat Modal Markup & Styles
   function injectChatUI() {
