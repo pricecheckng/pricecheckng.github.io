@@ -171,7 +171,8 @@
       } else if (t === 'brush') {
         var bp = (d.pts || [d.a]).map(px); for (i = 0; i + 1 < bp.length; i++) L(bp[i], bp[i + 1], OR, 0, 2.2); out.pts = bp.length ? [bp[0], bp[bp.length - 1]] : [];
       } else if (t === 'text' || t === 'emoji') {
-        out.labels.push({ x: a.x, y: a.y, txt: d.txt || (t === 'text' ? 'Text' : '🙂'), col: '232,241,236', c: 1, b: 1, sz: t === 'emoji' ? ((d.txt || '').length > 3 ? 15 : 26) : 14 }); out.pts = [a];
+        out.labels.push({ x: a.x, y: a.y, txt: d.txt || (t === 'text' ? 'Text' : '🙂'), col: '232,241,236', c: 1, b: 1, sz: t === 'emoji' ? emoBox(d).sz : 14 }); out.pts = [a];
+        if (t === 'emoji') { var eb = emoBox(d); out.pts = [{ x: a.x, y: a.y - eb.hh }, { x: a.x, y: a.y + eb.hh }]; out.sq = [{ x: a.x - eb.hw, y: a.y }, { x: a.x + eb.hw, y: a.y }]; }
       } else if (t === 'avwap') {
         var j0 = cl(tIdx(d.a.t)), sv = 0, sp = 0, prev = null;
         for (i = j0; i < n; i++) { var k = D.c[i]; sv += k.v || 0; sp += ((k.h + k.l + k.c) / 3) * (k.v || 0); var q = { x: xOf(i), y: sc.py(sv ? sp / sv : k.c) }; if (prev) L(prev, q, OR, 0, 1.8); prev = q; }
@@ -208,6 +209,10 @@
       return out;
     }
 
+    function emoBox(d) {
+      var a = px(d.a), tx = d.txt || '🙂', long = tx.length > 3, sz = d.sz || (long ? 15 : 26), hw = long ? Math.max(sz * 1.2, tx.length * sz * .32) : sz * .85, hh = sz * .85;
+      return { x: a.x, y: a.y, sz: sz, hw: hw, hh: hh };
+    }
     function shpShape(d, out) {
       var t = d.type, a = px(d.a), b = d.b ? px(d.b) : a, c = d.c ? px(d.c) : b, i, C1 = '77,163,255', UP = '22,199,132', DN = '234,57,67', OR = '245,165,36', YL = '255,214,10';
       var L = function (p, q, col, dash, w, al) { out.lines.push({ p: p, q: q, col: col || C1, dash: dash, w: w, al: al }); };
@@ -320,7 +325,7 @@
         if (t === 'hline' || t === 'cross') { if (Math.abs(y - a.y) < 12) return k; }
         if (t === 'hray') { if (Math.abs(y - a.y) < 12 && x > a.x - 12) return k; }
         if (t === 'vline' || t === 'cross') { if (Math.abs(x - a.x) < 12) return k; }
-        if (t === 'text' || t === 'emoji') { if (Math.abs(x - a.x) < (t === 'text' || (d.txt || '').length > 3 ? 56 : 20) && Math.abs(y - a.y) < 18) return k; continue; }
+        if (t === 'text' || t === 'emoji') { if (t === 'emoji') { var eb2 = emoBox(d); if (Math.abs(x - eb2.x) < eb2.hw + 8 && Math.abs(y - eb2.y) < eb2.hh + 8) return k; continue; } if (Math.abs(x - a.x) < 50 && Math.abs(y - a.y) < 18) return k; continue; }
         if (SHAPE[t] || SHP[t]) { var sg = shapeGeom(d); for (var si = 0; si < sg.lines.length; si++) if (!sg.lines[si].dash && segDist(x, y, sg.lines[si].p, sg.lines[si].q) < 14) return k; continue; }
         if (RECT[t]) { var rb0 = rectBox(d); if (x > rb0.x0 - 14 && x < rb0.x1 + 14 && y > rb0.y0 - 14 && y < rb0.y1 + 14) return k; continue; }
         if (FIB[t]) { var gs = fibGeom(d); for (var gi = 0; gi < gs.length; gi++) if (segDist(x, y, gs[gi].p, gs[gi].q) < 12) return k; if (t === 'fib' && segDist(x, y, a, px(d.b)) < 12) return k; continue; }
@@ -575,6 +580,7 @@
           sg2.lines.forEach(function (ln) { mx.strokeStyle = 'rgb(' + ln.col + ')'; mx.lineWidth = (ln.w || 1.3) + (o.sel && !ln.al ? .6 : 0); mx.setLineDash(ln.dash ? [4, 4] : []); mx.globalAlpha = ln.al || 1; mx.lineCap = ln.w > 8 ? 'round' : 'butt'; line(ln.p, ln.q); }); mx.setLineDash([]); mx.globalAlpha = 1; mx.lineCap = 'butt';
           if (sg2.labels && sg2.labels.length) { mx.font = '600 10px system-ui,sans-serif'; mx.textBaseline = 'middle'; mx.textAlign = 'left'; var llast = []; sg2.labels.forEach(function (lb) { if (lb.x < 2 || lb.x > plotW() - 16 || lb.y < 4 || lb.y > PH - 4) return; if (!lb.c) for (var z = 0; z < llast.length; z++) if (Math.abs(llast[z].x - lb.x) < 22 && Math.abs(llast[z].y - lb.y) < 11) return; llast.push(lb); mx.fillStyle = 'rgb(' + lb.col + ')'; mx.font = (lb.sz ? (lb.sz + 'px') : (lb.b ? '700 11px' : '600 10px')) + ' system-ui,sans-serif'; mx.textAlign = lb.c ? 'center' : 'left'; mx.fillText(lb.txt, lb.c ? lb.x : lb.x + 3, lb.y); }); mx.textAlign = 'left'; mx.font = '11px system-ui,sans-serif'; }
           if (o.sel) sg2.pts.forEach(function (q) { mx.strokeStyle = DC; mx.lineWidth = 2; mx.fillStyle = '#0b120e'; mx.beginPath(); mx.arc(q.x, q.y, 5, 0, 7); mx.fill(); mx.stroke(); });
+          if (o.sel && sg2.sq) sg2.sq.forEach(function (q) { mx.strokeStyle = DC; mx.lineWidth = 2; mx.fillStyle = '#0b120e'; mx.fillRect(q.x - 5, q.y - 5, 10, 10); mx.strokeRect(q.x - 5, q.y - 5, 10, 10); });
           return;
         }
         if (RECT[t]) {
@@ -676,7 +682,7 @@
     }
 
     // ---- gestures ----
-    var manualR = null, lastR = null, dragY = 0, axisD = null;
+    var manualR = null, lastR = null, dragY = 0, axisD = null, rs = null;
     var ptrs = {}, dragX = null, startDist = 0, startBw = 0, holdT = null, moved = false, anchorIdx = 0;
     function idxAt(px) { return Math.round((px - V.bw / 2) / V.bw + V.start); }
     mc.addEventListener('pointerdown', function (ev) {
@@ -687,6 +693,10 @@
       dragY = ev.offsetY;
       if (manualR && lastR && ev.offsetX >= plotW() && Object.keys(ptrs).length === 1) { axisD = { y: ev.offsetY, hi: manualR.hi, lo: manualR.lo }; return; }
       if (ids.length === 1 && draft && draft.stage >= 2 && ev.offsetX < plotW() && sc) { setLive(pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY)); dragX = null; draw(); return; }
+      if (ids.length === 1 && tool === 'cursor' && sel >= 0 && DR[sel] && DR[sel].type === 'emoji' && !DR[sel].lk && ev.offsetX < plotW() && sc) {
+        var eb3 = emoBox(DR[sel]), hd = [[eb3.x, eb3.y - eb3.hh], [eb3.x, eb3.y + eb3.hh], [eb3.x - eb3.hw, eb3.y], [eb3.x + eb3.hw, eb3.y]].some(function (q) { return Math.hypot(ev.offsetX - q[0], ev.offsetY - q[1]) < 20; });
+        if (hd || (Math.abs(ev.offsetX - eb3.x) < eb3.hw && Math.abs(ev.offsetY - eb3.y) < eb3.hh)) { rs = { k: sel, size: hd, ox: ev.offsetX - eb3.x, oy: ev.offsetY - eb3.y, moved: false }; dragX = null; return; }
+      }
       if (ids.length === 1 && tool !== 'cursor' && ev.offsetX < plotW() && sc) {
         var pt0 = pointAt(ev.offsetX, ev.offsetY); draft = { type: tool, a: pt0, b: pt0 }; if (MULTI[tool]) draft.pts = [pt0, pt0]; if (FREE[tool]) draft.pts = [pt0]; dragX = null; draw(); return;
       }
@@ -702,6 +712,12 @@
       if (!ptrs[ev.pointerId]) { if (ev.pointerType === 'mouse' && ev.offsetX < plotW() && cur !== 'arrow' && cur !== 'eraser') { cross = idxAt(ev.offsetX); draw(); } return; }
       ptrs[ev.pointerId] = { x: ev.offsetX, y: ev.offsetY };
       var ids = Object.keys(ptrs);
+      if (rs && ids.length === 1 && DR[rs.k]) {
+        var rd = DR[rs.k], ec = px(rd.a); rs.moved = true;
+        if (rs.size) rd.sz = Math.max(12, Math.min(260, Math.hypot(ev.offsetX - ec.x, ev.offsetY - ec.y) / .85));
+        else rd.a = pointAt(Math.min(Math.max(ev.offsetX - rs.ox, 0), plotW() - 1), Math.max(0, ev.offsetY - rs.oy));
+        draw(); return;
+      }
       if (draft && ids.length === 1 && draft.stage >= 2) { setLive(pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY)); draw(); return; }
       if (draft && ids.length === 1 && FREE[draft.type]) { var bpt = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY), lp = px(draft.pts[draft.pts.length - 1]), cp = px(bpt); if (Math.hypot(lp.x - cp.x, lp.y - cp.y) > 3) { draft.pts.push(bpt); draft.b = bpt; } draw(); return; }
       if (draft && ids.length === 1) { draft.b = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY); if (draft.pts) draft.pts[1] = draft.b; if (ONE[draft.type]) draft.a = draft.b; draw(); return; }
@@ -719,6 +735,7 @@
     });
     function up(ev) {
       if (axisD) { axisD = null; delete ptrs[ev.pointerId]; return; }
+      if (rs) { var wm = rs.moved; rs = null; delete ptrs[ev.pointerId]; if (wm) emitDraw(); draw(); return; }
       var wasDrag = ev.type !== 'pointercancel' && !!ptrs[ev.pointerId];
       if (draft && wasDrag) {
         var a0 = px(draft.a), b0 = px(draft.b), far = Math.hypot(a0.x - b0.x, a0.y - b0.y) > 8;
