@@ -182,6 +182,7 @@
   .agrow { display:flex; align-items:center; gap:8px; margin-top:4px; }
   #agMode { background:#101a15; border:1px solid var(--line); color:var(--txt); border-radius:10px; font:inherit; font-size:12px; font-weight:700; padding:5px 9px; cursor:pointer; }
   #ntBar { position:absolute; z-index:30; display:none; align-items:center; gap:2px; background:#16241d; border:1px solid var(--line); border-radius:12px; padding:4px 6px; box-shadow:0 6px 20px rgba(0,0,0,.5); touch-action:manipulation; } #ntBar.on { display:flex; }
+  #ntBar .hd { width:22px; height:38px; display:inline-flex; align-items:center; justify-content:center; color:var(--mut,#8aa396); letter-spacing:-3px; font-size:14px; touch-action:none; cursor:grab; }
   #ntBar button { min-width:40px; height:38px; border:0; background:transparent; color:var(--txt); border-radius:8px; display:inline-flex; flex-direction:column; align-items:center; justify-content:center; font:inherit; font-size:15px; cursor:pointer; gap:2px; } #ntBar button i { display:block; width:20px; height:3px; border-radius:2px; background:#fff; } #ntBar button.del { color:#ea3943; }
   #ntPop { position:absolute; z-index:31; display:none; background:#16241d; border:1px solid var(--line); border-radius:12px; padding:8px; box-shadow:0 6px 20px rgba(0,0,0,.5); } #ntPop.on { display:block; }
   #ntPop .sw { display:inline-block; width:30px; height:30px; margin:3px; border-radius:50%; border:2px solid transparent; vertical-align:middle; } #ntPop .sw.on { border-color:#fff; } #ntPop .sw.none { background:repeating-linear-gradient(45deg,#2c4337 0 4px,#16241d 4px 8px); }
@@ -555,7 +556,7 @@ chart.setMagnet(magnetOn);
   const ROWS = [GRAY, BRI].concat([[1, .8], [1, .6], [1, .4], [1, .2], [0, .2], [0, .4]].map(r => BRI.map(c => mixc(c, r[0], r[1]))));
   const hex2 = h => /^#[0-9a-f]{6}$/i.test(h || '') ? h : '#16c784';
   const SZ = [10, 12, 14, 16, 18, 20, 24, 28, 32, 40];
-  let cur = -1, curD = null, editing = -1, editOpt = false, editNew = false, popK = '';
+  let barPos = null, cur = -1, curD = null, editing = -1, editOpt = false, editNew = false, popK = '';
   const isTxt = d => d && (d.type === 'text' || NTN[d.type]);
   const defFs = d => d.fs || (d.type === 'text' || d.type === 'atext' ? 14 : 12);
   const hide = () => { bar.classList.remove('on'); pop.classList.remove('on'); popK = ''; };
@@ -563,12 +564,12 @@ chart.setMagnet(magnetOn);
     if (cur < 0 || !curD) return hide();
     const inf = chart.noteInfo(cur); if (!inf) return hide();
     const W = host.clientWidth, bw = bar.offsetWidth || 260;
-    let x = Math.max(6, Math.min(W - bw - 6, inf.x - bw / 2)), y = inf.y - 70; if (y < 4) y = inf.y + 40;
+    let x = barPos ? barPos.x : W - bw - 6, y = barPos ? barPos.y : 6; x = Math.max(4, Math.min(W - bw - 4, x)); y = Math.max(2, Math.min(host.clientHeight - 50, y));
     bar.style.left = x + 'px'; bar.style.top = y + 'px';
-    if (pop.classList.contains('on')) { pop.style.left = Math.max(6, Math.min(W - pop.offsetWidth - 6, inf.x - pop.offsetWidth / 2)) + 'px'; pop.style.top = Math.max(4, Math.min(y + 48, host.clientHeight - pop.offsetHeight - 4)) + 'px'; }
+    if (pop.classList.contains('on')) { pop.style.left = Math.max(6, Math.min(W - pop.offsetWidth - 6, x + bw - pop.offsetWidth)) + 'px'; pop.style.top = Math.max(4, Math.min(y + 46, host.clientHeight - pop.offsetHeight - 4)) + 'px'; }
     if (editing === cur) posEd(inf);
   };
-  const paintBar = () => { const d = curD; if (!d) return; bar.innerHTML = '<button data-a="t" aria-label="Text colour">' + ICN.t + '<i style="background:' + (d.tc || '#e8f1ec') + '"></i></button><button data-a="f" aria-label="Fill colour">' + ICN.f + '<i style="background:' + (d.fc || '#16c784') + '"></i></button><button data-a="s" aria-label="Text size">' + defFs(d) + '</button><button data-a="x" class="del" aria-label="Delete">' + ICN.d + '</button><button data-a="m" aria-label="More">' + ICN.m + '</button>'; };
+  const paintBar = () => { const d = curD; if (!d) return; bar.innerHTML = '<span class="hd" aria-label="Drag toolbar">\u22ee\u22ee</span><button data-a="t" aria-label="Text colour">' + ICN.t + '<i style="background:' + (d.tc || '#e8f1ec') + '"></i></button><button data-a="f" aria-label="Fill colour">' + ICN.f + '<i style="background:' + (d.fc || '#16c784') + '"></i></button><button data-a="s" aria-label="Text size">' + defFs(d) + '</button><button data-a="x" class="del" aria-label="Delete">' + ICN.d + '</button><button data-a="m" aria-label="More">' + ICN.m + '</button>'; };
   window.__ntSel = (i, d) => {
     if (i < 0 || !isTxt(d)) { cur = -1; curD = null; if (editing < 0) hide(); return; }
     const first = cur !== i; cur = i; curD = d;
@@ -632,7 +633,7 @@ chart.setMagnet(magnetOn);
     else if (k === 'm') { popK = ''; openMore('main'); return; }
     pop.classList.add('on'); place();
   };
-  bar.addEventListener('pointerdown', e => e.preventDefault());
+  bar.addEventListener('pointerdown', e => { e.preventDefault(); const h = e.target.closest('.hd'); if (!h) return; const r0 = bar.getBoundingClientRect(), hr = host.getBoundingClientRect(), dx = e.clientX - r0.left, dy = e.clientY - r0.top; const mv = ev => { barPos = { x: ev.clientX - hr.left - dx, y: ev.clientY - hr.top - dy }; place(); }, up = () => { removeEventListener('pointermove', mv); removeEventListener('pointerup', up); }; addEventListener('pointermove', mv); addEventListener('pointerup', up); });
   pop.addEventListener('pointerdown', e => e.preventDefault());
   bar.addEventListener('click', e => { const b = e.target.closest('button'); if (!b || cur < 0) return; const a = b.dataset.a;
     if (a === 'x') { const i = cur; if (editing >= 0) { editing = -1; ed.classList.remove('on'); } hide(); chart.deleteAt(i); return; }
