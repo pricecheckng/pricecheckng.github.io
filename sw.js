@@ -1,4 +1,4 @@
-const CACHE = "pricecheck-ng-v143";
+const CACHE = "pricecheck-ng-v144";
 const SHELL = ["./", "index.html", "styles.css", "app.js", "config.js", "manifest.webmanifest", "icon-green-192.png"];
 
 self.addEventListener("install", (e) => {
@@ -25,11 +25,15 @@ self.addEventListener("fetch", (e) => {
   e.respondWith(
     fetch(req, { cache: "no-cache" })
       .then((res) => {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        if (res.ok) {
+          const copy = res.clone();
+          caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
+        }
         return res;
       })
-      .catch(() => caches.match(req).then((hit) => hit || caches.match("index.html")))
+      .catch(() =>
+        caches.match(req, { ignoreSearch: true }).then((hit) => hit || (req.mode === "navigate" ? caches.match("index.html") : Response.error()))
+      )
   );
 });
 
