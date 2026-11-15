@@ -292,9 +292,9 @@
 /* if the chart code could not start (a bad mobile connection can drop one file), reload once on its own */
 setTimeout(function () { try { if (!window.__pcnMod) { if (!sessionStorage.getItem('pcnRl')) { sessionStorage.setItem('pcnRl', '1'); location.reload(); } } else sessionStorage.removeItem('pcnRl'); } catch (e) {} }, 9000);
 </script>
-<script src="pcnchart.js?v=144"></script>
+<script src="pcnchart.js?v=145"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=144";
+import { ICONS } from "./chart-icons.js?v=145";
 window.__pcnMod = true; try { sessionStorage.removeItem("pcnRl"); } catch (_) {}
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
@@ -378,8 +378,8 @@ function paintTool(t) {
   if (t) curTool = t;
   try { paintTools2(); } catch (_) {}
   document.querySelectorAll('#dtools [data-tool]').forEach(b => b.classList.toggle('on', b.dataset.tool === curTool || (b.dataset.tool === 'text' && !!NTN[curTool]) || (b.dataset.tool === 'line' && !!LN[curTool]) || (b.dataset.tool === 'fibmenu' && !!(FBN[curTool] || (GNN[curTool] && curTool.charAt(0) === 'g'))) || (b.dataset.tool === 'prjmenu' && !!PJN[curTool]) || (b.dataset.tool === 'patmenu' && !!(PTN[curTool] || ['cyc', 'tcyc', 'sine'].indexOf(curTool) >= 0)) || (b.dataset.tool === 'gnmenu' && !!GNN[curTool]) || (b.dataset.tool === 'brsmenu' && !!BRN[curTool])));
-  try { const tb = document.querySelector('#dtools [data-tool="text"]'); if (tb) tb.innerHTML = ntIcon(NTN[curTool] ? curTool : ntType); } catch (_) {}
-  try { $('brsBtn').innerHTML = brIcon(BRN[curTool] ? curTool : brType); } catch (_) {}
+  try { const tb = document.querySelector('#dtools [data-tool="text"]'); if (tb) tb.innerHTML = ICONS.text; } catch (_) {}
+  try { $('brsBtn').innerHTML = ICONS.brush; } catch (_) {}
   $('curBtn').innerHTML = ICONS['cur_' + curMode];
   $('gnBtn').innerHTML = ICONS[GNN[curTool] ? curTool : gnType];
   $('patBtn').innerHTML = ICONS[PTN[curTool] ? curTool : ptType];
