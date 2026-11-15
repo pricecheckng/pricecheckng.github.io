@@ -204,6 +204,7 @@
   #agUp { width:44px; height:44px; flex:none; border-radius:12px; border:1px solid var(--line); background:#16241d; color:var(--txt); cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
   #agModeMenu { display:none; position:absolute; left:16px; right:16px; bottom:70px; z-index:12; background:#14211a; border:1px solid var(--line); border-radius:12px; padding:6px; box-shadow:0 10px 30px rgba(0,0,0,.5); } #agModeMenu.on { display:block; }
   #agModeMenu button { display:block; width:100%; text-align:left; background:none; border:0; color:var(--txt); font:inherit; font-size:14px; font-weight:700; padding:9px 10px; border-radius:8px; cursor:pointer; } #agModeMenu button small { display:block; color:var(--mut); font-weight:500; font-size:11px; } #agModeMenu button { position:relative; padding-right:34px; } #agModeMenu button small { font-size:12px; } #agModeMenu button.on { background:#1b2e24; } #agModeMenu button.on::after { content:'\2713'; position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--g,#16c784); font-size:16px; }
+.info .live{display:none!important}
 #dtools{opacity:0}#dtools.rdy{opacity:1;transition:opacity .18s}
 </style>
 </head>
@@ -318,9 +319,9 @@ setTimeout(function(){var d=document.getElementById('dtools');if(d)d.classList.a
   }, 7000);
 })();
 </script>
-<script src="pcnchart.js?v=149"></script>
+<script src="pcnchart.js?v=151"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=149";
+import { ICONS } from "./chart-icons.js?v=151";
 window.__pcnMod = true; try { sessionStorage.removeItem("pcnRl"); } catch (_) {}
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
