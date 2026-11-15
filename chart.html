@@ -191,7 +191,7 @@
   #ntPop .pal { width:300px; } #ntPop .prow { display:flex; gap:4px; margin-bottom:4px; } #ntPop .prow .sw { flex:1; width:auto; height:26px; margin:0; border-radius:5px; border:2px solid transparent; } #ntPop .prow .sw.on { border-color:#fff; box-shadow:0 0 0 1px #000; }
   #ntPop .hr { height:1px; background:var(--line); margin:10px 0; } #ntPop .plus { display:flex; gap:10px; align-items:center; } #ntPop .plus label, #ntPop .plus button { width:34px; height:34px; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--txt); font-size:22px; display:inline-flex; align-items:center; justify-content:center; position:relative; overflow:hidden; } #ntPop .plus input[type=color] { position:absolute; inset:-6px; opacity:0; width:60px; height:60px; } #ntPop .plus .nf { width:auto; padding:0 12px; font-size:14px; }
   #ntPop .op { display:flex; align-items:center; gap:10px; margin-top:6px; } #ntPop .op input[type=range] { flex:1; height:22px; } #ntPop .op b { min-width:56px; text-align:center; border:1px solid var(--line); border-radius:8px; padding:6px 0; font-size:14px; font-weight:600; } #ntPop .cap { font-size:13px; color:var(--mut,#8aa396); margin-top:8px; letter-spacing:.04em; }
-  #ntEd { position:absolute; z-index:29; display:none; transform:translate(-50%,-50%); border:2px solid #16c784; border-radius:14px; background:#12201a; color:#e8f1ec; font:600 12px system-ui,sans-serif; text-align:center; padding:0 10px; outline:none; box-sizing:border-box; } #ntEd.on { display:block; } #ntEd::placeholder { opacity:.6; }
+  #ntEd { position:absolute; z-index:29; display:none; transform:translate(-50%,-50%); border:2px solid #16c784; border-radius:14px; background:#12201a; color:#e8f1ec; font:600 12px system-ui,sans-serif; text-align:center; padding:7px 10px; outline:none; box-sizing:border-box; resize:none; overflow:hidden; white-space:pre; } #ntEd.on { display:block; } #ntEd::placeholder { opacity:.6; }
   #agMic { margin-left:auto; width:36px; height:36px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--acc); display:none; align-items:center; justify-content:center; cursor:pointer; } #agMic.rec { background:#ea3943; border-color:#ea3943; color:#fff; animation:micp 1s infinite; } @keyframes micp { 50% { opacity:.55; } }
   #agForm.hasmic #agMic { display:inline-flex; } #agForm.hasmic.empty #agSend { display:none; }
   #agSend { margin-left:auto; width:36px; height:36px; border-radius:10px; border:0; background:var(--acc); color:#fff; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; } #agSend:disabled { opacity:.5; }
@@ -548,8 +548,8 @@ chart.setMagnet(magnetOn);
 (() => {
   const host = chart.host; if (getComputedStyle(host).position === 'static') host.style.position = 'relative';
   const mk = (tag, id) => { const e = document.createElement(tag); e.id = id; host.appendChild(e); return e; };
-  const bar = mk('div', 'ntBar'), pop = mk('div', 'ntPop'), ed = mk('input', 'ntEd');
-  ed.maxLength = 60; ed.placeholder = 'Add text'; ed.autocomplete = 'off';
+  const bar = mk('div', 'ntBar'), pop = mk('div', 'ntPop'), ed = mk('textarea', 'ntEd');
+  ed.rows = 1; ed.wrap = 'off'; ed.enterKeyHint = 'enter'; ed.maxLength = 240; ed.placeholder = 'Add text'; ed.autocomplete = 'off';
   const ICN = { t: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 5h14M12 5v14M9 19h6"/></svg>', f: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13l6-8 6 8-6 6z"/><path d="M19 15c1 1.6 1.5 2.6 1.5 3.3a1.5 1.5 0 0 1-3 0c0-.7.5-1.7 1.5-3.3z" fill="currentColor"/></svg>', d: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>', m: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>' };
   const GRAY = ['#ffffff', '#d1d4dc', '#b2b5be', '#9598a1', '#787b86', '#5d606b', '#434651', '#2a2e39', '#131722', '#000000'], BRI = ['#f23645', '#ff9800', '#ffeb3b', '#4caf50', '#089981', '#00bcd4', '#2962ff', '#673ab7', '#9c27b0', '#e91e63'];
   const mixc = (h, t, f) => { const n = [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16)), m = t ? 255 : 0; return '#' + n.map(v => Math.round(v + (m - v) * f).toString(16).padStart(2, '0')).join(''); };
@@ -579,7 +579,8 @@ chart.setMagnet(magnetOn);
   };
   const posEd = inf => {
     const d = chart.noteInfo(editing) && curD; const fs = (curD && defFs(curD)) || 12, v = ed.value || ed.placeholder;
-    ed.style.fontSize = fs + 'px'; ed.style.height = (fs + 14) + 'px'; ed.style.width = Math.max(90, v.length * fs * .62 + 28) + 'px';
+    const ls = (ed.value || ed.placeholder).split('\n'), lh = Math.round(fs * 1.25), mx = Math.max.apply(null, ls.map(l => l.length));
+    ed.style.fontSize = fs + 'px'; ed.style.lineHeight = lh + 'px'; ed.style.height = (ls.length * lh + 16) + 'px'; ed.style.width = Math.max(90, mx * fs * .62 + 28) + 'px';
     let y = inf.y; const vv = window.visualViewport; if (vv) { const r = host.getBoundingClientRect(), lim = vv.height - r.top - 70; if (y > lim) y = Math.max(70, lim); }
     ed.style.left = inf.x + 'px'; ed.style.top = y + 'px';
     ed.style.background = curD && curD.fc ? curD.fc : '#12201a'; ed.style.color = curD && curD.tc ? curD.tc : '#e8f1ec'; ed.style.borderColor = curD && curD.fc ? curD.fc : '#16c784';
@@ -597,7 +598,7 @@ chart.setMagnet(magnetOn);
     const inf = chart.noteInfo(i); if (inf) posEd(inf); setTimeout(() => { ed.focus(); place(); }, 60);
   };
   ed.addEventListener('input', () => { if (editing < 0) return; chart.setTextLive(editing, ed.value); const inf = chart.noteInfo(editing); if (inf) posEd(inf); });
-  ed.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); finish(true); } else if (e.key === 'Escape') finish(false); });
+  ed.addEventListener('keydown', e => { if (e.key === 'Escape') finish(false); });
   ed.addEventListener('blur', () => { setTimeout(() => { if (editing >= 0 && document.activeElement !== ed && !(bar.contains(document.activeElement)) && !pop.classList.contains('on')) finish(true); }, 120); });
 
   const I = p => '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>';
