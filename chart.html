@@ -187,6 +187,9 @@
   #ntPop .sw { display:inline-block; width:30px; height:30px; margin:3px; border-radius:50%; border:2px solid transparent; vertical-align:middle; } #ntPop .sw.on { border-color:#fff; } #ntPop .sw.none { background:repeating-linear-gradient(45deg,#2c4337 0 4px,#16241d 4px 8px); }
   #ntPop .opt { display:block; width:100%; text-align:left; padding:10px 14px; border:0; background:transparent; color:var(--txt); font:inherit; font-size:15px; border-radius:8px; } #ntPop .opt.on { background:#1f3329; color:var(--acc2,#16c784); }
   #ntPop .grid { width:216px; }
+  #ntPop .pal { width:300px; } #ntPop .prow { display:flex; gap:4px; margin-bottom:4px; } #ntPop .prow .sw { flex:1; width:auto; height:26px; margin:0; border-radius:5px; border:2px solid transparent; } #ntPop .prow .sw.on { border-color:#fff; box-shadow:0 0 0 1px #000; }
+  #ntPop .hr { height:1px; background:var(--line); margin:10px 0; } #ntPop .plus { display:flex; gap:10px; align-items:center; } #ntPop .plus label, #ntPop .plus button { width:34px; height:34px; border:1px solid var(--line); border-radius:8px; background:transparent; color:var(--txt); font-size:22px; display:inline-flex; align-items:center; justify-content:center; position:relative; overflow:hidden; } #ntPop .plus input[type=color] { position:absolute; inset:-6px; opacity:0; width:60px; height:60px; } #ntPop .plus .nf { width:auto; padding:0 12px; font-size:14px; }
+  #ntPop .op { display:flex; align-items:center; gap:10px; margin-top:6px; } #ntPop .op input[type=range] { flex:1; height:22px; } #ntPop .op b { min-width:56px; text-align:center; border:1px solid var(--line); border-radius:8px; padding:6px 0; font-size:14px; font-weight:600; } #ntPop .cap { font-size:13px; color:var(--mut,#8aa396); margin-top:8px; letter-spacing:.04em; }
   #ntEd { position:absolute; z-index:29; display:none; transform:translate(-50%,-50%); border:2px solid #16c784; border-radius:14px; background:#12201a; color:#e8f1ec; font:600 12px system-ui,sans-serif; text-align:center; padding:0 10px; outline:none; box-sizing:border-box; } #ntEd.on { display:block; } #ntEd::placeholder { opacity:.6; }
   #agMic { margin-left:auto; width:36px; height:36px; border-radius:10px; border:1px solid var(--line); background:transparent; color:var(--acc); display:none; align-items:center; justify-content:center; cursor:pointer; } #agMic.rec { background:#ea3943; border-color:#ea3943; color:#fff; animation:micp 1s infinite; } @keyframes micp { 50% { opacity:.55; } }
   #agForm.hasmic #agMic { display:inline-flex; } #agForm.hasmic.empty #agSend { display:none; }
@@ -495,7 +498,7 @@ $('lyBtn').innerHTML = ICONS.layers; $('lyBtn').onclick = () => { gOpen('Layers'
 
 $('gQ').oninput = () => { if ($('gT').textContent === 'Indicators') fxList(); };
 $('setBtn').onclick = () => { gOpen('Symbol', false); let cc = { up: '#16c784', dn: '#ea3943' }; try { cc = JSON.parse(localStorage.getItem('pcn_chart_cols') || 'null') || cc; } catch (_) {}
-  $('gL').innerHTML = '<div class="gs">CANDLES</div><div class="row"><span>Up colour</span><input type="color" id="cu" value="' + cc.up + '"></div><div class="row"><span>Down colour</span><input type="color" id="cd" value="' + cc.dn + '"></div><button type="button" class="gi" id="cr"><span>Reset colours</span></button>';
+  $('gL').innerHTML = '<div class="gs">CANDLES</div><div class="prow"><span>Up colour</span><input type="color" id="cu" value="' + cc.up + '"></div><div class="row"><span>Down colour</span><input type="color" id="cd" value="' + cc.dn + '"></div><button type="button" class="gi" id="cr"><span>Reset colours</span></button>';
   const ap = () => { cc = { up: $('cu').value, dn: $('cd').value }; try { localStorage.setItem('pcn_chart_cols', JSON.stringify(cc)); } catch (_) {} chart.setColors(cc.up, cc.dn); };
   $('cu').oninput = ap; $('cd').oninput = ap; $('cr').onclick = () => { $('cu').value = '#16c784'; $('cd').value = '#ea3943'; ap(); }; };
 $('fsBtn').onclick = () => { try { if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen(); } catch (_) {} };
@@ -547,7 +550,10 @@ chart.setMagnet(magnetOn);
   const bar = mk('div', 'ntBar'), pop = mk('div', 'ntPop'), ed = mk('input', 'ntEd');
   ed.maxLength = 60; ed.placeholder = 'Add text'; ed.autocomplete = 'off';
   const ICN = { t: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 5h14M12 5v14M9 19h6"/></svg>', f: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 13l6-8 6 8-6 6z"/><path d="M19 15c1 1.6 1.5 2.6 1.5 3.3a1.5 1.5 0 0 1-3 0c0-.7.5-1.7 1.5-3.3z" fill="currentColor"/></svg>', d: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></svg>', m: '<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>' };
-  const COL = ['#e8f1ec', '#0b120e', '#16c784', '#ea3943', '#f5a524', '#5b8def', '#2962ff', '#a78bfa', '#ec4899', '#facc15'];
+  const GRAY = ['#ffffff', '#d1d4dc', '#b2b5be', '#9598a1', '#787b86', '#5d606b', '#434651', '#2a2e39', '#131722', '#000000'], BRI = ['#f23645', '#ff9800', '#ffeb3b', '#4caf50', '#089981', '#00bcd4', '#2962ff', '#673ab7', '#9c27b0', '#e91e63'];
+  const mixc = (h, t, f) => { const n = [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16)), m = t ? 255 : 0; return '#' + n.map(v => Math.round(v + (m - v) * f).toString(16).padStart(2, '0')).join(''); };
+  const ROWS = [GRAY, BRI].concat([[1, .8], [1, .6], [1, .4], [1, .2], [0, .2], [0, .4]].map(r => BRI.map(c => mixc(c, r[0], r[1]))));
+  const hex2 = h => /^#[0-9a-f]{6}$/i.test(h || '') ? h : '#16c784';
   const SZ = [10, 12, 14, 16, 18, 20, 24, 28, 32, 40];
   let cur = -1, curD = null, editing = -1, editOpt = false, editNew = false, popK = '';
   const isTxt = d => d && (d.type === 'text' || NTN[d.type]);
@@ -559,7 +565,7 @@ chart.setMagnet(magnetOn);
     const W = host.clientWidth, bw = bar.offsetWidth || 260;
     let x = Math.max(6, Math.min(W - bw - 6, inf.x - bw / 2)), y = inf.y - 70; if (y < 4) y = inf.y + 40;
     bar.style.left = x + 'px'; bar.style.top = y + 'px';
-    if (pop.classList.contains('on')) { pop.style.left = Math.max(6, Math.min(W - pop.offsetWidth - 6, inf.x - pop.offsetWidth / 2)) + 'px'; pop.style.top = (y + 48) + 'px'; }
+    if (pop.classList.contains('on')) { pop.style.left = Math.max(6, Math.min(W - pop.offsetWidth - 6, inf.x - pop.offsetWidth / 2)) + 'px'; pop.style.top = Math.max(4, Math.min(y + 48, host.clientHeight - pop.offsetHeight - 4)) + 'px'; }
     if (editing === cur) posEd(inf);
   };
   const paintBar = () => { const d = curD; if (!d) return; bar.innerHTML = '<button data-a="t" aria-label="Text colour">' + ICN.t + '<i style="background:' + (d.tc || '#e8f1ec') + '"></i></button><button data-a="f" aria-label="Fill colour">' + ICN.f + '<i style="background:' + (d.fc || '#16c784') + '"></i></button><button data-a="s" aria-label="Text size">' + defFs(d) + '</button><button data-a="x" class="del" aria-label="Delete">' + ICN.d + '</button><button data-a="m" aria-label="More">' + ICN.m + '</button>'; };
@@ -595,7 +601,8 @@ chart.setMagnet(magnetOn);
   // toolbar actions
   const showPop = k => {
     if (popK === k) { pop.classList.remove('on'); popK = ''; return; } popK = k; const d = curD;
-    if (k === 't' || k === 'f') { const key = k === 't' ? 'tc' : 'fc'; pop.innerHTML = '<div class="grid">' + (k === 'f' ? '<span class="sw none' + (!d.fc ? ' on' : '') + '" data-c=""></span>' : '') + COL.map(c => '<span class="sw' + (d[key] === c ? ' on' : '') + '" data-c="' + c + '" style="background:' + c + '"></span>').join('') + '</div>'; pop.dataset.key = key; }
+    if (k === 't' || k === 'f') { const key = k === 't' ? 'tc' : 'fc', ok = k === 't' ? 'to' : 'fo', cc = d[key], op = Math.round((d[ok] != null ? d[ok] : (k === 'f' ? .92 : 1)) * 100);
+      pop.innerHTML = '<div class="pal">' + ROWS.map(r => '<div class="prow">' + r.map(c => '<span class="sw' + (cc === c ? ' on' : '') + '" data-c="' + c + '" style="background:' + c + '"></span>').join('') + '</div>').join('') + '<div class="hr"></div><div class="plus"><label aria-label="Custom colour">+<input type="color" id="ntCust" value="' + hex2(cc) + '"></label>' + (k === 'f' ? '<button type="button" class="nf" data-c="">No fill</button>' : '') + '</div><div class="cap">OPACITY</div><div class="op"><input type="range" id="ntOp" min="0" max="100" value="' + op + '"><b id="ntOpV">' + op + '%</b></div></div>'; pop.dataset.key = key; pop.dataset.ok = ok; }
     else if (k === 's') { pop.innerHTML = '<div style="max-height:240px;overflow:auto;width:110px">' + SZ.map(n => '<button class="opt' + (defFs(d) === n ? ' on' : '') + '" data-z="' + n + '">' + n + '</button>').join('') + '</div>'; }
     else if (k === 'm') { pop.innerHTML = '<button class="opt" data-o="edit">Edit text</button><button class="opt" data-o="lock">Lock it</button><button class="opt" data-o="hide">Hide it</button>'; }
     pop.classList.add('on'); place();
@@ -606,12 +613,13 @@ chart.setMagnet(magnetOn);
     if (a === 'x') { const i = cur; if (editing >= 0) { editing = -1; ed.classList.remove('on'); } hide(); chart.deleteAt(i); return; }
     showPop(a); });
   pop.addEventListener('click', e => {
-    const sw = e.target.closest('.sw'), z = e.target.closest('[data-z]'), o = e.target.closest('[data-o]'); if (cur < 0) return;
+    const sw = e.target.closest('.sw, .nf'), z = e.target.closest('[data-z]'), o = e.target.closest('[data-o]'); if (cur < 0) return;
     if (sw) { chart.setStyle(cur, pop.dataset.key, sw.dataset.c || null); paintBar(); pop.classList.remove('on'); popK = ''; }
     else if (z) { chart.setStyle(cur, 'fs', +z.dataset.z); paintBar(); pop.classList.remove('on'); popK = ''; }
     else if (o) { const i = cur; pop.classList.remove('on'); popK = ''; if (o.dataset.o === 'edit') window.__pcnText(i, curD.type, !!({ plabel: 1, flag: 1, signpost: 1 })[curD.type], true); else if (o.dataset.o === 'lock') { chart.setFlag(i, 'lk', true); hide(); } else { chart.setFlag(i, 'hid', true); hide(); } }
-    if (editing >= 0) setTimeout(() => ed.focus(), 30); place();
+    if (editing >= 0 && !(e.target.closest('input'))) setTimeout(() => ed.focus(), 30); place();
   });
+  pop.addEventListener('input', e => { if (cur < 0) return; if (e.target.id === 'ntOp') { const v = +e.target.value; $('ntOpV').textContent = v + '%'; chart.setStyle(cur, pop.dataset.ok, v / 100); } else if (e.target.id === 'ntCust') { chart.setStyle(cur, pop.dataset.key, e.target.value); paintBar(); } });
 })();
 paintTools2();
 
