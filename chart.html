@@ -624,6 +624,9 @@ chart.setMagnet(magnetOn);
       else if (a === 'set') setTimeout(() => window.__pcnText(i, d.type, !!({ plabel: 1, flag: 1, signpost: 1 })[d.type], true), 150);
     });
   };
+  document.addEventListener('pointerdown', e => { if (!pop.classList.contains('on')) return; if (pop.contains(e.target) || (bar.contains(e.target) && e.target.closest('button'))) return; e.stopPropagation(); e.preventDefault(); pop.classList.remove('on'); popK = ''; if (editing >= 0) setTimeout(() => ed.focus(), 30); }, true);
+  document.addEventListener('click', e => { if (!pop.classList.contains('on') && !pop._swallow) return; }, true);
+  try { new MutationObserver(() => { if (!$('gBg').classList.contains('on') && cur >= 0 && curD) { bar.classList.add('on'); place(); } }).observe($('gBg'), { attributes: true, attributeFilter: ['class'] }); } catch (_) {}
   // toolbar actions
   const showPop = k => {
     if (popK === k) { pop.classList.remove('on'); popK = ''; return; } popK = k; const d = curD;
