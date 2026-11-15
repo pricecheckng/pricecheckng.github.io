@@ -564,12 +564,12 @@ chart.setMagnet(magnetOn);
     if (cur < 0 || !curD) return hide();
     const inf = chart.noteInfo(cur); if (!inf) return hide();
     const W = host.clientWidth, bw = bar.offsetWidth || 260;
-    let x = Math.max(6, Math.min(W - bw - 6, inf.x - bw / 2)), y = inf.y - 70; if (y < 4) y = inf.y + 40;
+    let x = barPos ? barPos.x : W - bw - 6, y = barPos ? barPos.y : 6; x = Math.max(4, Math.min(W - bw - 4, x)); y = Math.max(2, Math.min(host.clientHeight - 50, y));
     bar.style.left = x + 'px'; bar.style.top = y + 'px';
-    if (pop.classList.contains('on')) { pop.style.left = Math.max(6, Math.min(W - pop.offsetWidth - 6, inf.x - pop.offsetWidth / 2)) + 'px'; pop.style.top = Math.max(4, Math.min(y + 48, host.clientHeight - pop.offsetHeight - 4)) + 'px'; }
+    if (pop.classList.contains('on')) { pop.style.left = Math.max(6, Math.min(W - pop.offsetWidth - 6, x + bw - pop.offsetWidth)) + 'px'; pop.style.top = Math.max(4, Math.min(y + 46, host.clientHeight - pop.offsetHeight - 4)) + 'px'; }
     if (editing === cur) posEd(inf);
   };
-  const paintBar = () => { const d = curD; if (!d) return; bar.innerHTML = '<button data-a="t" aria-label="Text colour">' + ICN.t + '<i style="background:' + (d.tc || '#e8f1ec') + '"></i></button><button data-a="f" aria-label="Fill colour">' + ICN.f + '<i style="background:' + (d.fc || '#16c784') + '"></i></button><button data-a="s" aria-label="Text size">' + defFs(d) + '</button><button data-a="x" class="del" aria-label="Delete">' + ICN.d + '</button><button data-a="m" aria-label="More">' + ICN.m + '</button>'; };
+  const paintBar = () => { const d = curD; if (!d) return; bar.innerHTML = '<span class="hd" aria-label="Drag toolbar">\u22ee\u22ee</span><button data-a="t" aria-label="Text colour">' + ICN.t + '<i style="background:' + (d.tc || '#e8f1ec') + '"></i></button><button data-a="f" aria-label="Fill colour">' + ICN.f + '<i style="background:' + (d.fc || '#16c784') + '"></i></button><button data-a="s" aria-label="Text size">' + defFs(d) + '</button><button data-a="x" class="del" aria-label="Delete">' + ICN.d + '</button><button data-a="m" aria-label="More">' + ICN.m + '</button>'; };
   window.__ntSel = (i, d) => {
     if (i < 0 || !isTxt(d)) { cur = -1; curD = null; if (editing < 0) hide(); return; }
     const first = cur !== i; cur = i; curD = d;
@@ -624,9 +624,6 @@ chart.setMagnet(magnetOn);
       else if (a === 'set') setTimeout(() => window.__pcnText(i, d.type, !!({ plabel: 1, flag: 1, signpost: 1 })[d.type], true), 150);
     });
   };
-  document.addEventListener('pointerdown', e => { if (!pop.classList.contains('on')) return; if (pop.contains(e.target) || (bar.contains(e.target) && e.target.closest('button'))) return; e.stopPropagation(); e.preventDefault(); pop.classList.remove('on'); popK = ''; if (editing >= 0) setTimeout(() => ed.focus(), 30); }, true);
-  document.addEventListener('click', e => { if (!pop.classList.contains('on') && !pop._swallow) return; }, true);
-  try { new MutationObserver(() => { if (!$('gBg').classList.contains('on') && cur >= 0 && curD) { bar.classList.add('on'); place(); } }).observe($('gBg'), { attributes: true, attributeFilter: ['class'] }); } catch (_) {}
   // toolbar actions
   const showPop = k => {
     if (popK === k) { pop.classList.remove('on'); popK = ''; return; } popK = k; const d = curD;
