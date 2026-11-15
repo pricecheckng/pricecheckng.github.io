@@ -155,6 +155,7 @@
     }
 
     var PRJ = { zoom: 1, brush: 1, text: 1, emoji: 1, avwap: 1, fvp: 1, fcast: 1, bpat: 1, ghost: 1, proj: 1 };
+    var NOTE = { atext: 1, note: 1, anote: 1, callout: 1, comment: 1, plabel: 1, pnote: 1, signpost: 1, flag: 1 }, NOTE_OPT = { plabel: 1, flag: 1, signpost: 1 }; Object.keys(NOTE).forEach(function (k) { PRJ[k] = 1; SHAPE[k] = 1; ONE[k] = 1; });
     function prjShape(d, out) {
       var t = d.type, a = px(d.a), b = d.b ? px(d.b) : a, c = d.c ? px(d.c) : b, n = D.c.length, i, G = '138,163,150', OR = '245,165,36', UP = '22,199,132', DN = '234,57,67', C1 = '77,163,255';
       var L = function (p, q, col, dash, w) { out.lines.push({ p: p, q: q, col: col || G, dash: dash, w: w }); };
@@ -170,6 +171,20 @@
         out.fills.push({ pts: [{ x: zx0, y: zy0 }, { x: zx1, y: zy0 }, { x: zx1, y: zy1 }, { x: zx0, y: zy1 }], col: C1, al: .15 }); out.pts = [];
       } else if (t === 'brush') {
         var bp = (d.pts || [d.a]).map(px); for (i = 0; i + 1 < bp.length; i++) L(bp[i], bp[i + 1], OR, 0, 2.2); out.pts = bp.length ? [bp[0], bp[bp.length - 1]] : [];
+      } else if (NOTE[t]) {
+        var TX = '232,241,236', BX = '18,32,26', AC = '22,199,132', OR2 = '245,165,36', tx2 = d.txt || '', pr = d.a.p != null ? nice(d.a.p) : '';
+        var bw = function (str) { return Math.max(34, String(str).length * 6.9 + 16); }, bh = 22;
+        var box = function (cx, y0, str, tail) { var w = bw(str), x0 = cx - w / 2; out.fills.push({ pts: [{ x: x0, y: y0 }, { x: x0 + w, y: y0 }, { x: x0 + w, y: y0 + bh }, { x: x0, y: y0 + bh }], col: BX, al: .92 }); L({ x: x0, y: y0 }, { x: x0 + w, y: y0 }, AC, 0, 1.2); L({ x: x0 + w, y: y0 }, { x: x0 + w, y: y0 + bh }, AC, 0, 1.2); L({ x: x0 + w, y: y0 + bh }, { x: x0, y: y0 + bh }, AC, 0, 1.2); L({ x: x0, y: y0 + bh }, { x: x0, y: y0 }, AC, 0, 1.2); out.labels.push({ x: cx, y: y0 + bh / 2, txt: str, col: TX, c: 1, b: 1, sz: 12 }); return { x0: x0, w: w }; };
+        out.pts = [a];
+        if (t === 'atext') { out.labels.push({ x: a.x, y: a.y - 22, txt: tx2 || 'Text', col: TX, c: 1, b: 1, sz: 14 }); L(a, { x: a.x, y: a.y - 12 }, OR2, 0, 1.2); out.fills.push({ pts: [{ x: a.x - 3, y: a.y - 3 }, { x: a.x + 3, y: a.y - 3 }, { x: a.x + 3, y: a.y + 3 }, { x: a.x - 3, y: a.y + 3 }], col: OR2, al: 1 }); }
+        else if (t === 'note') { var nt = tx2 || 'Note'; box(a.x, a.y - 14 - bh - 4, nt); L({ x: a.x, y: a.y - 18 }, a, AC, 0, 1.4); out.fills.push({ pts: [{ x: a.x - 3, y: a.y - 3 }, { x: a.x + 3, y: a.y - 3 }, { x: a.x + 3, y: a.y + 3 }, { x: a.x - 3, y: a.y + 3 }], col: AC, al: 1 }); }
+        else if (t === 'anote') { var an = tx2 || 'Note'; var bb = box(a.x + 26, a.y - 52, an); L({ x: a.x + 26, y: a.y - 30 }, a, OR2, 1, 1.1); out.fills.push({ pts: [{ x: a.x - 3, y: a.y - 3 }, { x: a.x + 3, y: a.y - 3 }, { x: a.x + 3, y: a.y + 3 }, { x: a.x - 3, y: a.y + 3 }], col: OR2, al: 1 }); }
+        else if (t === 'callout') { var ct = tx2 || 'Callout'; box(a.x, a.y - 14 - bh - 8, ct); out.fills.push({ pts: [{ x: a.x - 6, y: a.y - 22 }, { x: a.x + 6, y: a.y - 22 }, { x: a.x, y: a.y }], col: BX, al: .92 }); L({ x: a.x - 6, y: a.y - 22 }, a, AC, 0, 1.2); L({ x: a.x + 6, y: a.y - 22 }, a, AC, 0, 1.2); }
+        else if (t === 'comment') { var cm = tx2 || 'Comment', cw = bw(cm); out.fills.push({ pts: [{ x: a.x - cw / 2 + 6, y: a.y - 12 }, { x: a.x + cw / 2 - 6, y: a.y - 12 }, { x: a.x + cw / 2, y: a.y - 6 }, { x: a.x + cw / 2, y: a.y + 6 }, { x: a.x + cw / 2 - 6, y: a.y + 12 }, { x: a.x - cw / 2 + 6, y: a.y + 12 }, { x: a.x - cw / 2, y: a.y + 6 }, { x: a.x - cw / 2, y: a.y - 6 }], col: BX, al: .92 }); [[-cw / 2 + 6, -12, cw / 2 - 6, -12], [cw / 2 - 6, -12, cw / 2, -6], [cw / 2, -6, cw / 2, 6], [cw / 2, 6, cw / 2 - 6, 12], [cw / 2 - 6, 12, -cw / 2 + 6, 12], [-cw / 2 + 6, 12, -cw / 2, 6], [-cw / 2, 6, -cw / 2, -6], [-cw / 2, -6, -cw / 2 + 6, -12]].forEach(function (e) { L({ x: a.x + e[0], y: a.y + e[1] }, { x: a.x + e[2], y: a.y + e[3] }, AC, 0, 1.2); }); out.labels.push({ x: a.x, y: a.y, txt: cm, col: TX, c: 1, b: 1, sz: 12 }); }
+        else if (t === 'plabel') { var pl = (tx2 ? tx2 + ' ' : '') + pr, pw = bw(pl), px0 = a.x - 10 - pw; out.fills.push({ pts: [{ x: px0, y: a.y - 11 }, { x: a.x - 10, y: a.y - 11 }, { x: a.x, y: a.y }, { x: a.x - 10, y: a.y + 11 }, { x: px0, y: a.y + 11 }], col: BX, al: .92 }); L({ x: px0, y: a.y - 11 }, { x: a.x - 10, y: a.y - 11 }, AC, 0, 1.2); L({ x: a.x - 10, y: a.y - 11 }, a, AC, 0, 1.2); L(a, { x: a.x - 10, y: a.y + 11 }, AC, 0, 1.2); L({ x: a.x - 10, y: a.y + 11 }, { x: px0, y: a.y + 11 }, AC, 0, 1.2); L({ x: px0, y: a.y + 11 }, { x: px0, y: a.y - 11 }, AC, 0, 1.2); out.labels.push({ x: px0 + pw / 2, y: a.y, txt: pl, col: TX, c: 1, b: 1, sz: 12 }); }
+        else if (t === 'pnote') { var pn = (tx2 ? tx2 + '  ' : '') + pr; box(a.x, a.y - 14 - bh - 12, pn); L({ x: a.x, y: a.y - 36 }, { x: a.x, y: a.y - 6 }, AC, 0, 1.2); out.fills.push({ pts: [{ x: a.x - 4, y: a.y - 4 }, { x: a.x + 4, y: a.y - 4 }, { x: a.x + 4, y: a.y + 4 }, { x: a.x - 4, y: a.y + 4 }], col: AC, al: 1 }); }
+        else if (t === 'signpost') { L(a, { x: a.x, y: a.y - 40 }, OR2, 0, 1.6); out.fills.push({ pts: [{ x: a.x - 9, y: a.y - 40 }, { x: a.x, y: a.y - 49 }, { x: a.x + 9, y: a.y - 40 }, { x: a.x, y: a.y - 31 }], col: OR2, al: 1 }); out.labels.push({ x: a.x, y: a.y - 40, txt: '\u2605', col: '18,32,26', c: 1, b: 1, sz: 10 }); if (tx2) out.labels.push({ x: a.x, y: a.y - 60, txt: tx2, col: TX, c: 1, b: 1, sz: 12 }); }
+        else if (t === 'flag') { L(a, { x: a.x, y: a.y - 40 }, OR2, 0, 1.6); out.fills.push({ pts: [{ x: a.x, y: a.y - 40 }, { x: a.x + 20, y: a.y - 34 }, { x: a.x, y: a.y - 26 }], col: OR2, al: 1 }); if (tx2) out.labels.push({ x: a.x + 12, y: a.y - 50, txt: tx2, col: TX, c: 1, b: 1, sz: 12 }); }
       } else if (t === 'text' || t === 'emoji') {
         out.labels.push({ x: a.x, y: a.y, txt: d.txt || (t === 'text' ? 'Text' : '🙂'), col: '232,241,236', c: 1, b: 1, sz: t === 'emoji' ? emoBox(d).sz : 14 }); out.pts = [a];
         if (t === 'emoji') { var eb = emoBox(d); out.pts = [{ x: a.x, y: a.y - eb.hh }, { x: a.x, y: a.y + eb.hh }]; out.sq = [{ x: a.x - eb.hw, y: a.y }, { x: a.x + eb.hw, y: a.y }]; }
@@ -325,6 +340,7 @@
         if (t === 'hline' || t === 'cross') { if (Math.abs(y - a.y) < 12) return k; }
         if (t === 'hray') { if (Math.abs(y - a.y) < 12 && x > a.x - 12) return k; }
         if (t === 'vline' || t === 'cross') { if (Math.abs(x - a.x) < 12) return k; }
+        if (NOTE[t]) { if (Math.abs(x - a.x) < 80 && y > a.y - 70 && y < a.y + 16) return k; continue; }
         if (t === 'text' || t === 'emoji') { if (t === 'emoji') { var eb2 = emoBox(d); if (Math.abs(x - eb2.x) < eb2.hw + 8 && Math.abs(y - eb2.y) < eb2.hh + 8) return k; continue; } if (Math.abs(x - a.x) < 50 && Math.abs(y - a.y) < 18) return k; continue; }
         if (SHAPE[t] || SHP[t]) { var sg = shapeGeom(d); for (var si = 0; si < sg.lines.length; si++) if (!sg.lines[si].dash && segDist(x, y, sg.lines[si].p, sg.lines[si].q) < 14) return k; continue; }
         if (RECT[t]) { var rb0 = rectBox(d); if (x > rb0.x0 - 14 && x < rb0.x1 + 14 && y > rb0.y0 - 14 && y < rb0.y1 + 14) return k; continue; }
@@ -744,7 +760,7 @@
         if ((THREE[draft.type] || MULTI[draft.type]) && far) { draft.stage = 2; if (draft.pts) draft.pts[2] = draft.pts[1]; else draft.c = draft.b; if (opts.onStage) opts.onStage(2); delete ptrs[ev.pointerId]; clearTimeout(holdT); draw(); return; }
         if (FREE[draft.type]) { if (draft.pts.length >= 3) { DR.push({ type: draft.type, a: draft.pts[0], b: draft.pts[draft.pts.length - 1], pts: draft.pts.slice() }); sel = DR.length - 1; emitDraw(); } setTool('cursor'); }
         else if (draft.type === 'zoom') { if (far) { var zi0 = Math.min(tIdx(draft.a.t), tIdx(draft.b.t)), zi1 = Math.max(tIdx(draft.a.t), tIdx(draft.b.t)); V.bw = Math.max(2, Math.min(60, plotW() / Math.max(3, zi1 - zi0 + 2))); V.start = zi0 - .5; zoomed = true; if (opts.onView) opts.onView(false, true); } setTool('cursor'); }
-        else if (ONE[draft.type]) { var nd = { type: draft.type, a: draft.a }; if (draft.type === 'emoji') nd.txt = emojiSel; DR.push(nd); sel = DR.length - 1; emitDraw(); var nt = draft.type; setTool('cursor'); if (nt === 'text' && opts.onText) opts.onText(DR.length - 1); }
+        else if (ONE[draft.type]) { var nd = { type: draft.type, a: draft.a }; if (draft.type === 'emoji') nd.txt = emojiSel; DR.push(nd); sel = DR.length - 1; emitDraw(); var nt = draft.type; setTool('cursor'); if ((nt === 'text' || NOTE[nt]) && opts.onText) opts.onText(DR.length - 1, nt, !!NOTE_OPT[nt]); }
         else if (far) { if (draft.type === 'ruler') ruler = draft; else { DR.push({ type: draft.type, a: draft.a, b: draft.b }); sel = DR.length - 1; emitDraw(); } setTool('cursor'); }
         else { draft = null; draw(); }
       } else if (draft) { draft = null; draw(); }
