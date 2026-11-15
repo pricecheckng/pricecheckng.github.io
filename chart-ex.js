@@ -56,6 +56,12 @@
     }
   };
 
+  var first = function (tries) {   // run the attempts one after another, use the first that answers with data
+    var i = 0, err = null;
+    return (function next() { if (i >= tries.length) return Promise.reject(err || new Error('no data')); var f = tries[i++]; return f().then(function (r) { if (!r || !r.length) throw new Error('empty'); return r; }).catch(function (e) { err = e; return next(); }); })();
+  };
+  var asc = function (a) { return a.sort(function (x, y) { return x.t - y.t; }); };
+
   E.mexc = {
     name: 'MEXC',
     list: function () {
@@ -63,12 +69,51 @@
         var s = new Set(); (r || []).forEach(function (x) { var m = /^([A-Z0-9]+)USDT$/.exec(x.symbol); if (m) s.add(m[1]); }); return s; });
     },
     candles: function (sy, iv) {
-      var i = { '15m': '15m', '1h': '60m', '4h': '4h', '1d': '1d', '1w': '1W' }[iv];
-      return J('https://api.mexc.com/api/v3/klines?symbol=' + sy + 'USDT&interval=' + i + '&limit=500').then(function (r) {
-        return (r || []).map(function (k) { return { t: N(k[0]), o: N(k[1]), h: N(k[2]), l: N(k[3]), c: N(k[4]), v: N(k[5]) }; }); });
+      var v3 = { '15m': ['15m'], '1h': ['60m', '1h'], '4h': ['4h', '240m'], '1d': ['1d', '1D'], '1w': ['1W', '1w'] }[iv];
+      var v2 = { '15m': '15m', '1h': '60m', '4h': '4h', '1d': '1d', '1w': '1W' }[iv];
+      var tries = v3.map(function (i) { return function () { return J('https://api.mexc.com/api/v3/klines?symbol=' + sy + 'USDT&interval=' + i + '&limit=500').then(function (r) {
+        return (r || []).map(function (k) { return { t: N(k[0]), o: N(k[1]), h: N(k[2]), l: N(k[3]), c: N(k[4]), v: N(k[5]) }; }); }); }; });
+      tries.push(function () { return J('https://www.mexc.com/open/api/v2/market/kline?symbol=' + sy + '_USDT&interval=' + v2 + '&limit=500').then(function (r) {
+        return ((r && r.data) || []).map(function (k) { return { t: N(k[0]) * 1000, o: N(k[1]), h: N(k[3]), l: N(k[4]), c: N(k[2]), v: N(k[5]) }; }); }); });
+      return first(tries).then(asc);
     },
     ticker: function (sy) {
       return J('https://api.mexc.com/api/v3/ticker/24hr?symbol=' + sy + 'USDT').then(function (d) {
+        return { last: N(d.lastPrice), open: N(d.openPrice), high: N(d.highPrice), low: N(d.lowPrice), vol: N(d.volume), qvol: N(d.quoteVolume) }; });
+    }
+  };
+
+  E.bitget = {
+    name: 'Bitget',
+    list: function () {
+      return J('https://api.bitget.com/api/v2/spot/public/symbols').then(function (r) {
+        var s = new Set(); (r.data || []).forEach(function (x) { if (x.quoteCoin === 'USDT' && x.status === 'online') s.add(String(x.baseCoin).toUpperCase()); }); return s; });
+    },
+    candles: function (sy, iv) {
+      var g = { '15m': '15min', '1h': '1h', '4h': '4h', '1d': '1day', '1w': '1week' }[iv];
+      return J('https://api.bitget.com/api/v2/spot/market/candles?symbol=' + sy + 'USDT&granularity=' + g + '&limit=500').then(function (r) {
+        return asc((r.data || []).map(function (k) { return { t: N(k[0]), o: N(k[1]), h: N(k[2]), l: N(k[3]), c: N(k[4]), v: N(k[5]) }; })); });
+    },
+    ticker: function (sy) {
+      return J('https://api.bitget.com/api/v2/spot/market/tickers?symbol=' + sy + 'USDT').then(function (r) { var d = r.data[0];
+        return { last: N(d.lastPr), open: N(d.open), high: N(d.high24h), low: N(d.low24h), vol: N(d.baseVolume), qvol: N(d.usdtVolume || d.quoteVolume) }; });
+    }
+  };
+
+  /* Aster: same format as Binance. Spot first, then futures if the spot server does not answer. */
+  var AH = ['https://sapi.asterdex.com/api/v1', 'https://fapi.asterdex.com/fapi/v1'];
+  E.aster = {
+    name: 'Aster',
+    list: function () {
+      return Promise.all(AH.map(function (h) { return J(h + '/exchangeInfo').then(function (r) { return r.symbols || []; }).catch(function () { return []; }); })).then(function (a) {
+        var s = new Set(); a.forEach(function (l) { l.forEach(function (x) { if (x.quoteAsset === 'USDT' && (!x.status || x.status === 'TRADING')) s.add(String(x.baseAsset).toUpperCase()); }); }); return s; });
+    },
+    candles: function (sy, iv) {
+      return first(AH.map(function (h) { return function () { return J(h + '/klines?symbol=' + sy + 'USDT&interval=' + iv + '&limit=500').then(function (r) {
+        return (r || []).map(function (k) { return { t: N(k[0]), o: N(k[1]), h: N(k[2]), l: N(k[3]), c: N(k[4]), v: N(k[5]) }; }); }); }; })).then(asc);
+    },
+    ticker: function (sy) {
+      return first(AH.map(function (h) { return function () { return J(h + '/ticker/24hr?symbol=' + sy + 'USDT').then(function (d) { return [d]; }); }; })).then(function (r) { var d = r[0];
         return { last: N(d.lastPrice), open: N(d.openPrice), high: N(d.highPrice), low: N(d.lowPrice), vol: N(d.volume), qvol: N(d.quoteVolume) }; });
     }
   };
