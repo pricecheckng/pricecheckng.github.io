@@ -360,6 +360,8 @@
     function emitDraw() { histPush(); if (opts.onDraw) opts.onDraw(DR.slice()); }
     function applyHist(s) { DR = JSON.parse(s); sel = -1; draft = null; if (opts.onDraw) opts.onDraw(DR.slice()); if (opts.onHist) opts.onHist(); draw(); }
     function setLive(pt) { if (draft.pts) draft.pts[draft.stage] = pt; else draft.c = pt; }
+    var stay = false;
+    function endTool() { if (stay) { draft = null; if (opts.onTool) opts.onTool(tool); draw(); } else setTool('cursor'); }
     function setTool(t) { tool = t; draft = null; if (t !== 'cursor') sel = -1; if (opts.onTool) opts.onTool(t); draw(); }
     var ctype = 'candles', LINEY = { line: 1, linem: 1, step: 1, area: 1, hlc: 1, baseline: 1 }, haC = null, haN = -1;
     function haArr() { if (haC && haN === D.c.length && haC.last === D.c[D.c.length - 1].c) return haC; var out = [], i, p = null; for (i = 0; i < D.c.length; i++) { var k = D.c[i], cl = (k.o + k.h + k.l + k.c) / 4, op = p ? (p.o + p.c) / 2 : (k.o + k.c) / 2; var r = { o: op, c: cl, h: Math.max(k.h, op, cl), l: Math.min(k.l, op, cl) }; out.push(r); p = r; } out.last = D.c.length ? D.c[D.c.length - 1].c : 0; haC = out; haN = D.c.length; return out; }
@@ -761,12 +763,12 @@
       if (draft && wasDrag) {
         var a0 = px(draft.a), b0 = px(draft.b), far = Math.hypot(a0.x - b0.x, a0.y - b0.y) > 8;
         if (draft.stage >= 2 && draft.pts && draft.stage < MULTI[draft.type] - 1) { draft.stage++; draft.pts.push(draft.pts[draft.stage - 1]); if (opts.onStage) opts.onStage(draft.stage); delete ptrs[ev.pointerId]; clearTimeout(holdT); draw(); return; }
-        if (draft.stage >= 2) { DR.push(draft.pts ? { type: draft.type, a: draft.pts[0], b: draft.pts[1], pts: draft.pts.slice() } : { type: draft.type, a: draft.a, b: draft.b, c: draft.c }); sel = DR.length - 1; emitDraw(); setTool('cursor'); delete ptrs[ev.pointerId]; clearTimeout(holdT); return; }
+        if (draft.stage >= 2) { DR.push(draft.pts ? { type: draft.type, a: draft.pts[0], b: draft.pts[1], pts: draft.pts.slice() } : { type: draft.type, a: draft.a, b: draft.b, c: draft.c }); sel = DR.length - 1; emitDraw(); endTool(); delete ptrs[ev.pointerId]; clearTimeout(holdT); return; }
         if ((THREE[draft.type] || MULTI[draft.type]) && far) { draft.stage = 2; if (draft.pts) draft.pts[2] = draft.pts[1]; else draft.c = draft.b; if (opts.onStage) opts.onStage(2); delete ptrs[ev.pointerId]; clearTimeout(holdT); draw(); return; }
-        if (FREE[draft.type]) { if (draft.pts.length >= 3) { DR.push({ type: draft.type, a: draft.pts[0], b: draft.pts[draft.pts.length - 1], pts: draft.pts.slice() }); sel = DR.length - 1; emitDraw(); } setTool('cursor'); }
-        else if (draft.type === 'zoom') { if (far) { var zi0 = Math.min(tIdx(draft.a.t), tIdx(draft.b.t)), zi1 = Math.max(tIdx(draft.a.t), tIdx(draft.b.t)); V.bw = Math.max(2, Math.min(60, plotW() / Math.max(3, zi1 - zi0 + 2))); V.start = zi0 - .5; zoomed = true; if (opts.onView) opts.onView(false, true); } setTool('cursor'); }
-        else if (ONE[draft.type]) { var nd = { type: draft.type, a: draft.a }; if (draft.type === 'emoji') nd.txt = emojiSel; DR.push(nd); sel = DR.length - 1; emitDraw(); var nt = draft.type; setTool('cursor'); if ((nt === 'text' || NOTE[nt]) && opts.onText) opts.onText(DR.length - 1, nt, !!NOTE_OPT[nt]); }
-        else if (far) { if (draft.type === 'ruler') ruler = draft; else { DR.push({ type: draft.type, a: draft.a, b: draft.b }); sel = DR.length - 1; emitDraw(); } setTool('cursor'); }
+        if (FREE[draft.type]) { if (draft.pts.length >= 3) { DR.push({ type: draft.type, a: draft.pts[0], b: draft.pts[draft.pts.length - 1], pts: draft.pts.slice() }); sel = DR.length - 1; emitDraw(); } endTool(); }
+        else if (draft.type === 'zoom') { if (far) { var zi0 = Math.min(tIdx(draft.a.t), tIdx(draft.b.t)), zi1 = Math.max(tIdx(draft.a.t), tIdx(draft.b.t)); V.bw = Math.max(2, Math.min(60, plotW() / Math.max(3, zi1 - zi0 + 2))); V.start = zi0 - .5; zoomed = true; if (opts.onView) opts.onView(false, true); } endTool(); }
+        else if (ONE[draft.type]) { var nd = { type: draft.type, a: draft.a }; if (draft.type === 'emoji') nd.txt = emojiSel; DR.push(nd); sel = DR.length - 1; emitDraw(); var nt = draft.type; endTool(); if ((nt === 'text' || NOTE[nt]) && opts.onText) opts.onText(DR.length - 1, nt, !!NOTE_OPT[nt]); }
+        else if (far) { if (draft.type === 'ruler') ruler = draft; else { DR.push({ type: draft.type, a: draft.a, b: draft.b }); sel = DR.length - 1; emitDraw(); } endTool(); }
         else { draft = null; draw(); }
       } else if (draft) { draft = null; draw(); }
       else if (wasDrag && tool === 'cursor' && !moved && !held && downPos && sc && D.c.length) { var h = hitTest(downPos.x, downPos.y); if (cur === 'eraser') { if (h >= 0) { DR.splice(h, 1); sel = -1; emitDraw(); draw(); } } else if (h !== sel) { sel = h; draw(); } }
@@ -822,6 +824,7 @@
       host: mainEl, noteInfo: function (i) { var d = DR[i]; if (!d || !d.a) return null; var g = shapeGeom(d), ls = (g.labels || []).filter(function (q) { return q.txt !== '\u2605'; }), lb = ls[0], a = px(d.a); if (!lb) return { x: a.x, y: a.y, ax: a.x, ay: a.y }; var my = ls.reduce(function (m, q) { return m + q.y; }, 0) / ls.length; return { x: lb.x, y: my, ax: a.x, ay: a.y, sz: lb.sz || 12 }; }, setStyle: function (i, k, v) { if (!DR[i]) return; if (v == null) delete DR[i][k]; else DR[i][k] = v; emitDraw(); draw(); }, setTextLive: function (i, t) { if (DR[i]) { DR[i].txt = t; draw(); } },
       reorder: function (i, m) { if (!DR[i]) return -1; var d = DR.splice(i, 1)[0], n = m === 'front' ? DR.length : m === 'back' ? 0 : m === 'fwd' ? Math.min(DR.length, i + 1) : Math.max(0, i - 1); DR.splice(n, 0, d); sel = n; emitDraw(); draw(); return n; },
       cloneAt: function (i) { var d = DR[i]; if (!d) return -1; var c = JSON.parse(JSON.stringify(d)); delete c.ai; delete c.lk; delete c.hid; var mv = function (p) { if (!p || p.t == null) return p; var q = px(p); return pointAt(q.x + 18, q.y + 18) || p; }; if (c.a) c.a = mv(c.a); if (c.b) c.b = mv(c.b); if (c.c) c.c = mv(c.c); if (c.pts) c.pts = c.pts.map(mv); DR.push(c); sel = DR.length - 1; emitDraw(); draw(); return sel; },
+      setStay: function (v) { stay = !!v; }, deselect: function () { if (sel >= 0) { sel = -1; draw(); } },
       selectAt: function (i) { if (DR[i] && !DR[i].hid && !DR[i].lk) { sel = i; draw(); return true; } return false; },
       deleteSelected: function () { if (sel < 0) return false; DR.splice(sel, 1); sel = -1; emitDraw(); draw(); return true; },
       clearDrawings: function () { DR = []; sel = -1; ruler = null; emitDraw(); draw(); },
