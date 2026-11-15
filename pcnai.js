@@ -1,4 +1,4 @@
-/* PriceCheck NG - PCN AI chat. BUILD 149 */
+/* PriceCheck NG - PCN AI chat. BUILD 150 */
 (function () {
   // 1. Inject Chat Modal Markup & Styles
   function injectChatUI() {
@@ -627,9 +627,26 @@
   }
 
   // 2. Add PCN AI Tab to Navigation Bar
+  function openChat(e) {
+        e.preventDefault();
+        injectChatUI();
+        // opening PCN AI fresh: clear the last chat and show the suggestions again
+        var m = document.getElementById('pcnMsgs');
+        if (m) {
+          var msgsAll = m.querySelectorAll('.pcn-msg');
+          for (var i = 0; i < msgsAll.length; i++) msgsAll[i].remove();
+          var pr = document.getElementById('pcnPrompts'), pt = document.getElementById('pcnPromptTitle');
+          if (pr) pr.style.display = '';
+          if (pt) pt.style.display = '';
+          m.scrollTop = 0;
+        }
+        document.getElementById('pcn-chat-modal').classList.add('open');
+      }
   function setupTabs() {
     var bar = document.querySelector('.tabs');
     if (!bar) return false;
+    var ex = bar.querySelector('a[data-tab="pcnai"]');
+    if (ex && !ex.__pcnH) { ex.__pcnH = true; ex.addEventListener('click', openChat); }
 
     if (!bar.querySelector('a[data-tab="pcnai"]')) {
       var acct = bar.querySelector('a[data-tab="account"]');
@@ -646,22 +663,7 @@
       var sv = t.querySelector('svg');
       if (sv) sv.innerHTML = '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/>';
 
-      // Open Chat Modal on click
-      t.addEventListener('click', function (e) {
-        e.preventDefault();
-        injectChatUI();
-        // opening PCN AI fresh: clear the last chat and show the suggestions again
-        var m = document.getElementById('pcnMsgs');
-        if (m) {
-          var msgsAll = m.querySelectorAll('.pcn-msg');
-          for (var i = 0; i < msgsAll.length; i++) msgsAll[i].remove();
-          var pr = document.getElementById('pcnPrompts'), pt = document.getElementById('pcnPromptTitle');
-          if (pr) pr.style.display = '';
-          if (pt) pt.style.display = '';
-          m.scrollTop = 0;
-        }
-        document.getElementById('pcn-chat-modal').classList.add('open');
-      });
+      t.__pcnH = true; t.addEventListener('click', openChat);
 
       bar.style.display = 'grid';
       bar.style.gridAutoFlow = 'column';
