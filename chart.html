@@ -292,12 +292,33 @@
     <div id="typeOpts"></div></div></div>
 </div>
 <script>
-/* if the chart code could not start (a bad mobile connection can drop one file), reload once on its own */
-setTimeout(function () { try { if (!window.__pcnMod) { if (!sessionStorage.getItem('pcnRl')) { sessionStorage.setItem('pcnRl', '1'); location.reload(); } } else sessionStorage.removeItem('pcnRl'); } catch (e) {} }, 9000);
+/* if the chart code could not start: clear old saved copies and reload by itself, then show a fix button with the real reason */
+(function () {
+  var why = '';
+  window.addEventListener('error', function (e) { try { why = (e && (e.message || (e.target && e.target.src))) || why; } catch (_) {} }, true);
+  window.addEventListener('unhandledrejection', function (e) { try { why = String((e.reason && e.reason.message) || e.reason || why); } catch (_) {} });
+  function wipe(done) {
+    var n = 0, fin = function () { if (++n >= 2) done(); };
+    try { navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }).then(fin, fin); } catch (_) { fin(); }
+    try { caches.keys().then(function (ks) { return Promise.all(ks.map(function (k) { return caches.delete(k); })); }).then(fin, fin); } catch (_) { fin(); }
+  }
+  function go() { var u = location.pathname + (location.search ? location.search.replace(/[?&]r=\d+/,'') + '&' : '?') + 'r=' + Date.now(); location.replace(u); }
+  setTimeout(function () {
+    try {
+      if (window.__pcnMod) { sessionStorage.removeItem('pcnRl'); return; }
+      if (!sessionStorage.getItem('pcnRl')) { sessionStorage.setItem('pcnRl', '1'); wipe(go); return; }
+      var b = document.createElement('button');
+      b.textContent = 'Chart did not start. Tap here to fix' + (why ? ' (' + String(why).slice(0, 70) + ')' : '');
+      b.style.cssText = 'position:fixed;left:16px;right:16px;top:45%;z-index:99999;padding:16px;border-radius:14px;border:0;background:#16a34a;color:#fff;font:700 15px system-ui';
+      b.onclick = function () { sessionStorage.removeItem('pcnRl'); b.textContent = 'Fixing...'; wipe(go); };
+      document.body.appendChild(b);
+    } catch (e) {}
+  }, 7000);
+})();
 </script>
-<script src="pcnchart.js?v=147"></script>
+<script src="pcnchart.js?v=148"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=147";
+import { ICONS } from "./chart-icons.js?v=148";
 window.__pcnMod = true; try { sessionStorage.removeItem("pcnRl"); } catch (_) {}
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
