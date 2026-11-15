@@ -35,7 +35,8 @@
     }
     function px(pt) { return { x: xOf(tIdx(pt.t)), y: sc.py(pt.p) }; }
     function segDist(x, y, a, b) { var dx = b.x - a.x, dy = b.y - a.y, l = dx * dx + dy * dy, t = l ? Math.max(0, Math.min(1, ((x - a.x) * dx + (y - a.y) * dy) / l)) : 0; return Math.hypot(x - a.x - t * dx, y - a.y - t * dy); }
-    var ONE = { text: 1, emoji: 1, avwap: 1, hline: 1, hray: 1, vline: 1, cross: 1 };
+    var ONE = { text: 1, emoji: 1, avwap: 1, hline: 1, hray: 1, vline: 1, cross: 1, amu: 1, amd: 1, aml: 1, amr: 1 };
+    var SHP = { rect: 1, rrect: 1, circle: 1, ellipse: 1, tri: 1, arc: 1, curve: 1, dcurve: 1, poly: 1, arr: 1, arrmk: 1, amu: 1, amd: 1, aml: 1, amr: 1, hlight: 1, path: 1 }, FREE = { brush: 1, hlight: 1, path: 1 };
     function ext(a, b, fwd, back) { var dx = b.x - a.x, dy = b.y - a.y, l = Math.hypot(dx, dy) || 1, ux = dx / l, uy = dy / l; return [back ? { x: a.x - ux * 6000, y: a.y - uy * 6000 } : a, fwd ? { x: b.x + ux * 6000, y: b.y + uy * 6000 } : b]; }
     var FC = ['138,163,150', '234,57,67', '245,165,36', '22,199,132', '45,212,191', '77,163,255', '138,163,150', '167,139,250'];
     function fibGeom(d) {
@@ -91,7 +92,7 @@
       return out;
     }
 
-    var MULTI = { xabcd: 5, cypher: 5, hnsh: 7, abcd: 4, trip: 4, drives: 7, eimp: 6, ecor: 4, etri: 6, edbl: 4, etrp: 6 };
+    var MULTI = { dcurve: 4, poly: 5, xabcd: 5, cypher: 5, hnsh: 7, abcd: 4, trip: 4, drives: 7, eimp: 6, ecor: 4, etri: 6, edbl: 4, etrp: 6 };
     var WL = { eimp: ['0', '(1)', '(2)', '(3)', '(4)', '(5)'], ecor: ['0', '(A)', '(B)', '(C)'], etri: ['0', '(A)', '(B)', '(C)', '(D)', '(E)'], edbl: ['0', '(W)', '(X)', '(Y)'], etrp: ['0', '(W)', '(X)', '(Y)', '(X)', '(Z)'],
       xabcd: ['X', 'A', 'B', 'C', 'D'], cypher: ['X', 'A', 'B', 'C', 'D'], abcd: ['A', 'B', 'C', 'D'], trip: ['A', 'B', 'C', 'D'], hnsh: ['', 'Left Shoulder', '', 'Head', '', 'Right Shoulder', ''], drives: ['', 'Drive 1', 'Corr 1', 'Drive 2', 'Corr 2', 'Drive 3', ''] };
     function patShape(d, out) {
@@ -170,7 +171,7 @@
       } else if (t === 'brush') {
         var bp = (d.pts || [d.a]).map(px); for (i = 0; i + 1 < bp.length; i++) L(bp[i], bp[i + 1], OR, 0, 2.2); out.pts = bp.length ? [bp[0], bp[bp.length - 1]] : [];
       } else if (t === 'text' || t === 'emoji') {
-        out.labels.push({ x: a.x, y: a.y, txt: d.txt || (t === 'text' ? 'Text' : '🙂'), col: '232,241,236', c: 1, b: 1, sz: t === 'emoji' ? 26 : 14 }); out.pts = [a];
+        out.labels.push({ x: a.x, y: a.y, txt: d.txt || (t === 'text' ? 'Text' : '🙂'), col: '232,241,236', c: 1, b: 1, sz: t === 'emoji' ? ((d.txt || '').length > 3 ? 15 : 26) : 14 }); out.pts = [a];
       } else if (t === 'avwap') {
         var j0 = cl(tIdx(d.a.t)), sv = 0, sp = 0, prev = null;
         for (i = j0; i < n; i++) { var k = D.c[i]; sv += k.v || 0; sp += ((k.h + k.l + k.c) / 3) * (k.v || 0); var q = { x: xOf(i), y: sc.py(sv ? sp / sv : k.c) }; if (prev) L(prev, q, OR, 0, 1.8); prev = q; }
@@ -206,8 +207,62 @@
       }
       return out;
     }
+
+    function shpShape(d, out) {
+      var t = d.type, a = px(d.a), b = d.b ? px(d.b) : a, c = d.c ? px(d.c) : b, i, C1 = '77,163,255', UP = '22,199,132', DN = '234,57,67', OR = '245,165,36', YL = '255,214,10';
+      var L = function (p, q, col, dash, w, al) { out.lines.push({ p: p, q: q, col: col || C1, dash: dash, w: w, al: al }); };
+      var poly = function (P, close, col, w) { for (var j = 0; j + 1 < P.length; j++) L(P[j], P[j + 1], col, 0, w || 1.7); if (close && P.length > 2) L(P[P.length - 1], P[0], col, 0, w || 1.7); };
+      var fillP = function (P, col, al) { out.fills.push({ pts: P, col: col, al: al }); };
+      var head = function (p, q, col, sz) { var ang = Math.atan2(q.y - p.y, q.x - p.x); L(q, { x: q.x - sz * Math.cos(ang - .45), y: q.y - sz * Math.sin(ang - .45) }, col, 0, 1.9); L(q, { x: q.x - sz * Math.cos(ang + .45), y: q.y - sz * Math.sin(ang + .45) }, col, 0, 1.9); };
+      var P0 = d.pts ? d.pts.map(px) : null;
+      if (t === 'rect') {
+        var R = [a, { x: b.x, y: a.y }, b, { x: a.x, y: b.y }]; poly(R, 1, C1); fillP(R, C1, .12); out.pts = [a, b];
+      } else if (t === 'rrect') {
+        var ux = b.x - a.x, uy = b.y - a.y, ul = Math.hypot(ux, uy) || 1, nx = -uy / ul, ny = ux / ul, w = (c.x - a.x) * nx + (c.y - a.y) * ny;
+        var RR = [a, b, { x: b.x + nx * w, y: b.y + ny * w }, { x: a.x + nx * w, y: a.y + ny * w }]; poly(RR, 1, C1); fillP(RR, C1, .12); out.pts = d.c ? [a, b, c] : [a, b];
+      } else if (t === 'circle' || t === 'ellipse') {
+        var cx, cy, rx, ry; if (t === 'circle') { cx = a.x; cy = a.y; rx = ry = Math.hypot(b.x - a.x, b.y - a.y); } else { cx = (a.x + b.x) / 2; cy = (a.y + b.y) / 2; rx = Math.abs(b.x - a.x) / 2; ry = Math.abs(b.y - a.y) / 2; }
+        var E = []; for (i = 0; i < 60; i++) E.push({ x: cx + rx * Math.cos(i / 60 * 6.2832), y: cy + ry * Math.sin(i / 60 * 6.2832) }); poly(E, 1, C1); fillP(E, C1, .12); out.pts = [a, b];
+      } else if (t === 'tri') {
+        var T = [a, b, c]; poly(T, 1, C1); fillP(T, C1, .12); out.pts = d.c ? [a, b, c] : [a, b];
+      } else if (t === 'arc') {
+        var D = 2 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y));
+        if (!d.c || Math.abs(D) < 1e-6) { L(a, b, C1, 0, 1.7); out.pts = d.c ? [a, b, c] : [a, b]; }
+        else {
+          var sa = a.x * a.x + a.y * a.y, sb = b.x * b.x + b.y * b.y, sc2 = c.x * c.x + c.y * c.y, ox = (sa * (b.y - c.y) + sb * (c.y - a.y) + sc2 * (a.y - b.y)) / D, oy = (sa * (c.x - b.x) + sb * (a.x - c.x) + sc2 * (b.x - a.x)) / D, rr = Math.hypot(a.x - ox, a.y - oy), TP = 6.2832;
+          var ang = function (p) { return Math.atan2(p.y - oy, p.x - ox); }, nrm = function (v) { v = v % TP; return v < 0 ? v + TP : v; }, th0 = ang(a), da = nrm(ang(b) - th0), dc = nrm(ang(c) - th0), span = dc <= da ? da : da - TP, AR = [];
+          for (i = 0; i <= 48; i++) AR.push({ x: ox + rr * Math.cos(th0 + span * i / 48), y: oy + rr * Math.sin(th0 + span * i / 48) });
+          poly(AR, 0, C1); fillP(AR, C1, .1); out.pts = [a, b, c];
+        }
+      } else if (t === 'curve') {
+        var cp = { x: 2 * c.x - (a.x + b.x) / 2, y: 2 * c.y - (a.y + b.y) / 2 }, CV = []; for (i = 0; i <= 36; i++) { var u = i / 36, v = 1 - u; CV.push({ x: v * v * a.x + 2 * v * u * cp.x + u * u * b.x, y: v * v * a.y + 2 * v * u * cp.y + u * u * b.y }); }
+        poly(CV, 0, C1); out.pts = d.c ? [a, b, c] : [a, b];
+      } else if (t === 'dcurve') {
+        var Q = P0 || [a, b, b, b]; var p0 = Q[0], p1 = Q[1], k1 = Q[2] || Q[1], k2 = Q[3] || k1, DC = [];
+        for (i = 0; i <= 40; i++) { var u2 = i / 40, v2 = 1 - u2; DC.push({ x: v2 * v2 * v2 * p0.x + 3 * v2 * v2 * u2 * k1.x + 3 * v2 * u2 * u2 * k2.x + u2 * u2 * u2 * p1.x, y: v2 * v2 * v2 * p0.y + 3 * v2 * v2 * u2 * k1.y + 3 * v2 * u2 * u2 * k2.y + u2 * u2 * u2 * p1.y }); }
+        poly(DC, 0, C1); L(p0, k1, '138,163,150', 1); L(p1, k2, '138,163,150', 1); out.pts = Q.slice(0, Q.length);
+      } else if (t === 'poly') {
+        var Y = P0 || [a, b]; poly(Y, 1, C1); if (Y.length > 2) fillP(Y, C1, .12); out.pts = Y.slice();
+      } else if (t === 'arr') {
+        L(a, b, C1, 0, 2); head(a, b, C1, 13); out.pts = [a, b];
+      } else if (t === 'arrmk') {
+        var ax = b.x - a.x, ay = b.y - a.y, al2 = Math.hypot(ax, ay) || 1, ex = ax / al2, ey = ay / al2, px2 = -ey, py2 = ex, hl = Math.min(22, al2 * .5), hw = 9, sw = 3.5;
+        var bx0 = b.x - ex * hl, by0 = b.y - ey * hl, AM = [{ x: a.x + px2 * sw, y: a.y + py2 * sw }, { x: bx0 + px2 * sw, y: by0 + py2 * sw }, { x: bx0 + px2 * hw, y: by0 + py2 * hw }, b, { x: bx0 - px2 * hw, y: by0 - py2 * hw }, { x: bx0 - px2 * sw, y: by0 - py2 * sw }, { x: a.x - px2 * sw, y: a.y - py2 * sw }];
+        fillP(AM, OR, .9); poly(AM, 1, OR, 1); out.pts = [a, b];
+      } else if (t === 'amu' || t === 'amd' || t === 'aml' || t === 'amr') {
+        var base = [[0, -17], [15, 1], [6, 1], [6, 17], [-6, 17], [-6, 1], [-15, 1]], col = t === 'amu' ? UP : t === 'amd' ? DN : t === 'aml' ? OR : C1, rot = t === 'amu' ? 0 : t === 'amd' ? 3.1416 : t === 'aml' ? -1.5708 : 1.5708, cr = Math.cos(rot), sr = Math.sin(rot);
+        var AB = base.map(function (q) { return { x: a.x + q[0] * cr - q[1] * sr, y: a.y + q[0] * sr + q[1] * cr }; }); fillP(AB, col, .85); poly(AB, 1, col, 1.4); out.pts = [a];
+      } else if (t === 'hlight' || t === 'path') {
+        var HP = (d.pts || [d.a]).map(px);
+        if (t === 'hlight') { for (i = 0; i + 1 < HP.length; i++) L(HP[i], HP[i + 1], YL, 0, 14, .38); }
+        else { for (i = 0; i + 1 < HP.length; i++) L(HP[i], HP[i + 1], C1, 0, 2.2); if (HP.length > 3) { var pe = HP[HP.length - 1], pq = HP[Math.max(0, HP.length - 4)]; head(pq, pe, C1, 13); } }
+        out.pts = HP.length ? [HP[0], HP[HP.length - 1]] : [];
+      }
+      return out;
+    }
     function shapeGeom(d) {
       var t = d.type, out = { lines: [], fills: [], pts: [], labels: [] }, A = d.a, B = d.b, i, n = D.c.length;
+      if (SHP[t]) return shpShape(d, out);
       if (NEWF[t]) return fibShape(d, out);
       if (MULTI[t]) return patShape(d, out);
       if (GANN[t]) return gannShape(d, out);
@@ -251,7 +306,7 @@
       }
       return out;
     }
-    var THREE = { bpat: 1, proj: 1, fibtime: 1, fibwedge: 1, pitchfan: 1, pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
+    var THREE = { rrect: 1, arc: 1, curve: 1, tri: 1, bpat: 1, proj: 1, fibtime: 1, fibwedge: 1, pitchfan: 1, pitch: 1, schiff: 1, mschiff: 1, inpitch: 1 };
     var RECT = { longpos: 1, shortpos: 1, prange: 1, drange: 1, dprange: 1 };
     function posGeom(d) {
       var a = px(d.a), b = px(d.b), up = d.type === 'longpos', rew = Math.abs(d.b.p - d.a.p), tp = d.a.p + (up ? rew : -rew), sp = d.a.p + (up ? -rew : rew) / 2,
@@ -265,8 +320,8 @@
         if (t === 'hline' || t === 'cross') { if (Math.abs(y - a.y) < 12) return k; }
         if (t === 'hray') { if (Math.abs(y - a.y) < 12 && x > a.x - 12) return k; }
         if (t === 'vline' || t === 'cross') { if (Math.abs(x - a.x) < 12) return k; }
-        if (t === 'text' || t === 'emoji') { if (Math.abs(x - a.x) < (t === 'text' ? 50 : 20) && Math.abs(y - a.y) < 18) return k; continue; }
-        if (SHAPE[t]) { var sg = shapeGeom(d); for (var si = 0; si < sg.lines.length; si++) if (!sg.lines[si].dash && segDist(x, y, sg.lines[si].p, sg.lines[si].q) < 14) return k; continue; }
+        if (t === 'text' || t === 'emoji') { if (Math.abs(x - a.x) < (t === 'text' || (d.txt || '').length > 3 ? 56 : 20) && Math.abs(y - a.y) < 18) return k; continue; }
+        if (SHAPE[t] || SHP[t]) { var sg = shapeGeom(d); for (var si = 0; si < sg.lines.length; si++) if (!sg.lines[si].dash && segDist(x, y, sg.lines[si].p, sg.lines[si].q) < 14) return k; continue; }
         if (RECT[t]) { var rb0 = rectBox(d); if (x > rb0.x0 - 14 && x < rb0.x1 + 14 && y > rb0.y0 - 14 && y < rb0.y1 + 14) return k; continue; }
         if (FIB[t]) { var gs = fibGeom(d); for (var gi = 0; gi < gs.length; gi++) if (segDist(x, y, gs[gi].p, gs[gi].q) < 12) return k; if (t === 'fib' && segDist(x, y, a, px(d.b)) < 12) return k; continue; }
         if (!ONE[t]) { var b = px(d.b), e = t === 'ray' ? ext(a, b, 1, 0) : t === 'extended' ? ext(a, b, 1, 1) : [a, b]; if (segDist(x, y, e[0], e[1]) < 14) return k; } }
@@ -514,10 +569,10 @@
         if (t === 'hray') line({ x: a.x, y: a.y }, { x: plotW(), y: a.y });
         if (t === 'vline' || t === 'cross') line({ x: a.x, y: 0 }, { x: a.x, y: PH });
         mx.setLineDash([]);
-        if (SHAPE[t]) {
+        if (SHAPE[t] || SHP[t]) {
           var sg2 = shapeGeom(d);
           sg2.fills.forEach(function (f) { mx.fillStyle = 'rgba(' + f.col + ',' + (f.al || .12) + ')'; mx.beginPath(); f.pts.forEach(function (p, ix) { if (ix) mx.lineTo(p.x, p.y); else mx.moveTo(p.x, p.y); }); mx.closePath(); mx.fill(); });
-          sg2.lines.forEach(function (ln) { mx.strokeStyle = 'rgb(' + ln.col + ')'; mx.lineWidth = (ln.w || 1.3) + (o.sel ? .6 : 0); mx.setLineDash(ln.dash ? [4, 4] : []); line(ln.p, ln.q); }); mx.setLineDash([]);
+          sg2.lines.forEach(function (ln) { mx.strokeStyle = 'rgb(' + ln.col + ')'; mx.lineWidth = (ln.w || 1.3) + (o.sel && !ln.al ? .6 : 0); mx.setLineDash(ln.dash ? [4, 4] : []); mx.globalAlpha = ln.al || 1; mx.lineCap = ln.w > 8 ? 'round' : 'butt'; line(ln.p, ln.q); }); mx.setLineDash([]); mx.globalAlpha = 1; mx.lineCap = 'butt';
           if (sg2.labels && sg2.labels.length) { mx.font = '600 10px system-ui,sans-serif'; mx.textBaseline = 'middle'; mx.textAlign = 'left'; var llast = []; sg2.labels.forEach(function (lb) { if (lb.x < 2 || lb.x > plotW() - 16 || lb.y < 4 || lb.y > PH - 4) return; if (!lb.c) for (var z = 0; z < llast.length; z++) if (Math.abs(llast[z].x - lb.x) < 22 && Math.abs(llast[z].y - lb.y) < 11) return; llast.push(lb); mx.fillStyle = 'rgb(' + lb.col + ')'; mx.font = (lb.sz ? (lb.sz + 'px') : (lb.b ? '700 11px' : '600 10px')) + ' system-ui,sans-serif'; mx.textAlign = lb.c ? 'center' : 'left'; mx.fillText(lb.txt, lb.c ? lb.x : lb.x + 3, lb.y); }); mx.textAlign = 'left'; mx.font = '11px system-ui,sans-serif'; }
           if (o.sel) sg2.pts.forEach(function (q) { mx.strokeStyle = DC; mx.lineWidth = 2; mx.fillStyle = '#0b120e'; mx.beginPath(); mx.arc(q.x, q.y, 5, 0, 7); mx.fill(); mx.stroke(); });
           return;
@@ -633,7 +688,7 @@
       if (manualR && lastR && ev.offsetX >= plotW() && Object.keys(ptrs).length === 1) { axisD = { y: ev.offsetY, hi: manualR.hi, lo: manualR.lo }; return; }
       if (ids.length === 1 && draft && draft.stage >= 2 && ev.offsetX < plotW() && sc) { setLive(pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY)); dragX = null; draw(); return; }
       if (ids.length === 1 && tool !== 'cursor' && ev.offsetX < plotW() && sc) {
-        var pt0 = pointAt(ev.offsetX, ev.offsetY); draft = { type: tool, a: pt0, b: pt0 }; if (MULTI[tool]) draft.pts = [pt0, pt0]; if (tool === 'brush') draft.pts = [pt0]; dragX = null; draw(); return;
+        var pt0 = pointAt(ev.offsetX, ev.offsetY); draft = { type: tool, a: pt0, b: pt0 }; if (MULTI[tool]) draft.pts = [pt0, pt0]; if (FREE[tool]) draft.pts = [pt0]; dragX = null; draw(); return;
       }
       if (ids.length === 1) {
         dragX = ev.offsetX; var ox = ev.offsetX;
@@ -648,7 +703,7 @@
       ptrs[ev.pointerId] = { x: ev.offsetX, y: ev.offsetY };
       var ids = Object.keys(ptrs);
       if (draft && ids.length === 1 && draft.stage >= 2) { setLive(pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY)); draw(); return; }
-      if (draft && ids.length === 1 && draft.type === 'brush') { var bpt = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY), lp = px(draft.pts[draft.pts.length - 1]), cp = px(bpt); if (Math.hypot(lp.x - cp.x, lp.y - cp.y) > 3) { draft.pts.push(bpt); draft.b = bpt; } draw(); return; }
+      if (draft && ids.length === 1 && FREE[draft.type]) { var bpt = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY), lp = px(draft.pts[draft.pts.length - 1]), cp = px(bpt); if (Math.hypot(lp.x - cp.x, lp.y - cp.y) > 3) { draft.pts.push(bpt); draft.b = bpt; } draw(); return; }
       if (draft && ids.length === 1) { draft.b = pointAt(Math.min(ev.offsetX, plotW() - 1), ev.offsetY); if (draft.pts) draft.pts[1] = draft.b; if (ONE[draft.type]) draft.a = draft.b; draw(); return; }
       if (ids.length === 2) {
         var a = ptrs[ids[0]], b = ptrs[ids[1]], d = Math.abs(a.x - b.x) || 1, mid = (a.x + b.x) / 2;
@@ -670,7 +725,7 @@
         if (draft.stage >= 2 && draft.pts && draft.stage < MULTI[draft.type] - 1) { draft.stage++; draft.pts.push(draft.pts[draft.stage - 1]); if (opts.onStage) opts.onStage(draft.stage); delete ptrs[ev.pointerId]; clearTimeout(holdT); draw(); return; }
         if (draft.stage >= 2) { DR.push(draft.pts ? { type: draft.type, a: draft.pts[0], b: draft.pts[1], pts: draft.pts.slice() } : { type: draft.type, a: draft.a, b: draft.b, c: draft.c }); sel = DR.length - 1; emitDraw(); setTool('cursor'); delete ptrs[ev.pointerId]; clearTimeout(holdT); return; }
         if ((THREE[draft.type] || MULTI[draft.type]) && far) { draft.stage = 2; if (draft.pts) draft.pts[2] = draft.pts[1]; else draft.c = draft.b; if (opts.onStage) opts.onStage(2); delete ptrs[ev.pointerId]; clearTimeout(holdT); draw(); return; }
-        if (draft.type === 'brush') { if (draft.pts.length >= 3) { DR.push({ type: 'brush', a: draft.pts[0], b: draft.pts[draft.pts.length - 1], pts: draft.pts.slice() }); sel = DR.length - 1; emitDraw(); } setTool('cursor'); }
+        if (FREE[draft.type]) { if (draft.pts.length >= 3) { DR.push({ type: draft.type, a: draft.pts[0], b: draft.pts[draft.pts.length - 1], pts: draft.pts.slice() }); sel = DR.length - 1; emitDraw(); } setTool('cursor'); }
         else if (draft.type === 'zoom') { if (far) { var zi0 = Math.min(tIdx(draft.a.t), tIdx(draft.b.t)), zi1 = Math.max(tIdx(draft.a.t), tIdx(draft.b.t)); V.bw = Math.max(2, Math.min(60, plotW() / Math.max(3, zi1 - zi0 + 2))); V.start = zi0 - .5; zoomed = true; if (opts.onView) opts.onView(false, true); } setTool('cursor'); }
         else if (ONE[draft.type]) { var nd = { type: draft.type, a: draft.a }; if (draft.type === 'emoji') nd.txt = emojiSel; DR.push(nd); sel = DR.length - 1; emitDraw(); var nt = draft.type; setTool('cursor'); if (nt === 'text' && opts.onText) opts.onText(DR.length - 1); }
         else if (far) { if (draft.type === 'ruler') ruler = draft; else { DR.push({ type: draft.type, a: draft.a, b: draft.b }); sel = DR.length - 1; emitDraw(); } setTool('cursor'); }
