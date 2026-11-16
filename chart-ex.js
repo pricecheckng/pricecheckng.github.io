@@ -188,7 +188,15 @@
   var ubC = function (sy, iv) {
     var path = { '15m': '/candles/minutes/15', '1h': '/candles/minutes/60', '4h': '/candles/minutes/240', '1d': '/candles/days', '1w': '/candles/weeks' }[iv];
     return J(UB + path + '?market=USDT-' + sy + '&count=200').then(function (r) {
-      return asc((r || []).map(function (k) { return { t: Date.parse(k.candle_date_time_utc + 'Z'), o: N(k.opening_price), h: N(k.high_price), l: N(k.low_price), c: N(k.trade_price), v: N(k.candle_acc_trade_volume) }; })); });
+      var a = asc((r || []).map(function (k) { return { t: Date.parse(k.candle_date_time_utc + 'Z'), o: N(k.opening_price), h: N(k.high_price), l: N(k.low_price), c: N(k.trade_price), v: N(k.candle_acc_trade_volume) }; }));
+      /* Upbit sends no candle for a period with no trades. Fill those with a flat candle so the chart has no holes. */
+      var step = { '15m': 9e5, '1h': 36e5, '4h': 144e5, '1d': 864e5, '1w': 6048e5 }[iv], out = [];
+      a.forEach(function (c) {
+        var p = out[out.length - 1];
+        if (p && step) { for (var t = p.t + step, n = 0; t < c.t && n < 2000; t += step, n++) out.push({ t: t, o: p.c, h: p.c, l: p.c, c: p.c, v: 0 }); }
+        out.push(c);
+      });
+      return out; });
   };
   E.upbit = {
     name: 'Upbit', quote: 'USDT',
