@@ -325,10 +325,10 @@ setTimeout(function(){var d=document.getElementById('dtools');if(d)d.classList.a
   }, 7000);
 })();
 </script>
-<script src="pcnchart.js?v=163"></script>
-<script src="chart-ex.js?v=163"></script>
+<script src="pcnchart.js?v=164"></script>
+<script src="chart-ex.js?v=164"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=163";
+import { ICONS } from "./chart-icons.js?v=164";
 window.__pcnMod = true; try { sessionStorage.removeItem("pcnRl"); } catch (_) {}
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
@@ -740,14 +740,20 @@ function startLive(my, tries = 0) {
 }
 function startExPoll(my) {
   const A = window.PCNEX[exch], sy = symbol, iv = interval; liveState(true, 'live');
+  let n = 0, lastK = (lastD && lastD.candles && lastD.candles.length) ? Object.assign({}, lastD.candles[lastD.candles.length - 1]) : null;
+  // price every 5 seconds, candles every 15 seconds (keeps our server calls low)
   const tick = async () => {
     if (document.hidden || my !== token) return;
-    try { const [cs, tk0] = await Promise.all([A.candles(sy, iv), A.ticker(sy).catch(() => null)]); if (my !== token) return; const tk = tk0 || window.PCNEX_derive(cs, iv);
-      cs.slice(-2).forEach(k => chart.tick(k)); const last = cs[cs.length - 1]; if (tk.last && last) chart.tick(Object.assign({}, last, { c: tk.last, h: Math.max(last.h, tk.last), l: Math.min(last.l, tk.last) }));
-      setPrice(tk.last || last.c); paint24(tk.high, tk.low, tk.vol, tk.qvol); liveState(true, 'live');
+    const withC = (n++ % 3) === 0;
+    try {
+      const [cs, tk0] = await Promise.all([withC ? A.candles(sy, iv) : null, A.ticker(sy).catch(() => null)]); if (my !== token) return;
+      if (cs && cs.length) { cs.slice(-2).forEach(k => chart.tick(k)); lastK = Object.assign({}, cs[cs.length - 1]); }
+      const tk = tk0 || (cs && cs.length ? window.PCNEX_derive(cs, iv) : null); if (!tk) throw new Error('no data');
+      if (lastK && tk.last) { lastK = Object.assign({}, lastK, { c: tk.last, h: Math.max(lastK.h, tk.last), l: Math.min(lastK.l, tk.last) }); chart.tick(lastK); }
+      setPrice(tk.last || (lastK && lastK.c)); paint24(tk.high, tk.low, tk.vol, tk.qvol); liveState(true, 'live');
     } catch (_) { if (my === token) liveState(false, 'offline'); }
   };
-  poll = setInterval(tick, 4000);
+  poll = setInterval(tick, 5000);
 }
 function startPoll(my) {
   liveState(true, 'live');
