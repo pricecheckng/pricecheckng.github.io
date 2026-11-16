@@ -325,10 +325,10 @@ setTimeout(function(){var d=document.getElementById('dtools');if(d)d.classList.a
   }, 7000);
 })();
 </script>
-<script src="pcnchart.js?v=159"></script>
-<script src="chart-ex.js?v=159"></script>
+<script src="pcnchart.js?v=160"></script>
+<script src="chart-ex.js?v=160"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=159";
+import { ICONS } from "./chart-icons.js?v=160";
 window.__pcnMod = true; try { sessionStorage.removeItem("pcnRl"); } catch (_) {}
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
@@ -773,7 +773,7 @@ async function load() {
       source = exch; dayOpen = tk.open || null;
       $('px').classList.remove('hv'); setPrice(tk.last || cs[cs.length - 1].c); paint24(tk.high, tk.low, tk.vol, tk.qvol);
       $('msg').style.display = 'none'; startLive(my);
-    } catch (e) { if (my === token) fail('Could not load ' + symbol + '/USDT on ' + EXN[exch] + '. Pick another pair and try again.' + (e && e.message ? ' (' + String(e.message).slice(0, 60) + ')' : '')); }
+    } catch (e) { if (my === token) { const m = String((e && e.message) || ''); fail(/timeout|Failed to fetch|failed/i.test(m) ? EXN[exch] + ' cannot be reached from your network right now. Try Binance, Bybit, Gate, Bitget or Aster.' : 'Could not load ' + symbol + '/USDT on ' + EXN[exch] + '. Pick another pair and try again.' + (m ? ' (' + m.slice(0, 60) + ')' : '')); } }
     return;
   }
   try {
