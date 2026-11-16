@@ -19,6 +19,9 @@ document.getElementById('go').onclick=async function(){
       if(md==null||Math.abs(md)>5)pr.push('mcap '+f(c.market_cap_usd)+' vs '+f(x.market_cap)+(md==null?'':' ('+md.toFixed(1)+'%)'));
       if(Math.abs(rd)>3)pr.push('rank '+c.market_cap_rank+' vs '+x.market_cap_rank);
       if(pr.length){bad++;rows.push(['no','#'+c.market_cap_rank+' '+c.symbol.toUpperCase()+': '+pr.join('; ')])}});
+    var mi=o.filter(function(c){return !gm[c.id]}).map(function(c){return c.id});
+    if(mi.length){try{var xr=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids='+mi.join(','));var xj=xr.ok?await xr.json():[];var xm={};xj.forEach(function(c){xm[c.id]=c});
+      o.filter(function(c){return !gm[c.id]}).forEach(function(c){var x=xm[c.id];rows.push(['wn','LOOKUP #'+c.market_cap_rank+' '+c.symbol.toUpperCase()+' ('+c.id+'): ours mcap '+f(c.market_cap_usd)+' price '+f(c.price_usd)+' / CoinGecko '+(x?'mcap '+f(x.market_cap)+' price '+f(x.current_price)+' rank '+(x.market_cap_rank||'none'):'does not list this coin')])})}catch(e){}}
     var age=o.reduce(function(m,c){return Math.max(m,Date.parse(c.last_updated||0)||0)},0);
     LOG.push('Checked '+o.length+' coins: '+bad+' mismatched, '+miss+' not in CoinGecko top 250. Newest update in our table: '+(age?Math.round((Date.now()-age)/6e4)+' min ago':'unknown'));
     rows.forEach(function(r){LOG.push((r[0]==='no'?'MISMATCH ':'NOTE ')+r[1])});
