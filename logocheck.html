@@ -1,0 +1,53 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Pair logo check</title>
+<style>body{margin:0;padding:14px;background:#0b130f;color:#e6f2ea;font:13px system-ui}h1{font-size:18px;margin:0 0 6px}button{padding:12px 18px;border:0;border-radius:10px;background:#16a34a;color:#fff;font:700 15px system-ui;margin:0 8px 8px 0}#sum{margin:8px 0;font-weight:700}.r{padding:6px 0;border-bottom:1px solid #1d2b23;word-break:break-word}b.no{color:#f87171}b.wn{color:#fbbf24}b.ok{color:#4ade80}small{display:block;color:#8aa396}</style></head><body>
+<h1>Pair logo check</h1><p>Tap Start and wait 2 to 4 minutes. It lists the exchange pairs that would show a letter instead of a logo. Then tap Copy report and paste it to me.</p>
+<button id="go">Start</button><button id="cp">Copy report</button><div id="sum"></div><div id="out"></div>
+<script type="module">import { SUPABASE_URL, SUPABASE_KEY } from "./config.js"; window.PCN_CFG = { url: SUPABASE_URL, key: SUPABASE_KEY }; window.PCNEX_PROXY = { url: SUPABASE_URL + "/functions/v1/pcn-ex", key: SUPABASE_KEY };</script>
+<script src="chart-ex.js?v=171"></script>
+<script>
+var LOG=[],out=document.getElementById('out'),sum=document.getElementById('sum');
+function to(p,ms){return Promise.race([p,new Promise(function(_,j){setTimeout(function(){j(new Error('timeout'))},ms)})])}
+function add(cls,txt,sub){var d=document.createElement('div');d.className='r';d.innerHTML='<b class="'+cls+'">'+(cls==='ok'?'OK':cls==='no'?'MISSING':'NOTE')+'</b> '+txt+(sub?'<small>'+sub+'</small>':'');out.appendChild(d);LOG.push((cls==='ok'?'OK':cls==='no'?'MISSING':'NOTE')+' '+txt+(sub?' - '+sub:''))}
+function icoName(s){return String(s||'').toUpperCase().replace(/^(?:1000000|100000|10000|1000|1M)(?=[A-Z])/,'')}
+function cdn(n){var l=n.toLowerCase();return['https://assets.coincap.io/assets/icons/'+l+'@2x.png','https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@1.0.0/128/color/'+l+'.png']}
+function load(u){return new Promise(function(r){var t=new Image();var d=setTimeout(function(){r(false)},8000);t.onload=function(){clearTimeout(d);r(t.naturalWidth>1)};t.onerror=function(){clearTimeout(d);r(false)};t.referrerPolicy='no-referrer';t.src=u})}
+async function hasLogo(n,top){
+  if(top[n])return 'top500';
+  var us=cdn(n);for(var u of us){if(await load(u))return 'cdn'}
+  return null}
+async function pool(items,n,fn){var i=0;await Promise.all(Array.from({length:n},async function(){while(i<items.length){var k=items[i++];await fn(k)}}))}
+document.getElementById('go').onclick=async function(){
+  out.innerHTML='';LOG=[];sum.textContent='loading coins...';
+  var C=window.PCN_CFG,H={apikey:C.key},top={},db={};
+  try{var r=await fetch(C.url+'/rest/v1/coins?select=symbol,image_url&market_cap_rank=not.is.null&order=market_cap_rank.asc&limit=500',{headers:H});(await r.json()).forEach(function(c){var s=String(c.symbol||'').toUpperCase();if(s&&c.image_url&&!top[s])top[s]=c.image_url})}catch(e){add('wn','could not load top 500',String(e))}
+  for(var o=0;o<8000;o+=1000){try{var r2=await fetch(C.url+'/rest/v1/coins?select=symbol,image_url,market_cap_rank&order=market_cap_rank.asc.nullslast&limit=1000&offset='+o,{headers:H});var a=await r2.json();if(!Array.isArray(a)||!a.length)break;a.forEach(function(c){var s=String(c.symbol||'').toUpperCase();if(s&&c.image_url&&!db[s])db[s]=c.image_url});if(a.length<1000)break}catch(e){break}}
+  var E=window.PCNEX,names=Object.keys(E.caps),per={},all={};
+  for(var n of names){
+    var caps=E.caps[n]||['spot'];
+    for(var ty of ['spot','perp','future','option']){
+      if(caps.indexOf(ty)<0)continue;
+      sum.textContent='listing '+n+' '+ty+'...';
+      var api=ty==='spot'?E[n]:E.mk(n,ty);if(!api)continue;
+      try{var l=await to(api.list(),30000),bases=[];
+        if(ty==='spot')bases=[...l];else bases=l.map(function(x){return x.base||x.s});
+        bases.forEach(function(b){var k=icoName(b);if(!k)return;(per[n+' '+ty]=per[n+' '+ty]||new Set()).add(k);all[k]=1})
+      }catch(e){add('wn',n+' '+ty+' list failed',String(e&&e.message))}
+    }
+  }
+  var syms=Object.keys(all),res={},done=0;
+  await pool(syms,10,async function(k){res[k]=await hasLogo(k,top);done++;if(done%25===0)sum.textContent='checking logos '+done+'/'+syms.length});
+  var missTotal=0,inDb=0;
+  Object.keys(per).sort().forEach(function(key){
+    var arr=[...per[key]],miss=arr.filter(function(k){return !res[k]});
+    missTotal+=miss.length;
+    if(!miss.length){add('ok',key+': all '+arr.length+' have a logo');return}
+    var fixable=miss.filter(function(k){return db[k]}),gone=miss.filter(function(k){return !db[k]});inDb+=fixable.length;
+    add('no',key+': '+miss.length+' of '+arr.length+' show a letter','Logo exists in our database for: '+(fixable.slice(0,60).join(', ')||'none')+(fixable.length>60?' ...':'')+' | No logo anywhere: '+(gone.slice(0,60).join(', ')||'none')+(gone.length>60?' ...':''))
+  });
+  var uniqMiss=syms.filter(function(k){return !res[k]}),uDb=uniqMiss.filter(function(k){return db[k]});
+  sum.textContent='Done: '+syms.length+' coins checked, '+uniqMiss.length+' without a logo ('+uDb.length+' of them have one in our database, '+(uniqMiss.length-uDb.length)+' have none)';
+  LOG.unshift(sum.textContent);
+  LOG.push('ALL MISSING: '+uniqMiss.join(', '))
+};
+document.getElementById('cp').onclick=function(){var t=LOG.join('\n');try{navigator.clipboard.writeText(t).then(function(){sum.textContent+=' (copied)'})}catch(e){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}};
+</script></body></html>
