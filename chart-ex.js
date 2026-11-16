@@ -262,7 +262,7 @@
   M.binance.option = {
     quote: 'USDT',
     list: function () { return J(BO + '/exchangeInfo').then(function (r) { return (r.optionSymbols || []).map(function (x) { var o = optLabel(x.symbol); return { s: x.symbol, base: String(x.underlying || o.base).replace(/USDT$/, ''), label: o.label, name: o.name }; }); }); },
-    candles: function (id, iv) { return J(BO + '/klines?symbol=' + id + '&interval=' + iv + '&limit=500').then(function (r) { return asc((r || []).map(function (k) { return { t: N(k.openTime), o: N(k.open), h: N(k.high), l: N(k.low), c: N(k.close), v: N(k.volume) }; })); }); },
+    candles: function (id, iv) { return J(BO + '/klines?symbol=' + id + '&interval=' + iv + '&limit=500').then(function (r) { return asc((r || []).map(function (k) { return Array.isArray(k) ? bk(k) : { t: N(k.openTime || k.t), o: N(k.open || k.o), h: N(k.high || k.h), l: N(k.low || k.l), c: N(k.close || k.c), v: N(k.volume || k.v) }; }).filter(function (k) { return k.c > 0; })); }); },
     ticker: function (id) { return J(BO + '/ticker?symbol=' + id).then(function (r) { var d = Array.isArray(r) ? r[0] : r; return { last: N(d.lastPrice), open: N(d.open), high: N(d.high), low: N(d.low), vol: N(d.volume), qvol: N(d.amount) }; }); }
   };
 
@@ -291,7 +291,12 @@
     perp: { quote: 'USDT', candles: okCandles, ticker: okTicker, list: function () { return okInst('SWAP').then(function (l) { return l.filter(function (x) { return x.settleCcy === 'USDT' && x.state === 'live'; }).map(function (x) { var b = String(x.uly || x.instId).split('-')[0]; return { s: x.instId, base: b, label: b + '/USDT', name: 'Perpetual' }; }); }); } },
     future: { quote: 'USD', candles: okCandles, ticker: okTicker, list: function () { return okInst('FUTURES').then(function (l) { l = l.filter(function (x) { return x.state === 'live'; }); var u = l.filter(function (x) { return x.settleCcy === 'USDT' || x.settleCcy === 'USDC'; }); return u.length ? u : l; }).then(function (l) { return l.map(function (x) { var b = String(x.uly || x.instId).split('-')[0], d = x.expTime ? fd(+x.expTime) : ''; return { s: x.instId, base: b, label: b + ' ' + d, name: 'Futures ' + d }; }); }); } },
     option: { quote: 'USD', candles: okCandles, ticker: okTicker, list: function () { return Promise.all(['BTC-USD', 'ETH-USD'].map(function (u) { return okInst('OPTION', '&uly=' + u).catch(function () { return []; }); })).then(function (a) {
-      return [].concat.apply([], a).filter(function (x) { return x.state === 'live'; }).map(function (x) { var o = optLabel(x.instId); return { s: x.instId, base: o.base, label: o.label, name: o.name }; }); }); } }
+      var l = [].concat.apply([], a).filter(function (x) { return x.state === 'live'; });
+      /* put contracts that actually traded today first, so the first ones you open have a chart */
+      return Promise.all(['BTC-USD', 'ETH-USD'].map(function (u) { return tryH(OH, function (h) { return J(h + '/api/v5/market/tickers?instType=OPTION&uly=' + u).then(function (r) { return r.data || []; }); }).catch(function () { return []; }); })).then(function (t) {
+        var vol = {}; [].concat.apply([], t).forEach(function (d) { vol[d.instId] = N(d.volCcy24h) || 0; });
+        l.sort(function (x, y) { return (vol[y.instId] || 0) - (vol[x.instId] || 0); });
+        return l.map(function (x) { var o = optLabel(x.instId); return { s: x.instId, base: o.base, label: o.label, name: o.name }; }); }); }); } }
   };
 
   /* Bitget USDT-M perps */
