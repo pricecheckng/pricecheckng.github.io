@@ -1,0 +1,65 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Full exchange test</title>
+<style>body{margin:0;padding:14px;background:#0b130f;color:#e6f2ea;font:13px system-ui}h1{font-size:18px;margin:0 0 6px}button{padding:12px 18px;border:0;border-radius:10px;background:#16a34a;color:#fff;font:700 15px system-ui;margin:4px 6px 8px 0}.r{padding:6px 0;border-bottom:1px solid #1d2b24;word-break:break-word}.ok{color:#22c55e}.no{color:#ef4444}.wn{color:#f59e0b}small{color:#8aa598;display:block}#sum{font-weight:700;margin:6px 0}</style></head><body>
+<h1>Full exchange test</h1><p>Tap Start and wait about 2 minutes. Then tap Copy report and paste it to me, or send a screenshot.</p>
+<button id="go">Start</button><button id="cp">Copy report</button><div id="sum"></div><div id="out"></div>
+<script type="module">import { SUPABASE_URL, SUPABASE_KEY } from "./config.js"; window.PCNEX_PROXY = { url: SUPABASE_URL + "/functions/v1/pcn-ex", key: SUPABASE_KEY };</script>
+<script src="chart-ex.js?v=168"></script>
+<script>
+var LOG=[],out=document.getElementById('out'),sum=document.getElementById('sum');
+function to(p,ms){return Promise.race([p,new Promise(function(_,j){setTimeout(function(){j(new Error('timeout '+ms/1000+'s'))},ms)})])}
+function add(cls,txt,sub){var d=document.createElement('div');d.className='r';d.innerHTML='<b class="'+cls+'">'+(cls==='ok'?'OK':cls==='no'?'FAIL':'WARN')+'</b> '+txt+(sub?'<small>'+sub+'</small>':'');out.appendChild(d);LOG.push((cls==='ok'?'OK  ':cls==='no'?'FAIL':'WARN')+' '+txt+(sub?'  -> '+sub:''));return cls}
+function check(cs,iv){
+  if(!Array.isArray(cs)||!cs.length)return ['no candles'];
+  var p=[],bad=0,unord=0,hl=0,nz=0,i;
+  for(i=0;i<cs.length;i++){var k=cs[i];
+    if(![k.t,k.o,k.h,k.l,k.c,k.v].every(isFinite))bad++;
+    if(i&&k.t<=cs[i-1].t)unord++;
+    if(k.h<Math.max(k.o,k.c)*0.999999||k.l>Math.min(k.o,k.c)*1.000001)hl++;
+    if(!(k.c>0))nz++}
+  if(bad)p.push(bad+' NaN candles');if(unord)p.push(unord+' out of order');if(hl)p.push(hl+' bad high/low');if(nz)p.push(nz+' zero price');
+  var step={'15m':9e5,'1h':36e5,'4h':144e5,'1d':864e5,'1w':6048e5}[iv],last=cs[cs.length-1].t;
+  if(cs.length<30)p.push('only '+cs.length+' candles');
+  return p}
+async function testOne(label,api,id,isMk){
+  var tag=label+' '+id,res={};
+  var ivs=['15m','1h','4h','1d','1w'];
+  for(var iv of ivs){
+    try{var t=performance.now();var cs=await to(api.candles(id,iv),20000);var p=check(cs,iv);
+      var lastc=cs&&cs.length?cs[cs.length-1]:null;res[iv]=lastc?lastc.c:null;
+      var age=lastc?Math.round((Date.now()-lastc.t)/864e5):'?';
+      add(p.length?(cs&&cs.length?'wn':'no'):'ok',tag+' '+iv+' candles: '+(cs?cs.length:0)+' ('+Math.round(performance.now()-t)+'ms)',p.length?p.join(', '):(age>3&&iv!=='1w'?'last candle '+age+' days old':''))
+    }catch(e){add('no',tag+' '+iv+' candles',String(e&&e.message))}
+  }
+  try{var tk=await to(api.ticker(id),20000);var probs=[];
+    ['last','open','high','low','vol'].forEach(function(f){if(!isFinite(tk[f]))probs.push(f+' missing')});
+    if(!(tk.last>0))probs.push('price is 0');
+    if(res['1h']&&tk.last>0&&Math.abs(tk.last/res['1h']-1)>0.08)probs.push('ticker '+tk.last+' differs from candle '+res['1h']);
+    if(tk.high<tk.low)probs.push('high below low');
+    add(probs.length?'wn':'ok',tag+' ticker: '+tk.last+' hi '+tk.high+' lo '+tk.low+' vol '+tk.vol,probs.join(', '))
+  }catch(e){add('no',tag+' ticker',String(e&&e.message))}
+}
+document.getElementById('go').onclick=async function(){
+  out.innerHTML='';LOG=[];sum.textContent='running...';
+  var E=window.PCNEX,names=Object.keys(E).filter(function(k){return E[k]&&E[k].list});
+  var types=['spot','perp','future','option'];
+  for(var n of names){
+    var caps=E.caps[n]||['spot'];
+    for(var ty of types){
+      if(caps.indexOf(ty)<0)continue;
+      var label=n+' '+ty,api=ty==='spot'?E[n]:E.mk(n,ty);
+      if(!api){add('no',label,'adapter missing');continue}
+      var ids=[];
+      try{var l=await to(api.list(),30000);
+        if(ty==='spot'){var arr=[...l];ids=arr.indexOf('BTC')>=0?['BTC']:arr.slice(0,1);if(arr.length>5)ids.push(arr[arr.length-1]);add('ok',label+' list: '+arr.length+' pairs')}
+        else{var bt=l.filter(function(x){return x.base==='BTC'}),pick=bt.length?bt[0]:l[0];ids=pick?[pick.s]:[];
+          if(l.length>5){var tail=l[l.length-1];if(tail&&ids.indexOf(tail.s)<0)ids.push(tail.s)}
+          add(l.length?'ok':'no',label+' list: '+l.length+' contracts',l.length?'sample: '+l.slice(0,2).map(function(x){return x.label}).join(' | '):'list is empty')}
+      }catch(e){add('no',label+' list',String(e&&e.message));continue}
+      for(var id of ids)await testOne(label,api,id,ty!=='spot');
+    }
+  }
+  var f=LOG.filter(function(x){return x.indexOf('FAIL')===0}).length,w=LOG.filter(function(x){return x.indexOf('WARN')===0}).length;
+  sum.textContent='Done: '+LOG.length+' checks, '+f+' failed, '+w+' warnings';LOG.unshift(sum.textContent)
+};
+document.getElementById('cp').onclick=function(){var t=LOG.join('\n');try{navigator.clipboard.writeText(t).then(function(){sum.textContent+=' (copied)'})}catch(e){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}};
+</script></body></html>
