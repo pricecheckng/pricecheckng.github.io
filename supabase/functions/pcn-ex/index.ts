@@ -3,6 +3,7 @@
 const ALLOW = new Set([
   "www.okx.com", "aws.okx.com",
   "api.mexc.com", "contract.mexc.com", "www.mexc.com",
+  "api.upbit.com",
 ]);
 const CORS = {
   "access-control-allow-origin": "*",

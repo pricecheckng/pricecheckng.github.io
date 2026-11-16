@@ -1,6 +1,6 @@
 /* PriceCheck NG - exchange data for the chart page (OKX, Bybit, Gate, MEXC). Binance is handled inside chart.html. */
 (function () {
-  var ALLOWED = /^https:\/\/(www\.okx\.com|aws\.okx\.com|api\.mexc\.com|contract\.mexc\.com|www\.mexc\.com)\//;
+  var ALLOWED = /^https:\/\/(www\.okx\.com|aws\.okx\.com|api\.mexc\.com|contract\.mexc\.com|www\.mexc\.com|api\.upbit\.com)\//;
   var direct = function (u, opt, ms) { var c = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (c) c.abort(); }, ms || 8000);
     return fetch(u, Object.assign({ signal: c ? c.signal : undefined }, opt || {})).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }, function (e) { clearTimeout(t); throw new Error(e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'failed'); }); };
   /* if an exchange cannot be reached directly (blocked network), ask our own server to fetch it. window.PCNEX_PROXY = { url, key } is set by the page.
@@ -180,6 +180,25 @@
         var u = a[0][0].universe, cx = a[0][1], i = u.findIndex(function (x) { return String(x.name).toUpperCase() === sy; }), c = cx[i], hi = -Infinity, lo = Infinity, v = 0;
         (a[1] || []).forEach(function (k) { hi = Math.max(hi, N(k.h)); lo = Math.min(lo, N(k.l)); v += N(k.v); });
         return { last: N(c.markPx), open: N(c.prevDayPx), high: hi, low: lo, vol: v, qvol: N(c.dayNtlVlm) }; });
+    }
+  };
+
+  /* Upbit: Korean exchange. We use its USDT markets (named USDT-BTC). */
+  var UB = 'https://api.upbit.com/v1';
+  var ubC = function (sy, iv) {
+    var path = { '15m': '/candles/minutes/15', '1h': '/candles/minutes/60', '4h': '/candles/minutes/240', '1d': '/candles/days', '1w': '/candles/weeks' }[iv];
+    return J(UB + path + '?market=USDT-' + sy + '&count=200').then(function (r) {
+      return asc((r || []).map(function (k) { return { t: Date.parse(k.candle_date_time_utc + 'Z'), o: N(k.opening_price), h: N(k.high_price), l: N(k.low_price), c: N(k.trade_price), v: N(k.candle_acc_trade_volume) }; })); });
+  };
+  E.upbit = {
+    name: 'Upbit', quote: 'USDT',
+    list: function () {
+      return J(UB + '/market/all').then(function (r) { var s = new Set(); (r || []).forEach(function (x) { var m = /^USDT-([A-Z0-9]+)$/.exec(x.market); if (m) s.add(m[1]); }); return s; });
+    },
+    candles: ubC,
+    ticker: function (sy) {
+      return J(UB + '/ticker?markets=USDT-' + sy).then(function (r) { var d = r[0];
+        return { last: N(d.trade_price), open: N(d.prev_closing_price), high: N(d.high_price), low: N(d.low_price), vol: N(d.acc_trade_volume_24h), qvol: N(d.acc_trade_price_24h) }; });
     }
   };
 

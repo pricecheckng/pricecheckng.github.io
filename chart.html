@@ -96,6 +96,9 @@
   #sheetBg { position:fixed; inset:0; background:var(--bg); z-index:20; display:none; flex-direction:column; }
   #sheetBg.on { display:flex; }
   .sh-top { display:flex; align-items:center; gap:10px; padding:10px 12px; }
+  .back:focus, .back:focus-visible, #typeX:focus { outline:none; box-shadow:none; }
+  .back { -webkit-tap-highlight-color:transparent; }
+  #typeX { width:36px!important; height:36px!important; border:1px solid var(--acc); padding:0; }
   .sh-top .back { flex:none; width:42px; height:42px; border-radius:12px; border:1px solid var(--acc); background:#16241d; outline:none; -webkit-tap-highlight-color:transparent; padding:0; }
   .sh-top .back:focus, .sh-top .back:focus-visible { outline:none; box-shadow:none; }
   .sh-top .back svg { width:20px; height:20px; }
@@ -223,7 +226,7 @@
     <a class="back" href="index.html" aria-label="Back"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3L5 9l6 6"/></svg></a>
     <button class="pair" id="pairBtn" aria-label="Choose pair"><span class="ico" id="pIco">B</span><span id="pTxt">BTC/USDT</span><small>&#9662;</small></button>
     <div class="dd"><button class="ddb" id="exBtn">Binance <span>&#9662;</span></button>
-      <div class="ddm" id="exMenu"><button data-ex="binance">Binance<em>live</em></button><button data-ex="okx">OKX<em>live</em></button><button data-ex="bybit">Bybit<em>live</em></button><button data-ex="aster">Aster<em>live</em></button><button data-ex="bitget">Bitget<em>live</em></button><button data-ex="gate">Gate<em>live</em></button><button data-ex="mexc">MEXC<em>live</em></button><button data-ex="coinbase">Coinbase<em>live</em></button><button data-ex="hyperliquid">Hyperliquid<em>live</em></button><button disabled>Upbit<em>soon</em></button></div></div>
+      <div class="ddm" id="exMenu"><button data-ex="binance">Binance<em>live</em></button><button data-ex="okx">OKX<em>live</em></button><button data-ex="bybit">Bybit<em>live</em></button><button data-ex="aster">Aster<em>live</em></button><button data-ex="bitget">Bitget<em>live</em></button><button data-ex="gate">Gate<em>live</em></button><button data-ex="mexc">MEXC<em>live</em></button><button data-ex="coinbase">Coinbase<em>live</em></button><button data-ex="hyperliquid">Hyperliquid<em>live</em></button><button data-ex="upbit">Upbit<em>live</em></button></div></div>
     <i class="vs"></i><div class="dd"><button class="ddb tfb" id="tfBtn"><span id="tfTxt">4h</span> <span>&#9662;</span></button>
       <div class="ddm r" id="tfMenu"><button class="tf" data-i="15m">15 minutes</button><button class="tf" data-i="1h">1 hour</button><button class="tf on" data-i="4h">4 hours</button><button class="tf" data-i="1d">1 day</button><button class="tf" data-i="1w">1 week</button></div></div><i class="vs"></i><button type="button" id="ctBtn" aria-label="Chart type"><svg></svg></button><i class="vs"></i><button type="button" id="fxBtn" aria-label="Indicators"><svg></svg></button><i class="vs"></i><button type="button" id="undoBtn" class="hbtn dis" aria-label="Undo"><svg></svg></button><button type="button" id="redoBtn" class="hbtn dis" aria-label="Redo"><svg></svg></button><i class="vs"></i><button type="button" id="setBtn" aria-label="Chart settings"><svg></svg></button><button type="button" id="fsBtn" aria-label="Full screen"><svg></svg></button><button type="button" id="snBtn" aria-label="Snapshot"><svg></svg></button>
   </div>
@@ -295,7 +298,7 @@
 <div id="sheetBg">
   <div class="sh-top"><button class="back" id="shBack" aria-label="Close"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3L5 9l6 6"/></svg></button><input id="shQ" placeholder="Search Binance pairs" autocomplete="off" autocapitalize="characters"></div>
   <div class="tabs"><button class="on">Crypto</button><button disabled style="opacity:.45">TradFi <sup style="font-size:9px">soon</sup></button></div>
-  <div class="exs"><button data-ex="binance">Binance</button><button data-ex="okx">OKX</button><button data-ex="bybit">Bybit</button><button data-ex="aster">Aster</button><button data-ex="bitget">Bitget</button><button data-ex="gate">Gate</button><button data-ex="mexc">MEXC</button><button data-ex="coinbase">Coinbase</button><button data-ex="hyperliquid">Hyperliquid</button><button class="soon" disabled>Upbit<sup>soon</sup></button></div>
+  <div class="exs"><button data-ex="binance">Binance</button><button data-ex="okx">OKX</button><button data-ex="bybit">Bybit</button><button data-ex="aster">Aster</button><button data-ex="bitget">Bitget</button><button data-ex="gate">Gate</button><button data-ex="mexc">MEXC</button><button data-ex="coinbase">Coinbase</button><button data-ex="hyperliquid">Hyperliquid</button><button data-ex="upbit">Upbit</button></div>
   <div class="toolbar"><span id="pcount" style="color:var(--mut);font-size:13px"></span><button id="typeBtn" class="ddb" style="color:var(--txt)"><span id="typeTxt">all types</span> <span>&#9662;</span></button></div>
   <div id="plist"></div>
   <div id="typeBg" style="display:none;position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.55);align-items:flex-end"><div id="typeSheet" style="width:100%;background:#101a15;border-radius:18px 18px 0 0;padding:6px 8px 18px;border-top:1px solid var(--line)">
@@ -328,10 +331,10 @@ setTimeout(function(){var d=document.getElementById('dtools');if(d)d.classList.a
   }, 7000);
 })();
 </script>
-<script src="pcnchart.js?v=165"></script>
-<script src="chart-ex.js?v=165"></script>
+<script src="pcnchart.js?v=166"></script>
+<script src="chart-ex.js?v=166"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=165";
+import { ICONS } from "./chart-icons.js?v=166";
 window.__pcnMod = true; try { sessionStorage.removeItem("pcnRl"); } catch (_) {}
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
@@ -340,7 +343,8 @@ $('tz').textContent = tz.replace('_', ' ');
 const qs = new URLSearchParams(location.search);
 let symbol = (qs.get('s') || 'BTC').toUpperCase().replace(/[^A-Z0-9]/g, '') || 'BTC', interval = ['15m','1h','4h','1d','1w'].includes(qs.get('i')) ? qs.get('i') : '4h';
 window.PCNEX_PROXY = { url: SUPABASE_URL + '/functions/v1/pcn-ex', key: SUPABASE_KEY };
-const EXN = { binance: 'Binance', okx: 'OKX', bybit: 'Bybit', aster: 'Aster', bitget: 'Bitget', gate: 'Gate', mexc: 'MEXC', coinbase: 'Coinbase', hyperliquid: 'Hyperliquid' };
+const EXN = { binance: 'Binance', okx: 'OKX', bybit: 'Bybit', aster: 'Aster', bitget: 'Bitget', gate: 'Gate', mexc: 'MEXC', coinbase: 'Coinbase', hyperliquid: 'Hyperliquid', upbit: 'Upbit' };
+const PT = () => exch === 'hyperliquid' ? 'perps' : 'spot';
 const QT = () => (exch !== 'binance' && window.PCNEX && window.PCNEX[exch] && window.PCNEX[exch].quote) || 'USDT';
 let exch = (qs.get('x') || (function () { try { return JSON.parse(localStorage.getItem('pcn_chart_ex')); } catch (_) { return null; } })() || 'binance'); if (!EXN[exch] || (exch !== 'binance' && !(window.PCNEX && window.PCNEX[exch]))) exch = 'binance';
 let meta = {};                       // symbol -> {name, img}
@@ -819,12 +823,13 @@ async function loadPairs() {
   else try { const cached = sg('pcn_binance_usdt', null); if (cached && Date.now() - cached.t < 6 * 36e5) ok = new Set(cached.s); else { const r = await fetch('https://api.binance.com/api/v3/ticker/price'); const a = await r.json(); ok = new Set(a.filter(x => x.symbol.endsWith('USDT')).map(x => x.symbol.slice(0, -4))); ss('pcn_binance_usdt', { t: Date.now(), s: [...ok] }); } } catch (_) {}
   const seen = new Set(); pairs = [];
   (Array.isArray(rows) ? rows : []).forEach(c => { const s = String(c.symbol || '').toUpperCase(); if (!s || seen.has(s) || (ok && !ok.has(s))) return; seen.add(s); pairs.push({ s, name: c.name || s, img: c.image_url }); meta[s] = { name: c.name, img: c.image_url }; });
+  if (ok) [...ok].sort().forEach(s => { if (!seen.has(s)) { seen.add(s); pairs.push({ s, name: s }); } });
   if (!seen.has('BTC')) pairs.unshift({ s: 'BTC', name: 'Bitcoin' });
   return pairs;
 }
 let ptype = 'all';
 function renderTypes() {
-  const n = (pairs || []).length, o = [['all', 'all types', n], ['spot', 'spot', n], ['perps', 'perps', 0], ['futures', 'futures', 0], ['options', 'options', 0]];
+  const n = (pairs || []).length, o = [['all', 'all types', n], ['spot', 'spot', PT() === 'spot' ? n : 0], ['perps', 'perps', PT() === 'perps' ? n : 0], ['futures', 'futures', 0], ['options', 'options', 0]];
   $('typeOpts').innerHTML = '';
   o.forEach(([k, t, c]) => { const d = document.createElement('div'); d.className = 'topt' + (ptype === k ? ' on' : '') + (c ? '' : ' off'); d.innerHTML = `<span>${t}</span><em>${c || 'soon'}</em>`; if (c) d.onclick = () => { ptype = k; $('typeTxt').textContent = t; $('typeBg').style.display = 'none'; renderList(); }; $('typeOpts').appendChild(d); });
 }
@@ -834,12 +839,12 @@ $('typeBg').onclick = e => { if (e.target.id === 'typeBg') $('typeBg').style.dis
 function renderList() {
   $('pcount').textContent = pairs ? pairs.length + ' pairs' : '';
   const q = $('shQ').value.trim().toUpperCase(), box = $('plist');
-  let a = (pairs || []).filter(p => !q || p.s.includes(q) || p.name.toUpperCase().includes(q));
-  a = [...a.filter(p => favs.includes(p.s)), ...a.filter(p => !favs.includes(p.s))].slice(0, 120);
+  let a = (ptype === 'all' || ptype === PT() ? (pairs || []) : []).filter(p => !q || p.s.includes(q) || p.name.toUpperCase().includes(q));
+  a = [...a.filter(p => favs.includes(p.s)), ...a.filter(p => !favs.includes(p.s))].slice(0, 300);
   box.innerHTML = a.length ? '' : '<div class="empty">No pair found on ' + EXN[exch] + '.</div>';
   a.forEach(p => {
     const r = document.createElement('div'); r.className = 'row';
-    r.innerHTML = `<span class="st${favs.includes(p.s) ? ' on' : ''}">${favs.includes(p.s) ? '&#9733;' : '&#9734;'}</span><span class="ico"></span><span class="nm">${p.s}/${QT()}<small>${p.name.replace(/</g, '')}</small></span><span class="tp">spot</span>`;
+    r.innerHTML = `<span class="st${favs.includes(p.s) ? ' on' : ''}">${favs.includes(p.s) ? '&#9733;' : '&#9734;'}</span><span class="ico"></span><span class="nm">${p.s}/${QT()}<small>${p.name.replace(/</g, '')}</small></span><span class="tp">${PT()}</span>`;
     setIco(r.querySelector('.ico'), p.s);
     r.querySelector('.st').onclick = e => { e.stopPropagation(); favs = favs.includes(p.s) ? favs.filter(x => x !== p.s) : [p.s, ...favs]; ss('pcn_chart_favs', favs); renderList(); };
     r.onclick = () => { symbol = p.s; closeSheet(); history.replaceState(null, '', `?s=${symbol}&i=${interval}&x=${exch}`); load(); };
@@ -856,7 +861,7 @@ function paintEx() {
   document.querySelectorAll('.set b').forEach(b => { if (b.previousElementSibling && b.previousElementSibling.textContent === 'Live data') b.textContent = EXN[exch]; });
 }
 async function setEx(k, fromPicker) {
-  if (k === exch || !EXN[k]) return; exch = k; ss('pcn_chart_ex', k); pairs = null; paintEx(); setPair(); closeMenus();
+  if (k === exch || !EXN[k]) return; exch = k; ss('pcn_chart_ex', k); pairs = null; ptype = 'all'; try { $('typeTxt').textContent = 'all types'; } catch (_) {} paintEx(); setPair(); closeMenus();
   if (fromPicker) { $('plist').innerHTML = '<div class="empty">Loading pairs…</div>'; await loadPairs(); renderList(); }
   else { try { await loadPairs(); } catch (_) {} }
   if (pairs && pairs.length && !pairs.some(p => p.s === symbol)) symbol = pairs.some(p => p.s === 'BTC') ? 'BTC' : pairs[0].s;
