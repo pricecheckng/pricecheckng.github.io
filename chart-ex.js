@@ -1,13 +1,19 @@
 /* PriceCheck NG - exchange data for the chart page (OKX, Bybit, Gate, MEXC). Binance is handled inside chart.html. */
 (function () {
   var ALLOWED = /^https:\/\/(www\.okx\.com|aws\.okx\.com|api\.mexc\.com|contract\.mexc\.com|www\.mexc\.com)\//;
-  var direct = function (u, opt) { var c = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (c) c.abort(); }, 8000);
+  var direct = function (u, opt, ms) { var c = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (c) c.abort(); }, ms || 8000);
     return fetch(u, Object.assign({ signal: c ? c.signal : undefined }, opt || {})).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }, function (e) { clearTimeout(t); throw new Error(e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'failed'); }); };
-  /* if the exchange cannot be reached directly (blocked network), ask our own server to fetch it. window.PCNEX_PROXY = { url, key } is set by the page */
+  /* if an exchange cannot be reached directly (blocked network), ask our own server to fetch it. window.PCNEX_PROXY = { url, key } is set by the page.
+     A host that failed directly is remembered for 10 minutes so the next requests go straight to our server. */
+  var bad = {}; try { bad = JSON.parse(localStorage.getItem('pcn_ex_bad') || '{}'); } catch (_) {}
   var J = function (u) {
-    return direct(u).catch(function (e) {
-      var P = window.PCNEX_PROXY; if (!P || !ALLOWED.test(u)) throw e;
-      return direct(P.url + '?u=' + encodeURIComponent(u), { headers: { apikey: P.key, Authorization: 'Bearer ' + P.key } }).catch(function () { throw e; });
+    var h = u.split('/')[2], P = window.PCNEX_PROXY, canP = P && ALLOWED.test(u);
+    var viaP = function () { return direct(P.url + '?u=' + encodeURIComponent(u), { headers: { apikey: P.key, Authorization: 'Bearer ' + P.key } }); };
+    if (canP && bad[h] && Date.now() - bad[h] < 6e5) return viaP().catch(function () { return direct(u); });
+    return direct(u, null, canP ? 4000 : 8000).catch(function (e) {
+      if (!canP) throw e;
+      bad[h] = Date.now(); try { localStorage.setItem('pcn_ex_bad', JSON.stringify(bad)); } catch (_) {}
+      return viaP().catch(function () { throw e; });
     });
   };
   var N = function (x) { return +x; };
