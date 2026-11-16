@@ -3,6 +3,9 @@
   var J = function (u) { var c = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (c) c.abort(); }, 8000);
     return fetch(u, c ? { signal: c.signal } : {}).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }, function (e) { clearTimeout(t); throw new Error(e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'failed'); }); };
   var N = function (x) { return +x; };
+  var JP = function (u, body) { var c = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (c) c.abort(); }, 8000);
+    return fetch(u, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: c ? c.signal : undefined }).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }, function (e) { clearTimeout(t); throw new Error(e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'failed'); }); };
+  var MSI = { '15m': 9e5, '1h': 36e5, '4h': 144e5, '1d': 864e5, '1w': 6048e5 };
   var E = {};
   var first = function (tries) {   // run the attempts one after another, use the first that answers with data
     var i = 0, err = null;
@@ -107,6 +110,62 @@
     ticker: function (sy) {
       return J('https://api.bitget.com/api/v2/spot/market/tickers?symbol=' + sy + 'USDT').then(function (r) { var d = r.data[0];
         return { last: N(d.lastPr), open: N(d.open), high: N(d.high24h), low: N(d.low24h), vol: N(d.baseVolume), qvol: N(d.usdtVolume || d.quoteVolume) }; });
+    }
+  };
+
+  /* Coinbase: prices are in USD. It has no 4h or weekly candles, so those are built from 1h and daily ones. */
+  var CB = 'https://api.exchange.coinbase.com';
+  var cbPage = function (sy, g, endMs) {
+    var q = endMs ? '&start=' + new Date(endMs - 300 * g * 1000).toISOString() + '&end=' + new Date(endMs).toISOString() : '';
+    return J(CB + '/products/' + sy + '-USD/candles?granularity=' + g + q).then(function (r) { return (r || []).map(function (k) { return { t: N(k[0]) * 1000, o: N(k[3]), h: N(k[2]), l: N(k[1]), c: N(k[4]), v: N(k[5]) }; }); });
+  };
+  var cbJoin = function (sy, g, pages) {
+    return cbPage(sy, g).then(function (a) { var all = a.slice();
+      var more = function (n) { if (n >= pages || !all.length) return all; var oldest = Math.min.apply(null, all.map(function (k) { return k.t; }));
+        return cbPage(sy, g, oldest - 1000).then(function (b) { all = all.concat(b); return more(n + 1); }).catch(function () { return all; }); };
+      return more(1); }).then(function (all) { return asc(all.filter(function (k, i, arr) { return arr.findIndex(function (x) { return x.t === k.t; }) === i; })); });
+  };
+  var cbAgg = function (cs, ms) {
+    var out = [], cur = null;
+    cs.forEach(function (k) { var b = Math.floor(k.t / ms) * ms; if (ms === 6048e5) b = Math.floor((k.t - 3 * 864e5) / ms) * ms + 3 * 864e5;
+      if (!cur || cur.t !== b) { cur = { t: b, o: k.o, h: k.h, l: k.l, c: k.c, v: k.v }; out.push(cur); } else { cur.h = Math.max(cur.h, k.h); cur.l = Math.min(cur.l, k.l); cur.c = k.c; cur.v += k.v; } });
+    return out;
+  };
+  E.coinbase = {
+    name: 'Coinbase', quote: 'USD',
+    list: function () {
+      return J(CB + '/products').then(function (r) { var s = new Set(); (r || []).forEach(function (x) { if (x.quote_currency === 'USD' && x.status === 'online' && !x.trading_disabled) s.add(String(x.base_currency).toUpperCase()); }); return s; });
+    },
+    candles: function (sy, iv) {
+      if (iv === '15m') return cbJoin(sy, 900, 2);
+      if (iv === '1h') return cbJoin(sy, 3600, 2);
+      if (iv === '4h') return cbJoin(sy, 3600, 3).then(function (c) { return cbAgg(c, 144e5); });
+      if (iv === '1d') return cbJoin(sy, 86400, 2);
+      return cbJoin(sy, 86400, 3).then(function (c) { return cbAgg(c, 6048e5); });
+    },
+    ticker: function (sy) {
+      return J(CB + '/products/' + sy + '-USD/stats').then(function (d) { var l = N(d.last); return { last: l, open: N(d.open), high: N(d.high), low: N(d.low), vol: N(d.volume), qvol: N(d.volume) * l }; });
+    }
+  };
+
+  /* Hyperliquid: perpetual futures, prices in USDC. */
+  var HL = 'https://api.hyperliquid.xyz/info';
+  E.hyperliquid = {
+    name: 'Hyperliquid', quote: 'USDC',
+    list: function () {
+      return JP(HL, { type: 'meta' }).then(function (r) { var s = new Set(); ((r && r.universe) || []).forEach(function (x) { if (!x.isDelisted) s.add(String(x.name).toUpperCase()); }); return s; });
+    },
+    candles: function (sy, iv) {
+      var now = Date.now();
+      return JP(HL, { type: 'candleSnapshot', req: { coin: sy, interval: iv, startTime: now - 500 * MSI[iv], endTime: now } }).then(function (r) {
+        return asc((r || []).map(function (k) { return { t: N(k.t), o: N(k.o), h: N(k.h), l: N(k.l), c: N(k.c), v: N(k.v) }; })); });
+    },
+    ticker: function (sy) {
+      var now = Date.now();
+      return Promise.all([JP(HL, { type: 'metaAndAssetCtxs' }), JP(HL, { type: 'candleSnapshot', req: { coin: sy, interval: '1h', startTime: now - 24 * 36e5, endTime: now } })]).then(function (a) {
+        var u = a[0][0].universe, cx = a[0][1], i = u.findIndex(function (x) { return String(x.name).toUpperCase() === sy; }), c = cx[i], hi = -Infinity, lo = Infinity, v = 0;
+        (a[1] || []).forEach(function (k) { hi = Math.max(hi, N(k.h)); lo = Math.min(lo, N(k.l)); v += N(k.v); });
+        return { last: N(c.markPx), open: N(c.prevDayPx), high: hi, low: lo, vol: v, qvol: N(c.dayNtlVlm) }; });
     }
   };
 

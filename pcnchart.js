@@ -476,7 +476,7 @@
       V.start = Math.max(minS, Math.min(V.start, maxS));
     }
     function fit() { zoomed = false; var n = D.c.length; V.bw = Math.max(3, Math.min(18, plotW() / Math.min(n, 45))); V.start = Math.max(0, n - plotW() / V.bw + 4); clampView(); }
-    function range() { var s = Math.max(0, Math.floor(V.start)), e = Math.min(D.c.length - 1, Math.ceil(V.start + plotW() / V.bw)); return [s, e]; }
+    function range() { var s = Math.max(0, Math.min(D.c.length - 1, Math.floor(V.start))), e = Math.min(D.c.length - 1, Math.ceil(V.start + plotW() / V.bw)); return [s, e]; }
     function nice(v) { return v >= 1000 ? v.toLocaleString('en-US', { maximumFractionDigits: 0 }) : v >= 100 ? v.toFixed(1) : v >= 1 ? v.toFixed(3) : v.toPrecision(3); }
     function xOf(i) { return (i - V.start) * V.bw + V.bw / 2; }
 
