@@ -1,7 +1,15 @@
 /* PriceCheck NG - exchange data for the chart page (OKX, Bybit, Gate, MEXC). Binance is handled inside chart.html. */
 (function () {
-  var J = function (u) { var c = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (c) c.abort(); }, 8000);
-    return fetch(u, c ? { signal: c.signal } : {}).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }, function (e) { clearTimeout(t); throw new Error(e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'failed'); }); };
+  var ALLOWED = /^https:\/\/(www\.okx\.com|aws\.okx\.com|api\.mexc\.com|contract\.mexc\.com|www\.mexc\.com)\//;
+  var direct = function (u, opt) { var c = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (c) c.abort(); }, 8000);
+    return fetch(u, Object.assign({ signal: c ? c.signal : undefined }, opt || {})).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }, function (e) { clearTimeout(t); throw new Error(e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'failed'); }); };
+  /* if the exchange cannot be reached directly (blocked network), ask our own server to fetch it. window.PCNEX_PROXY = { url, key } is set by the page */
+  var J = function (u) {
+    return direct(u).catch(function (e) {
+      var P = window.PCNEX_PROXY; if (!P || !ALLOWED.test(u)) throw e;
+      return direct(P.url + '?u=' + encodeURIComponent(u), { headers: { apikey: P.key, Authorization: 'Bearer ' + P.key } }).catch(function () { throw e; });
+    });
+  };
   var N = function (x) { return +x; };
   var JP = function (u, body) { var c = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (c) c.abort(); }, 8000);
     return fetch(u, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: c ? c.signal : undefined }).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }, function (e) { clearTimeout(t); throw new Error(e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'failed'); }); };

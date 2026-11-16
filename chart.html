@@ -325,10 +325,10 @@ setTimeout(function(){var d=document.getElementById('dtools');if(d)d.classList.a
   }, 7000);
 })();
 </script>
-<script src="pcnchart.js?v=161"></script>
-<script src="chart-ex.js?v=161"></script>
+<script src="pcnchart.js?v=162"></script>
+<script src="chart-ex.js?v=162"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=161";
+import { ICONS } from "./chart-icons.js?v=162";
 window.__pcnMod = true; try { sessionStorage.removeItem("pcnRl"); } catch (_) {}
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
@@ -336,6 +336,7 @@ const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 $('tz').textContent = tz.replace('_', ' ');
 const qs = new URLSearchParams(location.search);
 let symbol = (qs.get('s') || 'BTC').toUpperCase().replace(/[^A-Z0-9]/g, '') || 'BTC', interval = ['15m','1h','4h','1d','1w'].includes(qs.get('i')) ? qs.get('i') : '4h';
+window.PCNEX_PROXY = { url: SUPABASE_URL + '/functions/v1/pcn-ex', key: SUPABASE_KEY };
 const EXN = { binance: 'Binance', okx: 'OKX', bybit: 'Bybit', aster: 'Aster', bitget: 'Bitget', gate: 'Gate', mexc: 'MEXC', coinbase: 'Coinbase', hyperliquid: 'Hyperliquid' };
 const QT = () => (exch !== 'binance' && window.PCNEX && window.PCNEX[exch] && window.PCNEX[exch].quote) || 'USDT';
 let exch = (qs.get('x') || (function () { try { return JSON.parse(localStorage.getItem('pcn_chart_ex')); } catch (_) { return null; } })() || 'binance'); if (!EXN[exch] || (exch !== 'binance' && !(window.PCNEX && window.PCNEX[exch]))) exch = 'binance';
