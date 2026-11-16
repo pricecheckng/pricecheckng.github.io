@@ -802,7 +802,7 @@ async function load() {
       chart.setData({ candles: cs, sma50: [], sma200: [], rsi14: [], levels: [] }, interval);
       chart.tick(Object.assign({}, cs[cs.length - 1]));   // makes the chart work out the MA lines and RSI
       loadDrawings(); chart.setTool('cursor');
-      lastD = { candles: cs, series: { sma50: [], sma200: [], rsi14: [] }, analysis: { price: tk.last, today: { open: tk.open }, levels: [] }, source: exch };
+      lastD = { candles: cs, series: { sma50: [], sma200: [], rsi14: [] }, analysis: Object.assign(exAnalysis(cs), { price: tk.last, today: { open: tk.open, high: tk.high, low: tk.low, volume: tk.vol } }), source: exch };
       source = exch; dayOpen = tk.open || null; setPair();
       $('px').classList.remove('hv'); setPrice(tk.last || cs[cs.length - 1].c); paint24(tk.high, tk.low, tk.vol, tk.qvol);
       $('msg').style.display = 'none'; startLive(my);
@@ -1023,6 +1023,19 @@ agIn.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && 
   hd.addEventListener('pointermove', e => { if (!drag) return; const vh = $('vChart').getBoundingClientRect().height, nh = Math.max(120, Math.min(vh * 0.8, h0 + (y0 - e.clientY))); if (!agent.classList.contains('open')) setOpen(true); agent.style.setProperty('--ag-h', nh + 'px'); });
   hd.addEventListener('pointerup', () => { drag = false; }); hd.addEventListener('dblclick', () => setOpen(!agent.classList.contains('open')));
 })();
+
+/* indicators for exchanges other than Binance spot: worked out here from the loaded candles, so PCN AI can answer about moving averages, RSI and levels */
+function exAnalysis(cs) {
+  const cl = cs.map(k => k.c), L = cl.length, sma = p => L >= p ? cl.slice(-p).reduce((a, b) => a + b, 0) / p : null;
+  const ema = p => { if (L < p) return null; const k = 2 / (p + 1); let e = cl.slice(0, p).reduce((a, b) => a + b, 0) / p; for (let i = p; i < L; i++) e = cl[i] * k + e * (1 - k); return e; };
+  let rsi = null; if (L > 15) { let g = 0, l = 0; for (let i = 1; i <= 14; i++) { const d = cl[i] - cl[i - 1]; d > 0 ? g += d : l -= d; } g /= 14; l /= 14; for (let i = 15; i < L; i++) { const d = cl[i] - cl[i - 1]; g = (g * 13 + (d > 0 ? d : 0)) / 14; l = (l * 13 + (d < 0 ? -d : 0)) / 14; } rsi = l === 0 ? 100 : 100 - 100 / (1 + g / l); }
+  const w = cs.slice(-200), pv = [], W = 5;
+  for (let i = W; i < w.length - W; i++) { let hi = true, lo = true; for (let j = i - W; j <= i + W; j++) { if (w[j].h > w[i].h) hi = false; if (w[j].l < w[i].l) lo = false; } if (hi) pv.push(w[i].h); if (lo) pv.push(w[i].l); }
+  const px = cl[L - 1], cluster = []; pv.sort((a, b) => a - b).forEach(p => { const c = cluster[cluster.length - 1]; if (c && Math.abs(p / c.sum * c.n - 1) < 0.006) { c.sum += p; c.n++; } else cluster.push({ sum: p, n: 1 }); });
+  const lv = cluster.map(c => ({ price: c.sum / c.n, touches: c.n })).map(c => Object.assign(c, { kind: c.price >= px ? 'resistance' : 'support' }));
+  const near = (k) => lv.filter(x => x.kind === k).sort((a, b) => Math.abs(a.price - px) - Math.abs(b.price - px)).slice(0, 3);
+  return { sma50: sma(50), sma200: sma(200), ema50: ema(50), ema200: ema(200), rsi14: rsi, levels: near('support').concat(near('resistance')) };
+}
 function chartContext(q) {
   const d = lastD; if (!d) return '';
   const a = d.analysis, t = a.today, c = chart.last(), n = v => v == null ? 'n/a' : fmt(v), cs = d.candles.slice(-5);
