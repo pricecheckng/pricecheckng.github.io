@@ -650,7 +650,7 @@ ${script || ""}
     const up = chs.slice().sort((a, b) => Number(b.change_24h_pct) - Number(a.change_24h_pct))[0];
     const dn = chs.slice().sort((a, b) => Number(a.change_24h_pct) - Number(b.change_24h_pct))[0];
     const lead = list.slice(0, 3);
-    let t = `<p>PriceCheck NG tracks ${list.length} ${esc(name)} coins${cap > 0 ? " with a combined market cap of " + fBig(cap) : ""}. On ${SNAP_DATE}, `;
+    let t = `<p>PriceCheck NG tracks ${list.length} ${esc(name)} coins${cap > 0 ? " with a combined market cap of <span id=\"cap\" data-n=\"" + list.length + "\">" + fBig(cap) + "</span>" : ""}. On <span id="dt">${SNAP_DATE}</span>, `;
     t += `the biggest are ${lead.map((c) => `<a href="${hrefOf(c)}">${esc(c.name)}</a>`).join(", ")}.`;
     if (avg !== null) t += ` On average these coins ${avg >= 0 ? "rose" : "fell"} ${Math.abs(avg).toFixed(2)}% over the previous 24 hours.`;
     if (up && dn && up.id !== dn.id) t += ` The best performer was <a href="${hrefOf(up)}">${esc(up.name)}</a> (${Number(up.change_24h_pct) >= 0 ? "+" : ""}${Number(up.change_24h_pct).toFixed(2)}%) and the weakest was <a href="${hrefOf(dn)}">${esc(dn.name)}</a> (${Number(dn.change_24h_pct) >= 0 ? "+" : ""}${Number(dn.change_24h_pct).toFixed(2)}%).`;
@@ -658,7 +658,7 @@ ${script || ""}
     const tr = rows.map((c, i) => {
       const p = Number(c.price_usd), ch = Number(c.change_24h_pct), mc = Number(c.market_cap_usd);
       const img = /^https:\/\/[^\s"'<>]+$/.test(String(c.image_url || "")) ? `<img src="${esc(c.image_url)}" alt="" width="24" height="24" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">` : "";
-      return `<tr><td>${i + 1}</td><td><a class="cl" href="${hrefOf(c)}">${img}<span>${esc(c.name)} <small>${esc(c.symbol.toUpperCase())}</small></span></a></td><td data-p="${esc(c.id)}">${p > 0 ? fUsd(p) : "-"}</td><td>${NGN && p > 0 ? fNgn(p * NGN) : "-"}</td><td data-c="${esc(c.id)}" class="${Number.isFinite(ch) ? (ch >= 0 ? "up" : "down") : ""}">${Number.isFinite(ch) ? (ch >= 0 ? "+" : "") + ch.toFixed(2) + "%" : "-"}</td><td>${mc > 0 ? fBig(mc) : "-"}</td></tr>`;
+      return `<tr><td>${i + 1}</td><td><a class="cl" href="${hrefOf(c)}">${img}<span>${esc(c.name)} <small>${esc(c.symbol.toUpperCase())}</small></span></a></td><td data-p="${esc(c.id)}">${p > 0 ? fUsd(p) : "-"}</td><td>${NGN && p > 0 ? fNgn(p * NGN) : "-"}</td><td data-c="${esc(c.id)}" class="${Number.isFinite(ch) ? (ch >= 0 ? "up" : "down") : ""}">${Number.isFinite(ch) ? (ch >= 0 ? "+" : "") + ch.toFixed(2) + "%" : "-"}</td><td data-m="${esc(c.id)}">${mc > 0 ? fBig(mc) : "-"}</td></tr>`;
     }).join("");
     const body = `<h1>${esc(name)} crypto prices</h1><p class="sub">Live prices in US dollars and Nigerian naira for ${list.length} ${esc(name)} coins.</p>` + t +
       `<div class="tw"><table class="catt"><thead><tr><th>#</th><th>Coin</th><th>Price</th><th>Price (NGN)</th><th>24h</th><th>Market cap</th></tr></thead><tbody>${tr}</tbody></table></div>` +
@@ -672,16 +672,24 @@ import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
 const IDS = ${JSON.stringify(ids)};
 const NGN = ${JSON.stringify(NGN || 0)};
 const money = (n) => (n >= 1000 ? "$" + Math.round(n).toLocaleString("en-US") : n >= 1 ? "$" + n.toFixed(2) : n >= 0.01 ? "$" + n.toFixed(4) : "$" + Number(n.toPrecision(4)).toString());
-fetch(SUPABASE_URL + "/rest/v1/coins?select=id,price_usd,change_24h_pct&id=in.(" + IDS.map(encodeURIComponent).join(",") + ")", { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } })
+fetch(SUPABASE_URL + "/rest/v1/coins?select=id,price_usd,change_24h_pct,market_cap_usd&id=in.(" + IDS.map(encodeURIComponent).join(",") + ")", { headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY } })
   .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
   .then((rows) => {
+    let tot = 0;
+    const big = (n) => n >= 1e12 ? "$" + (n / 1e12).toFixed(2) + " trillion" : n >= 1e9 ? "$" + (n / 1e9).toFixed(2) + " billion" : n >= 1e6 ? "$" + (n / 1e6).toFixed(1) + " million" : "$" + Math.round(n).toLocaleString("en-US");
     for (const c of rows) {
-      const p = Number(c.price_usd), ch = Number(c.change_24h_pct);
+      const p = Number(c.price_usd), ch = Number(c.change_24h_pct), mc = Number(c.market_cap_usd);
+      const me = document.querySelector('[data-m="' + c.id + '"]');
+      if (me && mc > 0) { me.textContent = big(mc); tot += mc; }
       const pe = document.querySelector('[data-p="' + c.id + '"]');
       if (pe && p > 0) { pe.textContent = money(p); if (NGN && pe.nextElementSibling) pe.nextElementSibling.textContent = "\\u20a6" + (p * NGN).toLocaleString("en-US", { maximumFractionDigits: p * NGN >= 100 ? 0 : 4 }); }
       const ce = document.querySelector('[data-c="' + c.id + '"]');
       if (ce && Number.isFinite(ch)) { ce.textContent = (ch >= 0 ? "+" : "") + ch.toFixed(2) + "%"; ce.className = ch >= 0 ? "up" : "down"; }
     }
+    const cp = document.getElementById("cap");
+    if (cp && tot > 0 && Number(cp.dataset.n) === IDS.length) cp.textContent = big(tot);
+    const dt = document.getElementById("dt");
+    if (dt) dt.textContent = new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
   }).catch(() => {});
 </script>`;
     fs.writeFileSync(file, shell(`${name} Crypto Prices Today in Naira and USD | PriceCheck NG`, `${name} crypto prices today: ${list.length} coins${cap > 0 ? ", combined market cap " + fBig(cap) : ""}. Live prices in USD and Nigerian naira on PriceCheck NG.`, url, ld, body, script));
