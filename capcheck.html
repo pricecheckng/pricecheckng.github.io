@@ -33,14 +33,14 @@ document.getElementById('cat').onclick=async function(){
     var idx=await (await fetch('categories.html',{cache:'no-store'})).text();
     var pages=[...new Set((idx.match(/category-[a-z0-9-]+\.html/g)||[]))];
     var cats=[];
-    for(var i=0;i<pages.length;i++){var t=await (await fetch(pages[i],{cache:'no-store'})).text();
-      var ids=/const IDS = (\[.*?\]);/.exec(t),m=/combined market cap of \$([\d.,]+) (million|billion|trillion)/i.exec(t),dt=/On (\d+ \w+ \d{4})/.exec(t);
+    for(var i=0;i<pages.length;i++){var t=await (await fetch(pages[i],{cache:'no-store'})).text();var tt=t.replace(/<[^>]+>/g,'');
+      var ids=/const IDS = (\[.*?\]);/.exec(t),m=/combined market cap of \$([\d.,]+) (million|billion|trillion)/i.exec(tt),dt=/On (\d+ \w+ \d{4})/.exec(tt);
       if(!ids)continue;cats.push({p:pages[i],ids:JSON.parse(ids[1]),baked:m?parseFloat(m[1].replace(/,/g,''))*({million:1e6,billion:1e9,trillion:1e12})[m[2].toLowerCase()]:null,date:dt&&dt[1]})}
     var all=[...new Set([].concat.apply([],cats.map(function(c){return c.ids})))];
-    var ours={};for(var k=0;k<all.length;k+=100){var part=all.slice(k,k+100);
-      var o=await (await fetch(SUPABASE_URL+'/rest/v1/coins?select=id,market_cap_usd&id=in.('+part.map(encodeURIComponent).join(',')+')',{headers:{apikey:SUPABASE_KEY}})).json();o.forEach(function(c){ours[c.id]=+c.market_cap_usd||0})}
+    var ours={},oi={},cgi={};for(var k=0;k<all.length;k+=100){var part=all.slice(k,k+100);
+      var o=await (await fetch(SUPABASE_URL+'/rest/v1/coins?select=id,symbol,market_cap_usd,circulating_supply&id=in.('+part.map(encodeURIComponent).join(',')+')',{headers:{apikey:SUPABASE_KEY}})).json();o.forEach(function(c){ours[c.id]=+c.market_cap_usd||0;oi[c.id]=c})}
     var cg={};for(var k2=0;k2<all.length;k2+=150){var pr=all.slice(k2,k2+150);
-      var rr=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&ids='+pr.join(','));if(!rr.ok)throw new Error('CoinGecko HTTP '+rr.status);(await rr.json()).forEach(function(c){cg[c.id]=c.market_cap||0})}
+      var rr=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&ids='+pr.join(','));if(!rr.ok)throw new Error('CoinGecko HTTP '+rr.status);(await rr.json()).forEach(function(c){cg[c.id]=c.market_cap||0;cgi[c.id]=c})}
     var bad=0,rows=[];
     cats.forEach(function(c){var so=0,sg=0,missO=[],missG=[];c.ids.forEach(function(id){if(ours[id]==null)missO.push(id);else so+=ours[id];if(cg[id]==null)missG.push(id);else sg+=cg[id]});
       var d1=c.baked&&sg?(c.baked/sg-1)*100:null,d2=so&&sg?(so/sg-1)*100:null,pr=[];
@@ -48,7 +48,11 @@ document.getElementById('cat').onclick=async function(){
       if(d2!=null&&Math.abs(d2)>10)pr.push('our table sums to '+f(so)+' vs CoinGecko '+f(sg)+' ('+d2.toFixed(0)+'%)');
       if(missO.length)pr.push('not in our table: '+missO.join(','));if(missG.length)pr.push('not on CoinGecko: '+missG.join(','));
       if(pr.length){bad++;rows.push(['no',c.p.replace('category-','').replace('.html','')+' ('+c.ids.length+' coins): '+pr.join('; ')])}});
-    LOG.push('Checked '+cats.length+' category pages: '+bad+' need attention');rows.forEach(function(r){LOG.push('MISMATCH '+r[1])});
+    var dc=[];Object.keys(ours).forEach(function(id){if(cg[id]&&ours[id]){var d=(ours[id]/cg[id]-1)*100;if(Math.abs(d)>15)dc.push({id:id,d:d,gap:Math.abs(ours[id]-cg[id]),o:ours[id],g:cg[id],so:oi[id].circulating_supply,sg:cgi[id].circulating_supply})}});
+    dc.sort(function(a,b){return b.gap-a.gap});
+    var cr=dc.slice(0,40).map(function(x){return ['no','COIN '+x.id+': ours '+f(x.o)+' (supply '+f(+x.so)+') vs CoinGecko '+f(x.g)+' (supply '+f(+x.sg)+') = '+x.d.toFixed(0)+'%']});
+    rows=rows.concat(cr);
+    LOG.push('Checked '+cats.length+' category pages: '+bad+' need attention. '+dc.length+' coins differ from CoinGecko by more than 15% (biggest 40 listed).');rows.forEach(function(r){LOG.push('MISMATCH '+r[1])});
     sum.textContent=LOG[0];rows.forEach(function(r){var d=document.createElement('div');d.className='r no';d.textContent=r[1];out.appendChild(d)});
   }catch(e){sum.textContent='Failed: '+(e&&e.message);LOG=['Failed: '+(e&&e.message)]}
 };
