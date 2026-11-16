@@ -366,6 +366,8 @@ syncTf();
 
 function fail(t) { const m = $('msg'); m.textContent = t; m.style.display = 'flex'; }
 const icoOk = {}, icoBad = new Set();
+const icoDb = {};
+function dbIco(n) { if (n in icoDb) return Promise.resolve(icoDb[n]); return fetch(`${SUPABASE_URL}/rest/v1/coins?select=image_url&symbol=ilike.${encodeURIComponent(n)}&image_url=not.is.null&order=market_cap_rank.asc.nullslast&limit=1`, { headers: { apikey: SUPABASE_KEY } }).then(r => r.json()).then(a => (icoDb[n] = Array.isArray(a) && a[0] ? a[0].image_url : null)).catch(() => null); }
 function icoName(sym) { return String(sym || '').toUpperCase().replace(/^(?:1000000|100000|10000|1000|1M)(?=[A-Z])/, ''); }
 function icoUrls(sym) { const n = icoName(sym), l = n.toLowerCase(), u = [], m = meta[sym] || meta[n]; if (m && m.img) u.push(m.img); u.push('https://assets.coincap.io/assets/icons/' + l + '@2x.png', 'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@1.0.0/128/color/' + l + '.png'); return u; }
 function setIco(el, sym) {
@@ -374,7 +376,10 @@ function setIco(el, sym) {
   if (icoOk[n]) return put(icoOk[n]);
   if (icoBad.has(n)) return;
   const us = icoUrls(sym); let i = 0;
-  (function next() { if (i >= us.length) { icoBad.add(n); return; } const u = us[i++], t = new Image(); t.onload = () => { if (t.naturalWidth > 1) { icoOk[n] = u; if (el.isConnected) put(u); } else next(); }; t.onerror = next; t.referrerPolicy = 'no-referrer'; t.src = u; })();
+  const m0 = meta[sym] || meta[n];
+  const viaDb = () => dbIco(n).then(u => { if (!u) return next(); const t = new Image(); t.onload = () => { if (t.naturalWidth > 1) { icoOk[n] = u; if (el.isConnected) put(u); } else next(); }; t.onerror = next; t.referrerPolicy = 'no-referrer'; t.src = u; });
+  if (!(m0 && m0.img) && /^[A-Z0-9]{1,15}$/.test(n)) viaDb(); else next();
+  function next() { if (i >= us.length) { icoBad.add(n); return; } const u = us[i++], t = new Image(); t.onload = () => { if (t.naturalWidth > 1) { icoOk[n] = u; if (el.isConnected) put(u); } else next(); }; t.onerror = next; t.referrerPolicy = 'no-referrer'; t.src = u; }
 }
 function setPair() { $('pTxt').textContent = LBL(); const q2 = $('bq2'); if (q2) q2.textContent = QT(); const b2 = $('bq'); if (b2) b2.textContent = BASE(); setIco($('pIco'), BASE()); }
 let prevP = null;
