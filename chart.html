@@ -365,7 +365,17 @@ const syncTf = () => { document.querySelectorAll('#tfMenu .tf').forEach(b => b.c
 syncTf();
 
 function fail(t) { const m = $('msg'); m.textContent = t; m.style.display = 'flex'; }
-function setIco(el, sym) { const m = meta[sym]; if (m && m.img) { el.innerHTML = ''; const im = new Image(); im.src = m.img; im.alt = ''; im.style.cssText = 'width:100%;height:100%;border-radius:50%'; im.onerror = () => { el.textContent = sym[0]; }; el.appendChild(im); } else el.textContent = sym[0]; }
+const icoOk = {}, icoBad = new Set();
+function icoName(sym) { return String(sym || '').toUpperCase().replace(/^(?:1000000|100000|10000|1000|1M)(?=[A-Z])/, ''); }
+function icoUrls(sym) { const n = icoName(sym), l = n.toLowerCase(), u = [], m = meta[sym] || meta[n]; if (m && m.img) u.push(m.img); u.push('https://assets.coincap.io/assets/icons/' + l + '@2x.png', 'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@1.0.0/128/color/' + l + '.png'); return u; }
+function setIco(el, sym) {
+  const n = icoName(sym); el.textContent = (n || '?')[0];
+  const put = u => { const im = new Image(); im.alt = ''; im.referrerPolicy = 'no-referrer'; im.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover'; im.src = u; el.textContent = ''; el.appendChild(im); };
+  if (icoOk[n]) return put(icoOk[n]);
+  if (icoBad.has(n)) return;
+  const us = icoUrls(sym); let i = 0;
+  (function next() { if (i >= us.length) { icoBad.add(n); return; } const u = us[i++], t = new Image(); t.onload = () => { if (t.naturalWidth > 1) { icoOk[n] = u; if (el.isConnected) put(u); } else next(); }; t.onerror = next; t.referrerPolicy = 'no-referrer'; t.src = u; })();
+}
 function setPair() { $('pTxt').textContent = LBL(); const q2 = $('bq2'); if (q2) q2.textContent = QT(); const b2 = $('bq'); if (b2) b2.textContent = BASE(); setIco($('pIco'), BASE()); }
 let prevP = null;
 function flash(el, dir) { el.classList.remove('lf-u', 'lf-d'); void el.offsetWidth; el.classList.add(dir > 0 ? 'lf-u' : 'lf-d'); }
