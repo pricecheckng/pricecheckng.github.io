@@ -1,0 +1,30 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Market cap check</title>
+<style>body{margin:0;padding:14px;background:#0b130f;color:#e6f2ea;font:13px system-ui}h1{font-size:18px;margin:0 0 6px}button{padding:12px 18px;border:0;border-radius:10px;background:#16a34a;color:#fff;font:700 15px system-ui;margin:4px 6px 8px 0}.r{padding:6px 0;border-bottom:1px solid #1d2b24}.no{color:#ef4444}.wn{color:#f59e0b}#sum{font-weight:700;margin:6px 0}small{color:#8aa598}</style></head><body>
+<h1>Market cap check</h1><p>Compares our top 250 coins with CoinGecko live: price, market cap and rank. Tap Start, wait 20 seconds.</p>
+<button id="go">Start</button><button id="cp">Copy report</button><div id="sum"></div><div id="out"></div>
+<script type="module">
+import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
+var LOG=[],out=document.getElementById('out'),sum=document.getElementById('sum');
+var f=function(n){return n==null||!isFinite(n)?'--':n>=1e9?(n/1e9).toFixed(2)+'B':n>=1e6?(n/1e6).toFixed(1)+'M':n.toFixed(n<1?6:2)};
+document.getElementById('go').onclick=async function(){
+  out.innerHTML='';LOG=[];sum.textContent='loading...';
+  try{
+    var o=await (await fetch(SUPABASE_URL+'/rest/v1/coins?select=id,symbol,price_usd,market_cap_usd,market_cap_rank,circulating_supply,updated_at&market_cap_rank=lte.250&order=market_cap_rank.asc&limit=250',{headers:{apikey:SUPABASE_KEY}})).json();
+    var g=[];for(var p=1;p<=1;p++){var r=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page='+p);if(!r.ok)throw new Error('CoinGecko HTTP '+r.status);g=g.concat(await r.json())}
+    var gm={};g.forEach(function(c){gm[c.id]=c});
+    var bad=0,miss=0,rows=[];
+    o.forEach(function(c){var x=gm[c.id];if(!x){miss++;rows.push(['wn','#'+c.market_cap_rank+' '+c.symbol.toUpperCase()+' not in CoinGecko top 250 now']);return}
+      var pd=c.price_usd&&x.current_price?(c.price_usd/x.current_price-1)*100:null,md=c.market_cap_usd&&x.market_cap?(c.market_cap_usd/x.market_cap-1)*100:null,rd=c.market_cap_rank-x.market_cap_rank;
+      var pr=[];if(pd==null||Math.abs(pd)>3)pr.push('price '+f(c.price_usd)+' vs '+f(x.current_price)+(pd==null?'':' ('+pd.toFixed(1)+'%)'));
+      if(md==null||Math.abs(md)>5)pr.push('mcap '+f(c.market_cap_usd)+' vs '+f(x.market_cap)+(md==null?'':' ('+md.toFixed(1)+'%)'));
+      if(Math.abs(rd)>3)pr.push('rank '+c.market_cap_rank+' vs '+x.market_cap_rank);
+      if(pr.length){bad++;rows.push(['no','#'+c.market_cap_rank+' '+c.symbol.toUpperCase()+': '+pr.join('; ')])}});
+    var age=o.reduce(function(m,c){return Math.max(m,Date.parse(c.updated_at||0)||0)},0);
+    LOG.push('Checked '+o.length+' coins: '+bad+' mismatched, '+miss+' not in CoinGecko top 250. Newest update in our table: '+(age?Math.round((Date.now()-age)/6e4)+' min ago':'unknown'));
+    rows.forEach(function(r){LOG.push((r[0]==='no'?'MISMATCH ':'NOTE ')+r[1])});
+    sum.textContent=LOG[0];rows.forEach(function(r){var d=document.createElement('div');d.className='r '+r[0];d.textContent=r[1];out.appendChild(d)});
+    if(!rows.length)out.innerHTML='<div class="r">All matched.</div>';
+  }catch(e){sum.textContent='Failed: '+(e&&e.message);LOG=['Failed: '+(e&&e.message)]}
+};
+document.getElementById('cp').onclick=function(){var t=LOG.join('\n');try{navigator.clipboard.writeText(t)}catch(e){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}};
+</script></body></html>
