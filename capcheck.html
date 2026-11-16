@@ -9,7 +9,7 @@ var f=function(n){return n==null||!isFinite(n)?'--':n>=1e9?(n/1e9).toFixed(2)+'B
 document.getElementById('go').onclick=async function(){
   out.innerHTML='';LOG=[];sum.textContent='loading...';
   try{
-    var o=await (await fetch(SUPABASE_URL+'/rest/v1/coins?select=id,symbol,price_usd,market_cap_usd,market_cap_rank,circulating_supply,updated_at&market_cap_rank=lte.250&order=market_cap_rank.asc&limit=250',{headers:{apikey:SUPABASE_KEY}})).json();
+    var o=await (await fetch(SUPABASE_URL+'/rest/v1/coins?select=id,symbol,price_usd,market_cap_usd,market_cap_rank,circulating_supply,last_updated&market_cap_rank=lte.250&order=market_cap_rank.asc&limit=250',{headers:{apikey:SUPABASE_KEY}})).json();if(!Array.isArray(o))throw new Error('our table: '+JSON.stringify(o).slice(0,120));
     var g=[];for(var p=1;p<=1;p++){var r=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page='+p);if(!r.ok)throw new Error('CoinGecko HTTP '+r.status);g=g.concat(await r.json())}
     var gm={};g.forEach(function(c){gm[c.id]=c});
     var bad=0,miss=0,rows=[];
@@ -19,7 +19,7 @@ document.getElementById('go').onclick=async function(){
       if(md==null||Math.abs(md)>5)pr.push('mcap '+f(c.market_cap_usd)+' vs '+f(x.market_cap)+(md==null?'':' ('+md.toFixed(1)+'%)'));
       if(Math.abs(rd)>3)pr.push('rank '+c.market_cap_rank+' vs '+x.market_cap_rank);
       if(pr.length){bad++;rows.push(['no','#'+c.market_cap_rank+' '+c.symbol.toUpperCase()+': '+pr.join('; ')])}});
-    var age=o.reduce(function(m,c){return Math.max(m,Date.parse(c.updated_at||0)||0)},0);
+    var age=o.reduce(function(m,c){return Math.max(m,Date.parse(c.last_updated||0)||0)},0);
     LOG.push('Checked '+o.length+' coins: '+bad+' mismatched, '+miss+' not in CoinGecko top 250. Newest update in our table: '+(age?Math.round((Date.now()-age)/6e4)+' min ago':'unknown'));
     rows.forEach(function(r){LOG.push((r[0]==='no'?'MISMATCH ':'NOTE ')+r[1])});
     sum.textContent=LOG[0];rows.forEach(function(r){var d=document.createElement('div');d.className='r '+r[0];d.textContent=r[1];out.appendChild(d)});
