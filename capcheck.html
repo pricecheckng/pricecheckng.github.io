@@ -1,7 +1,7 @@
 <!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>Market cap check</title>
 <style>body{margin:0;padding:14px;background:#0b130f;color:#e6f2ea;font:13px system-ui}h1{font-size:18px;margin:0 0 6px}button{padding:12px 18px;border:0;border-radius:10px;background:#16a34a;color:#fff;font:700 15px system-ui;margin:4px 6px 8px 0}.r{padding:6px 0;border-bottom:1px solid #1d2b24}.no{color:#ef4444}.wn{color:#f59e0b}#sum{font-weight:700;margin:6px 0}small{color:#8aa598}</style></head><body>
-<h1>Market cap check</h1><p>Compares our top 250 coins with CoinGecko live: price, market cap and rank. Tap Start, wait 20 seconds.</p>
-<button id="go">Start</button><button id="cp">Copy report</button><div id="sum"></div><div id="out"></div>
+<h1>Market cap check</h1><p><b>Start</b> compares our top 250 coins with CoinGecko live (price, market cap, rank). <b>Check categories</b> compares the market cap written on every category page (Sports, Gaming and the rest) with live numbers. Wait up to 40 seconds.</p>
+<button id="go">Start</button><button id="cat">Check categories</button><button id="cp">Copy report</button><div id="sum"></div><div id="out"></div>
 <script type="module">
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
 var LOG=[],out=document.getElementById('out'),sum=document.getElementById('sum');
@@ -24,6 +24,32 @@ document.getElementById('go').onclick=async function(){
     rows.forEach(function(r){LOG.push((r[0]==='no'?'MISMATCH ':'NOTE ')+r[1])});
     sum.textContent=LOG[0];rows.forEach(function(r){var d=document.createElement('div');d.className='r '+r[0];d.textContent=r[1];out.appendChild(d)});
     if(!rows.length)out.innerHTML='<div class="r">All matched.</div>';
+  }catch(e){sum.textContent='Failed: '+(e&&e.message);LOG=['Failed: '+(e&&e.message)]}
+};
+
+document.getElementById('cat').onclick=async function(){
+  out.innerHTML='';LOG=[];sum.textContent='loading categories...';
+  try{
+    var idx=await (await fetch('categories.html',{cache:'no-store'})).text();
+    var pages=[...new Set((idx.match(/category-[a-z0-9-]+\.html/g)||[]))];
+    var cats=[];
+    for(var i=0;i<pages.length;i++){var t=await (await fetch(pages[i],{cache:'no-store'})).text();
+      var ids=/const IDS = (\[.*?\]);/.exec(t),m=/combined market cap of \$([\d.,]+) (million|billion|trillion)/i.exec(t),dt=/On (\d+ \w+ \d{4})/.exec(t);
+      if(!ids)continue;cats.push({p:pages[i],ids:JSON.parse(ids[1]),baked:m?parseFloat(m[1].replace(/,/g,''))*({million:1e6,billion:1e9,trillion:1e12})[m[2].toLowerCase()]:null,date:dt&&dt[1]})}
+    var all=[...new Set([].concat.apply([],cats.map(function(c){return c.ids})))];
+    var ours={};for(var k=0;k<all.length;k+=100){var part=all.slice(k,k+100);
+      var o=await (await fetch(SUPABASE_URL+'/rest/v1/coins?select=id,market_cap_usd&id=in.('+part.map(encodeURIComponent).join(',')+')',{headers:{apikey:SUPABASE_KEY}})).json();o.forEach(function(c){ours[c.id]=+c.market_cap_usd||0})}
+    var cg={};for(var k2=0;k2<all.length;k2+=150){var pr=all.slice(k2,k2+150);
+      var rr=await fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&per_page=250&ids='+pr.join(','));if(!rr.ok)throw new Error('CoinGecko HTTP '+rr.status);(await rr.json()).forEach(function(c){cg[c.id]=c.market_cap||0})}
+    var bad=0,rows=[];
+    cats.forEach(function(c){var so=0,sg=0,missO=[],missG=[];c.ids.forEach(function(id){if(ours[id]==null)missO.push(id);else so+=ours[id];if(cg[id]==null)missG.push(id);else sg+=cg[id]});
+      var d1=c.baked&&sg?(c.baked/sg-1)*100:null,d2=so&&sg?(so/sg-1)*100:null,pr=[];
+      if(d1==null||Math.abs(d1)>10)pr.push('page says '+f(c.baked)+' ('+(c.date||'?')+') but CoinGecko now '+f(sg)+(d1==null?'':' ('+d1.toFixed(0)+'%)'));
+      if(d2!=null&&Math.abs(d2)>10)pr.push('our table sums to '+f(so)+' vs CoinGecko '+f(sg)+' ('+d2.toFixed(0)+'%)');
+      if(missO.length)pr.push('not in our table: '+missO.join(','));if(missG.length)pr.push('not on CoinGecko: '+missG.join(','));
+      if(pr.length){bad++;rows.push(['no',c.p.replace('category-','').replace('.html','')+' ('+c.ids.length+' coins): '+pr.join('; ')])}});
+    LOG.push('Checked '+cats.length+' category pages: '+bad+' need attention');rows.forEach(function(r){LOG.push('MISMATCH '+r[1])});
+    sum.textContent=LOG[0];rows.forEach(function(r){var d=document.createElement('div');d.className='r no';d.textContent=r[1];out.appendChild(d)});
   }catch(e){sum.textContent='Failed: '+(e&&e.message);LOG=['Failed: '+(e&&e.message)]}
 };
 document.getElementById('cp').onclick=function(){var t=LOG.join('\n');try{navigator.clipboard.writeText(t)}catch(e){var a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();document.execCommand('copy');a.remove()}};
