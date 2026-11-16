@@ -3,7 +3,7 @@
 <h1>Full exchange test</h1><p>Tap Start and wait about 2 minutes. Then tap Copy report and paste it to me, or send a screenshot.</p>
 <button id="go">Start</button><button id="cp">Copy report</button><div id="sum"></div><div id="out"></div>
 <script type="module">import { SUPABASE_URL, SUPABASE_KEY } from "./config.js"; window.PCNEX_PROXY = { url: SUPABASE_URL + "/functions/v1/pcn-ex", key: SUPABASE_KEY };</script>
-<script src="chart-ex.js?v=168"></script>
+<script src="chart-ex.js?v=169"></script>
 <script>
 var LOG=[],out=document.getElementById('out'),sum=document.getElementById('sum');
 function to(p,ms){return Promise.race([p,new Promise(function(_,j){setTimeout(function(){j(new Error('timeout '+ms/1000+'s'))},ms)})])}
@@ -40,13 +40,14 @@ async function testOne(label,api,id,isMk){
 }
 document.getElementById('go').onclick=async function(){
   out.innerHTML='';LOG=[];sum.textContent='running...';
-  var E=window.PCNEX,names=Object.keys(E).filter(function(k){return E[k]&&E[k].list});
+  var E=window.PCNEX,names=Object.keys(E.caps);
   var types=['spot','perp','future','option'];
   for(var n of names){
     var caps=E.caps[n]||['spot'];
     for(var ty of types){
       if(caps.indexOf(ty)<0)continue;
       var label=n+' '+ty,api=ty==='spot'?E[n]:E.mk(n,ty);
+      if(ty==='spot'&&n==='binance'){add('ok',label+' (tested inside the chart page, skipped here)');continue}
       if(!api){add('no',label,'adapter missing');continue}
       var ids=[];
       try{var l=await to(api.list(),30000);

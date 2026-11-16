@@ -10,7 +10,7 @@
     var h = u.split('/')[2], P = window.PCNEX_PROXY, canP = P && ALLOWED.test(u);
     var viaP = function () { return direct(P.url + '?u=' + encodeURIComponent(u), { headers: { apikey: P.key, Authorization: 'Bearer ' + P.key } }); };
     if (canP && bad[h] && Date.now() - bad[h] < 6e5) return viaP().catch(function () { return direct(u); });
-    return direct(u, null, canP ? 4000 : 8000).catch(function (e) {
+    return direct(u, null, canP ? 7000 : 8000).catch(function (e) {
       if (!canP) throw e;
       bad[h] = Date.now(); try { localStorage.setItem('pcn_ex_bad', JSON.stringify(bad)); } catch (_) {}
       return viaP().catch(function () { throw e; });
@@ -25,7 +25,7 @@
     var i = 0, err = null;
     return (function next() { if (i >= tries.length) return Promise.reject(err || new Error('no data')); var f = tries[i++]; return f().then(function (r) { if (!r || !r.length) throw new Error('empty'); return r; }).catch(function (e) { err = e; return next(); }); })();
   };
-  var asc = function (a) { return a.sort(function (x, y) { return x.t - y.t; }); };
+  var asc = function (a) { a.sort(function (x, y) { return x.t - y.t; }); return a.filter(function (k, i) { return !i || k.t !== a[i - 1].t; }); };
 
 
 
@@ -196,7 +196,7 @@
         if (p && step) { for (var t = p.t + step, n = 0; t < c.t && n < 2000; t += step, n++) out.push({ t: t, o: p.c, h: p.c, l: p.c, c: p.c, v: 0 }); }
         out.push(c);
       });
-      return out; });
+      return out.slice(-600); });
   };
   E.upbit = {
     name: 'Upbit', quote: 'USDT',
@@ -289,7 +289,7 @@
     return { last: N(d.last), open: N(d.open24h), high: N(d.high24h), low: N(d.low24h), vol: N(d.vol24h), qvol: N(d.volCcy24h) }; }); };
   M.okx = {
     perp: { quote: 'USDT', candles: okCandles, ticker: okTicker, list: function () { return okInst('SWAP').then(function (l) { return l.filter(function (x) { return x.settleCcy === 'USDT' && x.state === 'live'; }).map(function (x) { var b = String(x.uly || x.instId).split('-')[0]; return { s: x.instId, base: b, label: b + '/USDT', name: 'Perpetual' }; }); }); } },
-    future: { quote: 'USDT', candles: okCandles, ticker: okTicker, list: function () { return okInst('FUTURES').then(function (l) { return l.filter(function (x) { return x.settleCcy === 'USDT' && x.state === 'live'; }).map(function (x) { var b = String(x.uly || x.instId).split('-')[0], d = x.expTime ? fd(+x.expTime) : ''; return { s: x.instId, base: b, label: b + ' ' + d, name: 'Futures ' + d }; }); }); } },
+    future: { quote: 'USD', candles: okCandles, ticker: okTicker, list: function () { return okInst('FUTURES').then(function (l) { l = l.filter(function (x) { return x.state === 'live'; }); var u = l.filter(function (x) { return x.settleCcy === 'USDT' || x.settleCcy === 'USDC'; }); return u.length ? u : l; }).then(function (l) { return l.map(function (x) { var b = String(x.uly || x.instId).split('-')[0], d = x.expTime ? fd(+x.expTime) : ''; return { s: x.instId, base: b, label: b + ' ' + d, name: 'Futures ' + d }; }); }); } },
     option: { quote: 'USD', candles: okCandles, ticker: okTicker, list: function () { return Promise.all(['BTC-USD', 'ETH-USD'].map(function (u) { return okInst('OPTION', '&uly=' + u).catch(function () { return []; }); })).then(function (a) {
       return [].concat.apply([], a).filter(function (x) { return x.state === 'live'; }).map(function (x) { var o = optLabel(x.instId); return { s: x.instId, base: o.base, label: o.label, name: o.name }; }); }); } }
   };
