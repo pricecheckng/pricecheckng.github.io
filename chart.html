@@ -331,22 +331,30 @@ setTimeout(function(){var d=document.getElementById('dtools');if(d)d.classList.a
   }, 7000);
 })();
 </script>
-<script src="pcnchart.js?v=166"></script>
-<script src="chart-ex.js?v=166"></script>
+<script src="pcnchart.js?v=167"></script>
+<script src="chart-ex.js?v=167"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=166";
+import { ICONS } from "./chart-icons.js?v=167";
 window.__pcnMod = true; try { sessionStorage.removeItem("pcnRl"); } catch (_) {}
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 $('tz').textContent = tz.replace('_', ' ');
 const qs = new URLSearchParams(location.search);
-let symbol = (qs.get('s') || 'BTC').toUpperCase().replace(/[^A-Z0-9]/g, '') || 'BTC', interval = ['15m','1h','4h','1d','1w'].includes(qs.get('i')) ? qs.get('i') : '4h';
+let symbol = (qs.get('s') || 'BTC').toUpperCase().replace(/[^A-Z0-9_.\-]/g, '') || 'BTC', interval = ['15m','1h','4h','1d','1w'].includes(qs.get('i')) ? qs.get('i') : '4h';
 window.PCNEX_PROXY = { url: SUPABASE_URL + '/functions/v1/pcn-ex', key: SUPABASE_KEY };
 const EXN = { binance: 'Binance', okx: 'OKX', bybit: 'Bybit', aster: 'Aster', bitget: 'Bitget', gate: 'Gate', mexc: 'MEXC', coinbase: 'Coinbase', hyperliquid: 'Hyperliquid', upbit: 'Upbit' };
-const PT = () => exch === 'hyperliquid' ? 'perps' : 'spot';
-const QT = () => (exch !== 'binance' && window.PCNEX && window.PCNEX[exch] && window.PCNEX[exch].quote) || 'USDT';
 let exch = (qs.get('x') || (function () { try { return JSON.parse(localStorage.getItem('pcn_chart_ex')); } catch (_) { return null; } })() || 'binance'); if (!EXN[exch] || (exch !== 'binance' && !(window.PCNEX && window.PCNEX[exch]))) exch = 'binance';
+const MTL = { spot: 'spot', perp: 'perps', future: 'futures', option: 'options' };
+const CAPS = ex => (window.PCNEX && window.PCNEX.caps && window.PCNEX.caps[ex]) || ['spot'];
+let mt = (CAPS(exch).includes(qs.get('m')) ? qs.get('m') : (CAPS(exch).includes('spot') ? 'spot' : CAPS(exch)[0]));
+const isDirect = () => exch === 'binance' && mt === 'spot';          // Binance spot uses our own server and websocket
+const curA = () => mt === 'spot' ? window.PCNEX[exch] : window.PCNEX.mk(exch, mt);
+let pinfo = {};                                                       // contract id -> {base, label, q}
+const SQ = () => (exch !== 'binance' && window.PCNEX && window.PCNEX[exch] && window.PCNEX[exch].quote) || 'USDT';
+const QT = () => mt === 'spot' ? SQ() : ((pinfo[symbol] && pinfo[symbol].q) || (curA() && curA().quote) || 'USDT');
+const BASE = () => mt === 'spot' ? symbol : ((pinfo[symbol] && pinfo[symbol].base) || symbol.split(/[-_]/)[0].replace(/(USDT|USDC|USD)$/, ''));
+const LBL = () => mt === 'spot' ? symbol + '/' + SQ() : ((pinfo[symbol] && pinfo[symbol].label) || symbol) + (mt === 'perp' ? ' Perp' : '');
 let meta = {};                       // symbol -> {name, img}
 const sg = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (_) { return d; } };
 const ss = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
@@ -358,7 +366,7 @@ syncTf();
 
 function fail(t) { const m = $('msg'); m.textContent = t; m.style.display = 'flex'; }
 function setIco(el, sym) { const m = meta[sym]; if (m && m.img) { el.innerHTML = ''; const im = new Image(); im.src = m.img; im.alt = ''; im.style.cssText = 'width:100%;height:100%;border-radius:50%'; im.onerror = () => { el.textContent = sym[0]; }; el.appendChild(im); } else el.textContent = sym[0]; }
-function setPair() { $('pTxt').textContent = symbol + '/' + QT(); const q2 = $('bq2'); if (q2) q2.textContent = QT(); setIco($('pIco'), symbol); }
+function setPair() { $('pTxt').textContent = LBL(); const q2 = $('bq2'); if (q2) q2.textContent = QT(); const b2 = $('bq'); if (b2) b2.textContent = BASE(); setIco($('pIco'), BASE()); }
 let prevP = null;
 function flash(el, dir) { el.classList.remove('lf-u', 'lf-d'); void el.offsetWidth; el.classList.add(dir > 0 ? 'lf-u' : 'lf-d'); }
 function dayCols() { let cc = { up: '#16c784', dn: '#ea3943' }; try { cc = JSON.parse(localStorage.getItem('pcn_chart_cols') || 'null') || cc; } catch (_) {} return cc; }
@@ -735,7 +743,7 @@ function liveState(on, txt) { $('live').classList.toggle('on', on); $('liveT').t
 function stopLive() { clearTimeout(wsTimer); clearInterval(poll); poll = 0; if (ws) { ws.onclose = ws.onmessage = ws.onerror = null; try { ws.close(); } catch (_) {} ws = null; } }
 function startLive(my, tries = 0) {
   stopLive();
-  if (exch !== 'binance') return startExPoll(my);
+  if (!isDirect()) return startExPoll(my);
   if (source !== 'binance') return startPoll(my);          // other sources: refresh by polling
   let opened = false;
   try { ws = new WebSocket(`wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}usdt@kline_${interval}`); } catch (_) { return startPoll(my); }
@@ -746,7 +754,7 @@ function startLive(my, tries = 0) {
   ws.onerror = () => { try { ws.close(); } catch (_) {} };
 }
 function startExPoll(my) {
-  const A = window.PCNEX[exch], sy = symbol, iv = interval; liveState(true, 'live');
+  const A = curA(), sy = symbol, iv = interval; liveState(true, 'live');
   let n = 0, lastK = (lastD && lastD.candles && lastD.candles.length) ? Object.assign({}, lastD.candles[lastD.candles.length - 1]) : null;
   // price every 5 seconds, candles every 15 seconds (keeps our server calls low)
   const tick = async () => {
@@ -775,9 +783,9 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden && so
 // ---------- load ----------
 async function load() {
   const my = ++token; stopLive(); liveState(false, 'connecting'); fail('Loading chart…'); setPair();
-  if (exch !== 'binance') {
+  if (!isDirect()) {
     try {
-      const A = window.PCNEX[exch]; stop24(); $('bq').textContent = symbol;
+      const A = curA(); if (!A) throw new Error('not available'); stop24(); setPair();
       const [cs, tk0] = await Promise.all([A.candles(symbol, interval).catch(e => { throw new Error('candles: ' + (e && e.message)); }), A.ticker(symbol).catch(() => null)]); if (my !== token) return;
       if (!cs.length) throw new Error('no candles');
       const tk = tk0 || window.PCNEX_derive(cs, interval);
@@ -785,10 +793,10 @@ async function load() {
       chart.tick(Object.assign({}, cs[cs.length - 1]));   // makes the chart work out the MA lines and RSI
       loadDrawings(); chart.setTool('cursor');
       lastD = { candles: cs, series: { sma50: [], sma200: [], rsi14: [] }, analysis: { price: tk.last, today: { open: tk.open }, levels: [] }, source: exch };
-      source = exch; dayOpen = tk.open || null;
+      source = exch; dayOpen = tk.open || null; setPair();
       $('px').classList.remove('hv'); setPrice(tk.last || cs[cs.length - 1].c); paint24(tk.high, tk.low, tk.vol, tk.qvol);
       $('msg').style.display = 'none'; startLive(my);
-    } catch (e) { try { console.warn('exchange load', e); } catch (_) {} if (my === token) { const m = String((e && e.message) || ''); fail(/timeout|Failed to fetch|failed/i.test(m) ? EXN[exch] + ' cannot be reached from your network right now. Try Binance, Bybit, Gate, Bitget or Aster.' : 'Could not load ' + symbol + '/' + QT() + ' on ' + EXN[exch] + '. Pick another pair and try again.' + (m ? ' (' + m.slice(0, 60) + ')' : '')); } }
+    } catch (e) { try { console.warn('exchange load', e); } catch (_) {} if (my === token) { const m = String((e && e.message) || ''); fail(m === 'no candles' ? 'No trades yet on ' + LBL() + '. Pick another contract.' : /timeout|Failed to fetch|failed/i.test(m) ? EXN[exch] + ' cannot be reached from your network right now. Try Binance, Bybit, Gate, Bitget or Aster.' : 'Could not load ' + LBL() + ' on ' + EXN[exch] + '. Pick another pair and try again.' + (m ? ' (' + m.slice(0, 60) + ')' : '')); } }
     return;
   }
   try {
@@ -810,28 +818,36 @@ const placeMenu = (btn, menu) => { const r = btn.getBoundingClientRect(); menu.s
 $('exBtn').onclick = e => { e.stopPropagation(); const o = $('exMenu').classList.contains('on'); closeMenus(); if (!o) { placeMenu($('exBtn'), $('exMenu')); $('exMenu').classList.add('on'); } };
 $('tfBtn').onclick = e => { e.stopPropagation(); const o = $('tfMenu').classList.contains('on'); closeMenus(); if (!o) { placeMenu($('tfBtn'), $('tfMenu')); $('tfMenu').classList.add('on'); } };
 document.addEventListener('click', closeMenus);
-document.querySelectorAll('#tfMenu .tf').forEach(b => b.onclick = () => { interval = b.dataset.i; syncTf(); closeMenus(); history.replaceState(null, '', `?s=${symbol}&i=${interval}&x=${exch}`); load(); });
+document.querySelectorAll('#tfMenu .tf').forEach(b => b.onclick = () => { interval = b.dataset.i; syncTf(); closeMenus(); history.replaceState(null, '', `?s=${symbol}&i=${interval}&x=${exch}&m=${mt}`); load(); });
 
 // ---------- pair picker (Binance live; other exchanges shown as coming soon) ----------
 let pairs = null, favs = sg('pcn_chart_favs', []);
+const pcache = {}, loaded = {};
 async function loadPairs() {
   if (pairs) return pairs;
+  const ex = exch, hasSpot = CAPS(ex).includes('spot');
   let rows = [];
   try { const r = await fetch(`${SUPABASE_URL}/rest/v1/coins?select=symbol,name,image_url,market_cap_rank&market_cap_rank=not.is.null&order=market_cap_rank.asc&limit=500`, { headers: { apikey: SUPABASE_KEY } }); rows = await r.json(); } catch (_) {}
   let ok = null;
-  if (exch !== 'binance') { try { const ck = 'pcn_pairs_' + exch, cached = sg(ck, null); if (cached && Date.now() - cached.t < 6 * 36e5) ok = new Set(cached.s); else { ok = await window.PCNEX[exch].list(); ss(ck, { t: Date.now(), s: [...ok] }); } } catch (_) { ok = null; } }
+  if (!hasSpot) rows = [];
+  else if (exch !== 'binance') { try { const ck = 'pcn_pairs_' + exch, cached = sg(ck, null); if (cached && Date.now() - cached.t < 6 * 36e5) ok = new Set(cached.s); else { ok = await window.PCNEX[exch].list(); ss(ck, { t: Date.now(), s: [...ok] }); } } catch (_) { ok = null; } }
   else try { const cached = sg('pcn_binance_usdt', null); if (cached && Date.now() - cached.t < 6 * 36e5) ok = new Set(cached.s); else { const r = await fetch('https://api.binance.com/api/v3/ticker/price'); const a = await r.json(); ok = new Set(a.filter(x => x.symbol.endsWith('USDT')).map(x => x.symbol.slice(0, -4))); ss('pcn_binance_usdt', { t: Date.now(), s: [...ok] }); } } catch (_) {}
-  const seen = new Set(); pairs = [];
-  (Array.isArray(rows) ? rows : []).forEach(c => { const s = String(c.symbol || '').toUpperCase(); if (!s || seen.has(s) || (ok && !ok.has(s))) return; seen.add(s); pairs.push({ s, name: c.name || s, img: c.image_url }); meta[s] = { name: c.name, img: c.image_url }; });
-  if (ok) [...ok].sort().forEach(s => { if (!seen.has(s)) { seen.add(s); pairs.push({ s, name: s }); } });
-  if (!seen.has('BTC')) pairs.unshift({ s: 'BTC', name: 'Bitcoin' });
-  return pairs;
+  const seen = new Set(); const list = pairs = pcache[ex] = [];
+  (Array.isArray(rows) ? rows : []).forEach(c => { const s = String(c.symbol || '').toUpperCase(); if (!s || seen.has(s) || (ok && !ok.has(s))) return; seen.add(s); list.push({ s, name: c.name || s, img: c.image_url, t: 'spot' }); meta[s] = { name: c.name, img: c.image_url }; });
+  if (hasSpot && ok) [...ok].sort().forEach(s => { if (!seen.has(s)) { seen.add(s); list.push({ s, name: s, t: 'spot' }); } });
+  if (hasSpot && !seen.has('BTC')) list.unshift({ s: 'BTC', name: 'Bitcoin', t: 'spot' });
+  // perps, futures and options of this exchange: loaded one by one, the list grows as each arrives
+  const jobs = CAPS(ex).filter(t => t !== 'spot').map(t => { const k = window.PCNEX.mk(ex, t); if (!k) return Promise.resolve();
+    return k.list().then(arr => { (arr || []).forEach(x => { pinfo[x.s] = { base: x.base, label: x.label, q: k.quote }; list.push({ s: x.s, name: x.name || x.label, label: x.label, base: x.base, q: k.quote, t }); }); }).catch(() => {}).then(() => { loaded[ex + t] = 1; if (ex === exch && $('sheetBg').classList.contains('on')) { renderList(); if ($('typeBg').style.display === 'flex') renderTypes(); } }); });
+  if (!hasSpot) await Promise.all(jobs);
+  return list;
 }
 let ptype = 'all';
 function renderTypes() {
-  const n = (pairs || []).length, o = [['all', 'all types', n], ['spot', 'spot', PT() === 'spot' ? n : 0], ['perps', 'perps', PT() === 'perps' ? n : 0], ['futures', 'futures', 0], ['options', 'options', 0]];
+  const all = pairs || [], cnt = t => all.filter(p => p.t === t).length;
+  const o = [['all', 'all types', all.length], ...['spot', 'perp', 'future', 'option'].map(t => [t, MTL[t], cnt(t)])];
   $('typeOpts').innerHTML = '';
-  o.forEach(([k, t, c]) => { const d = document.createElement('div'); d.className = 'topt' + (ptype === k ? ' on' : '') + (c ? '' : ' off'); d.innerHTML = `<span>${t}</span><em>${c || 'soon'}</em>`; if (c) d.onclick = () => { ptype = k; $('typeTxt').textContent = t; $('typeBg').style.display = 'none'; renderList(); }; $('typeOpts').appendChild(d); });
+  o.forEach(([k, t, c]) => { const d = document.createElement('div'); const pending = !c && k !== 'all' && CAPS(exch).includes(k) && !loaded[exch + k] && k !== 'spot'; d.className = 'topt' + (ptype === k ? ' on' : '') + (c ? '' : ' off'); d.innerHTML = `<span>${t}</span><em>${c || (pending ? '…' : '—')}</em>`; if (c) d.onclick = () => { ptype = k; $('typeTxt').textContent = t; $('typeBg').style.display = 'none'; renderList(); }; $('typeOpts').appendChild(d); });
 }
 $('typeBtn').onclick = () => { renderTypes(); $('typeBg').style.display = 'flex'; };
 $('typeX').onclick = () => { $('typeBg').style.display = 'none'; };
@@ -839,15 +855,15 @@ $('typeBg').onclick = e => { if (e.target.id === 'typeBg') $('typeBg').style.dis
 function renderList() {
   $('pcount').textContent = pairs ? pairs.length + ' pairs' : '';
   const q = $('shQ').value.trim().toUpperCase(), box = $('plist');
-  let a = (ptype === 'all' || ptype === PT() ? (pairs || []) : []).filter(p => !q || p.s.includes(q) || p.name.toUpperCase().includes(q));
+  let a = (pairs || []).filter(p => (ptype === 'all' || p.t === ptype) && (!q || p.s.includes(q) || String(p.name).toUpperCase().includes(q) || String(p.label || '').toUpperCase().includes(q)));
   a = [...a.filter(p => favs.includes(p.s)), ...a.filter(p => !favs.includes(p.s))].slice(0, 300);
   box.innerHTML = a.length ? '' : '<div class="empty">No pair found on ' + EXN[exch] + '.</div>';
   a.forEach(p => {
     const r = document.createElement('div'); r.className = 'row';
-    r.innerHTML = `<span class="st${favs.includes(p.s) ? ' on' : ''}">${favs.includes(p.s) ? '&#9733;' : '&#9734;'}</span><span class="ico"></span><span class="nm">${p.s}/${QT()}<small>${p.name.replace(/</g, '')}</small></span><span class="tp">${PT()}</span>`;
-    setIco(r.querySelector('.ico'), p.s);
+    r.innerHTML = `<span class="st${favs.includes(p.s) ? ' on' : ''}">${favs.includes(p.s) ? '&#9733;' : '&#9734;'}</span><span class="ico"></span><span class="nm">${p.t === 'spot' ? p.s + '/' + SQ() : String(p.label || p.s).replace(/</g, '') + (p.t === 'perp' ? ' Perp' : '')}<small>${String(p.name).replace(/</g, '')}</small></span><span class="tp">${MTL[p.t]}</span>`;
+    setIco(r.querySelector('.ico'), p.base || p.s);
     r.querySelector('.st').onclick = e => { e.stopPropagation(); favs = favs.includes(p.s) ? favs.filter(x => x !== p.s) : [p.s, ...favs]; ss('pcn_chart_favs', favs); renderList(); };
-    r.onclick = () => { symbol = p.s; closeSheet(); history.replaceState(null, '', `?s=${symbol}&i=${interval}&x=${exch}`); load(); };
+    r.onclick = () => { symbol = p.s; mt = p.t; closeSheet(); setPair(); history.replaceState(null, '', `?s=${symbol}&i=${interval}&x=${exch}&m=${mt}`); load(); };
     box.appendChild(r);
   });
 }
@@ -861,11 +877,12 @@ function paintEx() {
   document.querySelectorAll('.set b').forEach(b => { if (b.previousElementSibling && b.previousElementSibling.textContent === 'Live data') b.textContent = EXN[exch]; });
 }
 async function setEx(k, fromPicker) {
-  if (k === exch || !EXN[k]) return; exch = k; ss('pcn_chart_ex', k); pairs = null; ptype = 'all'; try { $('typeTxt').textContent = 'all types'; } catch (_) {} paintEx(); setPair(); closeMenus();
+  if (k === exch || !EXN[k]) return; exch = k; ss('pcn_chart_ex', k); pairs = pcache[k] || null; ptype = 'all'; try { $('typeTxt').textContent = 'all types'; } catch (_) {}
+  mt = CAPS(k).includes('spot') ? 'spot' : CAPS(k)[0]; paintEx(); closeMenus();
   if (fromPicker) { $('plist').innerHTML = '<div class="empty">Loading pairs…</div>'; await loadPairs(); renderList(); }
   else { try { await loadPairs(); } catch (_) {} }
-  if (pairs && pairs.length && !pairs.some(p => p.s === symbol)) symbol = pairs.some(p => p.s === 'BTC') ? 'BTC' : pairs[0].s;
-  history.replaceState(null, '', `?s=${symbol}&i=${interval}&x=${exch}`); load();
+  if (pairs && pairs.length) { const t = pairs.filter(p => p.t === mt); if (!t.some(p => p.s === symbol)) symbol = (t.find(p => p.s === 'BTC') || t.find(p => /^BTC/.test(p.base || p.s)) || t[0] || pairs[0]).s; }
+  setPair(); history.replaceState(null, '', `?s=${symbol}&i=${interval}&x=${exch}&m=${mt}`); load();
 }
 document.querySelectorAll('#exMenu [data-ex]').forEach(b => b.onclick = e => { e.stopPropagation(); setEx(b.dataset.ex, false); });
 document.querySelectorAll('.exs [data-ex]').forEach(b => b.onclick = () => setEx(b.dataset.ex, true));
@@ -916,7 +933,7 @@ async function renderWatch() {
     setIco(row.querySelector('.ico'), sym);
     if (p != null && wprev[sym] != null && p !== wprev[sym]) flash(row.querySelector('.p'), p > wprev[sym] ? 1 : -1);
     if (p != null) wprev[sym] = p;
-    row.onclick = () => { symbol = sym; history.replaceState(null, '', `?s=${symbol}&i=${interval}&x=${exch}`); showView('vChart'); load(); };
+    row.onclick = () => { symbol = sym; mt = 'spot'; if (!CAPS(exch).includes('spot')) { exch = 'binance'; ss('pcn_chart_ex', exch); pairs = null; paintEx(); } history.replaceState(null, '', `?s=${symbol}&i=${interval}&x=${exch}&m=${mt}`); showView('vChart'); load(); };
     box.appendChild(row);
   });
   const add = document.createElement('button'); add.className = 'addb'; add.textContent = 'Add pairs'; add.onclick = () => { showView('vChart'); $('pairBtn').click(); }; box.appendChild(add);
@@ -1002,7 +1019,7 @@ function chartContext(q) {
   const lp = c ? c.c : a.price, lv = (a.levels || []).map(l => l.kind + ' ' + n(l.price) + ' (' + (l.price >= lp ? '+' : '') + ((l.price / lp - 1) * 100).toFixed(1) + '% from price' + (l.touches ? ', ' + l.touches + ' touches' : '') + ')').join('; ') || 'none found';
   const full = /(summar|setup|outline|analy|upside|downside|scenario|overview|outlook|what do you think|how does|look)/i.test(q || '');
   const tf = TFN[interval];
-  return `Pair: ${symbol}/${QT()} on ${EXN[exch]}, timeframe ${tf}. Live price: ${n(c ? c.c : a.price)}.\n` +
+  return `Pair: ${LBL()} (${MTL[mt]}) on ${EXN[exch]}, timeframe ${tf}. Live price: ${n(c ? c.c : a.price)}.\n` +
     (t && t.open ? `Today (viewer's day): open ${n(t.open)}, high ${n(t.high)}, low ${n(t.low)}, change ${(((c ? c.c : a.price) / t.open - 1) * 100).toFixed(2)}%, volume ${n(t.volume)}.\n` : '') +
     `RSI14 ${a.rsi14 == null ? 'n/a' : (+a.rsi14).toFixed(1)}; SMA50 ${n(a.sma50)}; SMA200 ${n(a.sma200)}; EMA50 ${n(a.ema50)}; EMA200 ${n(a.ema200)}.\nLevels: ${lv}.\n` +
     'INSTRUCTION: Answer from this chart data. Stay on the chart: price, trend, moving averages, RSI, support and resistance. If no support level is listed, say price is near its recent lows. Do not add news, ETF, whale or stablecoin context unless the question asks for it. Use only numbers given here and never invent a level.\n' +

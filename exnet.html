@@ -2,7 +2,7 @@
 <style>body{margin:0;padding:16px;background:#0b130f;color:#e6f2ea;font:14px system-ui}h1{font-size:18px}.r{padding:8px 0;border-bottom:1px solid #1d2b24}.ok{color:#22c55e}.no{color:#ef4444}small{color:#7f9a8b;display:block;word-break:break-all}button{padding:12px 18px;border:0;border-radius:10px;background:#16a34a;color:#fff;font:700 15px system-ui}</style></head><body>
 <h1>Exchange check</h1><p>Tap start, wait 40 seconds, then send me a screenshot.</p><button id="go">Start</button><div id="out"></div>
 <script type="module">import { SUPABASE_URL, SUPABASE_KEY } from "./config.js"; window.PCNEX_PROXY = { url: SUPABASE_URL + "/functions/v1/pcn-ex", key: SUPABASE_KEY };</script>
-<script src="chart-ex.js?v=166"></script>
+<script src="chart-ex.js?v=167"></script>
 <script>
 document.getElementById('go').onclick=async function(){
   var out=document.getElementById('out');out.innerHTML='';

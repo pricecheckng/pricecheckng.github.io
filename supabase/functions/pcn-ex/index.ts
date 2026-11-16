@@ -1,9 +1,18 @@
 // PriceCheck NG - pcn-ex: lets the chart read OKX and MEXC through our own server
 // when the user's network blocks those exchanges. Only these exchange hosts are allowed.
 const ALLOW = new Set([
-  "www.okx.com", "aws.okx.com",
-  "api.mexc.com", "contract.mexc.com", "www.mexc.com",
+  "www.okx.com",
+  "aws.okx.com",
+  "api.mexc.com",
+  "contract.mexc.com",
+  "www.mexc.com",
   "api.upbit.com",
+  "fapi.binance.com",
+  "eapi.binance.com",
+  "fapi.asterdex.com",
+  "api.bybit.com",
+  "api.gateio.ws",
+  "api.bitget.com",
 ]);
 const CORS = {
   "access-control-allow-origin": "*",

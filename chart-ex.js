@@ -1,6 +1,6 @@
 /* PriceCheck NG - exchange data for the chart page (OKX, Bybit, Gate, MEXC). Binance is handled inside chart.html. */
 (function () {
-  var ALLOWED = /^https:\/\/(www\.okx\.com|aws\.okx\.com|api\.mexc\.com|contract\.mexc\.com|www\.mexc\.com|api\.upbit\.com)\//;
+  var ALLOWED = /^https:\/\/(www\.okx\.com|aws\.okx\.com|api\.mexc\.com|contract\.mexc\.com|www\.mexc\.com|api\.upbit\.com|fapi\.binance\.com|eapi\.binance\.com|fapi\.asterdex\.com|api\.bybit\.com|api\.gateio\.ws|api\.bitget\.com)\//;
   var direct = function (u, opt, ms) { var c = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (c) c.abort(); }, ms || 8000);
     return fetch(u, Object.assign({ signal: c ? c.signal : undefined }, opt || {})).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }, function (e) { clearTimeout(t); throw new Error(e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'failed'); }); };
   /* if an exchange cannot be reached directly (blocked network), ask our own server to fetch it. window.PCNEX_PROXY = { url, key } is set by the page.
@@ -219,6 +219,116 @@
         return { last: N(d.lastPrice), open: N(d.openPrice), high: N(d.highPrice), low: N(d.lowPrice), vol: N(d.volume), qvol: N(d.quoteVolume) }; });
     }
   };
+
+  /* ================= perps, dated futures and options =================
+     Every market has: quote, list() -> [{s: id, base, label, name}], candles(id, iv), ticker(id).
+     "id" is the exchange's own contract name (for example BTCUSDT, BTC-USDT-SWAP, BTC-250328-70000-C). */
+  var MON = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var fd = function (ms) { var d = new Date(ms); return d.getUTCDate() + ' ' + MON[d.getUTCMonth()] + ' ' + String(d.getUTCFullYear()).slice(2); };
+  var ymd = function (x) { return fd(Date.UTC(2000 + +x.slice(0, 2), +x.slice(2, 4) - 1, +x.slice(4, 6))); };
+  var optLabel = function (id) { var m = /^([A-Z0-9]+)-(?:[A-Z]+-)?(\d{6})-(\d+(?:\.\d+)?)-([CP])/.exec(id); return m ? { base: m[1], label: m[1] + ' ' + ymd(m[2]) + ' ' + m[3] + (m[4] === 'C' ? ' Call' : ' Put'), name: 'Option' } : { base: id.split('-')[0], label: id, name: 'Option' }; };
+  var bk = function (k) { return { t: N(k[0]), o: N(k[1]), h: N(k[2]), l: N(k[3]), c: N(k[4]), v: N(k[5]) }; };
+  var t24 = function (d) { return { last: N(d.lastPrice), open: N(d.openPrice), high: N(d.highPrice), low: N(d.lowPrice), vol: N(d.volume), qvol: N(d.quoteVolume) }; };
+  var tryH = function (hosts, f) { return first(hosts.map(function (h) { return function () { return f(h); }; })); };
+  var M = {};
+
+  /* Binance-style futures (Binance USDT-M and Aster) */
+  var binFut = function (hosts, withFut) {
+    var info = null;
+    var load = function () { return info ? Promise.resolve(info) : tryH(hosts, function (h) { return J(h + '/exchangeInfo').then(function (r) { return r.symbols || []; }); }).then(function (l) { info = l; return l; }); };
+    var mk = function (kind) { return {
+      quote: 'USDT',
+      list: function () { return load().then(function (l) { return l.filter(function (x) {
+          if (x.quoteAsset !== 'USDT' || (x.status && x.status !== 'TRADING')) return false;
+          return kind === 'perp' ? x.contractType === 'PERPETUAL' : /QUARTER/.test(x.contractType || '');
+        }).map(function (x) { var d = x.deliveryDate ? fd(x.deliveryDate) : '';
+          return { s: x.symbol, base: x.baseAsset, label: kind === 'perp' ? x.baseAsset + '/USDT' : x.baseAsset + ' ' + d, name: kind === 'perp' ? 'Perpetual' : 'Futures ' + d }; }); }); },
+      candles: function (id, iv) { return tryH(hosts, function (h) { return J(h + '/klines?symbol=' + id + '&interval=' + iv + '&limit=500').then(function (r) { return (r || []).map(bk); }); }).then(asc); },
+      ticker: function (id) { return tryH(hosts, function (h) { return J(h + '/ticker/24hr?symbol=' + id).then(function (d) { return [t24(d)]; }); }).then(function (r) { return r[0]; }); }
+    }; };
+    var o = { perp: mk('perp') }; if (withFut) o.future = mk('future'); return o;
+  };
+  M.binance = binFut(['https://fapi.binance.com/fapi/v1'], true);
+  M.aster = binFut(['https://fapi.asterdex.com/fapi/v1'], false);
+  var BO = 'https://eapi.binance.com/eapi/v1';
+  M.binance.option = {
+    quote: 'USDT',
+    list: function () { return J(BO + '/exchangeInfo').then(function (r) { return (r.optionSymbols || []).map(function (x) { var o = optLabel(x.symbol); return { s: x.symbol, base: String(x.underlying || o.base).replace(/USDT$/, ''), label: o.label, name: o.name }; }); }); },
+    candles: function (id, iv) { return J(BO + '/klines?symbol=' + id + '&interval=' + iv + '&limit=500').then(function (r) { return asc((r || []).map(function (k) { return { t: N(k.openTime), o: N(k.open), h: N(k.high), l: N(k.low), c: N(k.close), v: N(k.volume) }; })); }); },
+    ticker: function (id) { return J(BO + '/ticker?symbol=' + id).then(function (r) { var d = Array.isArray(r) ? r[0] : r; return { last: N(d.lastPrice), open: N(d.open), high: N(d.high), low: N(d.low), vol: N(d.volume), qvol: N(d.amount) }; }); }
+  };
+
+  /* Bybit linear (USDT) perps and dated futures */
+  var BY = 'https://api.bybit.com/v5/market';
+  var byMk = function (kind) { return {
+    quote: 'USDT',
+    list: function () { return J(BY + '/instruments-info?category=linear&limit=1000').then(function (r) { return ((r.result && r.result.list) || []).filter(function (x) {
+        return x.quoteCoin === 'USDT' && x.status === 'Trading' && x.contractType === (kind === 'perp' ? 'LinearPerpetual' : 'LinearFutures'); }).map(function (x) { var d = x.deliveryTime && +x.deliveryTime ? fd(+x.deliveryTime) : '';
+          return { s: x.symbol, base: x.baseCoin, label: kind === 'perp' ? x.baseCoin + '/USDT' : x.baseCoin + ' ' + d, name: kind === 'perp' ? 'Perpetual' : 'Futures ' + d }; }); }); },
+    candles: function (id, iv) { var i = { '15m': '15', '1h': '60', '4h': '240', '1d': 'D', '1w': 'W' }[iv];
+      return J(BY + '/kline?category=linear&symbol=' + id + '&interval=' + i + '&limit=500').then(function (r) { return ((r.result && r.result.list) || []).map(bk).reverse(); }); },
+    ticker: function (id) { return J(BY + '/tickers?category=linear&symbol=' + id).then(function (r) { var d = r.result.list[0];
+      return { last: N(d.lastPrice), open: N(d.prevPrice24h), high: N(d.highPrice24h), low: N(d.lowPrice24h), vol: N(d.volume24h), qvol: N(d.turnover24h) }; }); }
+  }; };
+  M.bybit = { perp: byMk('perp'), future: byMk('future') };
+
+  /* OKX swaps, futures and options (any instrument id works with the same candle and ticker calls) */
+  var okInst = function (type, extra) { return tryH(OH, function (h) { return J(h + '/api/v5/public/instruments?instType=' + type + (extra || '')).then(function (r) { return r.data || []; }); }); };
+  var okCandles = function (id, iv) { var bar = { '15m': '15m', '1h': '1H', '4h': '4H', '1d': '1Dutc', '1w': '1Wutc' }[iv];
+    return tryH(OH, function (h) { return J(h + '/api/v5/market/candles?instId=' + id + '&bar=' + bar + '&limit=300').then(function (r) { return r.data || []; }); }).then(function (d) {
+      return d.map(function (k) { return { t: N(k[0]), o: N(k[1]), h: N(k[2]), l: N(k[3]), c: N(k[4]), v: N(k[5]) }; }).reverse(); }); };
+  var okTicker = function (id) { return tryH(OH, function (h) { return J(h + '/api/v5/market/ticker?instId=' + id).then(function (r) { return r.data || []; }); }).then(function (r) { var d = r[0];
+    return { last: N(d.last), open: N(d.open24h), high: N(d.high24h), low: N(d.low24h), vol: N(d.vol24h), qvol: N(d.volCcy24h) }; }); };
+  M.okx = {
+    perp: { quote: 'USDT', candles: okCandles, ticker: okTicker, list: function () { return okInst('SWAP').then(function (l) { return l.filter(function (x) { return x.settleCcy === 'USDT' && x.state === 'live'; }).map(function (x) { var b = String(x.uly || x.instId).split('-')[0]; return { s: x.instId, base: b, label: b + '/USDT', name: 'Perpetual' }; }); }); } },
+    future: { quote: 'USDT', candles: okCandles, ticker: okTicker, list: function () { return okInst('FUTURES').then(function (l) { return l.filter(function (x) { return x.settleCcy === 'USDT' && x.state === 'live'; }).map(function (x) { var b = String(x.uly || x.instId).split('-')[0], d = x.expTime ? fd(+x.expTime) : ''; return { s: x.instId, base: b, label: b + ' ' + d, name: 'Futures ' + d }; }); }); } },
+    option: { quote: 'USD', candles: okCandles, ticker: okTicker, list: function () { return Promise.all(['BTC-USD', 'ETH-USD'].map(function (u) { return okInst('OPTION', '&uly=' + u).catch(function () { return []; }); })).then(function (a) {
+      return [].concat.apply([], a).filter(function (x) { return x.state === 'live'; }).map(function (x) { var o = optLabel(x.instId); return { s: x.instId, base: o.base, label: o.label, name: o.name }; }); }); } }
+  };
+
+  /* Bitget USDT-M perps */
+  var BG = 'https://api.bitget.com/api/v2/mix/market';
+  M.bitget = { perp: {
+    quote: 'USDT',
+    list: function () { return J(BG + '/contracts?productType=usdt-futures').then(function (r) { return (r.data || []).filter(function (x) { return !x.symbolStatus || x.symbolStatus === 'normal'; }).map(function (x) { return { s: x.symbol, base: x.baseCoin, label: x.baseCoin + '/USDT', name: 'Perpetual' }; }); }); },
+    candles: function (id, iv) { var g = { '15m': '15m', '1h': '1H', '4h': '4H', '1d': '1D', '1w': '1W' }[iv];
+      return J(BG + '/candles?symbol=' + id + '&productType=usdt-futures&granularity=' + g + '&limit=500').then(function (r) { return asc((r.data || []).map(bk)); }); },
+    ticker: function (id) { return J(BG + '/ticker?symbol=' + id + '&productType=usdt-futures').then(function (r) { var d = Array.isArray(r.data) ? r.data[0] : r.data;
+      return { last: N(d.lastPr), open: N(d.open24h), high: N(d.high24h), low: N(d.low24h), vol: N(d.baseVolume), qvol: N(d.quoteVolume) }; }); }
+  } };
+
+  /* Gate perps and dated (delivery) futures */
+  var gateMk = function (path, kind) { var G = 'https://api.gateio.ws/api/v4/' + path, iv7 = { '15m': '15m', '1h': '1h', '4h': '4h', '1d': '1d', '1w': '7d' };
+    return {
+      quote: 'USDT',
+      list: function () { return J(G + '/contracts').then(function (r) { return (r || []).filter(function (x) { return !x.in_delisting; }).map(function (x) { var b = String(x.name).split('_')[0], d = x.expire_time ? fd(x.expire_time * 1000) : '';
+        return { s: x.name, base: b, label: kind === 'perp' ? b + '/USDT' : b + ' ' + d, name: kind === 'perp' ? 'Perpetual' : 'Futures ' + d }; }); }); },
+      candles: function (id, iv) { return J(G + '/candlesticks?contract=' + id + '&interval=' + iv7[iv] + '&limit=500').then(function (r) { return asc((r || []).map(function (k) { return { t: N(k.t) * 1000, o: N(k.o), h: N(k.h), l: N(k.l), c: N(k.c), v: N(k.v) }; })); }); },
+      ticker: function (id) { return J(G + '/tickers?contract=' + id).then(function (r) { var d = r[0], l = N(d.last);
+        return { last: l, open: l / (1 + N(d.change_percentage) / 100), high: N(d.high_24h), low: N(d.low_24h), vol: N(d.volume_24h_base || d.volume_24h), qvol: N(d.volume_24h_quote || d.volume_24h_usd || 0) }; }); }
+    }; };
+  M.gate = { perp: gateMk('futures/usdt', 'perp'), future: gateMk('delivery/usdt', 'future') };
+
+  /* MEXC perps (contract server) */
+  var MC = 'https://contract.mexc.com/api/v1/contract';
+  M.mexc = { perp: {
+    quote: 'USDT',
+    list: function () { return J(MC + '/detail').then(function (r) { return ((r && r.data) || []).filter(function (x) { return x.quoteCoin === 'USDT' && !x.state; }).map(function (x) { return { s: x.symbol, base: String(x.baseCoin).toUpperCase(), label: String(x.baseCoin).toUpperCase() + '/USDT', name: 'Perpetual' }; }); }); },
+    candles: function (id, iv) { var cm = { '15m': 'Min15', '1h': 'Min60', '4h': 'Hour4', '1d': 'Day1', '1w': 'Week1' }[iv];
+      return J(MC + '/kline/' + id + '?interval=' + cm).then(function (r) { var d = (r && r.data) || {}, o = []; (d.time || []).forEach(function (t, i) { o.push({ t: N(t) * 1000, o: N(d.open[i]), h: N(d.high[i]), l: N(d.low[i]), c: N(d.close[i]), v: N(d.vol[i]) }); }); return asc(o.slice(-500)); }); },
+    ticker: function (id) { return J(MC + '/ticker?symbol=' + id).then(function (r) { var d = r.data, l = N(d.lastPrice); return { last: l, open: l / (1 + N(d.riseFallRate)), high: N(d.high24Price), low: N(d.lower24Price), vol: N(d.volume24), qvol: N(d.amount24) }; }); }
+  } };
+
+  /* Hyperliquid: everything is a perp; its coin name is the id */
+  M.hyperliquid = { perp: {
+    quote: 'USDC',
+    list: function () { return E.hyperliquid.list().then(function (s) { return [...s].map(function (b) { return { s: b, base: b, label: b + '/USDC', name: 'Perpetual' }; }); }); },
+    candles: function (id, iv) { return E.hyperliquid.candles(id, iv); },
+    ticker: function (id) { return E.hyperliquid.ticker(id); }
+  } };
+
+  E.caps = { binance: ['spot', 'perp', 'future', 'option'], okx: ['spot', 'perp', 'future', 'option'], bybit: ['spot', 'perp', 'future'], gate: ['spot', 'perp', 'future'], bitget: ['spot', 'perp'], mexc: ['spot', 'perp'], aster: ['spot', 'perp'], hyperliquid: ['perp'], coinbase: ['spot'], upbit: ['spot'] };
+  E.mk = function (ex, type) { return M[ex] && M[ex][type]; };
 
   /* if an exchange refuses the 24h numbers, work them out from the candles */
   window.PCNEX_derive = function (cs, iv) {
