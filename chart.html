@@ -96,7 +96,10 @@
   #sheetBg { position:fixed; inset:0; background:var(--bg); z-index:20; display:none; flex-direction:column; }
   #sheetBg.on { display:flex; }
   .sh-top { display:flex; align-items:center; gap:10px; padding:10px 12px; }
-  .sh-top input { flex:1; background:#16241d; border:1px solid var(--acc); border-radius:12px; color:var(--txt); font:inherit; padding:11px 12px; outline:none; }
+  .sh-top .back { flex:none; width:42px; height:42px; border-radius:12px; border:1px solid var(--acc); background:#16241d; outline:none; -webkit-tap-highlight-color:transparent; padding:0; }
+  .sh-top .back:focus, .sh-top .back:focus-visible { outline:none; box-shadow:none; }
+  .sh-top .back svg { width:20px; height:20px; }
+  .sh-top input { height:42px; box-sizing:border-box;  flex:1; background:#16241d; border:1px solid var(--acc); border-radius:12px; color:var(--txt); font:inherit; padding:11px 12px; outline:none; }
   .tabs { display:flex; gap:20px; padding:0 16px; border-bottom:1px solid var(--line); }
   .tabs button, .exs button { background:none; border:0; color:var(--mut); font:inherit; font-weight:700; padding:12px 0; cursor:pointer; border-bottom:2px solid transparent; }
   .tabs button.on { color:var(--txt); border-color:var(--acc); }
@@ -325,10 +328,10 @@ setTimeout(function(){var d=document.getElementById('dtools');if(d)d.classList.a
   }, 7000);
 })();
 </script>
-<script src="pcnchart.js?v=164"></script>
-<script src="chart-ex.js?v=164"></script>
+<script src="pcnchart.js?v=165"></script>
+<script src="chart-ex.js?v=165"></script>
 <script type="module">
-import { ICONS } from "./chart-icons.js?v=164";
+import { ICONS } from "./chart-icons.js?v=165";
 window.__pcnMod = true; try { sessionStorage.removeItem("pcnRl"); } catch (_) {}
 import { SUPABASE_URL, SUPABASE_KEY } from './config.js';
 const $ = id => document.getElementById(id);
@@ -846,6 +849,7 @@ function renderList() {
 function closeSheet() { $('sheetBg').classList.remove('on'); }
 // ---------- exchange switch ----------
 function paintEx() {
+  try { $('shQ').placeholder = 'Search ' + EXN[exch] + ' pairs'; } catch (_) {}
   $('exBtn').innerHTML = EXN[exch] + ' <span>&#9662;</span>';
   document.querySelectorAll('#exMenu [data-ex]').forEach(b => b.classList.toggle('on', b.dataset.ex === exch));
   document.querySelectorAll('.exs [data-ex]').forEach(b => b.classList.toggle('on', b.dataset.ex === exch));
