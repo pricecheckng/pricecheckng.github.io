@@ -53,6 +53,11 @@
    "about": "Where PriceCheck NG gets its crypto prices, exchange rates, supply figures, news and charts."
   },
   {
+   "url": "https://pricecheckng.com.ng/exall.html",
+   "title": "Full exchange test",
+   "about": ""
+  },
+  {
    "url": "https://pricecheckng.com.ng/exchanges.html",
    "title": "Crypto exchanges compared: volume and coins tracked",
    "about": "Compare 39 crypto exchanges by 24 hour trading volume and number of coins tracked. Live data collected by PriceCheck NG."
