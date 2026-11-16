@@ -1,23 +1,32 @@
 /* PriceCheck NG - exchange data for the chart page (OKX, Bybit, Gate, MEXC). Binance is handled inside chart.html. */
 (function () {
-  var J = function (u) { return fetch(u).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }); };
+  var J = function (u) { var c = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (c) c.abort(); }, 8000);
+    return fetch(u, c ? { signal: c.signal } : {}).then(function (r) { clearTimeout(t); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }, function (e) { clearTimeout(t); throw new Error(e && e.name === 'AbortError' ? 'timeout' : (e && e.message) || 'failed'); }); };
   var N = function (x) { return +x; };
   var E = {};
+  var first = function (tries) {   // run the attempts one after another, use the first that answers with data
+    var i = 0, err = null;
+    return (function next() { if (i >= tries.length) return Promise.reject(err || new Error('no data')); var f = tries[i++]; return f().then(function (r) { if (!r || !r.length) throw new Error('empty'); return r; }).catch(function (e) { err = e; return next(); }); })();
+  };
+  var asc = function (a) { return a.sort(function (x, y) { return x.t - y.t; }); };
+
+
 
   /* every exchange: list() -> Set of coin symbols that trade against USDT, candles(sym, iv) -> oldest first [{t,o,h,l,c,v}], ticker(sym) -> {last, open, high, low, vol, qvol} */
+  var OH = ['https://aws.okx.com', 'https://www.okx.com'];
   E.okx = {
     name: 'OKX',
     list: function () {
-      return J('https://www.okx.com/api/v5/public/instruments?instType=SPOT').then(function (r) {
-        var s = new Set(); (r.data || []).forEach(function (x) { if (x.quoteCcy === 'USDT' && x.state === 'live') s.add(String(x.baseCcy).toUpperCase()); }); return s; });
+      return first(OH.map(function (h) { return function () { return J(h + '/api/v5/public/instruments?instType=SPOT').then(function (r) { return r.data || []; }); }; })).then(function (l) {
+        var s = new Set(); l.forEach(function (x) { if (x.quoteCcy === 'USDT' && x.state === 'live') s.add(String(x.baseCcy).toUpperCase()); }); return s; });
     },
     candles: function (sy, iv) {
       var bar = { '15m': '15m', '1h': '1H', '4h': '4H', '1d': '1Dutc', '1w': '1Wutc' }[iv];
-      return J('https://www.okx.com/api/v5/market/candles?instId=' + sy + '-USDT&bar=' + bar + '&limit=300').then(function (r) {
-        return (r.data || []).map(function (k) { return { t: N(k[0]), o: N(k[1]), h: N(k[2]), l: N(k[3]), c: N(k[4]), v: N(k[5]) }; }).reverse(); });
+      return first(OH.map(function (h) { return function () { return J(h + '/api/v5/market/candles?instId=' + sy + '-USDT&bar=' + bar + '&limit=300').then(function (r) { return r.data || []; }); }; })).then(function (d) {
+        return d.map(function (k) { return { t: N(k[0]), o: N(k[1]), h: N(k[2]), l: N(k[3]), c: N(k[4]), v: N(k[5]) }; }).reverse(); });
     },
     ticker: function (sy) {
-      return J('https://www.okx.com/api/v5/market/ticker?instId=' + sy + '-USDT').then(function (r) { var d = r.data[0];
+      return first(OH.map(function (h) { return function () { return J(h + '/api/v5/market/ticker?instId=' + sy + '-USDT').then(function (r) { return r.data || []; }); }; })).then(function (r) { var d = r[0];
         return { last: N(d.last), open: N(d.open24h), high: N(d.high24h), low: N(d.low24h), vol: N(d.vol24h), qvol: N(d.volCcy24h) }; });
     }
   };
@@ -56,30 +65,31 @@
     }
   };
 
-  var first = function (tries) {   // run the attempts one after another, use the first that answers with data
-    var i = 0, err = null;
-    return (function next() { if (i >= tries.length) return Promise.reject(err || new Error('no data')); var f = tries[i++]; return f().then(function (r) { if (!r || !r.length) throw new Error('empty'); return r; }).catch(function (e) { err = e; return next(); }); })();
-  };
-  var asc = function (a) { return a.sort(function (x, y) { return x.t - y.t; }); };
-
   E.mexc = {
     name: 'MEXC',
     list: function () {
-      return J('https://api.mexc.com/api/v3/ticker/price').then(function (r) {
-        var s = new Set(); (r || []).forEach(function (x) { var m = /^([A-Z0-9]+)USDT$/.exec(x.symbol); if (m) s.add(m[1]); }); return s; });
+      return first([
+        function () { return J('https://api.mexc.com/api/v3/ticker/price').then(function (r) { return (r || []).map(function (x) { var m = /^([A-Z0-9]+)USDT$/.exec(x.symbol); return m && m[1]; }).filter(Boolean); }); },
+        function () { return J('https://contract.mexc.com/api/v1/contract/detail').then(function (r) { return ((r && r.data) || []).filter(function (x) { return x.quoteCoin === 'USDT'; }).map(function (x) { return String(x.baseCoin).toUpperCase(); }); }); }
+      ]).then(function (a) { return new Set(a); });
     },
     candles: function (sy, iv) {
+      var cm = { '15m': 'Min15', '1h': 'Min60', '4h': 'Hour4', '1d': 'Day1', '1w': 'Week1' }[iv];
       var v3 = { '15m': ['15m'], '1h': ['60m', '1h'], '4h': ['4h', '240m'], '1d': ['1d', '1D'], '1w': ['1W', '1w'] }[iv];
       var v2 = { '15m': '15m', '1h': '60m', '4h': '4h', '1d': '1d', '1w': '1W' }[iv];
       var tries = v3.map(function (i) { return function () { return J('https://api.mexc.com/api/v3/klines?symbol=' + sy + 'USDT&interval=' + i + '&limit=500').then(function (r) {
         return (r || []).map(function (k) { return { t: N(k[0]), o: N(k[1]), h: N(k[2]), l: N(k[3]), c: N(k[4]), v: N(k[5]) }; }); }); }; });
       tries.push(function () { return J('https://www.mexc.com/open/api/v2/market/kline?symbol=' + sy + '_USDT&interval=' + v2 + '&limit=500').then(function (r) {
         return ((r && r.data) || []).map(function (k) { return { t: N(k[0]) * 1000, o: N(k[1]), h: N(k[3]), l: N(k[4]), c: N(k[2]), v: N(k[5]) }; }); }); });
+      tries.push(function () { return J('https://contract.mexc.com/api/v1/contract/kline/' + sy + '_USDT?interval=' + cm).then(function (r) { var d = (r && r.data) || {}, o = [];
+        (d.time || []).forEach(function (t, i) { o.push({ t: N(t) * 1000, o: N(d.open[i]), h: N(d.high[i]), l: N(d.low[i]), c: N(d.close[i]), v: N(d.vol[i]) }); }); return o.slice(-500); }); });
       return first(tries).then(asc);
     },
     ticker: function (sy) {
-      return J('https://api.mexc.com/api/v3/ticker/24hr?symbol=' + sy + 'USDT').then(function (d) {
-        return { last: N(d.lastPrice), open: N(d.openPrice), high: N(d.highPrice), low: N(d.lowPrice), vol: N(d.volume), qvol: N(d.quoteVolume) }; });
+      return first([
+        function () { return J('https://api.mexc.com/api/v3/ticker/24hr?symbol=' + sy + 'USDT').then(function (d) { return [{ last: N(d.lastPrice), open: N(d.openPrice), high: N(d.highPrice), low: N(d.lowPrice), vol: N(d.volume), qvol: N(d.quoteVolume) }]; }); },
+        function () { return J('https://contract.mexc.com/api/v1/contract/ticker?symbol=' + sy + '_USDT').then(function (r) { var d = r.data, l = N(d.lastPrice); return [{ last: l, open: l / (1 + N(d.riseFallRate)), high: N(d.high24Price), low: N(d.lower24Price), vol: N(d.volume24), qvol: N(d.amount24) }]; }); }
+      ]).then(function (r) { return r[0]; });
     }
   };
 
