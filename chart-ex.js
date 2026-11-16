@@ -284,9 +284,10 @@
   var okInst = function (type, extra) { return tryH(OH, function (h) { return J(h + '/api/v5/public/instruments?instType=' + type + (extra || '')).then(function (r) { return r.data || []; }); }); };
   var okCandles = function (id, iv) { var bar = { '15m': '15m', '1h': '1H', '4h': '4H', '1d': '1Dutc', '1w': '1Wutc' }[iv];
     return tryH(OH, function (h) { return J(h + '/api/v5/market/candles?instId=' + id + '&bar=' + bar + '&limit=300').then(function (r) { return r.data || []; }); }).then(function (d) {
-      return d.map(function (k) { return { t: N(k[0]), o: N(k[1]), h: N(k[2]), l: N(k[3]), c: N(k[4]), v: N(k[5]) }; }).reverse(); }); };
+      return d.map(function (k) { var vb = N(k[6]); return { t: N(k[0]), o: N(k[1]), h: N(k[2]), l: N(k[3]), c: N(k[4]), v: isFinite(vb) && k[6] !== '' ? vb : N(k[5]) }; }).reverse(); }); };  /* k[5] is contracts, k[6] is the coin amount */
   var okTicker = function (id) { return tryH(OH, function (h) { return J(h + '/api/v5/market/ticker?instId=' + id).then(function (r) { return r.data || []; }); }).then(function (r) { var d = r[0];
-    return { last: N(d.last), open: N(d.open24h), high: N(d.high24h), low: N(d.low24h), vol: N(d.vol24h), qvol: N(d.volCcy24h) }; }); };
+    var l = N(d.last), vb = N(d.volCcy24h);  /* vol24h is contracts; volCcy24h is the coin amount */
+    return { last: l, open: N(d.open24h), high: N(d.high24h), low: N(d.low24h), vol: vb, qvol: vb * l }; }); };
   M.okx = {
     perp: { quote: 'USDT', candles: okCandles, ticker: okTicker, list: function () { return okInst('SWAP').then(function (l) { return l.filter(function (x) { return x.settleCcy === 'USDT' && x.state === 'live'; }).map(function (x) { var b = String(x.uly || x.instId).split('-')[0]; return { s: x.instId, base: b, label: b + '/USDT', name: 'Perpetual' }; }); }); } },
     future: { quote: 'USD', candles: okCandles, ticker: okTicker, list: function () { return okInst('FUTURES').then(function (l) { l = l.filter(function (x) { return x.state === 'live'; }); var u = l.filter(function (x) { return x.settleCcy === 'USDT' || x.settleCcy === 'USDC'; }); return u.length ? u : l; }).then(function (l) { return l.map(function (x) { var b = String(x.uly || x.instId).split('-')[0], d = x.expTime ? fd(+x.expTime) : ''; return { s: x.instId, base: b, label: b + ' ' + d, name: 'Futures ' + d }; }); }); } },
@@ -324,12 +325,13 @@
 
   /* MEXC perps (contract server) */
   var MC = 'https://contract.mexc.com/api/v1/contract';
+  var mcCs = null, mcSize = function (id) { mcCs = mcCs || J(MC + '/detail').then(function (r) { var m = {}; ((r && r.data) || []).forEach(function (x) { m[x.symbol] = N(x.contractSize) || 1; }); return m; }).catch(function () { mcCs = null; return {}; }); return mcCs.then(function (m) { return m[id] || 1; }); };  /* MEXC counts volume in contracts */
   M.mexc = { perp: {
     quote: 'USDT',
     list: function () { return J(MC + '/detail').then(function (r) { return ((r && r.data) || []).filter(function (x) { return x.quoteCoin === 'USDT' && !x.state; }).map(function (x) { return { s: x.symbol, base: String(x.baseCoin).toUpperCase(), label: String(x.baseCoin).toUpperCase() + '/USDT', name: 'Perpetual' }; }); }); },
     candles: function (id, iv) { var cm = { '15m': 'Min15', '1h': 'Min60', '4h': 'Hour4', '1d': 'Day1', '1w': 'Week1' }[iv];
-      return J(MC + '/kline/' + id + '?interval=' + cm).then(function (r) { var d = (r && r.data) || {}, o = []; (d.time || []).forEach(function (t, i) { o.push({ t: N(t) * 1000, o: N(d.open[i]), h: N(d.high[i]), l: N(d.low[i]), c: N(d.close[i]), v: N(d.vol[i]) }); }); return asc(o.slice(-500)); }); },
-    ticker: function (id) { return J(MC + '/ticker?symbol=' + id).then(function (r) { var d = r.data, l = N(d.lastPrice); return { last: l, open: l / (1 + N(d.riseFallRate)), high: N(d.high24Price), low: N(d.lower24Price), vol: N(d.volume24), qvol: N(d.amount24) }; }); }
+      return Promise.all([J(MC + '/kline/' + id + '?interval=' + cm), mcSize(id)]).then(function (a) { var r = a[0], cs = a[1], d = (r && r.data) || {}, o = []; (d.time || []).forEach(function (t, i) { o.push({ t: N(t) * 1000, o: N(d.open[i]), h: N(d.high[i]), l: N(d.low[i]), c: N(d.close[i]), v: N(d.vol[i]) * cs }); }); return asc(o.slice(-500)); }); },
+    ticker: function (id) { return Promise.all([J(MC + '/ticker?symbol=' + id), mcSize(id)]).then(function (a) { var d = a[0].data, l = N(d.lastPrice); return { last: l, open: l / (1 + N(d.riseFallRate)), high: N(d.high24Price), low: N(d.lower24Price), vol: N(d.volume24) * a[1], qvol: N(d.amount24) }; }); }
   } };
 
   /* Hyperliquid: everything is a perp; its coin name is the id */
