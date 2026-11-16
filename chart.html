@@ -802,7 +802,7 @@ async function load() {
       chart.setData({ candles: cs, sma50: [], sma200: [], rsi14: [], levels: [] }, interval);
       chart.tick(Object.assign({}, cs[cs.length - 1]));   // makes the chart work out the MA lines and RSI
       loadDrawings(); chart.setTool('cursor');
-      lastD = { candles: cs, series: { sma50: [], sma200: [], rsi14: [] }, analysis: Object.assign(exAnalysis(cs), { price: tk.last, today: { open: tk.open, high: tk.high, low: tk.low, volume: tk.vol } }), source: exch };
+      lastD = { candles: cs, series: { sma50: [], sma200: [], rsi14: [] }, analysis: Object.assign(exAnalysis(cs), { price: tk.last, today: { open: tk.open, high: tk.high, low: tk.low, volume: tk.vol, qvol: tk.qvol } }), source: exch };
       source = exch; dayOpen = tk.open || null; setPair();
       $('px').classList.remove('hv'); setPrice(tk.last || cs[cs.length - 1].c); paint24(tk.high, tk.low, tk.vol, tk.qvol);
       $('msg').style.display = 'none'; startLive(my);
@@ -1043,9 +1043,9 @@ function chartContext(q) {
   const full = /(summar|setup|outline|analy|upside|downside|scenario|overview|outlook|what do you think|how does|look)/i.test(q || '');
   const tf = TFN[interval];
   return `Pair: ${LBL()} (${MTL[mt]}) on ${EXN[exch]}, timeframe ${tf}. Live price: ${n(c ? c.c : a.price)}.\n` +
-    (t && t.open ? `Today (viewer's day): open ${n(t.open)}, high ${n(t.high)}, low ${n(t.low)}, change ${(((c ? c.c : a.price) / t.open - 1) * 100).toFixed(2)}%, volume ${n(t.volume)}.\n` : '') +
-    `RSI14 ${a.rsi14 == null ? 'n/a' : (+a.rsi14).toFixed(1)}; SMA50 ${n(a.sma50)}; SMA200 ${n(a.sma200)}; EMA50 ${n(a.ema50)}; EMA200 ${n(a.ema200)}.\nLevels: ${lv}.\n` +
-    'INSTRUCTION: Answer from this chart data. Stay on the chart: price, trend, moving averages, RSI, support and resistance. If no support level is listed, say price is near its recent lows. Do not add news, ETF, whale or stablecoin context unless the question asks for it. Use only numbers given here and never invent a level.\n' +
+    (t && t.open ? `Today (viewer's day): open ${n(t.open)}, high ${n(t.high)}, low ${n(t.low)}, change ${(((c ? c.c : a.price) / t.open - 1) * 100).toFixed(2)}%, volume ${n(t.volume)} ${BASE()}${t.qvol > 0 ? ' (about ' + cmp(+t.qvol) + ' ' + QT() + ')' : ''}.\n` : '') +
+    `RSI14 ${a.rsi14 == null ? 'n/a' : (+a.rsi14).toFixed(1)}; SMA50 ${n(a.sma50)}; SMA200 ${n(a.sma200)}; EMA50 ${n(a.ema50)}; EMA200 ${n(a.ema200)}. These are 50-period and 200-period averages of ${tf} candles.\nLevels: ${lv}.\n` +
+    'INSTRUCTION: Name moving averages by the chart timeframe, for example "50-period ' + tf + ' moving average". Never call them daily or "50-day" unless the timeframe is 1D. When you give volume, always state its unit. Answer from this chart data. Stay on the chart: price, trend, moving averages, RSI, support and resistance. If no support level is listed, say price is near its recent lows. Do not add news, ETF, whale or stablecoin context unless the question asks for it. Use only numbers given here and never invent a level.\n' +
     (full ? 'FORMAT: Write about 120 to 170 words in plain short paragraphs, no bullet lists, no headings. First paragraph: one or two sentences on the pair, timeframe, live price, trend and RSI. Then three paragraphs that each start with a label: "Upside case:" (what price must close above, using the listed resistance and moving averages, and how far away it is), "Downside case:" (what price must close below, using the listed support or recent lows, and how far away it is), "What changes the read:" (the one level or RSI move that would flip the view). End there. Do not give financial advice.\n' : 'FORMAT: Answer the question directly in 2 to 5 short sentences. No headings. Do not repeat the whole chart summary.\n') +
     'Last 5 candles (UTC time, open/high/low/close): ' + cs.map(k => new Date(k.t).toISOString().slice(5, 16).replace('T', ' ') + ' ' + n(k.o) + '/' + n(k.h) + '/' + n(k.l) + '/' + n(k.c)).join(' | ');
 }
@@ -1132,7 +1132,7 @@ async function chartAction(q, box) {
 let busy = false;
 
 // ---------- alerts from the chat ----------
-const ALERT_RE = /\d|alert|notif|ping|remind|tell me|let me know|hit me|inform|warn|wake|buzz|shout|message me|text me|signal|cross|reach|touch|\bhits?\b|\b(when|once|if|as soon as)\b.*\b(moon|moons|pump|pumps|dump|dumps|crash|crashes|rise|rises|fall|falls|drop|drops|break|breaks|above|below|over|under)\b/i;
+const ALERT_RE = /alert|notif|\bping\b|remind|tell me (when|if)|let me know|hit me|inform me|warn me|wake me|buzz|message me|text me|\b(when|once|if|as soon as)\b.*\b(hits?|reach(es)?|cross(es)?|touch(es)?|moons?|pumps?|dumps?|crash(es)?|rises?|falls?|drops?|breaks?|above|below|over|under)\b.*(\d|%)/i;
 async function alertCall(body) {
   await ensureFresh(); const tok = getToken(); if (!tok) return null;
   try { const r = await fetch(SUPABASE_URL + '/functions/v1/pcn-alert', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer ' + tok }, body: JSON.stringify(body) }); if (!r.ok) return null; return await r.json(); } catch (_) { return null; }
