@@ -13,6 +13,11 @@
    "about": "A simple JSON API for crypto prices in naira, exchange rates and market data from PriceCheck NG."
   },
   {
+   "url": "https://pricecheckng.com.ng/capcheck.html",
+   "title": "Market cap check",
+   "about": ""
+  },
+  {
    "url": "https://pricecheckng.com.ng/categories.html",
    "title": "Crypto Categories: Memes, AI, DeFi, Gaming and More",
    "about": "Browse crypto by category: memes, AI, DeFi, gaming, layer 1 and more. Live prices in US dollars and Nigerian naira."
