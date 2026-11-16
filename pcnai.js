@@ -1,4 +1,4 @@
-/* PriceCheck NG - PCN AI chat. BUILD 167 */
+/* PriceCheck NG - PCN AI chat. BUILD 168 */
 (function () {
   // 1. Inject Chat Modal Markup & Styles
   function injectChatUI() {
@@ -279,6 +279,9 @@
 
 
     // ---- news answers: read from our own news table (no AI cost) ----
+    var CRYPTO_RX = /(crypto|bitcoin|\bbtc\b|ethereum|\beth\b|blockchain|defi|\bnfts?\b|stablecoin|altcoin|memecoin|token|\bcoins?\b|solana|\bxrp\b|ripple|binance|coinbase|bybit|okx|kraken|wallet|web3|airdrop|staking|on-chain|onchain|\bdao\b|\betf\b|tether|usdt|usdc|ledger|miners?|mining|halving|satoshi|dogecoin|cardano|polygon|avalanche|chainlink|telegram|\bsec\b|cftc|exchange|treasury|digital asset|layer.?2|rollup|protocol|liquidat|whale|hack|exploit|bull|bear|market)/i;
+    function isCryptoNews(r) { return CRYPTO_RX.test(String(r.title || '') + ' ' + String(r.summary || '') + ' ' + (r.topics || []).join(' ')); }
+
     var NEWS_TOPICS = [
       ['security', /(hack|exploit|scam|fraud|stolen|drain|phishing|rug)/i, 'hacks and scams'],
       ['regulation', /(regulat|\bsec\b|cftc|law|ban\b|government|policy|lawsuit|court)/i, 'regulation'],
@@ -313,7 +316,7 @@
       var rows = await api(cfg, q);
       if (!rows.length && (coin || topic)) { rows = await api(cfg, 'news?select=source,title,url,summary,published_at,topics&order=published_at.desc&limit=40'); label = 'crypto'; coin = null; topic = null; }
       var seen = {}, out = [];
-      rows.forEach(function (r) {
+      rows.filter(isCryptoNews).forEach(function (r) {
         var k = String(r.title).toLowerCase().replace(/[^a-z0-9]+/g, ' ').slice(0, 40);
         if (!seen[k] && out.length < 5 && /^https?:\/\//i.test(r.url)) { seen[k] = 1; out.push(r); }
       });
@@ -584,7 +587,8 @@
     (async function () {
       try {
         var cfg = await import('./config.js');
-        var rows = await api(cfg, 'news?select=title,published_at&order=published_at.desc&limit=1');
+        var rows = await api(cfg, 'news?select=title,summary,topics,published_at&order=published_at.desc&limit=25');
+        rows = rows.filter(isCryptoNews);
         if (rows[0] && rows[0].title) {
           var t = String(rows[0].title).replace(/\s+/g, ' ').trim(); if (t.length > 70) t = t.slice(0, 67).replace(/\s+\S*$/, '') + '...';
           var hc = document.getElementById('pcnHeadChip');
