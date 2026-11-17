@@ -1732,11 +1732,18 @@ function paintCoin(c) {
   const sec = (usd) => (state.cur === "USD" ? "" : ratio ? fmtLocal(usd * ratio, state.cur) : "–");
   const secBig = (usd) => (ratio && usd != null ? fmtBig(Number(usd) * ratio, m.sym) : "–");
   const chartHtml = `<div class="cp-wk" id="cpWk"></div>
-    <div class="seg" id="cpRanges" role="group" aria-label="Chart range" style="margin:10px 0;display:grid;grid-template-columns:repeat(5,1fr);gap:4px">${Object.keys(CHART_RANGES).map((k) => `<button type="button" data-r="${k}" aria-pressed="${k === "7D"}">${k}</button>`).join("")}</div>
+    <div id="cpTools" style="display:flex;gap:8px;align-items:stretch;margin:10px 0 0">
+      <div class="seg" id="cpRanges" role="group" aria-label="Chart range" style="flex:1;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin:0">${Object.keys(CHART_RANGES).map((k) => `<button type="button" data-r="${k}" aria-pressed="${k === "1W"}">${k}</button>`).join("")}</div>
+      <div class="seg" style="margin:0;grid-template-columns:1fr"><button type="button" id="cpLog" aria-pressed="false" style="padding:0 14px">Log</button></div>
+    </div>
     <div class="cp-read" id="cpRead"></div>
     <div id="cpChart"><p class="muted" style="margin:8px 0 0">Loading chart…</p></div>
-    <div id="cpAxis" style="display:flex;justify-content:space-between;opacity:.6;font-size:.85rem;margin-top:4px"></div>
+    <div id="cpAxis" style="display:flex;justify-content:space-between;opacity:.6;font-size:.8rem;margin:4px 58px 0 6px"></div>
     <div class="cp-lh" id="cpLH"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0 0">
+      <div class="seg" id="cpMode" role="group" aria-label="Chart value" style="margin:0"><button type="button" data-m="price" aria-pressed="true">Price</button><button type="button" data-m="mcap" aria-pressed="false">Market cap</button></div>
+      <div class="seg" id="cpType" role="group" aria-label="Chart type" style="margin:0"><button type="button" data-t="line" aria-pressed="true">Line</button><button type="button" data-t="candles" aria-pressed="false">Candles</button></div>
+    </div>
     <p class="muted" id="cpNote" style="margin:10px 0 0;font-size:.85rem">Touch the chart to see the price at any moment.</p>`;
   $("#coinBody").innerHTML = `
     <div class="cp-head">
@@ -2024,7 +2031,7 @@ async function loadCoinMarkets(c) {
   } catch (_) {}
 }
 /* ---------- candles from any exchange: Binance first, then Bybit, OKX, MEXC, Gate, KuCoin (all public, read in the browser) ---------- */
-const KL_IV = { "15m": { by: "15", okx: "15m", mx: "15m", gate: "15m", ku: "15min", lb: "minute15", ms: 9e5 }, "1h": { by: "60", okx: "1H", mx: "60m", gate: "1h", ku: "1hour", lb: "hour1", ms: 36e5 }, "4h": { by: "240", okx: "4H", mx: "4h", gate: "4h", ku: "4hour", lb: "hour4", ms: 144e5 }, "1d": { by: "D", okx: "1D", mx: "1d", gate: "1d", ku: "1day", lb: "day1", ms: 864e5 } };
+const KL_IV = { "15m": { by: "15", okx: "15m", mx: "15m", gate: "15m", ku: "15min", lb: "minute15", ms: 9e5 }, "1h": { by: "60", okx: "1H", mx: "60m", gate: "1h", ku: "1hour", lb: "hour1", ms: 36e5 }, "4h": { by: "240", okx: "4H", mx: "4h", gate: "4h", ku: "4hour", lb: "hour4", ms: 144e5 }, "1d": { by: "D", okx: "1D", mx: "1d", gate: "1d", ku: "1day", lb: "day1", ms: 864e5 }, "1w": { by: "W", okx: "1W", mx: "1W", gate: "7d", ku: "1week", lb: "week1", ms: 6048e5 } };
 const klCoin = new Map(); // coin id -> exchange that worked last time
 async function klGet(url, ms) {
   const ctl = new AbortController();
@@ -2042,25 +2049,25 @@ async function klGet(url, ms) {
 const KL_SRC = {
   binance: async (S, iv, lim) => {
     const j = await klGet(`https://data-api.binance.vision/api/v3/klines?symbol=${S}USDT&interval=${iv}&limit=${lim}`, 8000);
-    return Array.isArray(j) ? j.map((k) => ({ t: k[0], p: Number(k[4]) })) : null;
+    return Array.isArray(j) ? j.map((k) => ({ t: k[0], p: Number(k[4]), v: Number(k[7]) })) : null;
   },
   bybit: async (S, iv, lim) => {
     const j = await klGet(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${S}USDT&interval=${KL_IV[iv].by}&limit=${Math.min(lim, 1000)}`);
     const l = j && j.result && j.result.list;
-    return Array.isArray(l) ? l.map((k) => ({ t: Number(k[0]), p: Number(k[4]) })).reverse() : null;
+    return Array.isArray(l) ? l.map((k) => ({ t: Number(k[0]), p: Number(k[4]), v: Number(k[6]) })).reverse() : null;
   },
   okx: async (S, iv, lim) => {
     const j = await klGet(`https://www.okx.com/api/v5/market/candles?instId=${S}-USDT&bar=${KL_IV[iv].okx}&limit=${Math.min(lim, 300)}`);
     const l = j && j.data;
-    return Array.isArray(l) ? l.map((k) => ({ t: Number(k[0]), p: Number(k[4]) })).reverse() : null;
+    return Array.isArray(l) ? l.map((k) => ({ t: Number(k[0]), p: Number(k[4]), v: Number(k[7]) })).reverse() : null;
   },
   mexc: async (S, iv, lim) => {
     const j = await klGet(`https://api.mexc.com/api/v3/klines?symbol=${S}USDT&interval=${KL_IV[iv].mx}&limit=${Math.min(lim, 500)}`);
-    return Array.isArray(j) ? j.map((k) => ({ t: Number(k[0]), p: Number(k[4]) })) : null;
+    return Array.isArray(j) ? j.map((k) => ({ t: Number(k[0]), p: Number(k[4]), v: Number(k[7]) })) : null;
   },
   gate: async (S, iv, lim) => {
     const j = await klGet(`https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=${S}_USDT&interval=${KL_IV[iv].gate}&limit=${Math.min(lim, 1000)}`);
-    return Array.isArray(j) ? j.map((k) => ({ t: Number(k[0]) * 1000, p: Number(k[2]) })) : null;
+    return Array.isArray(j) ? j.map((k) => ({ t: Number(k[0]) * 1000, p: Number(k[2]), v: Number(k[1]) })) : null;
   },
   lbank: async (S, iv, lim) => {
     const start = Math.floor(Date.now() / 1000) - Math.ceil((lim * KL_IV[iv].ms) / 1000);
@@ -2235,32 +2242,37 @@ async function loadCoinNews(c) {
   } catch (_) {}
 }
 
-/* ---------- coin chart (ranges) ---------- */
+/* ---------- coin chart (CoinMarketCap-style box: ranges, log, price / market cap, line / candles) ---------- */
 const CHART_RANGES = {
-  "1D": { iv: "15m", lim: 96, name: "24 hours" },
-  "7D": { iv: "1h", lim: 168, name: "7 days" },
-  "30D": { iv: "4h", lim: 180, name: "30 days" },
-  "90D": { iv: "1d", lim: 90, name: "90 days" },
+  "24h": { iv: "15m", lim: 96, name: "24 hours" },
+  "1W": { iv: "1h", lim: 168, name: "7 days" },
+  "1M": { iv: "4h", lim: 180, name: "30 days" },
   "1Y": { iv: "1d", lim: 365, name: "1 year" },
+  All: { iv: "1w", lim: 600, name: "all time" },
 };
 const chartCache = new Map();
 let chartTok = 0;
+const CHART_EX = { binance: 1, okx: 1, bybit: 1, gate: 1, mexc: 1 };
 
 async function getSeries(c, r, sp) {
   const key = c.id + ":" + r;
   const hit = chartCache.get(key);
   if (hit && Date.now() - hit.at < 60000) return hit.s;
-  let out = null;
-  try {
-    const { iv, lim } = CHART_RANGES[r];
+  const pull = async (iv, lim) => {
     const sr = await fetchKlines(c, iv, lim);
     if (sr) {
       const px = Number(c.price_usd);
       if (px && !sr.dex) sr[sr.length - 1].p = px;
-      out = sr;
     }
+    return sr;
+  };
+  let out = null;
+  try {
+    const { iv, lim } = CHART_RANGES[r];
+    out = await pull(iv, lim);
   } catch (_) {}
-  if (!out && r === "7D" && sp.length >= 2) {
+  if (!out && r === "All") { try { out = await pull("1d", 1000); } catch (_) {} }
+  if (!out && r === "1W" && sp.length >= 2) {
     const now = Date.now();
     out = sp.map((p, i) => ({ t: now - (sp.length - 1 - i) * 4 * 3600000, p }));
   }
@@ -2268,82 +2280,127 @@ async function getSeries(c, r, sp) {
   return out;
 }
 
+const axFmt = (v, usd) => {
+  if (!isFinite(v)) return "";
+  if (usd) return "$" + Number(v).toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 2 });
+  const a = Math.abs(v);
+  if (a >= 1000) return Number(v).toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 2 });
+  if (a >= 1) return Number(v).toFixed(2);
+  return Number(v).toPrecision(3);
+};
+
 function initChart(c, sp, sec) {
-  const load = async (r) => {
+  const V = { r: "1W", mode: "price", log: false, type: "line" };
+  const supply = Number(c.circulating_supply) || 0;
+  const sym = String(c.symbol || "").toUpperCase();
+  let exName = null;
+  const q = (s) => document.querySelectorAll(s);
+  const paint = () => {
+    q("#cpRanges button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.r === V.r)));
+    q("#cpMode button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.m === V.mode)));
+    q("#cpType button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.t === V.type)));
+    const lg = $("#cpLog"); if (lg) lg.setAttribute("aria-pressed", String(V.log));
+    const cd = V.type === "candles";
+    ["cpTools", "cpMode", "cpAxis", "cpRead", "cpLH", "cpWk"].forEach((id) => { const e = $("#" + id); if (e) e.style.display = cd ? "none" : ""; });
+    const mb = q("#cpMode button[data-m=mcap]")[0]; if (mb) { mb.disabled = !supply; mb.style.opacity = supply ? "" : ".4"; }
+    const cb = q("#cpType button[data-t=candles]")[0]; if (cb) { const ok = !!exName && CHART_EX[exName]; cb.disabled = !ok; cb.style.opacity = ok ? "" : ".4"; cb.title = ok ? "" : "Candles are not available for this coin"; }
+    const nt = $("#cpNote"); if (nt) nt.textContent = cd ? "Full PriceCheck NG chart with drawing tools, indicators and more timeframes." : V.mode === "mcap" ? "Market cap here is price × current circulating supply, so past values are an estimate." : "Touch the chart to see the price at any moment.";
+  };
+  const load = async () => {
     const my = ++chartTok;
-    document.querySelectorAll("#cpRanges button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.r === r)));
-    const s = await getSeries(c, r, sp);
-    if (my !== chartTok || !$("#cpChart")) return;
-    if (!s) {
-      $("#cpChart").innerHTML = `<p class="muted" style="margin:8px 0 0">This chart is not available for this coin.</p>`;
-      $("#cpWk").innerHTML = "";
-      $("#cpRead").innerHTML = "";
-      $("#cpAxis").innerHTML = "";
-      $("#cpLH").innerHTML = "";
+    if (V.type === "candles") {
+      paint();
+      $("#cpChart").innerHTML = `<iframe title="${esc(sym)} candlestick chart" src="chart.html?s=${encodeURIComponent(sym)}&i=1h&x=${exName}&m=spot&embed=1" style="width:100%;height:560px;border:1px solid rgba(128,128,128,.25);border-radius:14px;background:#0b130f;display:block" loading="lazy"></iframe>`;
       return;
     }
-    const vals = s.map((o) => o.p);
-    const lo = Math.min(...vals);
-    const hi = Math.max(...vals);
+    paint();
+    const s = await getSeries(c, V.r, sp);
+    if (my !== chartTok || !$("#cpChart")) return;
+    if (s && !s.dex && klCoin.get(c.id) && !exName) { exName = klCoin.get(c.id); paint(); }
+    if (!s) {
+      $("#cpChart").innerHTML = `<p class="muted" style="margin:8px 0 0">This chart is not available for this coin.</p>`;
+      ["cpWk", "cpRead", "cpAxis", "cpLH"].forEach((id) => { const e = $("#" + id); if (e) e.innerHTML = ""; });
+      return;
+    }
+    const mc = V.mode === "mcap" && supply > 0;
+    const series = s.map((o) => ({ t: o.t, p: mc ? o.p * supply : o.p, v: o.v }));
+    const fm = mc ? (v) => fmtBig(v, "$") : mny;
+    const vals = series.map((o) => o.p);
+    const lo = Math.min(...vals), hi = Math.max(...vals);
     const wd = chg((vals[vals.length - 1] / vals[0] - 1) * 100);
-    const nm = CHART_RANGES[r].name;
+    const nm = CHART_RANGES[V.r].name;
     $("#cpWk").innerHTML = `<span class="cp-pill ${wd.c}">${wd.t}</span> <span class="muted">over ${nm}</span>`;
-    $("#cpAxis").innerHTML = `<span>${nm} ago</span><span>Latest</span>`;
-    $("#cpLH").innerHTML = `
-      <div><small>${r} low</small><b>${mny(lo)}</b></div>
-      <div><small>${r} high</small><b>${mny(hi)}</b></div>`;
-    mountChart(s, sec, r);
+    $("#cpLH").innerHTML = `<div><small>${V.r} low</small><b>${fm(lo)}</b></div><div><small>${V.r} high</small><b>${fm(hi)}</b></div>`;
+    mountChart(series, V.r, V.log, fm, mc);
   };
-  document.querySelectorAll("#cpRanges button").forEach((b) => (b.onclick = () => load(b.dataset.r)));
-  load("7D");
+  q("#cpRanges button").forEach((b) => (b.onclick = () => { V.r = b.dataset.r; load(); }));
+  q("#cpMode button").forEach((b) => (b.onclick = () => { if (b.disabled) return; V.mode = b.dataset.m; load(); }));
+  q("#cpType button").forEach((b) => (b.onclick = () => { if (b.disabled) return; V.type = b.dataset.t; load(); }));
+  const lg = $("#cpLog"); if (lg) lg.onclick = () => { V.log = !V.log; load(); };
+  load();
 }
 
-function mountChart(series, sec, range) {
+function mountChart(series, range, log, fm, isCap) {
   const sp = series.map((o) => o.p);
-  const W = 600, H = 280, P = 8;
+  const W = 600, H = 300, L = 6, R = 58, T = 12, PB = Math.round(H * 0.78), VT = Math.round(H * 0.84), VB = H - 4;
   const n = sp.length;
-  const min = Math.min(...sp);
-  const max = Math.max(...sp);
+  const useLog = log && sp.every((v) => v > 0);
+  const f = useLog ? Math.log : (v) => v;
+  const fv = sp.map(f);
+  const min = Math.min(...fv), max = Math.max(...fv);
   const rng = max - min || Math.abs(max) * 0.01 || 1;
-  const x = (i) => P + (i / (n - 1)) * (W - 2 * P);
-  const y = (v) => P + (1 - (v - min) / rng) * (H - 2 * P);
+  const x = (i) => L + (i / (n - 1)) * (W - L - R);
+  const y = (v) => T + (1 - (f(v) - min) / rng) * (PB - T);
   const col = sp[n - 1] >= sp[0] ? "#15803d" : "#dc2626";
   const pts = sp.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`);
-  $("#cpChart").innerHTML = `<svg id="cpSvg" class="cp-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${range} price chart">
-    <path d="M${pts.join(" L")} L${x(n - 1).toFixed(1)},${H} L${x(0).toFixed(1)},${H} Z" fill="${col}" opacity=".1"/>
-    <polyline points="${pts.join(" ")}" fill="none" stroke="${col}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
-    <line id="cpLine" x1="0" x2="0" y1="0" y2="${H}" stroke="#94a3b8" stroke-width="1.5" visibility="hidden"/>
-    <circle id="cpDot" r="6" fill="${col}" stroke="#fff" stroke-width="2.5" visibility="hidden"/>
-  </svg>`;
-  const svg = $("#cpSvg");
-  const line = $("#cpLine");
-  const dot = $("#cpDot");
-  const read = $("#cpRead");
-  const label = (i) => {
-    if (i === n - 1) return "Latest";
+  let grid = "";
+  for (let k = 0; k <= 4; k++) {
+    const fr = k / 4, val = useLog ? Math.exp(min + rng * fr) : min + rng * fr, yy = T + (1 - fr) * (PB - T);
+    grid += `<line x1="${L}" x2="${W - R}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="#94a3b8" stroke-opacity=".18"/><text x="${W - R + 5}" y="${(yy + 4).toFixed(1)}" font-size="11" fill="#94a3b8">${axFmt(val, isCap)}</text>`;
+  }
+  const vs = series.map((o) => Number(o.v) || 0), vmax = Math.max(...vs);
+  let bars = "";
+  if (vmax > 0) {
+    const bw = Math.max(1, ((W - L - R) / n) * 0.8);
+    bars = vs.map((v, i) => (v > 0 ? `<rect x="${(x(i) - bw / 2).toFixed(1)}" y="${(VB - (v / vmax) * (VB - VT)).toFixed(1)}" width="${bw.toFixed(1)}" height="${((v / vmax) * (VB - VT)).toFixed(1)}" fill="${col}" opacity=".28"/>` : "")).join("");
+  }
+  const ly = y(sp[n - 1]);
+  const tag = `<line x1="${L}" x2="${W - R}" y1="${ly.toFixed(1)}" y2="${ly.toFixed(1)}" stroke="${col}" stroke-dasharray="3 3" opacity=".7"/><rect x="${W - R + 1}" y="${(ly - 9).toFixed(1)}" width="${R - 2}" height="18" rx="4" fill="${col}"/><text x="${W - R + 5}" y="${(ly + 4).toFixed(1)}" font-size="11" font-weight="700" fill="#fff">${axFmt(sp[n - 1], isCap)}</text>`;
+  $("#cpChart").innerHTML = `<div style="position:relative">
+    <svg id="cpSvg" class="cp-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${range} price chart" style="display:block;width:100%;height:auto">
+      ${grid}${bars}
+      <path d="M${pts.join(" L")} L${x(n - 1).toFixed(1)},${PB} L${x(0).toFixed(1)},${PB} Z" fill="${col}" opacity=".1"/>
+      <polyline points="${pts.join(" ")}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/>
+      ${tag}
+      <line id="cpLine" x1="0" x2="0" y1="${T}" y2="${VB}" stroke="#94a3b8" stroke-width="1.2" visibility="hidden"/>
+      <circle id="cpDot" r="5" fill="${col}" stroke="#fff" stroke-width="2.2" visibility="hidden"/>
+    </svg>
+    <div style="position:absolute;right:68px;bottom:25%;display:flex;align-items:center;gap:6px;opacity:.35;pointer-events:none"><img src="icon-green-192.png" alt="" width="20" height="20" style="border-radius:5px"><span style="font-weight:800;font-size:.85rem;letter-spacing:-.2px">PriceCheck NG</span></div>
+  </div>`;
+  const svg = $("#cpSvg"), line = $("#cpLine"), dot = $("#cpDot"), read = $("#cpRead");
+  const lab = (i, short) => {
     const dt = new Date(series[i].t);
-    if (range === "1D") return dt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    const day = dt.toLocaleDateString([], { month: "short", day: "numeric", year: range === "1Y" ? "numeric" : undefined });
-    return range === "7D" || range === "30D" ? `${day}, ${dt.toLocaleTimeString([], { hour: "numeric" })}` : day;
+    if (range === "24h") return dt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    if (range === "All") return dt.toLocaleDateString([], { month: "short", year: "numeric" });
+    if (range === "1Y") return dt.toLocaleDateString([], { month: "short", day: short ? undefined : "numeric", year: "numeric" });
+    const day = dt.toLocaleDateString([], { month: "short", day: "numeric" });
+    return short ? day : `${day}, ${dt.toLocaleTimeString([], { hour: "numeric" })}`;
   };
-  const paint = (i, active) => {
-    read.innerHTML = `<b>${mny(sp[i])}</b><span>${label(i)}</span>`;
+  const ax = $("#cpAxis");
+  if (ax) ax.innerHTML = [0, 0.25, 0.5, 0.75, 1].map((fr) => `<span>${lab(Math.min(n - 1, Math.round(fr * (n - 1))), true)}</span>`).join("");
+  const show = (i, active) => {
+    read.innerHTML = `<b>${fm(sp[i])}</b><span>${i === n - 1 && !active ? "Latest" : lab(i)}${vs[i] > 0 ? " · Vol " + fmtBig(vs[i], "$") : ""}</span>`;
     const v = active ? "visible" : "hidden";
-    line.setAttribute("visibility", v);
-    dot.setAttribute("visibility", v);
-    if (active) {
-      line.setAttribute("x1", x(i));
-      line.setAttribute("x2", x(i));
-      dot.setAttribute("cx", x(i));
-      dot.setAttribute("cy", y(sp[i]));
-    }
+    line.setAttribute("visibility", v); dot.setAttribute("visibility", v);
+    if (active) { line.setAttribute("x1", x(i)); line.setAttribute("x2", x(i)); dot.setAttribute("cx", x(i)); dot.setAttribute("cy", y(sp[i])); }
   };
   const at = (e) => {
     const r = svg.getBoundingClientRect();
-    const f = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-    paint(Math.round(f * (n - 1)), true);
+    const px = ((e.clientX - r.left) / r.width) * W;
+    const fr = Math.min(1, Math.max(0, (px - L) / (W - L - R)));
+    show(Math.round(fr * (n - 1)), true);
   };
-  const reset = () => paint(n - 1, false);
+  const reset = () => show(n - 1, false);
   svg.addEventListener("pointerdown", at);
   svg.addEventListener("pointermove", at);
   svg.addEventListener("pointerleave", reset);

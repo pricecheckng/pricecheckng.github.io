@@ -103,6 +103,8 @@
   .sh-top .back:focus, .sh-top .back:focus-visible { outline:none; box-shadow:none; }
   .sh-top .back svg { width:20px; height:20px; }
   .sh-top input { height:42px; box-sizing:border-box;  flex:1; background:#16241d; border:1px solid var(--acc); border-radius:12px; color:var(--txt); font:inherit; padding:11px 12px; outline:none; }
+  html.embed .tabbar, html.embed .back, html.embed #agent { display:none !important; }
+  html.embed .top { padding-left:10px; }
   .tabs { display:flex; gap:20px; padding:0 16px; border-bottom:1px solid var(--line); }
   .tabs button, .exs button { background:none; border:0; color:var(--mut); font:inherit; font-weight:700; padding:12px 0; cursor:pointer; border-bottom:2px solid transparent; }
   .tabs button.on { color:var(--txt); border-color:var(--acc); }
@@ -342,6 +344,7 @@ const $ = id => document.getElementById(id);
 const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
 $('tz').textContent = tz.replace('_', ' ');
 const qs = new URLSearchParams(location.search);
+if (qs.get('embed')) document.documentElement.classList.add('embed');
 let symbol = (qs.get('s') || 'BTC').toUpperCase().replace(/[^A-Z0-9_.\-]/g, '') || 'BTC', interval = ['15m','1h','4h','1d','1w'].includes(qs.get('i')) ? qs.get('i') : '4h';
 window.PCNEX_PROXY = { url: SUPABASE_URL + '/functions/v1/pcn-ex', key: SUPABASE_KEY };
 const EXN = { binance: 'Binance', okx: 'OKX', bybit: 'Bybit', aster: 'Aster', bitget: 'Bitget', gate: 'Gate', mexc: 'MEXC', coinbase: 'Coinbase', hyperliquid: 'Hyperliquid', upbit: 'Upbit' };
