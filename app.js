@@ -2406,12 +2406,13 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) 
   let off = 0, cur = null, raf = 0;
   $("#cpChart").innerHTML = `<div id="cpBox" style="position:relative;border:1px solid rgba(148,163,184,.3);border-radius:6px;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none">
     <div id="cpHost"></div>
+    <div id="cpOpen" style="position:absolute;left:6px;top:0;transform:translateY(-50%);padding:2px 6px;border-radius:6px;background:rgba(100,116,139,.55);color:#fff;font-size:.7rem;font-weight:700;pointer-events:none;display:none"></div>
     <div id="cpTip" style="display:none;position:absolute;top:8px;z-index:2;padding:6px 10px;border-radius:9px;background:rgba(10,18,14,.94);border:1px solid rgba(148,163,184,.35);color:#e6f2ea;font-size:.82rem;line-height:1.35;white-space:nowrap;pointer-events:none"></div>
     <div id="cpLoad" style="display:none;position:absolute;left:8px;top:8px;padding:4px 10px;border-radius:12px;background:rgba(100,116,139,.7);color:#fff;font-size:.8rem;pointer-events:none">Loading older data…</div>
     <div id="cpDot" style="position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;border:2px solid #fff;visibility:hidden;pointer-events:none"></div>
     <div style="position:absolute;right:8px;bottom:22%;display:flex;align-items:center;gap:6px;opacity:.4;pointer-events:none"><img src="icon-green-192.png" alt="" width="28" height="28" style="border-radius:7px"><span style="font-weight:800;font-size:1.15rem;letter-spacing:-.3px">PriceCheck NG</span></div>
   </div>`;
-  const box = $("#cpBox"), host = $("#cpHost"), dot = $("#cpDot"), tip = $("#cpTip"), ax = $("#cpAxis"), lo = $("#cpLoad"), evt = $("#cpEvt"), pop = $("#cpPop");
+  const box = $("#cpBox"), host = $("#cpHost"), dot = $("#cpDot"), tip = $("#cpTip"), opn = $("#cpOpen"), ax = $("#cpAxis"), lo = $("#cpLoad"), evt = $("#cpEvt"), pop = $("#cpPop");
 
   const lab = (sl, i, short) => {
     const dt = new Date(sl[i].t);
@@ -2505,6 +2506,7 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) 
       <line id="cpLine" x1="0" x2="0" y1="${T}" y2="${VB}" stroke="#94a3b8" stroke-width="1" visibility="hidden" vector-effect="non-scaling-stroke"/>
     </svg>`;
     dot.style.background = up ? G : R;
+    opn.textContent = axFmt(sp[0], isCap); opn.style.display = "block"; opn.style.top = ((Math.min(PB - 12, Math.max(T + 12, ref)) / H) * 100).toFixed(2) + "%";
     cur = { sl, n, sp, vs, x, y };
     if (ax) ax.innerHTML = ticks(sl);
     drawEvt(sl);
