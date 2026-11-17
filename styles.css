@@ -322,3 +322,13 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
   .cp-cards { grid-template-columns: repeat(5, 1fr); }
 }
 html.dk .cp-tabs { background: #0e1511; }
+
+/* coin page chart controls (CoinMarketCap-style bar) */
+.cpr button,.cpb,.cps button{border:0;background:transparent;min-height:40px;border-radius:10px;font-weight:700;color:var(--muted);font-size:.9rem;white-space:nowrap;cursor:pointer}
+.cpr button{flex:1;padding:0 4px}
+.cpb{padding:0 12px;flex:none}
+.cpr button[aria-pressed="true"],.cps button[aria-pressed="true"],.cpb[aria-pressed="true"]{background:#fff;color:var(--green);box-shadow:0 1px 4px rgba(14,26,19,.12)}
+.cpd{width:1px;height:20px;background:rgba(148,163,184,.4);margin:0 4px;flex:none}
+.cps{display:flex;gap:2px;padding:4px;background:var(--surface);border-radius:14px}
+.cps button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 6px}
+.cps button:disabled{cursor:not-allowed}
