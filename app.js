@@ -2356,7 +2356,7 @@ function initChart(c, sp, sec) {
     const md = $("#cpMode"); if (md) md.style.visibility = cd ? "hidden" : "";
     const mb = q("#cpMode button[data-m=mcap]")[0]; if (mb) { mb.disabled = !supply; mb.style.opacity = supply ? "" : ".4"; }
     const cb = q("#cpType button[data-t=candles]")[0]; if (cb) { const ok = !!exName && CHART_EX[exName]; cb.disabled = !ok; cb.style.opacity = ok ? "" : ".4"; cb.title = ok ? "" : "Candles are not available for this coin"; }
-    const nt = $("#cpNote"); if (nt) nt.textContent = cd ? "Full PriceCheck NG chart with drawing tools, indicators and more timeframes." : V.mode === "mcap" ? "Market cap here is price × current circulating supply, so past values are an estimate." : "Hold your finger on the chart to see the price. Drag sideways to move through time.";
+    const nt = $("#cpNote"); if (nt) nt.textContent = cd ? "" : V.mode === "mcap" ? "Market cap here is price × current circulating supply, so past values are an estimate." : "Hold your finger on the chart to see the price. Drag sideways to move through time.";
   };
   const load = async () => {
     const my = ++chartTok;
