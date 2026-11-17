@@ -1743,6 +1743,10 @@ function paintCoin(c) {
       <div id="cpMode" role="group" aria-label="Chart value" class="cps"><button type="button" data-m="price" aria-pressed="true">Price</button><button type="button" data-m="mcap" aria-pressed="false">Market cap</button></div>
       <div id="cpType" role="group" aria-label="Chart type" class="cps"><button type="button" data-t="line" aria-pressed="true" aria-label="Line chart" style="flex:0 0 44px;padding:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></button><button type="button" data-t="candles" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v3M7 14v4M17 5v2M17 15v4"/><rect x="4.5" y="6" width="5" height="8" rx="1"/><rect x="14.5" y="7" width="5" height="8" rx="1"/></svg> Candles</button></div>
     </div>
+    <div id="cpRow2" style="display:none;grid-template-columns:2.2fr 1fr;gap:8px;margin:8px 0 0;align-items:stretch">
+      <div class="cps"><button type="button" id="cpFx"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V14M9 20V10M14 20V13M19 20V6"/><path d="M3 11l5-4 4 3 7-6"/></svg> Indicators</button></div>
+      <div class="cps"><button type="button" id="cpUndo" aria-label="Undo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><button type="button" id="cpRedo" aria-label="Redo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+    </div>
     <div class="cp-lh" id="cpLH"></div>
     <p class="muted" id="cpNote" style="margin:10px 0 0;font-size:.85rem">Hold your finger on the chart to see the price. Drag sideways to move through time.</p>`;
   $("#coinBody").innerHTML = `
@@ -2353,7 +2357,7 @@ function initChart(c, sp, sec) {
     const lg = $("#cpLog"); if (lg) lg.setAttribute("aria-pressed", String(V.log));
     const cd = V.type === "candles";
     ["cpTools", "cpAxis", "cpEvt", "cpPop", "cpRead", "cpLH", "cpWk"].forEach((id) => { const e = $("#" + id); if (e) e.style.display = cd ? "none" : ""; });
-    const md = $("#cpMode"); if (md) md.style.visibility = cd ? "hidden" : "";
+    const r2 = $("#cpRow2"); if (r2) r2.style.display = cd ? "grid" : "none";
     const mb = q("#cpMode button[data-m=mcap]")[0]; if (mb) { mb.disabled = !supply; mb.style.opacity = supply ? "" : ".4"; }
     const cb = q("#cpType button[data-t=candles]")[0]; if (cb) { const ok = !!exName && CHART_EX[exName]; cb.disabled = !ok; cb.style.opacity = ok ? "" : ".4"; cb.title = ok ? "" : "Candles are not available for this coin"; }
     const nt = $("#cpNote"); if (nt) nt.textContent = cd ? "" : V.mode === "mcap" ? "Market cap here is price × current circulating supply, so past values are an estimate." : "Hold your finger on the chart to see the price. Drag sideways to move through time.";
@@ -2391,8 +2395,15 @@ function initChart(c, sp, sec) {
     mountChart(series, V.r, V.log, fm, mc, CHART_RANGES[V.r].win, onWin, loadOlder, events);
   };
   q("#cpRanges button").forEach((b) => (b.onclick = () => { V.r = b.dataset.r; load(); }));
-  q("#cpMode button").forEach((b) => (b.onclick = () => { if (b.disabled) return; V.mode = b.dataset.m; load(); }));
-  q("#cpType button").forEach((b) => (b.onclick = () => { if (b.disabled) return; V.type = b.dataset.t; load(); }));
+  q("#cpMode button").forEach((b) => (b.onclick = () => { if (b.disabled) return; V.mode = b.dataset.m; if (V.mode === "mcap") V.type = "line"; load(); }));
+  q("#cpType button").forEach((b) => (b.onclick = () => { if (b.disabled) return; V.type = b.dataset.t; if (V.type === "candles") V.mode = "price"; load(); }));
+  const ifw = () => { const f = document.querySelector("#cpChart iframe"); try { return f && f.contentWindow.document; } catch (_) { return null; } };
+  const fwd = (id) => { const d = ifw(), e = d && d.getElementById(id); if (e) e.click(); };
+  const fx = $("#cpFx"), un = $("#cpUndo"), re = $("#cpRedo");
+  if (fx) fx.onclick = () => fwd("fxBtn");
+  if (un) un.onclick = () => fwd("undoBtn");
+  if (re) re.onclick = () => fwd("redoBtn");
+  const hist = setInterval(() => { if (!$("#cpRow2")) return clearInterval(hist); const d = ifw(); [["undoBtn", un], ["redoBtn", re]].forEach(([id, b]) => { const e = d && d.getElementById(id); if (b) b.style.opacity = e && !e.classList.contains("dis") ? "" : ".4"; }); }, 500);
   const lg = $("#cpLog"); if (lg) lg.onclick = () => { V.log = !V.log; load(); };
   load();
 }
