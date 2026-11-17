@@ -790,6 +790,8 @@
     rc.addEventListener('pointercancel', function () { dragX = null; });
 
     window.addEventListener('resize', size); window.addEventListener('orientationchange', function () { setTimeout(size, 250); }); window.addEventListener('pageshow', function () { setTimeout(size, 100); }); if (window.visualViewport) window.visualViewport.addEventListener('resize', size); setTimeout(size, 400); setTimeout(size, 1500);
+    var wake = function () { if (document.hidden) return; size(); setTimeout(size, 150); setTimeout(size, 600); setTimeout(size, 1500); };
+    document.addEventListener('visibilitychange', wake); window.addEventListener('focus', wake); window.addEventListener('pageshow', wake);
     if (window.ResizeObserver) { var ro = new ResizeObserver(size); ro.observe(mainEl); ro.observe(rsiEl); }
 
     return {
