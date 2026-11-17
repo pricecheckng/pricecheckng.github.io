@@ -2366,7 +2366,7 @@ function initChart(c, sp, sec) {
     const my = ++chartTok;
     if (V.type === "candles") {
       paint();
-      $("#cpChart").innerHTML = `<iframe title="${esc(sym)} candlestick chart" src="chart.html?s=${encodeURIComponent(sym)}&i=1h&x=${exName}&m=spot&embed=1" style="width:100%;height:440px;border:1px solid rgba(128,128,128,.25);border-radius:14px;background:#0b130f;display:block" loading="lazy"></iframe>`;
+      $("#cpChart").innerHTML = `<iframe title="${esc(sym)} candlestick chart" src="chart.html?s=${encodeURIComponent(sym)}&i=1h&x=${exName}&m=spot&embed=1" style="width:100%;height:625px;border:1px solid rgba(128,128,128,.25);border-radius:14px;background:#0b130f;display:block" loading="lazy"></iframe>`;
       return;
     }
     paint();
