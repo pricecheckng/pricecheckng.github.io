@@ -2031,7 +2031,7 @@ async function loadCoinMarkets(c) {
   } catch (_) {}
 }
 /* ---------- candles from any exchange: Binance first, then Bybit, OKX, MEXC, Gate, KuCoin (all public, read in the browser) ---------- */
-const KL_IV = { "15m": { by: "15", okx: "15m", mx: "15m", gate: "15m", ku: "15min", lb: "minute15", ms: 9e5 }, "1h": { by: "60", okx: "1H", mx: "60m", gate: "1h", ku: "1hour", lb: "hour1", ms: 36e5 }, "4h": { by: "240", okx: "4H", mx: "4h", gate: "4h", ku: "4hour", lb: "hour4", ms: 144e5 }, "1d": { by: "D", okx: "1D", mx: "1d", gate: "1d", ku: "1day", lb: "day1", ms: 864e5 }, "1w": { by: "W", okx: "1W", mx: "1W", gate: "7d", ku: "1week", lb: "week1", ms: 6048e5 } };
+const KL_IV = { "5m": { by: "5", okx: "5m", mx: "5m", gate: "5m", ku: "5min", lb: "minute5", ms: 3e5 }, "15m": { by: "15", okx: "15m", mx: "15m", gate: "15m", ku: "15min", lb: "minute15", ms: 9e5 }, "1h": { by: "60", okx: "1H", mx: "60m", gate: "1h", ku: "1hour", lb: "hour1", ms: 36e5 }, "4h": { by: "240", okx: "4H", mx: "4h", gate: "4h", ku: "4hour", lb: "hour4", ms: 144e5 }, "1d": { by: "D", okx: "1D", mx: "1d", gate: "1d", ku: "1day", lb: "day1", ms: 864e5 }, "1w": { by: "W", okx: "1W", mx: "1W", gate: "7d", ku: "1week", lb: "week1", ms: 6048e5 } };
 const klCoin = new Map(); // coin id -> exchange that worked last time
 async function klGet(url, ms) {
   const ctl = new AbortController();
@@ -2084,7 +2084,7 @@ const KL_SRC = {
 };
 /* ---------- coins that trade only on DEXes: find the main pool by contract address on GeckoTerminal ---------- */
 const GT_NET = { ethereum: "eth", "binance-smart-chain": "bsc", solana: "solana", base: "base", "polygon-pos": "polygon_pos", "arbitrum-one": "arbitrum", "optimistic-ethereum": "optimism", avalanche: "avax", tron: "tron", "the-open-network": "ton", sui: "sui", fantom: "ftm", cronos: "cronos", linea: "linea", blast: "blast", mantle: "mantle", scroll: "scroll", zksync: "zksync", xdai: "xdai", celo: "celo", aptos: "aptos", sonic: "sonic", berachain: "berachain", unichain: "unichain", hyperevm: "hyperevm" };
-const GT_TF = { "15m": ["minute", 15], "1h": ["hour", 1], "4h": ["hour", 4], "1d": ["day", 1] };
+const GT_TF = { "5m": ["minute", 5], "15m": ["minute", 15], "1h": ["hour", 1], "4h": ["hour", 4], "1d": ["day", 1] };
 const gtPool = new Map();
 async function dexKlines(c, iv, lim) {
   const pl = c.platforms && typeof c.platforms === "object" ? c.platforms : null;
@@ -2244,7 +2244,7 @@ async function loadCoinNews(c) {
 
 /* ---------- coin chart (CoinMarketCap-style box: ranges, log, price / market cap, line / candles) ---------- */
 const CHART_RANGES = {
-  "24h": { iv: "15m", lim: 96, name: "24 hours" },
+  "24h": { iv: "5m", lim: 288, name: "24 hours" },
   "1W": { iv: "1h", lim: 168, name: "7 days" },
   "1M": { iv: "4h", lim: 180, name: "30 days" },
   "1Y": { iv: "1d", lim: 365, name: "1 year" },
@@ -2365,7 +2365,7 @@ function mountChart(series, range, log, fm, isCap) {
   const vs = series.map((o) => Number(o.v) || 0), vmax = Math.max(...vs);
   let bars = "";
   if (vmax > 0) {
-    const bw = Math.max(1, (W / n) * 0.78);
+    const bw = Math.max(1.2, (W / n) * 1.0);
     bars = vs.map((v, i) => (v > 0 ? `<rect x="${(x(i) - bw / 2).toFixed(1)}" y="${(VB - (v / vmax) * (VB - VT - 2)).toFixed(1)}" width="${bw.toFixed(1)}" height="${((v / vmax) * (VB - VT - 2)).toFixed(1)}"/>` : "")).join("");
   }
   const openTxt = axFmt(sp[0], isCap), tw = openTxt.length * 7 + 14;
@@ -2379,7 +2379,7 @@ function mountChart(series, range, log, fm, isCap) {
       </defs>
       ${grid}
       <line x1="0" x2="${W}" y1="${VT}" y2="${VT}" stroke="#94a3b8" stroke-opacity=".3"/>
-      <g fill="#64748b" opacity=".45">${bars}</g>
+      <g fill="#5b6fb5" opacity=".5">${bars}</g>
       <path d="${area}" fill="url(#cgU)" clip-path="url(#cpUp)"/>
       <path d="${area}" fill="url(#cgD)" clip-path="url(#cpDn)"/>
       <polyline points="${pts}" fill="none" stroke="${G}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" clip-path="url(#cpUp)" vector-effect="non-scaling-stroke"/>
