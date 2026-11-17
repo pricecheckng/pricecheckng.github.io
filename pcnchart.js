@@ -461,9 +461,11 @@
       });
     }
     function size() {
+      dpr = Math.min(window.devicePixelRatio || 1, 3);
       var r = mainEl.getBoundingClientRect(), r2 = rsiEl.getBoundingClientRect();
       W = Math.max(1, r.width); H = Math.max(1, r.height); RH = Math.max(1, r2.height);
-      mc.width = W * dpr; mc.height = H * dpr; rc.width = W * dpr; rc.height = RH * dpr;
+      mc.width = Math.round(W * dpr); mc.height = Math.round(H * dpr); rc.width = Math.round(W * dpr); rc.height = Math.round(RH * dpr);
+      mc.style.width = W + 'px'; mc.style.height = H + 'px'; rc.style.width = W + 'px'; rc.style.height = RH + 'px';
       mx.setTransform(dpr, 0, 0, dpr, 0, 0); rx.setTransform(dpr, 0, 0, dpr, 0, 0);
       draw();
     }
@@ -787,7 +789,7 @@
     rc.addEventListener('pointerup', function () { dragX = null; });
     rc.addEventListener('pointercancel', function () { dragX = null; });
 
-    window.addEventListener('resize', size);
+    window.addEventListener('resize', size); window.addEventListener('orientationchange', function () { setTimeout(size, 250); }); window.addEventListener('pageshow', function () { setTimeout(size, 100); }); if (window.visualViewport) window.visualViewport.addEventListener('resize', size); setTimeout(size, 400); setTimeout(size, 1500);
     if (window.ResizeObserver) { var ro = new ResizeObserver(size); ro.observe(mainEl); ro.observe(rsiEl); }
 
     return {
