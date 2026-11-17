@@ -1739,6 +1739,7 @@ function paintCoin(c) {
     <div class="cp-read" id="cpRead"></div>
     <div id="cpChart"><p class="muted" style="margin:8px 0 0">Loading chart…</p></div>
     <div id="cpAxis" style="position:relative;height:24px;margin-top:8px;font-size:.95rem;opacity:.75"></div>
+    <div id="cpEvt" style="position:relative;height:40px;margin-top:8px"></div><div id="cpPop"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 0;align-items:stretch">
       <div id="cpMode" role="group" aria-label="Chart value" class="cps"><button type="button" data-m="price" aria-pressed="true">Price</button><button type="button" data-m="mcap" aria-pressed="false">Market cap</button></div>
       <div id="cpType" role="group" aria-label="Chart type" class="cps"><button type="button" data-t="line" aria-pressed="true" aria-label="Line chart" style="flex:0 0 44px;padding:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></button><button type="button" data-t="candles" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v3M7 14v4M17 5v2M17 15v4"/><rect x="4.5" y="6" width="5" height="8" rx="1"/><rect x="14.5" y="7" width="5" height="8" rx="1"/></svg> Candles</button></div>
@@ -2320,6 +2321,17 @@ async function getSeries(c, r, sp) {
   return out;
 }
 
+const chartNews = new Map();
+async function getChartNews(c) {
+  if (chartNews.has(c.id)) return chartNews.get(c.id);
+  let ev = [];
+  try {
+    const { data } = await sb.from("news").select("source,title,url,published_at").contains("coin_ids", [c.id]).order("published_at", { ascending: false }).limit(200);
+    ev = (data || []).map((r) => ({ t: Date.parse(r.published_at), title: r.title, url: r.url, source: r.source })).filter((r) => isFinite(r.t) && /^https?:\/\//i.test(r.url || ""));
+  } catch (_) {}
+  chartNews.set(c.id, ev);
+  return ev;
+}
 const axFmt = (v, usd) => {
   if (!isFinite(v)) return "";
   if (usd) return "$" + Number(v).toLocaleString("en-US", { notation: "compact", maximumFractionDigits: 2 });
@@ -2341,7 +2353,7 @@ function initChart(c, sp, sec) {
     q("#cpType button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.t === V.type)));
     const lg = $("#cpLog"); if (lg) lg.setAttribute("aria-pressed", String(V.log));
     const cd = V.type === "candles";
-    ["cpTools", "cpAxis", "cpRead", "cpLH", "cpWk"].forEach((id) => { const e = $("#" + id); if (e) e.style.display = cd ? "none" : ""; });
+    ["cpTools", "cpAxis", "cpEvt", "cpPop", "cpRead", "cpLH", "cpWk"].forEach((id) => { const e = $("#" + id); if (e) e.style.display = cd ? "none" : ""; });
     const md = $("#cpMode"); if (md) md.style.visibility = cd ? "hidden" : "";
     const mb = q("#cpMode button[data-m=mcap]")[0]; if (mb) { mb.disabled = !supply; mb.style.opacity = supply ? "" : ".4"; }
     const cb = q("#cpType button[data-t=candles]")[0]; if (cb) { const ok = !!exName && CHART_EX[exName]; cb.disabled = !ok; cb.style.opacity = ok ? "" : ".4"; cb.title = ok ? "" : "Candles are not available for this coin"; }
@@ -2375,8 +2387,10 @@ function initChart(c, sp, sec) {
       $("#cpLH").innerHTML = `<div><small>${V.r} low</small><b>${fm(lo)}</b></div><div><small>${V.r} high</small><b>${fm(hi)}</b></div>`;
     };
     const iv = CHART_RANGES[V.r].iv;
+    const events = await getChartNews(c);
+    if (my !== chartTok || !$("#cpChart")) return;
     const loadOlder = V.r === "All" || s.dex || !klCoin.get(c.id) ? null : async (before) => { const rows = await fetchOlder(c, iv, before); return rows && rows.map((o) => ({ t: o.t, p: mc ? o.p * supply : o.p, v: o.v })); };
-    mountChart(series, V.r, V.log, fm, mc, CHART_RANGES[V.r].win, onWin, loadOlder);
+    mountChart(series, V.r, V.log, fm, mc, CHART_RANGES[V.r].win, onWin, loadOlder, events);
   };
   q("#cpRanges button").forEach((b) => (b.onclick = () => { V.r = b.dataset.r; load(); }));
   q("#cpMode button").forEach((b) => (b.onclick = () => { if (b.disabled) return; V.mode = b.dataset.m; load(); }));
@@ -2385,7 +2399,7 @@ function initChart(c, sp, sec) {
   load();
 }
 
-function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder) {
+function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) {
   let N = all.length;
   const win = winN || N, maxOf = () => Math.max(0, N - win);
   let loading = false, exhausted = !loadOlder || !winN;
@@ -2396,10 +2410,9 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder) {
     <div id="cpHost"></div>
     <div id="cpLoad" style="display:none;position:absolute;left:8px;top:8px;padding:4px 10px;border-radius:12px;background:rgba(100,116,139,.7);color:#fff;font-size:.8rem;pointer-events:none">Loading older data…</div>
     <div id="cpDot" style="position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;border:2px solid #fff;visibility:hidden;pointer-events:none"></div>
-    <button type="button" id="cpLatest" style="display:none;position:absolute;left:8px;bottom:22%;align-items:center;gap:6px;padding:6px 12px 6px 9px;border:0;border-radius:18px;background:rgba(100,116,139,.75);color:#fff;font-weight:700;font-size:.85rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>Latest</button>
     <div style="position:absolute;right:8px;bottom:22%;display:flex;align-items:center;gap:6px;opacity:.4;pointer-events:none"><img src="icon-green-192.png" alt="" width="28" height="28" style="border-radius:7px"><span style="font-weight:800;font-size:1.15rem;letter-spacing:-.3px">PriceCheck NG</span></div>
   </div>`;
-  const box = $("#cpBox"), host = $("#cpHost"), dot = $("#cpDot"), read = $("#cpRead"), ax = $("#cpAxis"), lt = $("#cpLatest"), lo = $("#cpLoad");
+  const box = $("#cpBox"), host = $("#cpHost"), dot = $("#cpDot"), read = $("#cpRead"), ax = $("#cpAxis"), lo = $("#cpLoad"), evt = $("#cpEvt"), pop = $("#cpPop");
 
   const lab = (sl, i, short) => {
     const dt = new Date(sl[i].t);
@@ -2425,6 +2438,30 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder) {
     return out.map(([pc, txt]) => `<span style="position:absolute;left:${pc.toFixed(1)}%;transform:translateX(-50%);white-space:nowrap">${txt}</span>`).join("");
   };
 
+  const DOC = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>';
+  const HIST = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>';
+  let shown = [], openG = -1;
+  function drawEvt(sl) {
+    if (!evt) return;
+    if (pop) pop.innerHTML = "";
+    openG = -1;
+    const t0 = sl[0].t, t1 = sl[sl.length - 1].t, span = t1 - t0 || 1;
+    const vis = (events || []).filter((e) => e.t >= t0 && e.t <= t1).sort((a, b) => a.t - b.t);
+    const cl = [];
+    vis.forEach((e) => { const pc = ((e.t - t0) / span) * 100, last = cl[cl.length - 1]; if (last && pc - last.pc < 8) { last.items.push(e); last.pc = (last.pc * (last.items.length - 1) + pc) / last.items.length; } else cl.push({ pc, items: [e] }); });
+    shown = cl.filter((g) => g.pc > 26 && g.pc < 96);
+    const pill = `<button type="button" id="cpPill" aria-label="${off > 0 ? "Back to latest" : "Live"}" style="position:absolute;left:0;top:4px;display:flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 10px;border:0;border-radius:16px;background:rgba(100,116,139,.35);color:inherit;font-weight:700;font-size:.85rem">${off > 0 ? HIST + "Latest" : '<span style="width:8px;height:8px;border-radius:50%;background:#16c784"></span>Live'}</button>`;
+    const mk = shown.map((g, i) => `<button type="button" data-g="${i}" aria-label="${g.items.length} news" style="position:absolute;left:${g.pc.toFixed(1)}%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;height:32px;min-width:32px;padding:0 8px;justify-content:center;border:0;border-radius:16px;background:#16c784;color:#fff;font-weight:800;font-size:.85rem">${DOC}${g.items.length > 1 ? g.items.length : ""}</button>`).join("");
+    evt.innerHTML = pill + mk;
+    const pl = evt.querySelector("#cpPill"); if (pl) pl.onclick = () => { if (off > 0) { off = 0; render(); } };
+    evt.querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => {
+      const i = Number(b.dataset.g);
+      if (openG === i) { pop.innerHTML = ""; openG = -1; return; }
+      openG = i;
+      const g = shown[i];
+      pop.innerHTML = `<div style="border:1px solid rgba(148,163,184,.3);border-radius:12px;padding:6px 12px;margin-top:6px">${g.items.slice().reverse().slice(0, 6).map((e) => `<a href="${esc(e.url)}" target="_blank" rel="noopener noreferrer" style="display:block;padding:8px 0;border-bottom:1px solid rgba(148,163,184,.15);color:inherit;text-decoration:none"><b style="font-size:.92rem;line-height:1.3;display:block">${esc(e.title)}</b><small style="opacity:.65">${esc(e.source || "")} · ${new Date(e.t).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}</small></a>`).join("")}</div>`;
+    }));
+  }
   function render() {
     const sl = all.slice(Math.max(0, N - win - off), N - off), n = sl.length, sp = sl.map((o) => o.p);
     const useLog = log && sp.every((v) => v > 0);
@@ -2470,7 +2507,7 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder) {
     dot.style.background = up ? G : R;
     cur = { sl, n, sp, vs, x, y };
     if (ax) ax.innerHTML = ticks(sl);
-    lt.style.display = off > 0 ? "flex" : "none";
+    drawEvt(sl);
     if (onWin) onWin(sl);
     show(n - 1, false);
     ensure();
@@ -2523,7 +2560,6 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder) {
   box.addEventListener("pointerup", end);
   box.addEventListener("pointercancel", end);
   box.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") end(); });
-  lt.addEventListener("click", () => { off = 0; render(); });
   render();
 }
 
