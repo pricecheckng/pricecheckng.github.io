@@ -1732,8 +1732,8 @@ function paintCoin(c) {
   const sec = (usd) => (state.cur === "USD" ? "" : ratio ? fmtLocal(usd * ratio, state.cur) : "–");
   const secBig = (usd) => (ratio && usd != null ? fmtBig(Number(usd) * ratio, m.sym) : "–");
   const chartHtml = `<h3 style="margin:0 0 6px">${esc(c.name)} to USD Chart</h3><div class="cp-wk" id="cpWk"></div>
-    <div id="cpTools" style="display:flex;align-items:center;gap:2px;margin:10px 0 0;padding:4px;background:var(--surface);border-radius:14px">
-      <div id="cpRanges" role="group" aria-label="Chart range" class="cpr" style="display:flex;flex:1;gap:2px">${Object.keys(CHART_RANGES).map((k) => `<button type="button" data-r="${k}" aria-pressed="${k === "24h"}">${k}</button>`).join("")}</div>
+    <div id="cpTools" class="cpt">
+      <div id="cpRanges" role="group" aria-label="Chart range" class="cpr">${Object.keys(CHART_RANGES).map((k) => `<button type="button" data-r="${k}" aria-pressed="${k === "24h"}">${k}</button>`).join("")}</div>
       <span class="cpd"></span><button type="button" id="cpLog" class="cpb" aria-pressed="false">Log</button>
     </div>
     <div class="cp-read" id="cpRead"></div>
@@ -2368,8 +2368,7 @@ function mountChart(series, range, log, fm, isCap) {
     const bw = Math.max(1.2, (W / n) * 1.0);
     bars = vs.map((v, i) => (v > 0 ? `<rect x="${(x(i) - bw / 2).toFixed(1)}" y="${(VB - (v / vmax) * (VB - VT - 2)).toFixed(1)}" width="${bw.toFixed(1)}" height="${((v / vmax) * (VB - VT - 2)).toFixed(1)}"/>` : "")).join("");
   }
-  const openTxt = axFmt(sp[0], isCap);
-  $("#cpChart").innerHTML = `<div style="position:relative;border:1px solid rgba(148,163,184,.3);border-radius:6px;overflow:hidden">
+    $("#cpChart").innerHTML = `<div style="position:relative;border:1px solid rgba(148,163,184,.3);border-radius:6px;overflow:hidden">
     <svg id="cpSvg" class="cp-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${range} price chart" style="display:block;width:100%;height:auto;aspect-ratio:${W}/${H};touch-action:pan-y">
       <defs>
         <linearGradient id="cgU" gradientUnits="userSpaceOnUse" x1="0" y1="${T}" x2="0" y2="${ref.toFixed(1)}"><stop offset="0" stop-color="${G}" stop-opacity=".4"/><stop offset="1" stop-color="${G}" stop-opacity=".02"/></linearGradient>
@@ -2388,7 +2387,6 @@ function mountChart(series, range, log, fm, isCap) {
       <line id="cpLine" x1="0" x2="0" y1="${T}" y2="${VB}" stroke="#94a3b8" stroke-width="1" visibility="hidden" vector-effect="non-scaling-stroke"/>
     </svg>
     <div id="cpDot" style="position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;border:2px solid #fff;background:${up ? G : R};visibility:hidden;pointer-events:none"></div>
-    <div style="position:absolute;left:6px;top:${((ref / H) * 100).toFixed(2)}%;transform:translateY(-50%);padding:4px 9px;border-radius:7px;background:rgba(100,116,139,.6);color:#fff;font-size:.9rem;font-weight:700;pointer-events:none">${openTxt}</div>
     <div style="position:absolute;right:8px;bottom:22%;display:flex;align-items:center;gap:6px;opacity:.4;pointer-events:none"><img src="icon-green-192.png" alt="" width="28" height="28" style="border-radius:7px"><span style="font-weight:800;font-size:1.15rem;letter-spacing:-.3px">PriceCheck NG</span></div>
   </div>`;
   const svg = $("#cpSvg"), line = $("#cpLine"), dot = $("#cpDot"), read = $("#cpRead"), box = svg.parentNode;
