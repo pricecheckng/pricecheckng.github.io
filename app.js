@@ -2082,6 +2082,46 @@ const KL_SRC = {
     return Array.isArray(l) ? l.map((k) => ({ t: Number(k[0]) * 1000, p: Number(k[2]) })).reverse() : null;
   },
 };
+/* ---------- older history, fetched on demand while the chart is dragged back in time ---------- */
+const KL_OLD = {
+  binance: async (S, iv, end) => {
+    const j = await klGet(`https://data-api.binance.vision/api/v3/klines?symbol=${S}USDT&interval=${iv}&limit=1000&endTime=${end - 1}`, 9000);
+    return Array.isArray(j) ? j.map((k) => ({ t: k[0], p: Number(k[4]), v: Number(k[7]) })) : null;
+  },
+  bybit: async (S, iv, end) => {
+    const j = await klGet(`https://api.bybit.com/v5/market/kline?category=spot&symbol=${S}USDT&interval=${KL_IV[iv].by}&limit=1000&end=${end - 1}`, 9000);
+    const l = j && j.result && j.result.list;
+    return Array.isArray(l) ? l.map((k) => ({ t: Number(k[0]), p: Number(k[4]), v: Number(k[6]) })) : null;
+  },
+  okx: async (S, iv, end) => {
+    const j = await klGet(`https://www.okx.com/api/v5/market/history-candles?instId=${S}-USDT&bar=${KL_IV[iv].okx}&limit=100&after=${end}`, 9000);
+    const l = j && j.data;
+    return Array.isArray(l) ? l.map((k) => ({ t: Number(k[0]), p: Number(k[4]), v: Number(k[7]) })) : null;
+  },
+  mexc: async (S, iv, end) => {
+    const j = await klGet(`https://api.mexc.com/api/v3/klines?symbol=${S}USDT&interval=${KL_IV[iv].mx}&limit=500&endTime=${end - 1}`, 9000);
+    return Array.isArray(j) ? j.map((k) => ({ t: Number(k[0]), p: Number(k[4]), v: Number(k[7]) })) : null;
+  },
+  gate: async (S, iv, end) => {
+    const to = Math.floor((end - 1) / 1000), from = to - Math.floor((KL_IV[iv].ms * 990) / 1000);
+    const j = await klGet(`https://api.gateio.ws/api/v4/spot/candlesticks?currency_pair=${S}_USDT&interval=${KL_IV[iv].gate}&from=${from}&to=${to}`, 9000);
+    return Array.isArray(j) ? j.map((k) => ({ t: Number(k[0]) * 1000, p: Number(k[2]), v: Number(k[1]) })) : null;
+  },
+  kucoin: async (S, iv, end) => {
+    const to = Math.floor((end - 1) / 1000), from = to - Math.floor((KL_IV[iv].ms * 1400) / 1000);
+    const j = await klGet(`https://api.kucoin.com/api/v1/market/candles?type=${KL_IV[iv].ku}&symbol=${S}-USDT&startAt=${from}&endAt=${to}`, 9000);
+    const l = j && j.data;
+    return Array.isArray(l) ? l.map((k) => ({ t: Number(k[0]) * 1000, p: Number(k[2]) })) : null;
+  },
+};
+async function fetchOlder(c, iv, end) {
+  const src = klCoin.get(c.id);
+  if (!src || !KL_OLD[src]) return null;
+  const S = encodeURIComponent(String(c.symbol || "").toUpperCase());
+  const rows = await KL_OLD[src](S, iv, end).catch(() => null);
+  if (!rows) return null;
+  return rows.filter((o) => isFinite(o.t) && isFinite(o.p) && o.p > 0 && o.t < end).sort((a, b) => a.t - b.t);
+}
 /* ---------- coins that trade only on DEXes: find the main pool by contract address on GeckoTerminal ---------- */
 const GT_NET = { ethereum: "eth", "binance-smart-chain": "bsc", solana: "solana", base: "base", "polygon-pos": "polygon_pos", "arbitrum-one": "arbitrum", "optimistic-ethereum": "optimism", avalanche: "avax", tron: "tron", "the-open-network": "ton", sui: "sui", fantom: "ftm", cronos: "cronos", linea: "linea", blast: "blast", mantle: "mantle", scroll: "scroll", zksync: "zksync", xdai: "xdai", celo: "celo", aptos: "aptos", sonic: "sonic", berachain: "berachain", unichain: "unichain", hyperevm: "hyperevm" };
 const GT_TF = { "5m": ["minute", 5], "15m": ["minute", 15], "1h": ["hour", 1], "4h": ["hour", 4], "1d": ["day", 1] };
@@ -2334,7 +2374,9 @@ function initChart(c, sp, sec) {
       $("#cpWk").innerHTML = `<span class="cp-pill ${wd.c}">${wd.t}</span> <span class="muted">over ${nm}</span>`;
       $("#cpLH").innerHTML = `<div><small>${V.r} low</small><b>${fm(lo)}</b></div><div><small>${V.r} high</small><b>${fm(hi)}</b></div>`;
     };
-    mountChart(series, V.r, V.log, fm, mc, CHART_RANGES[V.r].win, onWin);
+    const iv = CHART_RANGES[V.r].iv;
+    const loadOlder = V.r === "All" || s.dex || !klCoin.get(c.id) ? null : async (before) => { const rows = await fetchOlder(c, iv, before); return rows && rows.map((o) => ({ t: o.t, p: mc ? o.p * supply : o.p, v: o.v })); };
+    mountChart(series, V.r, V.log, fm, mc, CHART_RANGES[V.r].win, onWin, loadOlder);
   };
   q("#cpRanges button").forEach((b) => (b.onclick = () => { V.r = b.dataset.r; load(); }));
   q("#cpMode button").forEach((b) => (b.onclick = () => { if (b.disabled) return; V.mode = b.dataset.m; load(); }));
@@ -2343,18 +2385,21 @@ function initChart(c, sp, sec) {
   load();
 }
 
-function mountChart(all, range, log, fm, isCap, winN, onWin) {
-  const N = all.length, win = Math.min(winN || N, N), maxOff = N - win;
+function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder) {
+  let N = all.length;
+  const win = winN || N, maxOf = () => Math.max(0, N - win);
+  let loading = false, exhausted = !loadOlder || !winN;
   const W = 600, H = 400, T = 16, PB = Math.round(H * 0.8), VT = Math.round(H * 0.84), VB = H - 2;
   const G = "#16c784", R = "#ea3943";
   let off = 0, cur = null, raf = 0;
   $("#cpChart").innerHTML = `<div id="cpBox" style="position:relative;border:1px solid rgba(148,163,184,.3);border-radius:6px;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none">
     <div id="cpHost"></div>
+    <div id="cpLoad" style="display:none;position:absolute;left:8px;top:8px;padding:4px 10px;border-radius:12px;background:rgba(100,116,139,.7);color:#fff;font-size:.8rem;pointer-events:none">Loading older data…</div>
     <div id="cpDot" style="position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;border:2px solid #fff;visibility:hidden;pointer-events:none"></div>
     <button type="button" id="cpLatest" style="display:none;position:absolute;left:8px;bottom:22%;align-items:center;gap:6px;padding:6px 12px 6px 9px;border:0;border-radius:18px;background:rgba(100,116,139,.75);color:#fff;font-weight:700;font-size:.85rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>Latest</button>
     <div style="position:absolute;right:8px;bottom:22%;display:flex;align-items:center;gap:6px;opacity:.4;pointer-events:none"><img src="icon-green-192.png" alt="" width="28" height="28" style="border-radius:7px"><span style="font-weight:800;font-size:1.15rem;letter-spacing:-.3px">PriceCheck NG</span></div>
   </div>`;
-  const box = $("#cpBox"), host = $("#cpHost"), dot = $("#cpDot"), read = $("#cpRead"), ax = $("#cpAxis"), lt = $("#cpLatest");
+  const box = $("#cpBox"), host = $("#cpHost"), dot = $("#cpDot"), read = $("#cpRead"), ax = $("#cpAxis"), lt = $("#cpLatest"), lo = $("#cpLoad");
 
   const lab = (sl, i, short) => {
     const dt = new Date(sl[i].t);
@@ -2381,7 +2426,7 @@ function mountChart(all, range, log, fm, isCap, winN, onWin) {
   };
 
   function render() {
-    const sl = all.slice(N - win - off, N - off), n = sl.length, sp = sl.map((o) => o.p);
+    const sl = all.slice(Math.max(0, N - win - off), N - off), n = sl.length, sp = sl.map((o) => o.p);
     const useLog = log && sp.every((v) => v > 0);
     const f = useLog ? Math.log : (v) => v;
     const fv = sp.map(f);
@@ -2428,6 +2473,19 @@ function mountChart(all, range, log, fm, isCap, winN, onWin) {
     lt.style.display = off > 0 ? "flex" : "none";
     if (onWin) onWin(sl);
     show(n - 1, false);
+    ensure();
+  }
+  async function ensure() {
+    if (exhausted || loading || N - win - off > win * 0.3) return;
+    loading = true; lo.style.display = "block";
+    let more = null;
+    try { more = await loadOlder(all[0].t); } catch (_) {}
+    loading = false; lo.style.display = "none";
+    if (!box.isConnected) return;
+    const first = all[0].t, add = (more || []).filter((o) => o.t < first);
+    if (!add.length) { exhausted = true; if (maxOf() === 0) render(); return; }
+    all = add.concat(all); N = all.length;
+    render();
   }
   function show(i, active) {
     if (!cur) return;
@@ -2448,16 +2506,16 @@ function mountChart(all, range, log, fm, isCap, winN, onWin) {
   box.addEventListener("pointerdown", (e) => {
     if (e.target.closest("#cpLatest")) return;
     down = true; mode = null; sx = e.clientX; so = off; last = e; clearTimeout(timer);
-    if (maxOff > 0) timer = setTimeout(() => { if (down && !mode) { mode = "cross"; at(last); } }, 320);
+    if (maxOf() > 0 || !exhausted) timer = setTimeout(() => { if (down && !mode) { mode = "cross"; at(last); } }, 320);
     else { mode = "cross"; at(e); }
   });
   box.addEventListener("pointermove", (e) => {
     last = e;
     if (!down) { if (e.pointerType === "mouse") at(e); return; }
     if (mode === "cross") { at(e); return; }
-    if (maxOff > 0 && (mode === "pan" || Math.abs(e.clientX - sx) > 8)) {
+    if ((maxOf() > 0 || !exhausted) && (mode === "pan" || Math.abs(e.clientX - sx) > 8)) {
       if (mode !== "pan") { mode = "pan"; clearTimeout(timer); try { box.setPointerCapture(e.pointerId); } catch (_) {} }
-      const no = Math.max(0, Math.min(maxOff, so + Math.round(((e.clientX - sx) / box.clientWidth) * win)));
+      const no = Math.max(0, Math.min(maxOf(), so + Math.round(((e.clientX - sx) / box.clientWidth) * win)));
       if (no !== off) { off = no; redraw(); }
     }
   });
