@@ -330,7 +330,8 @@
     quote: 'USDT',
     list: function () { return J(MC + '/detail').then(function (r) { return ((r && r.data) || []).filter(function (x) { return x.quoteCoin === 'USDT' && !x.state; }).map(function (x) { return { s: x.symbol, base: String(x.baseCoin).toUpperCase(), label: String(x.baseCoin).toUpperCase() + '/USDT', name: 'Perpetual' }; }); }); },
     candles: function (id, iv) { var cm = { '15m': 'Min15', '1h': 'Min60', '4h': 'Hour4', '1d': 'Day1', '1w': 'Week1' }[iv];
-      return Promise.all([J(MC + '/kline/' + id + '?interval=' + cm), mcSize(id)]).then(function (a) { var r = a[0], cs = a[1], d = (r && r.data) || {}, o = []; (d.time || []).forEach(function (t, i) { o.push({ t: N(t) * 1000, o: N(d.open[i]), h: N(d.high[i]), l: N(d.low[i]), c: N(d.close[i]), v: N(d.vol[i]) * cs }); }); return asc(o.slice(-500)); }); },
+      var get = function (c) { return Promise.all([J(MC + '/kline/' + id + '?interval=' + c), mcSize(id)]).then(function (a) { var r = a[0], cs = a[1], d = (r && r.data) || {}, o = []; (d.time || []).forEach(function (t, i) { o.push({ t: N(t) * 1000, o: N(d.open[i]), h: N(d.high[i]), l: N(d.low[i]), c: N(d.close[i]), v: N(d.vol[i]) * cs }); }); return asc(o.slice(-500)); }); };
+      return get(cm).then(function (o) { if (o.length || iv !== '1w') return o; return get('Day1').then(weekly); }); },
     ticker: function (id) { return Promise.all([J(MC + '/ticker?symbol=' + id), mcSize(id)]).then(function (a) { var d = a[0].data, l = N(d.lastPrice); return { last: l, open: l / (1 + N(d.riseFallRate)), high: N(d.high24Price), low: N(d.lower24Price), vol: N(d.volume24) * a[1], qvol: N(d.amount24) }; }); }
   } };
 
@@ -342,6 +343,8 @@
     ticker: function (id) { return E.hyperliquid.ticker(id); }
   } };
 
+  /* build weekly candles (weeks start Monday 00:00 UTC) from daily ones, for markets whose weekly feed is empty */
+  function weekly(ds) { var out = [], cur = null; (ds || []).forEach(function (k) { var d = new Date(k.t), w = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - ((d.getUTCDay() + 6) % 7) * 864e5; if (!cur || cur.t !== w) { cur = { t: w, o: k.o, h: k.h, l: k.l, c: k.c, v: k.v }; out.push(cur); } else { cur.h = Math.max(cur.h, k.h); cur.l = Math.min(cur.l, k.l); cur.c = k.c; cur.v += k.v; } }); return out; }
   E.caps = { binance: ['spot', 'perp', 'future', 'option'], okx: ['spot', 'perp', 'future', 'option'], bybit: ['spot', 'perp', 'future'], gate: ['spot', 'perp', 'future'], bitget: ['spot', 'perp'], mexc: ['spot', 'perp'], aster: ['spot', 'perp'], hyperliquid: ['perp'], coinbase: ['spot'], upbit: ['spot'] };
   E.mk = function (ex, type) { return M[ex] && M[ex][type]; };
 

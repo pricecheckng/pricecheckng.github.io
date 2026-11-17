@@ -3,7 +3,7 @@
 <h1>Pair logo check</h1><p>Tap Start and wait 2 to 4 minutes. It lists the exchange pairs that would show a letter instead of a logo. Then tap Copy report and paste it to me.</p>
 <button id="go">Start</button><button id="cp">Copy report</button><div id="sum"></div><div id="out"></div>
 <script type="module">import { SUPABASE_URL, SUPABASE_KEY } from "./config.js"; window.PCN_CFG = { url: SUPABASE_URL, key: SUPABASE_KEY }; window.PCNEX_PROXY = { url: SUPABASE_URL + "/functions/v1/pcn-ex", key: SUPABASE_KEY };</script>
-<script src="chart-ex.js?v=171"></script>
+<script src="chart-ex.js?v=172"></script>
 <script>
 var LOG=[],out=document.getElementById('out'),sum=document.getElementById('sum');
 function to(p,ms){return Promise.race([p,new Promise(function(_,j){setTimeout(function(){j(new Error('timeout'))},ms)})])}
