@@ -1734,7 +1734,7 @@ function paintCoin(c) {
   const chartHtml = `<h3 style="margin:0 0 6px">${esc(c.name)} to USD Chart</h3><div class="cp-wk" id="cpWk"></div>
     <div id="cpTools" class="cpt">
       <div id="cpRanges" role="group" aria-label="Chart range" class="cpr">${Object.keys(CHART_RANGES).map((k) => `<button type="button" data-r="${k}" aria-pressed="${k === "24h"}">${k}</button>`).join("")}</div>
-      <span class="cpd"></span><button type="button" id="cpLog" class="cpb" aria-pressed="false">Log</button>
+      <span class="cpd"></span><button type="button" id="cpLog" class="cpb" aria-pressed="false">Log</button><span class="cpd"></span><button type="button" id="cpSet" class="cpb" aria-label="Chart settings" style="flex:0 0 42px;padding:0;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
     </div>
     <div id="cpChart"><p class="muted" style="margin:8px 0 0">Loading chart…</p></div>
     <div id="cpAxis" style="position:relative;height:24px;margin-top:8px;font-size:.95rem;opacity:.75"></div>
@@ -1747,6 +1747,7 @@ function paintCoin(c) {
       <div class="cps"><button type="button" id="cpFx"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V14M9 20V10M14 20V13M19 20V6"/><path d="M3 11l5-4 4 3 7-6"/></svg> Indicators</button></div>
       <div class="cps"><button type="button" id="cpUndo" aria-label="Undo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><button type="button" id="cpRedo" aria-label="Redo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
     </div>
+    <div id="cpRow3" class="cps" style="margin:8px 0 0"><button type="button" id="cpCmp" style="justify-content:space-between;padding:0 12px;font-weight:600"><span id="cpCmpT">Compare</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></div>
     <div class="cp-lh" id="cpLH"></div>
     <p class="muted" id="cpNote" style="margin:10px 0 0;font-size:.85rem">Hold your finger on the chart to see the price. Drag sideways to move through time.</p>`;
   $("#coinBody").innerHTML = `
@@ -2296,6 +2297,8 @@ const CHART_RANGES = {
 };
 const chartCache = new Map();
 let chartTok = 0;
+let cpCompare = null; // {n1,n2,s} while a second coin is drawn on the chart
+let cpExp = null;     // {all(), isCap, range} for the download buttons
 const CHART_EX = { binance: 1, okx: 1, bybit: 1, gate: 1, mexc: 1 };
 
 async function getSeries(c, r, sp) {
@@ -2345,7 +2348,7 @@ const axFmt = (v, usd) => {
 };
 
 function initChart(c, sp, sec) {
-  const V = { r: "1W", mode: "price", log: false, type: "line" };
+  const V = { r: "1W", mode: "price", log: false, type: "line", cmp: null };
   const supply = Number(c.circulating_supply) || 0;
   const sym = String(c.symbol || "").toUpperCase();
   let exName = null;
@@ -2358,6 +2361,9 @@ function initChart(c, sp, sec) {
     const cd = V.type === "candles";
     ["cpTools", "cpAxis", "cpEvt", "cpPop", "cpRead", "cpLH", "cpWk"].forEach((id) => { const e = $("#" + id); if (e) e.style.display = cd ? "none" : ""; });
     const r2 = $("#cpRow2"); if (r2) r2.style.display = cd ? "grid" : "none";
+    const r3 = $("#cpRow3"); if (r3) r3.style.display = cd ? "none" : "flex";
+    if (lg) { lg.disabled = !!V.cmp; lg.style.opacity = V.cmp ? ".4" : ""; }
+    const ct = $("#cpCmpT"); if (ct) ct.textContent = V.cmp ? "vs " + V.cmp.name + "  ✕" : "Compare";
     const mb = q("#cpMode button[data-m=mcap]")[0]; if (mb) { mb.disabled = !supply; mb.style.opacity = supply ? "" : ".4"; }
     const cb = q("#cpType button[data-t=candles]")[0]; if (cb) { const ok = !!exName && CHART_EX[exName]; cb.disabled = !ok; cb.style.opacity = ok ? "" : ".4"; cb.title = ok ? "" : "Candles are not available for this coin"; }
     const nt = $("#cpNote"); if (nt) nt.textContent = cd ? "" : V.mode === "mcap" ? "Market cap here is price × current circulating supply, so past values are an estimate." : "Hold your finger on the chart to see the price. Drag sideways to move through time.";
@@ -2365,6 +2371,7 @@ function initChart(c, sp, sec) {
   const load = async () => {
     const my = ++chartTok;
     if (V.type === "candles") {
+      V.cmp = null; cpCompare = null;
       paint();
       $("#cpChart").innerHTML = `<iframe title="${esc(sym)} candlestick chart" src="chart.html?s=${encodeURIComponent(sym)}&i=1h&x=${exName}&m=spot&embed=1" style="width:100%;height:625px;border:1px solid rgba(128,128,128,.25);border-radius:14px;background:#0b130f;display:block" loading="lazy"></iframe>`;
       return;
@@ -2377,6 +2384,13 @@ function initChart(c, sp, sec) {
       $("#cpChart").innerHTML = `<p class="muted" style="margin:8px 0 0">This chart is not available for this coin.</p>`;
       ["cpWk", "cpRead", "cpAxis", "cpLH"].forEach((id) => { const e = $("#" + id); if (e) e.innerHTML = ""; });
       return;
+    }
+    cpCompare = null;
+    if (V.cmp) {
+      let cs = null; try { cs = await getSeries(V.cmp, V.r, []); } catch (_) {}
+      if (my !== chartTok || !$("#cpChart")) return;
+      if (cs && cs.length > 1) cpCompare = { n1: c.name, n2: V.cmp.name, s: cs };
+      else { const nm2 = V.cmp.name; V.cmp = null; paint(); const nt = $("#cpNote"); if (nt) nt.textContent = "Could not load " + nm2 + " for this range."; }
     }
     const mc = V.mode === "mcap" && supply > 0;
     const series = s.map((o) => ({ t: o.t, p: mc ? o.p * supply : o.p, v: o.v }));
@@ -2391,7 +2405,7 @@ function initChart(c, sp, sec) {
     };
     const iv = CHART_RANGES[V.r].iv;
     const events = [];
-    const loadOlder = V.r === "All" || s.dex || !klCoin.get(c.id) ? null : async (before) => { const rows = await fetchOlder(c, iv, before); return rows && rows.map((o) => ({ t: o.t, p: mc ? o.p * supply : o.p, v: o.v })); };
+    const loadOlder = cpCompare || V.r === "All" || s.dex || !klCoin.get(c.id) ? null : async (before) => { const rows = await fetchOlder(c, iv, before); return rows && rows.map((o) => ({ t: o.t, p: mc ? o.p * supply : o.p, v: o.v })); };
     mountChart(series, V.r, V.log, fm, mc, CHART_RANGES[V.r].win, onWin, loadOlder, events);
   };
   q("#cpRanges button").forEach((b) => (b.onclick = () => { V.r = b.dataset.r; load(); }));
@@ -2404,8 +2418,76 @@ function initChart(c, sp, sec) {
   if (un) un.onclick = () => fwd("undoBtn");
   if (re) re.onclick = () => fwd("redoBtn");
   const hist = setInterval(() => { if (!$("#cpRow2")) return clearInterval(hist); const d = ifw(); [["undoBtn", un], ["redoBtn", re]].forEach(([id, b]) => { const e = d && d.getElementById(id); if (b) b.style.opacity = e && !e.classList.contains("dis") ? "" : ".4"; }); }, 500);
-  const lg = $("#cpLog"); if (lg) lg.onclick = () => { V.log = !V.log; load(); };
+  const lg = $("#cpLog"); if (lg) lg.onclick = () => { if (V.cmp) return; V.log = !V.log; load(); };
+  const cmpB = $("#cpCmp");
+  if (cmpB) cmpB.onclick = () => {
+    if (V.cmp) { V.cmp = null; load(); return; }
+    coinPickSheet(async (pick) => {
+      closeSheet();
+      if (!pick || pick.id === c.id) return;
+      let full = pick; try { const { data } = await sb.from("coins").select("*").eq("id", pick.id).maybeSingle(); if (data) full = data; } catch (_) {}
+      V.cmp = full; V.log = false; load();
+    });
+  };
+  const setB = $("#cpSet");
+  if (setB) setB.onclick = () => {
+    const ok = !!cpExp;
+    const row = (id, label, svg) => `<button type="button" class="pf-res" data-dl="${id}"${ok ? "" : " disabled"} style="width:100%;display:flex;align-items:center;gap:12px;text-align:left">${svg}<span>${label}</span></button>`;
+    const IMG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-8 9"/></svg>';
+    const CSV = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>';
+    openSheet(`<div class="sheet-head"><span></span><div><h2 id="sheetTitle">Chart</h2></div><button class="x" type="button" data-close aria-label="Close">×</button></div>
+      <div style="display:grid;gap:8px">${row("jpg", "Download chart (.jpg)", IMG)}${row("png", "Download chart (.png)", IMG)}${row("csv", "Download price history (.csv)", CSV)}</div>
+      <button type="button" class="btn ghost" data-close style="width:100%;margin-top:12px">Close</button>`);
+    const out = $("#sheetBody");
+    out.onclick = async (e) => {
+      const b = e.target.closest("[data-dl]"); if (!b || b.disabled) return;
+      const kind = b.dataset.dl;
+      const nm = String(c.name || sym).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const base = `${nm}-${V.r}-${V.mode === "mcap" ? "market-cap" : "price"}`;
+      try {
+        if (kind === "csv") saveBlob(new Blob([chartCsv(c)], { type: "text/csv" }), base + ".csv");
+        else saveBlob(await chartImage(c, kind), base + "." + kind);
+        closeSheet();
+      } catch (_) { b.querySelector("span").textContent = "Could not download. Try again."; }
+    };
+  };
   load();
+}
+
+function saveBlob(blob, name) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+}
+function chartCsv(c) {
+  const e = cpExp; if (!e) throw new Error("no chart");
+  const lab = e.isCap ? "market_cap_usd" : "price_usd";
+  return "time_utc," + lab + ",volume_usd\n" + e.all().map((o) => new Date(o.t).toISOString() + "," + o.p + "," + (Number(o.v) || 0)).join("\n") + "\n";
+}
+async function chartImage(c, kind) {
+  const svg = document.querySelector("#cpSvg"), e = cpExp; if (!svg || !e) throw new Error("no chart");
+  const dk = document.documentElement.classList.contains("dk"), bg = dk ? "#0b130f" : "#ffffff", fg = dk ? "#e6f2ea" : "#0e1a13";
+  const cl = svg.cloneNode(true);
+  cl.setAttribute("xmlns", "http://www.w3.org/2000/svg"); cl.setAttribute("width", 1200); cl.setAttribute("height", 800);
+  cl.removeAttribute("style"); cl.setAttribute("font-family", "Arial, Helvetica, sans-serif");
+  const ln = cl.querySelector("#cpLine"); if (ln) ln.remove();
+  const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(cl)], { type: "image/svg+xml" }));
+  const load = (src) => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
+  const img = await load(url); URL.revokeObjectURL(url);
+  let logo = null; try { logo = await load("icon-green-192.png"); } catch (_) {}
+  const HT = 70, AX = 60, cv = document.createElement("canvas"); cv.width = 1200; cv.height = HT + 800 + AX;
+  const g = cv.getContext("2d");
+  g.fillStyle = bg; g.fillRect(0, 0, cv.width, cv.height);
+  g.fillStyle = fg; g.font = "bold 34px Arial, Helvetica, sans-serif"; g.textBaseline = "middle";
+  g.fillText(c.name + " to USD Chart  ·  " + e.range + (cpCompare ? "  ·  vs " + cpCompare.n2 : ""), 24, HT / 2);
+  g.drawImage(img, 0, HT, 1200, 800);
+  g.globalAlpha = 0.45; g.textAlign = "right"; g.font = "bold 38px Arial, Helvetica, sans-serif";
+  const wy = HT + 800 * 0.74; g.fillStyle = fg; g.fillText("PriceCheck NG", 1176, wy);
+  if (logo) g.drawImage(logo, 1176 - g.measureText("PriceCheck NG").width - 54, wy - 22, 44, 44);
+  g.globalAlpha = 0.75; g.fillStyle = fg; g.textAlign = "center"; g.font = "26px Arial, Helvetica, sans-serif";
+  document.querySelectorAll("#cpAxis > span").forEach((sp) => { const pc = parseFloat(sp.style.left); if (isFinite(pc)) g.fillText(sp.textContent, (pc / 100) * 1200, HT + 800 + AX / 2); });
+  return await new Promise((ok, no) => cv.toBlob((b) => (b ? ok(b) : no(new Error("blob"))), kind === "jpg" ? "image/jpeg" : "image/png", 0.92));
 }
 
 function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) {
@@ -2415,6 +2497,7 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) 
   const W = 600, H = 400, T = 16, PB = Math.round(H * 0.8), VT = Math.round(H * 0.84), VB = H - 2;
   const G = "#16c784", R = "#ea3943";
   let off = 0, cur = null, raf = 0;
+  cpExp = { all: () => all, isCap, range };
   $("#cpChart").innerHTML = `<div id="cpBox" style="position:relative;border:1px solid rgba(148,163,184,.3);border-radius:6px;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none">
     <div id="cpHost"></div>
     <div id="cpOpen" style="position:absolute;left:6px;top:0;transform:translateY(-50%);padding:2px 6px;border-radius:6px;background:rgba(100,116,139,.55);color:#fff;font-size:.7rem;font-weight:700;pointer-events:none;display:none"></div>
@@ -2474,8 +2557,52 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) 
     evt.innerHTML = `<button type="button" id="cpPill" aria-label="Back to latest" style="position:absolute;left:0;top:4px;display:flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 10px;border:0;border-radius:16px;background:rgba(100,116,139,.35);color:inherit;font-weight:700;font-size:.85rem">${HIST}Latest</button>`;
     const pl = evt.querySelector("#cpPill"); if (pl) pl.onclick = () => { if (off > 0) { off = 0; render(); } };
   }
+  const pctF = (v) => (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(Math.abs(v) < 10 ? 1 : 0) + "%";
+  function renderCmp(sl, n, sp) {
+    const cs = cpCompare.s, b0p = sp[0];
+    const pa = sp.map((v) => (v / b0p - 1) * 100);
+    const gap = n > 1 ? (sl[n - 1].t - sl[0].t) / (n - 1) : 0;
+    let j = 0;
+    const raw = sl.map((o) => {
+      if (o.t < cs[0].t - gap) return null;
+      while (j < cs.length - 1 && Math.abs(cs[j + 1].t - o.t) <= Math.abs(cs[j].t - o.t)) j++;
+      return cs[j].p;
+    });
+    const b0 = raw.find((v) => v != null);
+    const pb = raw.map((v) => (v == null || !b0 ? null : (v / b0 - 1) * 100));
+    const vals = pa.concat(pb.filter((v) => v != null)); vals.push(0);
+    let min = Math.min(...vals), max = Math.max(...vals);
+    const pad = (max - min) * 0.06 || 1; min -= pad; max += pad;
+    const rng = max - min;
+    const x = (i) => (n > 1 ? (i / (n - 1)) * W : 0);
+    const yp = (p) => T + (1 - (p - min) / rng) * (PB - T);
+    const C1 = "#3861fb", C2 = "#f7931a";
+    const line = (arr, col) => { const pts = arr.map((v, i) => (v == null ? null : `${x(i).toFixed(1)},${yp(v).toFixed(1)}`)).filter(Boolean).join(" "); return pts ? `<polyline points="${pts}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>` : ""; };
+    let grid = "";
+    for (let k = 1; k <= 3; k++) { const fr = k / 4, yy = T + (1 - fr) * (PB - T); grid += `<line x1="0" x2="${W}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="#94a3b8" stroke-opacity=".16"/><text x="${W - 6}" y="${(yy - 6).toFixed(1)}" font-size="27" text-anchor="end" fill="#94a3b8">${pctF(min + rng * fr)}</text>`; }
+    const vs = sl.map((o) => Number(o.v) || 0), vmax = Math.max(...vs);
+    let bars = "";
+    if (vmax > 0) { const bw = Math.max(1.2, W / n); bars = vs.map((v, i) => (v > 0 ? `<rect x="${(x(i) - bw / 2).toFixed(1)}" y="${(VB - (v / vmax) * (VB - VT - 2)).toFixed(1)}" width="${bw.toFixed(1)}" height="${((v / vmax) * (VB - VT - 2)).toFixed(1)}"/>` : "")).join(""); }
+    const y0 = yp(0);
+    host.innerHTML = `<svg id="cpSvg" class="cp-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${range} comparison chart" style="display:block;width:100%;height:auto;aspect-ratio:${W}/${H}">
+      ${grid}
+      <line x1="0" x2="${W}" y1="${VT}" y2="${VT}" stroke="#94a3b8" stroke-opacity=".3"/>
+      <g fill="#5b6fb5" opacity=".5">${bars}</g>
+      <line x1="0" x2="${W}" y1="${y0.toFixed(1)}" y2="${y0.toFixed(1)}" stroke="#94a3b8" stroke-dasharray="2 4" stroke-opacity=".8" vector-effect="non-scaling-stroke"/>
+      ${line(pb, C2)}${line(pa, C1)}
+      <line id="cpLine" x1="0" x2="0" y1="${T}" y2="${VB}" stroke="#94a3b8" stroke-width="1" visibility="hidden" vector-effect="non-scaling-stroke"/>
+    </svg><div style="position:absolute;left:8px;top:8px;display:flex;gap:10px;font-size:.78rem;font-weight:700;pointer-events:none"><span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${C1};margin-right:4px"></i>${esc(cpCompare.n1)}</span><span><i style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${C2};margin-right:4px"></i>${esc(cpCompare.n2)}</span></div>`;
+    dot.style.background = C1; opn.style.display = "none";
+    cur = { sl, n, sp, vs, x, y: (v) => yp((v / b0p - 1) * 100), cmp: { pa, pb, C1, C2 } };
+    if (ax) ax.innerHTML = ticks(sl);
+    drawEvt(sl);
+    if (onWin) onWin(sl);
+    show(n - 1, false);
+    ensure();
+  }
   function render() {
     const sl = all.slice(Math.max(0, N - win - off), N - off), n = sl.length, sp = sl.map((o) => o.p);
+    if (cpCompare && cpCompare.s) return renderCmp(sl, n, sp);
     const useLog = log && sp.every((v) => v > 0);
     const f = useLog ? Math.log : (v) => v;
     const fv = sp.map(f);
@@ -2542,7 +2669,8 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) 
     const { sl, n, sp, vs, x, y } = cur;
     if (active) {
       const lx = (x(i) / W) * 100;
-      tip.innerHTML = `<b style="font-size:1rem">${fm(sp[i])}</b><br><span style="opacity:.75">${lab(sl, i)}${vs[i] > 0 ? " · Vol " + fmtBig(vs[i], "$") : ""}</span>`;
+      if (cur.cmp) { const k = cur.cmp, d = (a, nm, col) => `<span style="color:${col}">●</span> ${esc(nm)} <b>${a == null ? "–" : pctF(a)}</b>`; tip.innerHTML = `${d(k.pa[i], cpCompare.n1, k.C1)}<br>${d(k.pb[i], cpCompare.n2, k.C2)}<br><span style="opacity:.75">${lab(sl, i)}</span>`; }
+      else tip.innerHTML = `<b style="font-size:1rem">${fm(sp[i])}</b><br><span style="opacity:.75">${lab(sl, i)}${vs[i] > 0 ? " · Vol " + fmtBig(vs[i], "$") : ""}</span>`;
       tip.style.display = "block";
       tip.style.left = lx + "%";
       tip.style.transform = lx > 55 ? "translateX(calc(-100% - 12px))" : "translateX(12px)";
