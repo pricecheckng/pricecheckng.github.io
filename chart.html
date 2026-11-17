@@ -1088,10 +1088,21 @@ function chartContext(q) {
   const lp = c ? c.c : a.price, lv = (a.levels || []).map(l => l.kind + ' ' + n(l.price) + ' (' + (l.price >= lp ? '+' : '') + ((l.price / lp - 1) * 100).toFixed(1) + '% from price' + (l.touches ? ', ' + l.touches + ' touches' : '') + ')').join('; ') || 'none found';
   const full = /(summar|setup|outline|analy|upside|downside|scenario|overview|outlook|what do you think|how does|look)/i.test(q || '');
   const tf = TFN[interval];
+  const rv = (() => {
+    const cc = d.candles, N = Math.min(24, cc.length); if (N < 5) return '';
+    const sl = cc.slice(-N), hi = Math.max.apply(null, sl.map(k => k.h)), lo = Math.min.apply(null, sl.map(k => k.l));
+    let o = 'Range of the last ' + N + ' ' + tf + ' candles: high ' + n(hi) + ', low ' + n(lo) + ' (' + ((hi / lo - 1) * 100).toFixed(2) + '% wide); price is ' + (((lp - lo) / (hi - lo || 1)) * 100).toFixed(0) + '% of the way up that range.\n';
+    const vs = cc.map(k => +k.v || 0), m = vs.length;
+    if (m >= 26 && vs.slice(-26).some(x => x > 0)) {
+      const avg = (a) => a.reduce((x, y) => x + y, 0) / a.length, base = avg(vs.slice(-26, -6)), r5 = avg(vs.slice(-6, -1)), lastDone = vs[m - 2], pc = (x) => (x / base * 100 - 100);
+      o += 'Volume trend (' + BASE() + ' per ' + tf + ' candle): average of the previous 20 candles ' + cmp(base) + '; average of the last 5 closed candles ' + cmp(r5) + ' (' + (pc(r5) >= 0 ? '+' : '') + pc(r5).toFixed(0) + '% vs that average, ' + (pc(r5) > 10 ? 'increasing' : pc(r5) < -10 ? 'decreasing' : 'flat') + '); last closed candle ' + cmp(lastDone) + ' (' + (pc(lastDone) >= 0 ? '+' : '') + pc(lastDone).toFixed(0) + '%).\n';
+    }
+    return o;
+  })();
   return `Pair: ${LBL()} (${MTL[mt]}) on ${EXN[exch]}, timeframe ${tf}. Live price: ${n(c ? c.c : a.price)}.\n` +
     (t && t.open ? `Today (viewer's day): open ${n(t.open)}, high ${n(t.high)}, low ${n(t.low)}, change ${(((c ? c.c : a.price) / t.open - 1) * 100).toFixed(2)}%, volume ${n(t.volume)} ${BASE()}${t.qvol > 0 ? ' (about ' + cmp(+t.qvol) + ' ' + QT() + ')' : ''}.\n` : '') +
-    `RSI14 ${a.rsi14 == null ? 'n/a' : (+a.rsi14).toFixed(1)}; SMA50 ${n(a.sma50)}; SMA200 ${n(a.sma200)}; EMA50 ${n(a.ema50)}; EMA200 ${n(a.ema200)}. These are 50-period and 200-period averages of ${tf} candles.\nLevels: ${lv}.\n` +
-    'INSTRUCTION: Name moving averages by the chart timeframe, for example "50-period ' + tf + ' moving average". Never call them daily or "50-day" unless the timeframe is 1D. When you give volume, always state its unit. Answer from this chart data. Stay on the chart: price, trend, moving averages, RSI, support and resistance. If no support level is listed, say price is near its recent lows. Do not add news, ETF, whale or stablecoin context unless the question asks for it. Use only numbers given here and never invent a level.\n' +
+    `RSI14 ${a.rsi14 == null ? 'n/a' : (+a.rsi14).toFixed(1)}; SMA50 ${n(a.sma50)}; SMA200 ${n(a.sma200)}; EMA50 ${n(a.ema50)}; EMA200 ${n(a.ema200)}. These are 50-period and 200-period averages of ${tf} candles.\nLevels: ${lv}.\n` + rv +
+    'INSTRUCTION: Name moving averages by the chart timeframe, for example "50-period ' + tf + ' moving average". Never call them daily or "50-day" unless the timeframe is 1D. When you give volume, always state its unit. Answer from this chart data. Stay on the chart: price, trend, range, volume trend, moving averages, RSI, support and resistance. If the question asks about the range or volume, answer it with the exact numbers given for range and volume trend. If no support level is listed, say price is near its recent lows. Do not add news, ETF, whale or stablecoin context unless the question asks for it. Use only numbers given here and never invent a level.\n' +
     (full ? 'FORMAT: Write about 120 to 170 words in plain short paragraphs, no bullet lists, no headings. First paragraph: one or two sentences on the pair, timeframe, live price, trend and RSI. Then three paragraphs that each start with a label: "Upside case:" (what price must close above, using the listed resistance and moving averages, and how far away it is), "Downside case:" (what price must close below, using the listed support or recent lows, and how far away it is), "What changes the read:" (the one level or RSI move that would flip the view). End there. Do not give financial advice.\n' : 'FORMAT: Answer the question directly in 2 to 5 short sentences. No headings. Do not repeat the whole chart summary.\n') +
     'Last 5 candles (UTC time, open/high/low/close): ' + cs.map(k => new Date(k.t).toISOString().slice(5, 16).replace('T', ' ') + ' ' + n(k.o) + '/' + n(k.h) + '/' + n(k.l) + '/' + n(k.c)).join(' | ');
 }
