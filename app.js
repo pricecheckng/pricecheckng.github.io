@@ -1738,7 +1738,7 @@ function paintCoin(c) {
     </div>
     <div class="cp-read" id="cpRead"></div>
     <div id="cpChart"><p class="muted" style="margin:8px 0 0">Loading chart…</p></div>
-    <div id="cpAxis" style="position:relative;height:20px;margin-top:6px;font-size:.8rem;opacity:.65"></div>
+    <div id="cpAxis" style="position:relative;height:24px;margin-top:8px;font-size:.95rem;opacity:.75"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 0;align-items:stretch">
       <div id="cpMode" role="group" aria-label="Chart value" class="cps"><button type="button" data-m="price" aria-pressed="true">Price</button><button type="button" data-m="mcap" aria-pressed="false">Market cap</button></div>
       <div id="cpType" role="group" aria-label="Chart type" class="cps"><button type="button" data-t="line" aria-pressed="true" aria-label="Line chart" style="flex:0 0 44px;padding:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></button><button type="button" data-t="candles" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v3M7 14v4M17 5v2M17 15v4"/><rect x="4.5" y="6" width="5" height="8" rx="1"/><rect x="14.5" y="7" width="5" height="8" rx="1"/></svg> Candles</button></div>
@@ -2343,7 +2343,7 @@ function initChart(c, sp, sec) {
 
 function mountChart(series, range, log, fm, isCap) {
   const sp = series.map((o) => o.p);
-  const W = 600, H = 330, T = 14, PB = Math.round(H * 0.78), VT = Math.round(H * 0.82), VB = H - 2;
+  const W = 600, H = 400, T = 16, PB = Math.round(H * 0.8), VT = Math.round(H * 0.84), VB = H - 2;
   const n = sp.length;
   const useLog = log && sp.every((v) => v > 0);
   const f = useLog ? Math.log : (v) => v;
@@ -2360,7 +2360,7 @@ function mountChart(series, range, log, fm, isCap) {
   let grid = "";
   for (let k = 1; k <= 3; k++) {
     const fr = k / 4, val = useLog ? Math.exp(min + rng * fr) : min + rng * fr, yy = T + (1 - fr) * (PB - T);
-    grid += `<line x1="0" x2="${W}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="#94a3b8" stroke-opacity=".16"/><text x="${W - 6}" y="${(yy - 4).toFixed(1)}" font-size="20" text-anchor="end" fill="#94a3b8">${axFmt(val, isCap)}</text>`;
+    grid += `<line x1="0" x2="${W}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="#94a3b8" stroke-opacity=".16"/><text x="${W - 6}" y="${(yy - 6).toFixed(1)}" font-size="27" text-anchor="end" fill="#94a3b8">${axFmt(val, isCap)}</text>`;
   }
   const vs = series.map((o) => Number(o.v) || 0), vmax = Math.max(...vs);
   let bars = "";
@@ -2368,7 +2368,7 @@ function mountChart(series, range, log, fm, isCap) {
     const bw = Math.max(1.2, (W / n) * 1.0);
     bars = vs.map((v, i) => (v > 0 ? `<rect x="${(x(i) - bw / 2).toFixed(1)}" y="${(VB - (v / vmax) * (VB - VT - 2)).toFixed(1)}" width="${bw.toFixed(1)}" height="${((v / vmax) * (VB - VT - 2)).toFixed(1)}"/>` : "")).join("");
   }
-  const openTxt = axFmt(sp[0], isCap), tw = openTxt.length * 7 + 14;
+  const openTxt = axFmt(sp[0], isCap);
   $("#cpChart").innerHTML = `<div style="position:relative;border:1px solid rgba(148,163,184,.3);border-radius:6px;overflow:hidden">
     <svg id="cpSvg" class="cp-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${range} price chart" style="display:block;width:100%;height:auto;aspect-ratio:${W}/${H};touch-action:pan-y">
       <defs>
@@ -2388,8 +2388,8 @@ function mountChart(series, range, log, fm, isCap) {
       <line id="cpLine" x1="0" x2="0" y1="${T}" y2="${VB}" stroke="#94a3b8" stroke-width="1" visibility="hidden" vector-effect="non-scaling-stroke"/>
     </svg>
     <div id="cpDot" style="position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;border:2px solid #fff;background:${up ? G : R};visibility:hidden;pointer-events:none"></div>
-    <div style="position:absolute;left:6px;top:${((ref / H) * 100).toFixed(2)}%;transform:translateY(-50%);padding:3px 7px;border-radius:6px;background:rgba(100,116,139,.55);color:#fff;font-size:.72rem;font-weight:700;pointer-events:none">${openTxt}</div>
-    <div style="position:absolute;right:8px;bottom:22%;display:flex;align-items:center;gap:6px;opacity:.4;pointer-events:none"><img src="icon-green-192.png" alt="" width="24" height="24" style="border-radius:6px"><span style="font-weight:800;font-size:1rem;letter-spacing:-.3px">PriceCheck NG</span></div>
+    <div style="position:absolute;left:6px;top:${((ref / H) * 100).toFixed(2)}%;transform:translateY(-50%);padding:4px 9px;border-radius:7px;background:rgba(100,116,139,.6);color:#fff;font-size:.9rem;font-weight:700;pointer-events:none">${openTxt}</div>
+    <div style="position:absolute;right:8px;bottom:22%;display:flex;align-items:center;gap:6px;opacity:.4;pointer-events:none"><img src="icon-green-192.png" alt="" width="28" height="28" style="border-radius:7px"><span style="font-weight:800;font-size:1.15rem;letter-spacing:-.3px">PriceCheck NG</span></div>
   </div>`;
   const svg = $("#cpSvg"), line = $("#cpLine"), dot = $("#cpDot"), read = $("#cpRead"), box = svg.parentNode;
   const lab = (i, short) => {
@@ -3778,7 +3778,10 @@ window.addEventListener("appinstalled", () => {
 });
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  const hadSW = !!navigator.serviceWorker.controller;
+  let swReloaded = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadSW && !swReloaded) { swReloaded = true; location.reload(); } });
+  navigator.serviceWorker.register("sw.js").then((r) => { try { r.update(); } catch (_) {} }).catch(() => {});
   navigator.serviceWorker.addEventListener("message", (e) => {
     if (e.data?.type === "goto") location.hash = e.data.hash || "#alerts";
   });

@@ -334,3 +334,6 @@ html.dk .cp-tabs { background: #0e1511; }
 .cps button:disabled{cursor:not-allowed}
 .cps button{font-size:.85rem;padding:0 4px}
 .cps button svg{flex:none}
+.cpr button,.cpb{min-height:46px;font-size:1rem}
+.cps button{min-height:46px;font-size:.95rem}
+#cpRead b{font-size:1.5rem}
