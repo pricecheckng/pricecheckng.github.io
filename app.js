@@ -2435,7 +2435,8 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) 
     else if (range === "1Y") { s0.setDate(1); s0.setHours(0, 0, 0, 0); s0.setMonth(s0.getMonth() + 1); walk(s0, (d) => d.setMonth(d.getMonth() + 3), (d) => (d.getMonth() === 0 ? String(d.getFullYear()) : d.toLocaleDateString([], { month: "short" }))); }
     else { const yrs = span / 31557600000; s0.setMonth(0, 1); s0.setHours(0, 0, 0, 0); s0.setFullYear(s0.getFullYear() + 1); walk(s0, (d) => d.setFullYear(d.getFullYear() + (yrs > 8 ? 2 : 1)), (d) => String(d.getFullYear())); }
     if (out.length < 2) return [0.1, 0.37, 0.63, 0.9].map((fr) => `<span style="position:absolute;left:${(fr * 100).toFixed(1)}%;transform:translateX(-50%);white-space:nowrap">${lab(sl, Math.min(sl.length - 1, Math.round(fr * (sl.length - 1))), true)}</span>`).join("");
-    return out.map(([pc, txt]) => `<span style="position:absolute;left:${pc.toFixed(1)}%;transform:translateX(-50%);white-space:nowrap">${txt}</span>`).join("");
+    const keep = out.length > 5 ? out.filter((_, i) => i % Math.ceil(out.length / 4) === 0) : out;
+    return keep.map(([pc, txt]) => `<span style="position:absolute;left:${pc.toFixed(1)}%;transform:translateX(-50%);white-space:nowrap">${txt}</span>`).join("");
   };
 
   const DOC = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></svg>';
@@ -2447,11 +2448,18 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) 
     openG = -1;
     const t0 = sl[0].t, t1 = sl[sl.length - 1].t, span = t1 - t0 || 1;
     const vis = (events || []).filter((e) => e.t >= t0 && e.t <= t1).sort((a, b) => a.t - b.t);
+    // stories on the left quarter are hidden (the pill lives there); the rest merge until the icons are at least 20% apart
     const cl = [];
-    vis.forEach((e) => { const pc = ((e.t - t0) / span) * 100, last = cl[cl.length - 1]; if (last && pc - last.pc < 8) { last.items.push(e); last.pc = (last.pc * (last.items.length - 1) + pc) / last.items.length; } else cl.push({ pc, items: [e] }); });
-    shown = cl.filter((g) => g.pc > 26 && g.pc < 96);
+    vis.forEach((e) => {
+      const pc = ((e.t - t0) / span) * 100;
+      if (pc <= 26 || pc >= 96) return;
+      const last = cl[cl.length - 1];
+      if (last && pc - last.pc < 20) { last.pc = (last.pc * last.items.length + pc) / (last.items.length + 1); last.items.push(e); }
+      else cl.push({ pc, items: [e] });
+    });
+    shown = cl;
     const pill = `<button type="button" id="cpPill" aria-label="${off > 0 ? "Back to latest" : "Live"}" style="position:absolute;left:0;top:4px;display:flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 10px;border:0;border-radius:16px;background:rgba(100,116,139,.35);color:inherit;font-weight:700;font-size:.85rem">${off > 0 ? HIST + "Latest" : '<span style="width:8px;height:8px;border-radius:50%;background:#16c784"></span>Live'}</button>`;
-    const mk = shown.map((g, i) => `<button type="button" data-g="${i}" aria-label="${g.items.length} news" style="position:absolute;left:${g.pc.toFixed(1)}%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;height:32px;min-width:32px;padding:0 8px;justify-content:center;border:0;border-radius:16px;background:#16c784;color:#fff;font-weight:800;font-size:.85rem">${DOC}${g.items.length > 1 ? g.items.length : ""}</button>`).join("");
+    const mk = shown.map((g, i) => `<button type="button" data-g="${i}" aria-label="${g.items.length} news" style="position:absolute;left:${g.pc.toFixed(1)}%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;height:30px;min-width:30px;padding:0 8px;justify-content:center;border:0;border-radius:15px;background:#16c784;color:#fff;font-weight:800;font-size:.8rem">${DOC}${g.items.length > 1 ? g.items.length : ""}</button>`).join("");
     evt.innerHTML = pill + mk;
     const pl = evt.querySelector("#cpPill"); if (pl) pl.onclick = () => { if (off > 0) { off = 0; render(); } };
     evt.querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => {
