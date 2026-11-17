@@ -105,6 +105,7 @@
   .sh-top input { height:42px; box-sizing:border-box;  flex:1; background:#16241d; border:1px solid var(--acc); border-radius:12px; color:var(--txt); font:inherit; padding:11px 12px; outline:none; }
   html.embed .tabbar, html.embed .back, html.embed #agent { display:none !important; }
   html.embed .top { padding-left:10px; }
+  html.embed .info, html.embed .leg { display:none !important; }
   .tabs { display:flex; gap:20px; padding:0 16px; border-bottom:1px solid var(--line); }
   .tabs button, .exs button { background:none; border:0; color:var(--mut); font:inherit; font-weight:700; padding:12px 0; cursor:pointer; border-bottom:2px solid transparent; }
   .tabs button.on { color:var(--txt); border-color:var(--acc); }
@@ -948,9 +949,10 @@ $('shBack').onclick = closeSheet; $('shQ').oninput = renderList;
 // ---------- footer: Chart / Watchlist / Settings ----------
 const DEF = { ma50: true, ma200: true, levels: false, rsi: false, hl: true, tf: '4h' };
 let tmpLv = false;   // levels turned on by the agent: shown now, not saved for the next visit
-const saveSet = () => ss('pcn_chart_set', tmpLv ? Object.assign({}, SET, { levels: false }) : SET);
+const EMB = !!qs.get('embed');
+const saveSet = () => EMB ? 0 : ss('pcn_chart_set', tmpLv ? Object.assign({}, SET, { levels: false }) : SET);
 const _s0 = sg('pcn_chart_set', {}); if (_s0.v !== 3) { delete _s0.rsi; delete _s0.levels; _s0.v = 3; }
-let SET = Object.assign({}, DEF, _s0); saveSet();
+let SET = Object.assign({}, DEF, _s0); if (EMB) { SET.ma50 = false; SET.ma200 = false; SET.hl = false; } saveSet();
 function applySet() {
   chart.setShow({ ma50: SET.ma50, ma200: SET.ma200, levels: SET.levels, hl: SET.hl });
   $('rsiWrap').style.display = SET.rsi ? '' : 'none';
