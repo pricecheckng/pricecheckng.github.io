@@ -1736,7 +1736,6 @@ function paintCoin(c) {
       <div id="cpRanges" role="group" aria-label="Chart range" class="cpr">${Object.keys(CHART_RANGES).map((k) => `<button type="button" data-r="${k}" aria-pressed="${k === "24h"}">${k}</button>`).join("")}</div>
       <span class="cpd"></span><button type="button" id="cpLog" class="cpb" aria-pressed="false">Log</button>
     </div>
-    <div class="cp-read" id="cpRead"></div>
     <div id="cpChart"><p class="muted" style="margin:8px 0 0">Loading chart…</p></div>
     <div id="cpAxis" style="position:relative;height:24px;margin-top:8px;font-size:.95rem;opacity:.75"></div>
     <div id="cpEvt" style="position:relative;height:40px;margin-top:8px"></div><div id="cpPop"></div>
@@ -1745,7 +1744,7 @@ function paintCoin(c) {
       <div id="cpType" role="group" aria-label="Chart type" class="cps"><button type="button" data-t="line" aria-pressed="true" aria-label="Line chart" style="flex:0 0 44px;padding:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></button><button type="button" data-t="candles" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v3M7 14v4M17 5v2M17 15v4"/><rect x="4.5" y="6" width="5" height="8" rx="1"/><rect x="14.5" y="7" width="5" height="8" rx="1"/></svg> Candles</button></div>
     </div>
     <div class="cp-lh" id="cpLH"></div>
-    <p class="muted" id="cpNote" style="margin:10px 0 0;font-size:.85rem">Touch the chart to see the price at any moment.</p>`;
+    <p class="muted" id="cpNote" style="margin:10px 0 0;font-size:.85rem">Hold your finger on the chart to see the price. Drag sideways to move through time.</p>`;
   $("#coinBody").innerHTML = `
     <div class="cp-head">
       ${c.id === "bitcoin" ? btcLogo("logo lg").replace('width="32" height="32"', 'width="48" height="48"') : `<img class="logo lg" src="${esc(c.image_url || "")}" alt="" width="48" height="48">`}
@@ -2357,7 +2356,7 @@ function initChart(c, sp, sec) {
     const md = $("#cpMode"); if (md) md.style.visibility = cd ? "hidden" : "";
     const mb = q("#cpMode button[data-m=mcap]")[0]; if (mb) { mb.disabled = !supply; mb.style.opacity = supply ? "" : ".4"; }
     const cb = q("#cpType button[data-t=candles]")[0]; if (cb) { const ok = !!exName && CHART_EX[exName]; cb.disabled = !ok; cb.style.opacity = ok ? "" : ".4"; cb.title = ok ? "" : "Candles are not available for this coin"; }
-    const nt = $("#cpNote"); if (nt) nt.textContent = cd ? "Full PriceCheck NG chart with drawing tools, indicators and more timeframes." : V.mode === "mcap" ? "Market cap here is price × current circulating supply, so past values are an estimate." : "Touch the chart to see the price at any moment.";
+    const nt = $("#cpNote"); if (nt) nt.textContent = cd ? "Full PriceCheck NG chart with drawing tools, indicators and more timeframes." : V.mode === "mcap" ? "Market cap here is price × current circulating supply, so past values are an estimate." : "Hold your finger on the chart to see the price. Drag sideways to move through time.";
   };
   const load = async () => {
     const my = ++chartTok;
@@ -2407,11 +2406,12 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) 
   let off = 0, cur = null, raf = 0;
   $("#cpChart").innerHTML = `<div id="cpBox" style="position:relative;border:1px solid rgba(148,163,184,.3);border-radius:6px;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none">
     <div id="cpHost"></div>
+    <div id="cpTip" style="display:none;position:absolute;top:8px;z-index:2;padding:6px 10px;border-radius:9px;background:rgba(10,18,14,.94);border:1px solid rgba(148,163,184,.35);color:#e6f2ea;font-size:.82rem;line-height:1.35;white-space:nowrap;pointer-events:none"></div>
     <div id="cpLoad" style="display:none;position:absolute;left:8px;top:8px;padding:4px 10px;border-radius:12px;background:rgba(100,116,139,.7);color:#fff;font-size:.8rem;pointer-events:none">Loading older data…</div>
     <div id="cpDot" style="position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;border:2px solid #fff;visibility:hidden;pointer-events:none"></div>
     <div style="position:absolute;right:8px;bottom:22%;display:flex;align-items:center;gap:6px;opacity:.4;pointer-events:none"><img src="icon-green-192.png" alt="" width="28" height="28" style="border-radius:7px"><span style="font-weight:800;font-size:1.15rem;letter-spacing:-.3px">PriceCheck NG</span></div>
   </div>`;
-  const box = $("#cpBox"), host = $("#cpHost"), dot = $("#cpDot"), read = $("#cpRead"), ax = $("#cpAxis"), lo = $("#cpLoad"), evt = $("#cpEvt"), pop = $("#cpPop");
+  const box = $("#cpBox"), host = $("#cpHost"), dot = $("#cpDot"), tip = $("#cpTip"), ax = $("#cpAxis"), lo = $("#cpLoad"), evt = $("#cpEvt"), pop = $("#cpPop");
 
   const lab = (sl, i, short) => {
     const dt = new Date(sl[i].t);
@@ -2527,7 +2527,13 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) 
   function show(i, active) {
     if (!cur) return;
     const { sl, n, sp, vs, x, y } = cur;
-    read.innerHTML = `<b>${fm(sp[i])}</b><span>${i === n - 1 && !active && off === 0 ? "Latest" : lab(sl, i)}${vs[i] > 0 ? " · Vol " + fmtBig(vs[i], "$") : ""}</span>`;
+    if (active) {
+      const lx = (x(i) / W) * 100;
+      tip.innerHTML = `<b style="font-size:1rem">${fm(sp[i])}</b><br><span style="opacity:.75">${lab(sl, i)}${vs[i] > 0 ? " · Vol " + fmtBig(vs[i], "$") : ""}</span>`;
+      tip.style.display = "block";
+      tip.style.left = lx + "%";
+      tip.style.transform = lx > 55 ? "translateX(calc(-100% - 12px))" : "translateX(12px)";
+    } else tip.style.display = "none";
     const ln = host.querySelector("#cpLine"), v = active ? "visible" : "hidden";
     if (ln) { ln.setAttribute("visibility", v); if (active) { ln.setAttribute("x1", x(i)); ln.setAttribute("x2", x(i)); } }
     dot.style.visibility = v;
@@ -2556,7 +2562,7 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) 
       if (no !== off) { off = no; redraw(); }
     }
   });
-  const end = () => { const wasCross = mode === "cross"; down = false; mode = null; clearTimeout(timer); if (wasCross && cur) show(cur.n - 1, false); };
+  const end = () => { down = false; mode = null; clearTimeout(timer); if (cur) show(cur.n - 1, false); };
   box.addEventListener("pointerup", end);
   box.addEventListener("pointercancel", end);
   box.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") end(); });
