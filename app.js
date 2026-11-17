@@ -2244,11 +2244,11 @@ async function loadCoinNews(c) {
 
 /* ---------- coin chart (CoinMarketCap-style box: ranges, log, price / market cap, line / candles) ---------- */
 const CHART_RANGES = {
-  "24h": { iv: "5m", lim: 288, name: "24 hours" },
-  "1W": { iv: "1h", lim: 168, name: "7 days" },
-  "1M": { iv: "4h", lim: 180, name: "30 days" },
-  "1Y": { iv: "1d", lim: 365, name: "1 year" },
-  All: { iv: "1w", lim: 600, name: "all time" },
+  "24h": { iv: "5m", win: 288, buf: 1000, name: "24 hours" },
+  "1W": { iv: "1h", win: 168, buf: 1000, name: "7 days" },
+  "1M": { iv: "4h", win: 180, buf: 1000, name: "30 days" },
+  "1Y": { iv: "1d", win: 365, buf: 1000, name: "1 year" },
+  All: { iv: "1w", win: 0, buf: 600, name: "all time" },
 };
 const chartCache = new Map();
 let chartTok = 0;
@@ -2268,8 +2268,8 @@ async function getSeries(c, r, sp) {
   };
   let out = null;
   try {
-    const { iv, lim } = CHART_RANGES[r];
-    out = await pull(iv, lim);
+    const { iv, buf } = CHART_RANGES[r];
+    out = await pull(iv, buf);
   } catch (_) {}
   if (!out && r === "All") { try { out = await pull("1d", 1000); } catch (_) {} }
   if (!out && r === "1W" && sp.length >= 2) {
@@ -2326,13 +2326,15 @@ function initChart(c, sp, sec) {
     const mc = V.mode === "mcap" && supply > 0;
     const series = s.map((o) => ({ t: o.t, p: mc ? o.p * supply : o.p, v: o.v }));
     const fm = mc ? (v) => fmtBig(v, "$") : mny;
-    const vals = series.map((o) => o.p);
-    const lo = Math.min(...vals), hi = Math.max(...vals);
-    const wd = chg((vals[vals.length - 1] / vals[0] - 1) * 100);
     const nm = CHART_RANGES[V.r].name;
-    $("#cpWk").innerHTML = `<span class="cp-pill ${wd.c}">${wd.t}</span> <span class="muted">over ${nm}</span>`;
-    $("#cpLH").innerHTML = `<div><small>${V.r} low</small><b>${fm(lo)}</b></div><div><small>${V.r} high</small><b>${fm(hi)}</b></div>`;
-    mountChart(series, V.r, V.log, fm, mc);
+    const onWin = (sl) => {
+      const vals = sl.map((o) => o.p);
+      const lo = Math.min(...vals), hi = Math.max(...vals);
+      const wd = chg((vals[vals.length - 1] / vals[0] - 1) * 100);
+      $("#cpWk").innerHTML = `<span class="cp-pill ${wd.c}">${wd.t}</span> <span class="muted">over ${nm}</span>`;
+      $("#cpLH").innerHTML = `<div><small>${V.r} low</small><b>${fm(lo)}</b></div><div><small>${V.r} high</small><b>${fm(hi)}</b></div>`;
+    };
+    mountChart(series, V.r, V.log, fm, mc, CHART_RANGES[V.r].win, onWin);
   };
   q("#cpRanges button").forEach((b) => (b.onclick = () => { V.r = b.dataset.r; load(); }));
   q("#cpMode button").forEach((b) => (b.onclick = () => { if (b.disabled) return; V.mode = b.dataset.m; load(); }));
@@ -2341,35 +2343,69 @@ function initChart(c, sp, sec) {
   load();
 }
 
-function mountChart(series, range, log, fm, isCap) {
-  const sp = series.map((o) => o.p);
+function mountChart(all, range, log, fm, isCap, winN, onWin) {
+  const N = all.length, win = Math.min(winN || N, N), maxOff = N - win;
   const W = 600, H = 400, T = 16, PB = Math.round(H * 0.8), VT = Math.round(H * 0.84), VB = H - 2;
-  const n = sp.length;
-  const useLog = log && sp.every((v) => v > 0);
-  const f = useLog ? Math.log : (v) => v;
-  const fv = sp.map(f);
-  let min = Math.min(...fv), max = Math.max(...fv);
-  const pad = (max - min) * 0.06 || Math.abs(max) * 0.005 || 1; min -= pad; max += pad;
-  const rng = max - min;
-  const x = (i) => (i / (n - 1)) * W;
-  const y = (v) => T + (1 - (f(v) - min) / rng) * (PB - T);
-  const ref = Math.min(PB, Math.max(T, y(sp[0])));
-  const up = sp[n - 1] >= sp[0], G = "#16c784", R = "#ea3943";
-  const pts = sp.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
-  const area = `M${pts.split(" ").join(" L")} L${x(n - 1).toFixed(1)},${ref.toFixed(1)} L0,${ref.toFixed(1)} Z`;
-  let grid = "";
-  for (let k = 1; k <= 3; k++) {
-    const fr = k / 4, val = useLog ? Math.exp(min + rng * fr) : min + rng * fr, yy = T + (1 - fr) * (PB - T);
-    grid += `<line x1="0" x2="${W}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="#94a3b8" stroke-opacity=".16"/><text x="${W - 6}" y="${(yy - 6).toFixed(1)}" font-size="27" text-anchor="end" fill="#94a3b8">${axFmt(val, isCap)}</text>`;
-  }
-  const vs = series.map((o) => Number(o.v) || 0), vmax = Math.max(...vs);
-  let bars = "";
-  if (vmax > 0) {
-    const bw = Math.max(1.2, (W / n) * 1.0);
-    bars = vs.map((v, i) => (v > 0 ? `<rect x="${(x(i) - bw / 2).toFixed(1)}" y="${(VB - (v / vmax) * (VB - VT - 2)).toFixed(1)}" width="${bw.toFixed(1)}" height="${((v / vmax) * (VB - VT - 2)).toFixed(1)}"/>` : "")).join("");
-  }
-    $("#cpChart").innerHTML = `<div style="position:relative;border:1px solid rgba(148,163,184,.3);border-radius:6px;overflow:hidden">
-    <svg id="cpSvg" class="cp-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${range} price chart" style="display:block;width:100%;height:auto;aspect-ratio:${W}/${H};touch-action:pan-y">
+  const G = "#16c784", R = "#ea3943";
+  let off = 0, cur = null, raf = 0;
+  $("#cpChart").innerHTML = `<div id="cpBox" style="position:relative;border:1px solid rgba(148,163,184,.3);border-radius:6px;overflow:hidden;touch-action:pan-y;user-select:none;-webkit-user-select:none">
+    <div id="cpHost"></div>
+    <div id="cpDot" style="position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;border:2px solid #fff;visibility:hidden;pointer-events:none"></div>
+    <button type="button" id="cpLatest" style="display:none;position:absolute;left:8px;bottom:22%;align-items:center;gap:6px;padding:6px 12px 6px 9px;border:0;border-radius:18px;background:rgba(100,116,139,.75);color:#fff;font-weight:700;font-size:.85rem"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/><path d="M12 8v4l3 2"/></svg>Latest</button>
+    <div style="position:absolute;right:8px;bottom:22%;display:flex;align-items:center;gap:6px;opacity:.4;pointer-events:none"><img src="icon-green-192.png" alt="" width="28" height="28" style="border-radius:7px"><span style="font-weight:800;font-size:1.15rem;letter-spacing:-.3px">PriceCheck NG</span></div>
+  </div>`;
+  const box = $("#cpBox"), host = $("#cpHost"), dot = $("#cpDot"), read = $("#cpRead"), ax = $("#cpAxis"), lt = $("#cpLatest");
+
+  const lab = (sl, i, short) => {
+    const dt = new Date(sl[i].t);
+    if (range === "24h") return dt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) + (short ? "" : ", " + dt.toLocaleDateString([], { month: "short", day: "numeric" }));
+    if (range === "All") return short ? String(dt.getFullYear()) : dt.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
+    if (range === "1Y") return dt.toLocaleDateString([], short ? { month: "short", year: "2-digit" } : { month: "short", day: "numeric", year: "numeric" });
+    const day = dt.toLocaleDateString([], { month: "short", day: "numeric" });
+    return short ? day : `${day}, ${dt.toLocaleTimeString([], { hour: "numeric" })}`;
+  };
+  const ticks = (sl) => {
+    const t0 = sl[0].t, t1 = sl[sl.length - 1].t, span = t1 - t0, out = [];
+    if (span <= 0) return "";
+    const add = (t, txt) => { const pc = ((t - t0) / span) * 100; if (pc > 7 && pc < 93) out.push([pc, txt]); };
+    const dm = (d) => d.toLocaleDateString([], { month: "short", day: "numeric" });
+    const walk = (d, step, fmt) => { for (let g = 0; d.getTime() <= t1 && g < 60; g++) { add(d.getTime(), fmt(d)); step(d); } };
+    const s0 = new Date(t0);
+    if (range === "24h") { s0.setMinutes(0, 0, 0); s0.setHours(Math.ceil((s0.getHours() + (t0 % 3600000 ? 0.01 : 0)) / 6) * 6); walk(s0, (d) => d.setHours(d.getHours() + 6), (d) => (d.getHours() === 0 ? dm(d) : d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }))); }
+    else if (range === "1W") { s0.setHours(24, 0, 0, 0); walk(s0, (d) => d.setDate(d.getDate() + 2), dm); }
+    else if (range === "1M") { s0.setHours(24, 0, 0, 0); walk(s0, (d) => d.setDate(d.getDate() + 7), dm); }
+    else if (range === "1Y") { s0.setDate(1); s0.setHours(0, 0, 0, 0); s0.setMonth(s0.getMonth() + 1); walk(s0, (d) => d.setMonth(d.getMonth() + 3), (d) => (d.getMonth() === 0 ? String(d.getFullYear()) : d.toLocaleDateString([], { month: "short" }))); }
+    else { const yrs = span / 31557600000; s0.setMonth(0, 1); s0.setHours(0, 0, 0, 0); s0.setFullYear(s0.getFullYear() + 1); walk(s0, (d) => d.setFullYear(d.getFullYear() + (yrs > 8 ? 2 : 1)), (d) => String(d.getFullYear())); }
+    if (out.length < 2) return [0.1, 0.37, 0.63, 0.9].map((fr) => `<span style="position:absolute;left:${(fr * 100).toFixed(1)}%;transform:translateX(-50%);white-space:nowrap">${lab(sl, Math.min(sl.length - 1, Math.round(fr * (sl.length - 1))), true)}</span>`).join("");
+    return out.map(([pc, txt]) => `<span style="position:absolute;left:${pc.toFixed(1)}%;transform:translateX(-50%);white-space:nowrap">${txt}</span>`).join("");
+  };
+
+  function render() {
+    const sl = all.slice(N - win - off, N - off), n = sl.length, sp = sl.map((o) => o.p);
+    const useLog = log && sp.every((v) => v > 0);
+    const f = useLog ? Math.log : (v) => v;
+    const fv = sp.map(f);
+    let min = Math.min(...fv), max = Math.max(...fv);
+    const pad = (max - min) * 0.06 || Math.abs(max) * 0.005 || 1; min -= pad; max += pad;
+    const rng = max - min;
+    const x = (i) => (n > 1 ? (i / (n - 1)) * W : 0);
+    const y = (v) => T + (1 - (f(v) - min) / rng) * (PB - T);
+    const ref = Math.min(PB, Math.max(T, y(sp[0])));
+    const up = sp[n - 1] >= sp[0];
+    const pts = sp.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+    const area = `M${pts.split(" ").join(" L")} L${x(n - 1).toFixed(1)},${ref.toFixed(1)} L0,${ref.toFixed(1)} Z`;
+    let grid = "";
+    for (let k = 1; k <= 3; k++) {
+      const fr = k / 4, val = useLog ? Math.exp(min + rng * fr) : min + rng * fr, yy = T + (1 - fr) * (PB - T);
+      grid += `<line x1="0" x2="${W}" y1="${yy.toFixed(1)}" y2="${yy.toFixed(1)}" stroke="#94a3b8" stroke-opacity=".16"/><text x="${W - 6}" y="${(yy - 6).toFixed(1)}" font-size="27" text-anchor="end" fill="#94a3b8">${axFmt(val, isCap)}</text>`;
+    }
+    const vs = sl.map((o) => Number(o.v) || 0), vmax = Math.max(...vs);
+    let bars = "";
+    if (vmax > 0) {
+      const bw = Math.max(1.2, W / n);
+      bars = vs.map((v, i) => (v > 0 ? `<rect x="${(x(i) - bw / 2).toFixed(1)}" y="${(VB - (v / vmax) * (VB - VT - 2)).toFixed(1)}" width="${bw.toFixed(1)}" height="${((v / vmax) * (VB - VT - 2)).toFixed(1)}"/>` : "")).join("");
+    }
+    host.innerHTML = `<svg id="cpSvg" class="cp-svg" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" role="img" aria-label="${range} price chart" style="display:block;width:100%;height:auto;aspect-ratio:${W}/${H}">
       <defs>
         <linearGradient id="cgU" gradientUnits="userSpaceOnUse" x1="0" y1="${T}" x2="0" y2="${ref.toFixed(1)}"><stop offset="0" stop-color="${G}" stop-opacity=".4"/><stop offset="1" stop-color="${G}" stop-opacity=".02"/></linearGradient>
         <linearGradient id="cgD" gradientUnits="userSpaceOnUse" x1="0" y1="${ref.toFixed(1)}" x2="0" y2="${PB}"><stop offset="0" stop-color="${R}" stop-opacity=".02"/><stop offset="1" stop-color="${R}" stop-opacity=".4"/></linearGradient>
@@ -2385,39 +2421,52 @@ function mountChart(series, range, log, fm, isCap) {
       <polyline points="${pts}" fill="none" stroke="${R}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round" clip-path="url(#cpDn)" vector-effect="non-scaling-stroke"/>
       <line x1="0" x2="${W}" y1="${ref.toFixed(1)}" y2="${ref.toFixed(1)}" stroke="#94a3b8" stroke-dasharray="2 4" stroke-opacity=".8" vector-effect="non-scaling-stroke"/>
       <line id="cpLine" x1="0" x2="0" y1="${T}" y2="${VB}" stroke="#94a3b8" stroke-width="1" visibility="hidden" vector-effect="non-scaling-stroke"/>
-    </svg>
-    <div id="cpDot" style="position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;border:2px solid #fff;background:${up ? G : R};visibility:hidden;pointer-events:none"></div>
-    <div style="position:absolute;right:8px;bottom:22%;display:flex;align-items:center;gap:6px;opacity:.4;pointer-events:none"><img src="icon-green-192.png" alt="" width="28" height="28" style="border-radius:7px"><span style="font-weight:800;font-size:1.15rem;letter-spacing:-.3px">PriceCheck NG</span></div>
-  </div>`;
-  const svg = $("#cpSvg"), line = $("#cpLine"), dot = $("#cpDot"), read = $("#cpRead"), box = svg.parentNode;
-  const lab = (i, short) => {
-    const dt = new Date(series[i].t);
-    if (range === "24h") return dt.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
-    if (range === "All") return short ? String(dt.getFullYear()) : dt.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
-    if (range === "1Y") return dt.toLocaleDateString([], short ? { month: "short", year: "2-digit" } : { month: "short", day: "numeric", year: "numeric" });
-    const day = dt.toLocaleDateString([], { month: "short", day: "numeric" });
-    return short ? day : `${day}, ${dt.toLocaleTimeString([], { hour: "numeric" })}`;
-  };
-  const ax = $("#cpAxis");
-  if (ax) ax.innerHTML = [0.1, 0.37, 0.63, 0.9].map((fr) => { const i = Math.min(n - 1, Math.round(fr * (n - 1))); return `<span style="position:absolute;left:${(fr * 100).toFixed(1)}%;transform:translateX(-50%);white-space:nowrap">${lab(i, true)}</span>`; }).join("");
-  const show = (i, active) => {
-    read.innerHTML = `<b>${fm(sp[i])}</b><span>${i === n - 1 && !active ? "Latest" : lab(i)}${vs[i] > 0 ? " · Vol " + fmtBig(vs[i], "$") : ""}</span>`;
-    const v = active ? "visible" : "hidden";
-    line.setAttribute("visibility", v); dot.style.visibility = v;
-    if (active) { line.setAttribute("x1", x(i)); line.setAttribute("x2", x(i)); dot.style.left = (x(i) / W) * 100 + "%"; dot.style.top = (y(sp[i]) / H) * 100 + "%"; }
-  };
+    </svg>`;
+    dot.style.background = up ? G : R;
+    cur = { sl, n, sp, vs, x, y };
+    if (ax) ax.innerHTML = ticks(sl);
+    lt.style.display = off > 0 ? "flex" : "none";
+    if (onWin) onWin(sl);
+    show(n - 1, false);
+  }
+  function show(i, active) {
+    if (!cur) return;
+    const { sl, n, sp, vs, x, y } = cur;
+    read.innerHTML = `<b>${fm(sp[i])}</b><span>${i === n - 1 && !active && off === 0 ? "Latest" : lab(sl, i)}${vs[i] > 0 ? " · Vol " + fmtBig(vs[i], "$") : ""}</span>`;
+    const ln = host.querySelector("#cpLine"), v = active ? "visible" : "hidden";
+    if (ln) { ln.setAttribute("visibility", v); if (active) { ln.setAttribute("x1", x(i)); ln.setAttribute("x2", x(i)); } }
+    dot.style.visibility = v;
+    if (active) { dot.style.left = (x(i) / W) * 100 + "%"; dot.style.top = (y(sp[i]) / H) * 100 + "%"; }
+  }
   const at = (e) => {
-    const r = svg.getBoundingClientRect();
+    const r = host.getBoundingClientRect();
     const fr = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
-    show(Math.round(fr * (n - 1)), true);
+    show(Math.round(fr * (cur.n - 1)), true);
   };
-  const reset = () => show(n - 1, false);
-  svg.addEventListener("pointerdown", at);
-  svg.addEventListener("pointermove", at);
-  svg.addEventListener("pointerleave", reset);
-  svg.addEventListener("pointerup", reset);
-  svg.addEventListener("pointercancel", reset);
-  reset();
+  let down = false, mode = null, sx = 0, so = 0, timer = 0, last = null;
+  const redraw = () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; render(); }); };
+  box.addEventListener("pointerdown", (e) => {
+    if (e.target.closest("#cpLatest")) return;
+    down = true; mode = null; sx = e.clientX; so = off; last = e; clearTimeout(timer);
+    if (maxOff > 0) timer = setTimeout(() => { if (down && !mode) { mode = "cross"; at(last); } }, 320);
+    else { mode = "cross"; at(e); }
+  });
+  box.addEventListener("pointermove", (e) => {
+    last = e;
+    if (!down) { if (e.pointerType === "mouse") at(e); return; }
+    if (mode === "cross") { at(e); return; }
+    if (maxOff > 0 && (mode === "pan" || Math.abs(e.clientX - sx) > 8)) {
+      if (mode !== "pan") { mode = "pan"; clearTimeout(timer); try { box.setPointerCapture(e.pointerId); } catch (_) {} }
+      const no = Math.max(0, Math.min(maxOff, so + Math.round(((e.clientX - sx) / box.clientWidth) * win)));
+      if (no !== off) { off = no; redraw(); }
+    }
+  });
+  const end = () => { const wasCross = mode === "cross"; down = false; mode = null; clearTimeout(timer); if (wasCross && cur) show(cur.n - 1, false); };
+  box.addEventListener("pointerup", end);
+  box.addEventListener("pointercancel", end);
+  box.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") end(); });
+  lt.addEventListener("click", () => { off = 0; render(); });
+  render();
 }
 
 function alertForm(c) {
