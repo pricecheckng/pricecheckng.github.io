@@ -332,3 +332,5 @@ html.dk .cp-tabs { background: #0e1511; }
 .cps{display:flex;gap:2px;padding:4px;background:var(--surface);border-radius:14px}
 .cps button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:0 6px}
 .cps button:disabled{cursor:not-allowed}
+.cps button{font-size:.85rem;padding:0 4px}
+.cps button svg{flex:none}

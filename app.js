@@ -1731,7 +1731,7 @@ function paintCoin(c) {
   const ratio = c.price_usd && second != null ? second / Number(c.price_usd) : 0;
   const sec = (usd) => (state.cur === "USD" ? "" : ratio ? fmtLocal(usd * ratio, state.cur) : "–");
   const secBig = (usd) => (ratio && usd != null ? fmtBig(Number(usd) * ratio, m.sym) : "–");
-  const chartHtml = `<h3 style="margin:0 0 4px;font-size:1.05rem">${esc(c.name)} to USD Chart</h3><div class="cp-wk" id="cpWk"></div>
+  const chartHtml = `<h3 style="margin:0 0 6px">${esc(c.name)} to USD Chart</h3><div class="cp-wk" id="cpWk"></div>
     <div id="cpTools" style="display:flex;align-items:center;gap:2px;margin:10px 0 0;padding:4px;background:var(--surface);border-radius:14px">
       <div id="cpRanges" role="group" aria-label="Chart range" class="cpr" style="display:flex;flex:1;gap:2px">${Object.keys(CHART_RANGES).map((k) => `<button type="button" data-r="${k}" aria-pressed="${k === "24h"}">${k}</button>`).join("")}</div>
       <span class="cpd"></span><button type="button" id="cpLog" class="cpb" aria-pressed="false">Log</button>
@@ -1739,11 +1739,11 @@ function paintCoin(c) {
     <div class="cp-read" id="cpRead"></div>
     <div id="cpChart"><p class="muted" style="margin:8px 0 0">Loading chart…</p></div>
     <div id="cpAxis" style="position:relative;height:20px;margin-top:6px;font-size:.8rem;opacity:.65"></div>
-    <div class="cp-lh" id="cpLH"></div>
-    <div style="display:flex;gap:8px;margin:12px 0 0;align-items:stretch">
-      <div id="cpMode" role="group" aria-label="Chart value" class="cps" style="flex:1"><button type="button" data-m="price" aria-pressed="true">Price</button><button type="button" data-m="mcap" aria-pressed="false">Market cap</button></div>
-      <div id="cpType" role="group" aria-label="Chart type" class="cps" style="flex:1.1"><button type="button" data-t="line" aria-pressed="true" aria-label="Line chart" style="flex:0 0 46px"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></button><button type="button" data-t="candles" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v3M7 14v4M17 5v2M17 15v4"/><rect x="4.5" y="6" width="5" height="8" rx="1"/><rect x="14.5" y="7" width="5" height="8" rx="1"/></svg> Candles</button></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 0;align-items:stretch">
+      <div id="cpMode" role="group" aria-label="Chart value" class="cps"><button type="button" data-m="price" aria-pressed="true">Price</button><button type="button" data-m="mcap" aria-pressed="false">Market cap</button></div>
+      <div id="cpType" role="group" aria-label="Chart type" class="cps"><button type="button" data-t="line" aria-pressed="true" aria-label="Line chart" style="flex:0 0 44px;padding:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></button><button type="button" data-t="candles" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 3v3M7 14v4M17 5v2M17 15v4"/><rect x="4.5" y="6" width="5" height="8" rx="1"/><rect x="14.5" y="7" width="5" height="8" rx="1"/></svg> Candles</button></div>
     </div>
+    <div class="cp-lh" id="cpLH"></div>
     <p class="muted" id="cpNote" style="margin:10px 0 0;font-size:.85rem">Touch the chart to see the price at any moment.</p>`;
   $("#coinBody").innerHTML = `
     <div class="cp-head">
@@ -1756,7 +1756,7 @@ function paintCoin(c) {
       <div class="big">${mainPx(c)}</div>
       <div class="sub"><span class="cp-pill ${d.c}">${d.t}</span> <span class="muted">24h</span></div>
     </div>
-    <div class="cp-card"><h3>Price chart</h3>${chartHtml}</div>
+    <div class="cp-card">${chartHtml}</div>
     <div id="coinChanges"></div>
     <div class="cp-stats">
       <div class="cp-stat"><small>Market cap</small><b>${mnyBig(c.market_cap_usd)}</b></div>
