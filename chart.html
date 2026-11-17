@@ -390,8 +390,8 @@ function tfKind(sym) {
 const TF_COL = { stock: '#2f6fed', etf: '#7c4dff', commodity: '#d4a017', index: '#0e9f9a', forex: '#17a34a' };
 const TF_SPECIAL = { XAU: ['Au', '#d4a017'], XAG: ['Ag', '#8f9aa5'], XPT: ['Pt', '#8aa0b8'], XPD: ['Pd', '#8d8f94'], XCU: ['Cu', '#c2703d'], COPPER: ['Cu', '#c2703d'], USOIL: ['OIL', '#3d4650'], UKOIL: ['OIL', '#3d4650'], OIL: ['OIL', '#3d4650'], WTI: ['OIL', '#3d4650'], BRENT: ['OIL', '#3d4650'], CL: ['OIL', '#3d4650'], NATGAS: ['GAS', '#e07b39'], NGAS: ['GAS', '#e07b39'], NG: ['GAS', '#e07b39'] };
 function tfBadge(el, tk) {
-  const sp = TF_SPECIAL[tk[1]], txt = sp ? sp[0] : tk[1].replace(/\d+$/, '').slice(0, 4);
-  el.textContent = txt; el.style.background = sp ? sp[1] : TF_COL[tk[0]]; el.style.color = '#fff'; el.style.fontWeight = '800'; el.style.fontSize = txt.length > 2 ? '9px' : '12px'; el.style.letterSpacing = '-.3px';
+  const sp = TF_SPECIAL[tk[1]]; let txt = sp ? sp[0] : tk[1].replace(/\d+$/, '').slice(0, 4); if (!sp && tk[0] === 'forex') txt = (tk[1].replace(/USD/, '') || tk[1]).slice(0, 3);
+  el.textContent = txt; el.style.background = sp ? sp[1] : TF_COL[tk[0]]; el.style.color = '#fff'; el.style.fontWeight = '800'; el.style.fontSize = txt.length > 3 ? '8px' : txt.length > 2 ? '9px' : '12px'; el.style.letterSpacing = '-.3px';
 }
 const icoDb = {};
 function dbIco(n) { if (n in icoDb) return Promise.resolve(icoDb[n]); return fetch(`${SUPABASE_URL}/rest/v1/coins?select=image_url&symbol=ilike.${encodeURIComponent(n)}&image_url=not.is.null&order=market_cap_rank.asc.nullslast&limit=1`, { headers: { apikey: SUPABASE_KEY } }).then(r => r.json()).then(a => (icoDb[n] = Array.isArray(a) && a[0] ? a[0].image_url : null)).catch(() => null); }

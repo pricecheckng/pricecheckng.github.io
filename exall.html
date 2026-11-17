@@ -4,6 +4,7 @@
 <button id="go">Start</button><button id="cp">Copy report</button><div id="sum"></div><div id="out"></div>
 <script type="module">import { SUPABASE_URL, SUPABASE_KEY } from "./config.js"; window.PCNEX_PROXY = { url: SUPABASE_URL + "/functions/v1/pcn-ex", key: SUPABASE_KEY };</script>
 <script src="chart-ex.js?v=171"></script>
+<script src="chart-tf.js"></script>
 <script>
 var LOG=[],out=document.getElementById('out'),sum=document.getElementById('sum');
 function to(p,ms){return Promise.race([p,new Promise(function(_,j){setTimeout(function(){j(new Error('timeout '+ms/1000+'s'))},ms)})])}
@@ -56,7 +57,12 @@ document.getElementById('go').onclick=async function(){
           if(l.length>5){var tail=l[l.length-1];if(tail&&ids.indexOf(tail.s)<0)ids.push(tail.s)}
           add(l.length?'ok':'no',label+' list: '+l.length+' contracts',l.length?'sample: '+l.slice(0,2).map(function(x){return x.label}).join(' | '):'list is empty')}
       }catch(e){add('no',label+' list',String(e&&e.message));continue}
-      for(var id of ids)await testOne(label,api,id,ty!=='spot');
+      var tfp=null;
+      try{var lst=ty==='spot'?[...l].map(function(x){return{s:x,base:x}}):l;
+        var hit=lst.filter(function(x){var k=tfKind(x.base||x.s);return k});
+        var pk=hit.find(function(x){return tfKind(x.base||x.s)[0]==='stock'})||hit[0];
+        if(pk&&ids.indexOf(pk.s)<0){tfp=pk;ids.push(pk.s)}}catch(e){}
+      for(var id of ids){if(tfp&&id===tfp.s)add('ok',label+' TradFi sample: '+id+' ('+tfKind(tfp.base||tfp.s)[0]+')');await testOne(label,api,id,ty!=='spot')}
     }
   }
   var f=LOG.filter(function(x){return x.indexOf('FAIL')===0}).length,w=LOG.filter(function(x){return x.indexOf('WARN')===0}).length;
