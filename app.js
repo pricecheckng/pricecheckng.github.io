@@ -2387,8 +2387,7 @@ function initChart(c, sp, sec) {
       $("#cpLH").innerHTML = `<div><small>${V.r} low</small><b>${fm(lo)}</b></div><div><small>${V.r} high</small><b>${fm(hi)}</b></div>`;
     };
     const iv = CHART_RANGES[V.r].iv;
-    const events = await getChartNews(c);
-    if (my !== chartTok || !$("#cpChart")) return;
+    const events = [];
     const loadOlder = V.r === "All" || s.dex || !klCoin.get(c.id) ? null : async (before) => { const rows = await fetchOlder(c, iv, before); return rows && rows.map((o) => ({ t: o.t, p: mc ? o.p * supply : o.p, v: o.v })); };
     mountChart(series, V.r, V.log, fm, mc, CHART_RANGES[V.r].win, onWin, loadOlder, events);
   };
@@ -2457,18 +2456,11 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) 
       if (last && pc - last.pc < 20) { last.pc = (last.pc * last.items.length + pc) / (last.items.length + 1); last.items.push(e); }
       else cl.push({ pc, items: [e] });
     });
-    shown = cl;
-    const pill = `<button type="button" id="cpPill" aria-label="${off > 0 ? "Back to latest" : "Live"}" style="position:absolute;left:0;top:4px;display:flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 10px;border:0;border-radius:16px;background:rgba(100,116,139,.35);color:inherit;font-weight:700;font-size:.85rem">${off > 0 ? HIST + "Latest" : '<span style="width:8px;height:8px;border-radius:50%;background:#16c784"></span>Live'}</button>`;
-    const mk = shown.map((g, i) => `<button type="button" data-g="${i}" aria-label="${g.items.length} news" style="position:absolute;left:${g.pc.toFixed(1)}%;top:4px;transform:translateX(-50%);display:flex;align-items:center;gap:4px;height:30px;min-width:30px;padding:0 8px;justify-content:center;border:0;border-radius:15px;background:#16c784;color:#fff;font-weight:800;font-size:.8rem">${DOC}${g.items.length > 1 ? g.items.length : ""}</button>`).join("");
-    evt.innerHTML = pill + mk;
+    shown = [];
+    if (off <= 0) { evt.innerHTML = ""; evt.style.height = "0"; evt.style.marginTop = "0"; return; }
+    evt.style.height = "40px"; evt.style.marginTop = "8px";
+    evt.innerHTML = `<button type="button" id="cpPill" aria-label="Back to latest" style="position:absolute;left:0;top:4px;display:flex;align-items:center;gap:6px;height:32px;padding:0 12px 0 10px;border:0;border-radius:16px;background:rgba(100,116,139,.35);color:inherit;font-weight:700;font-size:.85rem">${HIST}Latest</button>`;
     const pl = evt.querySelector("#cpPill"); if (pl) pl.onclick = () => { if (off > 0) { off = 0; render(); } };
-    evt.querySelectorAll("[data-g]").forEach((b) => (b.onclick = () => {
-      const i = Number(b.dataset.g);
-      if (openG === i) { pop.innerHTML = ""; openG = -1; return; }
-      openG = i;
-      const g = shown[i];
-      pop.innerHTML = `<div style="border:1px solid rgba(148,163,184,.3);border-radius:12px;padding:6px 12px;margin-top:6px">${g.items.slice().reverse().slice(0, 6).map((e) => `<a href="${esc(e.url)}" target="_blank" rel="noopener noreferrer" style="display:block;padding:8px 0;border-bottom:1px solid rgba(148,163,184,.15);color:inherit;text-decoration:none"><b style="font-size:.92rem;line-height:1.3;display:block">${esc(e.title)}</b><small style="opacity:.65">${esc(e.source || "")} · ${new Date(e.t).toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" })}</small></a>`).join("")}</div>`;
-    }));
   }
   function render() {
     const sl = all.slice(Math.max(0, N - win - off), N - off), n = sl.length, sp = sl.map((o) => o.p);
