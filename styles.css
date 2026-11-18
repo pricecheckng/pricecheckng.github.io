@@ -355,3 +355,7 @@ html.dk .cpa{background:#162a20}
 .cw .buy{flex:none;margin-left:4px;padding:1px 6px;border:1.5px solid #16a34a;color:#15803d;border-radius:7px;font-size:.68rem;font-weight:700;line-height:1.25;cursor:pointer;-webkit-tap-highlight-color:transparent}
 html.dk .cw .buy{border-color:#22c55e;color:#4ade80}
 #lin.dk .cw .buy{order:4;margin-left:8px}
+
+.cw .px{min-width:86px}
+.cw .buy{width:40px;box-sizing:border-box;text-align:center;padding-left:0;padding-right:0}
+@media (max-width:959px){.cw .coin{gap:5px!important}.cw .rk{width:22px!important}.cw .chg{width:52px!important;min-width:52px!important;white-space:nowrap}.cw .chg::before{display:none!important}}
