@@ -2485,7 +2485,7 @@ async function chartImage(c, kind) {
   g.drawImage(img, 0, HT, 1200, 800);
   g.globalAlpha = 0.45; g.textAlign = "right"; g.font = "bold 28px Arial, Helvetica, sans-serif";
   const wy = HT + 800 * 0.74; g.fillStyle = fg; g.fillText("PriceCheck NG", 1176, wy);
-  if (logo) { let src = logo; if (!dk) { src = document.createElement("canvas"); src.width = src.height = 68; const t = src.getContext("2d"); t.drawImage(logo, 0, 0, 68, 68); t.globalCompositeOperation = "source-in"; t.fillStyle = "#0a7a3d"; t.fillRect(0, 0, 68, 68); } g.drawImage(src, 1176 - g.measureText("PriceCheck NG").width - 42, wy - 17, 34, 34); }
+  if (logo) { let src = logo; if (!dk) { src = document.createElement("canvas"); src.width = src.height = 68; const t = src.getContext("2d"); t.drawImage(logo, 0, 0, 68, 68); t.globalCompositeOperation = "source-in"; t.fillStyle = "#0a7a3d"; t.fillRect(0, 0, 68, 68); } if (!dk) g.globalAlpha = 0.85; g.drawImage(src, 1176 - g.measureText("PriceCheck NG").width - 46, wy - 21, 42, 42); }
   g.globalAlpha = 0.75; g.fillStyle = fg; g.textAlign = "center"; g.font = "26px Arial, Helvetica, sans-serif";
   document.querySelectorAll("#cpAxis > span").forEach((sp) => { const pc = parseFloat(sp.style.left); if (isFinite(pc)) g.fillText(sp.textContent, (pc / 100) * 1200, HT + 800 + AX / 2); });
   return await new Promise((ok, no) => cv.toBlob((b) => (b ? ok(b) : no(new Error("blob"))), kind === "jpg" ? "image/jpeg" : "image/png", 0.92));
@@ -2505,7 +2505,7 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) 
     <div id="cpTip" style="display:none;position:absolute;top:8px;z-index:2;padding:6px 10px;border-radius:9px;background:rgba(10,18,14,.94);border:1px solid rgba(148,163,184,.35);color:#e6f2ea;font-size:.82rem;line-height:1.35;white-space:nowrap;pointer-events:none"></div>
     <div id="cpLoad" style="display:none;position:absolute;left:8px;top:8px;padding:4px 10px;border-radius:12px;background:rgba(100,116,139,.7);color:#fff;font-size:.8rem;pointer-events:none">Loading older data…</div>
     <div id="cpDot" style="position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;border:2px solid #fff;visibility:hidden;pointer-events:none"></div>
-    <div style="position:absolute;right:8px;bottom:22%;display:flex;align-items:center;gap:5px;opacity:.45;pointer-events:none"><span class="cpwm" style="width:20px;height:20px;display:block"></span><span style="font-weight:700;font-size:.8rem;letter-spacing:-.2px">PriceCheck NG</span></div>
+    <div style="position:absolute;right:8px;bottom:22%;display:flex;align-items:center;gap:5px;opacity:.7;pointer-events:none"><span class="cpwm" style="width:24px;height:24px;display:block"></span><span style="font-weight:700;font-size:.8rem;letter-spacing:-.2px;opacity:.65">PriceCheck NG</span></div>
   </div>`;
   const box = $("#cpBox"), host = $("#cpHost"), dot = $("#cpDot"), tip = $("#cpTip"), opn = $("#cpOpen"), ax = $("#cpAxis"), lo = $("#cpLoad"), evt = $("#cpEvt"), pop = $("#cpPop");
 
