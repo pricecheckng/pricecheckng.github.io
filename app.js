@@ -554,7 +554,7 @@ function mkLayout() {
     return;
   }
   lin.classList.toggle("xw", ex > 0);
-  lin.style.minWidth = ex ? 44 + 22 + 8 + 32 + 8 + 72 + 92 + (c.chg ? 66 : 0) + ex * 74 + 6 + "px" : "";
+  lin.style.minWidth = (ex ? 44 + 22 + 8 + 32 + 8 + 72 + 92 + (c.chg ? 66 : 0) + ex * 74 + 6 + 56 : 368) + "px";
   h.innerHTML = "<span>#</span><span>Name</span>" + (c.mcap ? '<span class="hc m">Market cap</span>' : "") + '<span class="hc p">Price</span>' + (c.chg ? '<span class="hc c">24h %</span>' : "") + (c.vol ? '<span class="hc m">Volume (24h)</span>' : "");
   const b = $("#fltBadge"), n = fltCount();
   if (b) { b.hidden = !n; b.textContent = n; }

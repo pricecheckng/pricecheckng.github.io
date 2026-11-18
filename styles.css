@@ -358,4 +358,21 @@ html.dk .cw .buy{border-color:#22c55e;color:#4ade80}
 
 .cw .px{min-width:86px}
 .cw .buy{width:40px;box-sizing:border-box;text-align:center;padding-left:0;padding-right:0}
-@media (max-width:959px){.cw .coin{gap:5px!important}.cw .rk{width:22px!important}.cw .chg{width:52px!important;min-width:52px!important;white-space:nowrap}.cw .chg::before{display:none!important}}
+@media (max-width:959px){
+  #lin{--rowbg:#fff;--hdrbg:#fff}
+  #lin .list{overflow:clip!important}
+  #lin .cw{display:flex;align-items:stretch;background:var(--rowbg)}
+  #lin .cw .coin{gap:5px!important;padding-left:34px!important;background:var(--rowbg)!important;flex:1 1 auto;min-width:0}
+  #lin .cw .star{position:sticky!important;left:0;top:auto;bottom:auto;z-index:4;flex:none;width:34px!important;margin-right:-34px;background:var(--rowbg)}
+  #lin .cw .rk{position:sticky;left:34px;z-index:3;box-sizing:border-box;width:22px!important;padding:0;background:var(--rowbg);opacity:1!important;color:var(--muted)}
+  #lin .cw .px{min-width:86px}
+  #lin .cw .buy{margin-left:0}
+  #lin .cw .meta span{font-size:.72rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #lin .cw .chg{width:68px!important;min-width:68px!important;white-space:nowrap}
+  #lin .lhd{background:var(--hdrbg);opacity:1!important;color:var(--muted);padding-left:34px!important}
+  #lin .lhd span:nth-child(1){position:sticky;left:34px;z-index:3;background:var(--hdrbg);width:22px!important}
+  #lin .lhd .hc{margin-left:5px!important}
+  #lin .lhd .hc.p{min-width:86px}
+  #lin .lhd .hc.c{min-width:68px}
+}
+}

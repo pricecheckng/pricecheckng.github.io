@@ -88,3 +88,5 @@ html.dk .pcn-fav{background:#0e1511;border-color:#1d2a23}
 html.dk .pcn-srcitem{color:#e9f1ec;border-color:#26332c}
 html.dk .pcn-srcitem small{color:#8fa399}
 html.dk .cpr button[aria-pressed="true"],html.dk .cps button[aria-pressed="true"],html.dk .cpb[aria-pressed="true"]{background:#162a20;color:#4ade80;box-shadow:none}
+
+@media (max-width:959px){html.dk #lin{--rowbg:#16201a;--hdrbg:#16201a}}
