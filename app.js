@@ -2338,6 +2338,7 @@ const CHART_RANGES = {
   All: { iv: "1w", win: 0, buf: 600, name: "all time" },
 };
 const chartCache = new Map();
+const cpWarm = new Set();
 let chartTok = 0;
 let cpCompare = null; // {n1,n2,s} while a second coin is drawn on the chart
 let cpExp = null;     // {all(), isCap, range} for the download buttons
@@ -2346,7 +2347,7 @@ const CHART_EX = { binance: 1, okx: 1, bybit: 1, gate: 1, mexc: 1 };
 async function getSeries(c, r, sp) {
   const key = c.id + ":" + r;
   const hit = chartCache.get(key);
-  if (hit && Date.now() - hit.at < 60000) return hit.s;
+  if (hit && Date.now() - hit.at < (r === "24h" ? 60000 : 300000)) return hit.s;
   const pull = async (iv, lim) => {
     const sr = await fetchKlines(c, iv, lim);
     if (sr) {
@@ -2419,8 +2420,11 @@ function initChart(c, sp, sec) {
       return;
     }
     paint();
+    const cbx = $("#cpChart"); if (cbx) cbx.style.opacity = ".4";
     const s = await getSeries(c, V.r, sp);
+    if (cbx) cbx.style.opacity = "";
     if (my !== chartTok || !$("#cpChart")) return;
+    if (s && !cpWarm.has(c.id)) { cpWarm.add(c.id); Object.keys(CHART_RANGES).filter((k) => k !== V.r).forEach((k, i) => setTimeout(() => { getSeries(c, k, sp).catch(() => {}); }, 400 + i * 500)); }
     if (s && !s.dex && klCoin.get(c.id) && !exName) { exName = klCoin.get(c.id); paint(); }
     if (!s) {
       $("#cpChart").innerHTML = `<p class="muted" style="margin:8px 0 0">This chart is not available for this coin.</p>`;
