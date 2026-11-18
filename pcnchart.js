@@ -819,6 +819,8 @@
       setMagnet: function (v) { magnet = !!v; }, setEmoji: function (e) { emojiSel = e; }, setText: function (i, t) { if (DR[i]) { DR[i].txt = t; emitDraw(); draw(); } }, deleteAt: function (i) { if (DR[i]) { DR.splice(i, 1); sel = -1; emitDraw(); draw(); } },
       setInds: function (a) { a = a || []; inds = a.filter(function (k) { return IND_META[k]; }); subs = a.filter(function (k) { return SUB_META[k]; }); subSync(); size(); }, indMeta: (function () { var o = {}, k; for (k in IND_META) o[k] = IND_META[k]; for (k in SUB_META) o[k] = SUB_META[k]; return o; })(), subIds: Object.keys(SUB_META),
       setType: function (t) { ctype = t; draw(); }, getType: function () { return ctype; }, setColors: function (u, d) { if (u) C.up = u; if (d) C.dn = d; draw(); },
+      pan: function (dir) { V.start += dir * (plotW() / V.bw) * 0.5; clampView(); draw(); },
+      panOk: function () { var n = D.c.length, vis = plotW() / V.bw; return [V.start > -vis * 0.6 + 0.5, V.start < Math.max(0, n - vis * 0.4) - 0.5]; },
       undo: function () { if (hist.length < 2) return false; redoS.push(hist.pop()); applyHist(hist[hist.length - 1]); return true; },
       redo: function () { if (!redoS.length) return false; var s = redoS.pop(); hist.push(s); applyHist(s); return true; },
       canUndo: function () { return hist.length > 1; }, canRedo: function () { return redoS.length > 0; },

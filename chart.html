@@ -335,7 +335,7 @@ setTimeout(function(){var d=document.getElementById('dtools');if(d)d.classList.a
   }, 7000);
 })();
 </script>
-<script src="pcnchart.js?v=169"></script>
+<script src="pcnchart.js?v=170"></script>
 <script src="chart-ex.js?v=172"></script>
 <script type="module">
 import { ICONS } from "./chart-icons.js?v=167";
@@ -859,6 +859,7 @@ async function load() {
     startLive(my);
   } catch (e) { if (my === token) fail('Could not load ' + symbol + '/USDT. Pick another pair and try again.'); }
 }
+window.PCN_pan = (d) => chart.pan(d); window.PCN_panOk = () => chart.panOk();
 const menus = ['exMenu', 'tfMenu'];
 const closeMenus = () => menus.forEach(m => $(m).classList.remove('on'));
 const placeMenu = (btn, menu) => { const r = btn.getBoundingClientRect(); menu.style.top = (r.bottom + 4) + 'px'; menu.style.left = Math.max(8, Math.min(r.left, innerWidth - 170)) + 'px'; menu.style.right = 'auto'; };

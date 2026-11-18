@@ -1745,7 +1745,7 @@ function paintCoin(c) {
     </div>
     <div id="cpRow2" style="display:none;grid-template-columns:2.2fr 1fr;gap:8px;margin:8px 0 0;align-items:stretch">
       <div class="cps"><button type="button" id="cpFx"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V14M9 20V10M14 20V13M19 20V6"/><path d="M3 11l5-4 4 3 7-6"/></svg> Indicators</button></div>
-      <div class="cps"><button type="button" id="cpUndo" aria-label="Undo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><button type="button" id="cpRedo" aria-label="Redo"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
+      <div class="cps"><button type="button" id="cpUndo" aria-label="Scroll back"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M11 6l-6 6 6 6"/></svg></button><button type="button" id="cpRedo" aria-label="Scroll forward"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button></div>
     </div>
     <div id="cpRow3" class="cps" style="margin:8px 0 0"><button type="button" id="cpCmp" style="justify-content:space-between;padding:0 12px;font-weight:600"><span id="cpCmpT">Compare</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></div>
     <div class="cp-lh" id="cpLH"></div>
@@ -2415,9 +2415,10 @@ function initChart(c, sp, sec) {
   const fwd = (id) => { const d = ifw(), e = d && d.getElementById(id); if (e) e.click(); };
   const fx = $("#cpFx"), un = $("#cpUndo"), re = $("#cpRedo");
   if (fx) fx.onclick = () => fwd("fxBtn");
-  if (un) un.onclick = () => fwd("undoBtn");
-  if (re) re.onclick = () => fwd("redoBtn");
-  const hist = setInterval(() => { if (!$("#cpRow2")) return clearInterval(hist); const d = ifw(); [["undoBtn", un], ["redoBtn", re]].forEach(([id, b]) => { const e = d && d.getElementById(id); if (b) b.style.opacity = e && !e.classList.contains("dis") ? "" : ".4"; }); }, 500);
+  const pan = (d) => { const f = document.querySelector("#cpChart iframe"); try { f.contentWindow.PCN_pan(d); } catch (_) {} };
+  if (un) un.onclick = () => pan(-1);
+  if (re) re.onclick = () => pan(1);
+  const hist = setInterval(() => { if (!$("#cpRow2")) return clearInterval(hist); const d = ifw(); let ok = [true, true]; try { const f = document.querySelector("#cpChart iframe"); ok = f.contentWindow.PCN_panOk(); } catch (_) {} [un, re].forEach((b, k) => { if (b) b.style.opacity = ok[k] ? "" : ".4"; }); }, 500);
   const lg = $("#cpLog"); if (lg) lg.onclick = () => { if (V.cmp) return; V.log = !V.log; load(); };
   const cmpB = $("#cpCmp");
   if (cmpB) cmpB.onclick = () => {
