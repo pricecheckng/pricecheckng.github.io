@@ -444,7 +444,9 @@
       });
     })();
 
+    function noCite(t) { return String(t).replace(/\s*\[\s*(?:(?:N\d+|Web\s*Notes?|Web|Notes?)\s*[,;]?\s*)+\](?!\()/gi, ''); }
     function mdRender(t) {
+      t = noCite(t);
       var inl = function (x) {
         return x.replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function (m, a, u) {
           var own = /^https?:\/\/(www\.)?pricecheckng\.com\.ng/i.test(u.replace(/&amp;/g, '&'));
