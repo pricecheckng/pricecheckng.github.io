@@ -1592,6 +1592,7 @@ async function loadWatch() {
   state.watchFor = state.user.id;
 }
 
+function watchStar(id) { return state.watch.has(id) ? "★" : "☆"; }
 function watchLabel(id) {
   return state.watch.has(id) ? "★ In your watchlist" : "☆ Add to watchlist";
 }
@@ -1754,6 +1755,10 @@ function paintCoin(c) {
     <div class="cp-head">
       ${c.id === "bitcoin" ? btcLogo("logo lg").replace('width="32" height="32"', 'width="48" height="48"') : `<img class="logo lg" src="${esc(c.image_url || "")}" alt="" width="48" height="48">`}
       <div><h1>${esc(c.name)}</h1><p>${esc(sym)}${c.market_cap_rank && c.kind !== "tokenized" ? " · Rank #" + c.market_cap_rank : ""}${c.kind === "tokenized" ? '<em style="font-style:normal;font-size:.72rem;background:rgba(22,163,74,.14);color:#15803d;border-radius:99px;padding:1px 8px;margin-left:6px">Tokenized asset</em>' : ""}</p>${c.kind === "tokenized" ? '<p class="muted" style="font-size:.85rem;margin:6px 0 0">A tokenized asset tracks the value of a fund, bond, stock or similar. Its price does not move like normal crypto and it may trade very little.</p>' : ""}</div>
+      <div style="margin-left:auto;display:flex;gap:8px;flex:none;align-self:flex-start">
+        <button type="button" id="watchBtn" class="cpa" aria-label="Add to watchlist" style="font-size:1.25rem">${watchStar(c.id)}</button>
+        <button type="button" id="shareBtn" class="cpa" aria-label="Share"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg></button>
+      </div>
     </div>
     <nav class="cp-tabs" aria-label="Sections"><a href="#" data-go="top">Overview</a><a href="#" data-go="#coinMarkets">Markets</a><a href="#" data-go="#coinNews">News</a><a href="#" data-go="#cpAbout">About</a></nav>
     <div class="cp-price">
@@ -1777,11 +1782,7 @@ function paintCoin(c) {
     <div id="cpAbout">${explainerHtml(c, sym)}</div>
     <div id="coinMore"></div>
     <button class="btn" type="button" id="alertBtn" style="padding:10px 14px;min-height:0;font-size:.95rem;border-radius:12px">🔔 Set price alert</button>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 4px">
-      <button class="btn ghost" type="button" id="watchBtn" style="padding:9px 8px;min-height:0;font-size:.88rem;border-radius:12px">${watchLabel(c.id)}</button>
-      <button class="btn ghost" type="button" id="shareBtn" style="padding:9px 8px;min-height:0;font-size:.88rem;border-radius:12px">Share</button>
-    </div>
-    ${referralCardHtml()}`;
+    `;
   cpLayout();
   loadCoinMore(c);
   $("#alertBtn").onclick = () => alertForm(c);
@@ -1793,12 +1794,12 @@ function paintCoin(c) {
   paintConverter(c);
   loadWatch().then(() => {
     const wb = $("#watchBtn");
-    if (wb) wb.textContent = watchLabel(c.id);
+    if (wb) { wb.textContent = watchStar(c.id); wb.style.color = state.watch.has(c.id) ? "#f5a623" : ""; }
   });
   $("#watchBtn").onclick = async () => {
     await toggleWatch(c.id);
     const wb = $("#watchBtn");
-    if (wb) wb.textContent = watchLabel(c.id);
+    if (wb) { wb.textContent = watchStar(c.id); wb.style.color = state.watch.has(c.id) ? "#f5a623" : ""; }
   };
   $("#shareBtn").onclick = async () => {
     track("share");
