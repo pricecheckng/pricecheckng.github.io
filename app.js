@@ -2197,7 +2197,7 @@ async function dexKlines(c, iv, lim) {
   return out;
 }
 // returns [{t,p}] oldest first, or null. Rejects a series whose last price is far from our live price (wrong token with the same symbol).
-async function fetchKlines(c, iv, lim) {
+async function fetchKlines(c, iv, lim, want) {
   const S = encodeURIComponent(String(c.symbol || "").toUpperCase());
   if (!S) return null;
   const px = Number(c.price_usd);
@@ -2212,7 +2212,15 @@ async function fetchKlines(c, iv, lim) {
   const order = ["binance", "bybit", "okx", "mexc", "gate", "kucoin", "lbank"];
   if (known) order.splice(order.indexOf(known), 1), order.unshift(known);
   const first = clean(await KL_SRC[order[0]](S, iv, lim).catch(() => null));
-  if (first) { klCoin.set(c.id, order[0]); return first; }
+  if (first && !(want && first.length < want)) { klCoin.set(c.id, order[0]); return first; }
+  if (first) {
+    // The main exchange has too little history (new listing there): ask the others and keep the longest history.
+    const more = await Promise.all(order.slice(1).map((n) => KL_SRC[n](S, iv, lim).then(clean).catch(() => null)));
+    let best = first;
+    for (const m of more) if (m && m.length > best.length) best = m;
+    klCoin.set(c.id, order[0]);
+    return best;
+  }
   const rest = order.slice(1);
   const res = await Promise.all(rest.map((n) => KL_SRC[n](S, iv, lim).then(clean).catch(() => null)));
   for (let i = 0; i < rest.length; i++) if (res[i]) { klCoin.set(c.id, rest[i]); return res[i]; }
@@ -2348,8 +2356,8 @@ async function getSeries(c, r, sp) {
   const key = c.id + ":" + r;
   const hit = chartCache.get(key);
   if (hit && Date.now() - hit.at < (r === "24h" ? 60000 : 300000)) return hit.s;
-  const pull = async (iv, lim) => {
-    const sr = await fetchKlines(c, iv, lim);
+  const pull = async (iv, lim, want) => {
+    const sr = await fetchKlines(c, iv, lim, want);
     if (sr) {
       const px = Number(c.price_usd);
       if (px && !sr.dex) sr[sr.length - 1].p = px;
@@ -2359,7 +2367,7 @@ async function getSeries(c, r, sp) {
   let out = null;
   try {
     const { iv, buf } = CHART_RANGES[r];
-    out = await pull(iv, buf);
+    out = await pull(iv, buf, r === "1Y" ? 360 : r === "1M" ? 175 : r === "All" ? 200 : 0);
   } catch (_) {}
   if (!out && r === "All") { try { out = await pull("1d", 1000); } catch (_) {} }
   if (!out && r === "1W" && sp.length >= 2) {
