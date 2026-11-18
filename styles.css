@@ -351,3 +351,7 @@ html:not(.dk) .cpwm{opacity:1;background:#07672f;-webkit-mask:url(logo-p.png) ce
 
 .cpa{display:flex;align-items:center;justify-content:center;min-width:44px;height:40px;padding:0 12px;border-radius:12px;border:0;background:#f1f3f5;color:inherit;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 html.dk .cpa{background:#162a20}
+
+.cw .buy{flex:none;margin-left:4px;padding:1px 6px;border:1.5px solid #16a34a;color:#15803d;border-radius:7px;font-size:.68rem;font-weight:700;line-height:1.25;cursor:pointer;-webkit-tap-highlight-color:transparent}
+html.dk .cw .buy{border-color:#22c55e;color:#4ade80}
+#lin.dk .cw .buy{order:4;margin-left:8px}

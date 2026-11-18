@@ -496,7 +496,10 @@ async function renderMarket() {
       iosBox.remove();
     };
   }
+  new MutationObserver(paintBuy).observe($("#list"), { childList: true, subtree: true });
+  loadBybitSet().then(paintBuy);
   $("#list").addEventListener("click", async (e) => {
+    if (e.target.closest("[data-buy]")) { track("buy", "bybit"); window.open(BYBIT_REF, "_blank", "noopener,noreferrer"); return; }
     const st = e.target.closest("[data-star]");
     if (st) {
       const cid = st.dataset.star;
@@ -723,6 +726,27 @@ function dxCells(c) {
   return `<span class="dx d1 ${d1.c}">${chgTxt(d1)}</span><span class="dx d7 ${d7.c}">${chgTxt(d7)}</span><span class="dx dsup">${sup}</span><span class="dx dspk">${svg}</span>`;
 }
 
+let bybitSet = null;
+async function loadBybitSet() {
+  if (bybitSet) return bybitSet;
+  try { const j = JSON.parse(localStorage.getItem("pcn_bybit") || "null"); if (j && Date.now() - j.t < 864e5 && j.s.length > 50) return (bybitSet = new Set(j.s)); } catch (_) {}
+  const j = await klGet("https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000", 8000);
+  const l = j && j.result && j.result.list;
+  if (!l || l.length < 50) return null;
+  const s = [...new Set(l.filter((x) => x.quoteCoin === "USDT" && x.status === "Trading").map((x) => String(x.baseCoin).toUpperCase()))];
+  try { localStorage.setItem("pcn_bybit", JSON.stringify({ t: Date.now(), s })); } catch (_) {}
+  return (bybitSet = new Set(s));
+}
+function paintBuy() {
+  if (!bybitSet) return;
+  document.querySelectorAll("#list .coin:not([data-bz])").forEach((b) => {
+    b.dataset.bz = "1";
+    const sym = ((b.querySelector(".meta b") || {}).textContent || "").toUpperCase(), rk = parseInt((b.querySelector(".rk") || {}).textContent, 10), px = b.querySelector(".px");
+    if (!sym || !px || px.textContent.length > 10 || !rk || rk > 500 || !bybitSet.has(sym) || /Tokenized/.test((b.querySelector(".meta span") || {}).textContent || "")) return;
+    const s = document.createElement("span"); s.className = "buy"; s.dataset.buy = "1"; s.setAttribute("role", "link"); s.textContent = "Buy";
+    px.parentNode.insertBefore(s, px);
+  });
+}
 function coinRow(c) {
   const d = chg(c.change_24h_pct);
   const sym = esc(c.symbol.toUpperCase());
