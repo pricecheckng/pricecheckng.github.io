@@ -1749,7 +1749,7 @@ function paintCoin(c) {
     </div>
     <div id="cpRow3" class="cps" style="margin:8px 0 0"><button type="button" id="cpCmp" style="justify-content:space-between;padding:0 12px;font-weight:600"><span id="cpCmpT">Compare</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></div>
     <div class="cp-lh" id="cpLH"></div>
-    <p class="muted" id="cpNote" style="margin:10px 0 0;font-size:.85rem">Hold your finger on the chart to see the price. Drag sideways to move through time.</p>`;
+    <p class="muted" id="cpNote" style="margin:10px 0 0;font-size:.85rem"></p>`;
   $("#coinBody").innerHTML = `
     <div class="cp-head">
       ${c.id === "bitcoin" ? btcLogo("logo lg").replace('width="32" height="32"', 'width="48" height="48"') : `<img class="logo lg" src="${esc(c.image_url || "")}" alt="" width="48" height="48">`}
@@ -2366,7 +2366,7 @@ function initChart(c, sp, sec) {
     const ct = $("#cpCmpT"); if (ct) ct.textContent = V.cmp ? "vs " + V.cmp.name + "  ✕" : "Compare";
     const mb = q("#cpMode button[data-m=mcap]")[0]; if (mb) { mb.disabled = !supply; mb.style.opacity = supply ? "" : ".4"; }
     const cb = q("#cpType button[data-t=candles]")[0]; if (cb) { const ok = !!exName && CHART_EX[exName]; cb.disabled = !ok; cb.style.opacity = ok ? "" : ".4"; cb.title = ok ? "" : "Candles are not available for this coin"; }
-    const nt = $("#cpNote"); if (nt) nt.textContent = cd ? "" : V.mode === "mcap" ? "Market cap here is price × current circulating supply, so past values are an estimate." : "Hold your finger on the chart to see the price. Drag sideways to move through time.";
+    const nt = $("#cpNote"); if (nt) nt.textContent = cd ? "" : V.mode === "mcap" ? "Market cap here is price × current circulating supply, so past values are an estimate." : "";
   };
   const load = async () => {
     const my = ++chartTok;
