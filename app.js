@@ -2352,6 +2352,20 @@ let cpCompare = null; // {n1,n2,s} while a second coin is drawn on the chart
 let cpExp = null;     // {all(), isCap, range} for the download buttons
 const CHART_EX = { binance: 1, okx: 1, bybit: 1, gate: 1, mexc: 1 };
 
+// Fallback for assets no exchange lists (tokenized funds, stocks): the prices PriceCheck NG recorded itself.
+async function ownSeries(c, r) {
+  const span = { "24h": 1, "1W": 7, "1M": 30 }[r];
+  let q = sb.from("price_points").select("ts,price").eq("coin_id", c.id).order("ts", { ascending: true }).limit(1500);
+  if (span) q = q.gte("ts", new Date(Date.now() - span * 864e5).toISOString());
+  const { data, error } = await q;
+  if (error || !Array.isArray(data)) return null;
+  const sr = data.map((o) => ({ t: Date.parse(o.ts), p: Number(o.price) })).filter((o) => isFinite(o.t) && o.p > 0);
+  const px = Number(c.price_usd);
+  if (px > 0 && sr.length) sr.push({ t: Date.now(), p: px });
+  if (sr.length < 3) return null;
+  sr.dex = true; sr.own = true;
+  return sr;
+}
 async function getSeries(c, r, sp) {
   const key = c.id + ":" + r;
   const hit = chartCache.get(key);
@@ -2370,6 +2384,7 @@ async function getSeries(c, r, sp) {
     out = await pull(iv, buf, r === "1Y" ? 360 : r === "1M" ? 175 : r === "All" ? 200 : 0);
   } catch (_) {}
   if (!out && r === "All") { try { out = await pull("1d", 1000); } catch (_) {} }
+  if (!out) { try { out = await ownSeries(c, r); } catch (_) {} }
   if (!out && r === "1W" && sp.length >= 2) {
     const now = Date.now();
     out = sp.map((p, i) => ({ t: now - (sp.length - 1 - i) * 4 * 3600000, p }));
@@ -2440,6 +2455,7 @@ function initChart(c, sp, sec) {
       return;
     }
     cpCompare = null;
+    if (s.own) { const nt0 = $("#cpNote"); if (nt0) nt0.textContent = "No exchange lists this asset, so this chart uses prices recorded by PriceCheck NG since " + new Date(s[0].t).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) + "."; }
     if (V.cmp) {
       let cs = null; try { cs = await getSeries(V.cmp, V.r, []); } catch (_) {}
       if (my !== chartTok || !$("#cpChart")) return;
