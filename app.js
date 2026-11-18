@@ -2475,16 +2475,16 @@ async function chartImage(c, kind) {
   const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(cl)], { type: "image/svg+xml" }));
   const load = (src) => new Promise((ok, no) => { const im = new Image(); im.onload = () => ok(im); im.onerror = no; im.src = src; });
   const img = await load(url); URL.revokeObjectURL(url);
-  let logo = null; try { logo = await load("icon-green-192.png"); } catch (_) {}
+  let logo = null; try { logo = await load("logo-p.png"); } catch (_) {}
   const HT = 70, AX = 60, cv = document.createElement("canvas"); cv.width = 1200; cv.height = HT + 800 + AX;
   const g = cv.getContext("2d");
   g.fillStyle = bg; g.fillRect(0, 0, cv.width, cv.height);
   g.fillStyle = fg; g.font = "bold 34px Arial, Helvetica, sans-serif"; g.textBaseline = "middle";
   g.fillText(c.name + " to USD Chart  ·  " + e.range + (cpCompare ? "  ·  vs " + cpCompare.n2 : ""), 24, HT / 2);
   g.drawImage(img, 0, HT, 1200, 800);
-  g.globalAlpha = 0.45; g.textAlign = "right"; g.font = "bold 38px Arial, Helvetica, sans-serif";
+  g.globalAlpha = 0.45; g.textAlign = "right"; g.font = "bold 28px Arial, Helvetica, sans-serif";
   const wy = HT + 800 * 0.74; g.fillStyle = fg; g.fillText("PriceCheck NG", 1176, wy);
-  if (logo) g.drawImage(logo, 1176 - g.measureText("PriceCheck NG").width - 54, wy - 22, 44, 44);
+  if (logo) { if (!dk) g.filter = "invert(1)"; g.drawImage(logo, 1176 - g.measureText("PriceCheck NG").width - 42, wy - 17, 34, 34); g.filter = "none"; }
   g.globalAlpha = 0.75; g.fillStyle = fg; g.textAlign = "center"; g.font = "26px Arial, Helvetica, sans-serif";
   document.querySelectorAll("#cpAxis > span").forEach((sp) => { const pc = parseFloat(sp.style.left); if (isFinite(pc)) g.fillText(sp.textContent, (pc / 100) * 1200, HT + 800 + AX / 2); });
   return await new Promise((ok, no) => cv.toBlob((b) => (b ? ok(b) : no(new Error("blob"))), kind === "jpg" ? "image/jpeg" : "image/png", 0.92));
@@ -2504,7 +2504,7 @@ function mountChart(all, range, log, fm, isCap, winN, onWin, loadOlder, events) 
     <div id="cpTip" style="display:none;position:absolute;top:8px;z-index:2;padding:6px 10px;border-radius:9px;background:rgba(10,18,14,.94);border:1px solid rgba(148,163,184,.35);color:#e6f2ea;font-size:.82rem;line-height:1.35;white-space:nowrap;pointer-events:none"></div>
     <div id="cpLoad" style="display:none;position:absolute;left:8px;top:8px;padding:4px 10px;border-radius:12px;background:rgba(100,116,139,.7);color:#fff;font-size:.8rem;pointer-events:none">Loading older data…</div>
     <div id="cpDot" style="position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;border-radius:50%;border:2px solid #fff;visibility:hidden;pointer-events:none"></div>
-    <div style="position:absolute;right:8px;bottom:22%;display:flex;align-items:center;gap:6px;opacity:.4;pointer-events:none"><img src="icon-green-192.png" alt="" width="28" height="28" style="border-radius:7px"><span style="font-weight:800;font-size:1.15rem;letter-spacing:-.3px">PriceCheck NG</span></div>
+    <div style="position:absolute;right:8px;bottom:22%;display:flex;align-items:center;gap:5px;opacity:.45;pointer-events:none"><img class="cpwm" src="logo-p.png" alt="" width="20" height="20" style="display:block"><span style="font-weight:700;font-size:.8rem;letter-spacing:-.2px">PriceCheck NG</span></div>
   </div>`;
   const box = $("#cpBox"), host = $("#cpHost"), dot = $("#cpDot"), tip = $("#cpTip"), opn = $("#cpOpen"), ax = $("#cpAxis"), lo = $("#cpLoad"), evt = $("#cpEvt"), pop = $("#cpPop");
 

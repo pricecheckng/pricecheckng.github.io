@@ -345,3 +345,5 @@ html.dk .cp-tabs { background: #0e1511; }
 .cps{padding:3px;border-radius:11px}
 .cps button{min-height:32px;font-size:.85rem;border-radius:9px}
 .cpb{padding:0 12px}
+
+html:not(.dk) .cpwm{filter:invert(1)}
