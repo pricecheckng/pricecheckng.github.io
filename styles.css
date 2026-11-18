@@ -346,4 +346,5 @@ html.dk .cp-tabs { background: #0e1511; }
 .cps button{min-height:32px;font-size:.85rem;border-radius:9px}
 .cpb{padding:0 12px}
 
-html:not(.dk) .cpwm{filter:invert(1)}
+.cpwm{background:url(logo-p.png) center/contain no-repeat}
+html:not(.dk) .cpwm{background:#0a7a3d;-webkit-mask:url(logo-p.png) center/contain no-repeat;mask:url(logo-p.png) center/contain no-repeat}
