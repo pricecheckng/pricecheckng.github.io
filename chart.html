@@ -1346,7 +1346,7 @@ loadPairs().then(setPair);
 
 // tool menus open above the ask-agent bar, like CMC
 try {
-  const setDock = () => { const a = $('agent'); if (a) document.documentElement.style.setProperty('--dockH', Math.max(0, Math.round(innerHeight - a.getBoundingClientRect().top)) + 'px'); };
+  const setDock = () => { const a = $('agent'); if (a && a.offsetParent === null) { document.documentElement.style.setProperty('--dockH', '0px'); return; } if (a) document.documentElement.style.setProperty('--dockH', Math.max(0, Math.round(innerHeight - a.getBoundingClientRect().top)) + 'px'); };
   setDock(); addEventListener('resize', setDock);
   ['lnBg', 'fibBg', 'prjBg', 'patBg', 'gnBg', 'gBg'].forEach(id => { const e = $(id); if (e) new MutationObserver(() => { if (e.classList.contains('on')) setDock(); }).observe(e, { attributes: true, attributeFilter: ['class'] }); });
 } catch (e) { console.error('pcn dock', e); }
