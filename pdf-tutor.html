@@ -198,19 +198,32 @@ async function ai(action, payload) {
   const { data } = await sb.auth.getSession();
   const tok = data && data.session && data.session.access_token;
   if (!tok) { show("sAuth"); throw new Error("Please sign in first."); }
-  let r;
-  try {
-    r = await fetch(SUPABASE_URL + "/functions/v1/pdf-tutor", {
-      method: "POST",
-      headers: { "content-type": "application/json", apikey: SUPABASE_KEY, authorization: "Bearer " + tok },
-      body: JSON.stringify({ action, ...payload }),
-    });
-  } catch (_) { throw new Error("No internet connection. Try again."); }
-  if (r.status === 404) throw new Error("The AI function is not set up yet (pdf-tutor is not deployed).");
-  let j = {}; try { j = await r.json(); } catch (_) {}
-  if (r.status === 401) { show("sAuth"); throw new Error("Please sign in first."); }
-  if (!r.ok || !j.ok) throw new Error(j.error || "The AI had a problem (" + r.status + "). Try again.");
-  return j.data;
+  const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+  for (let attempt = 0; ; attempt++) {
+    let r;
+    try {
+      r = await fetch(SUPABASE_URL + "/functions/v1/pdf-tutor", {
+        method: "POST",
+        headers: { "content-type": "application/json", apikey: SUPABASE_KEY, authorization: "Bearer " + tok },
+        body: JSON.stringify({ action, ...payload }),
+      });
+    } catch (_) {
+      if (attempt < 2) { await sleep(1500 * (attempt + 1)); continue; }
+      throw new Error("No internet connection. Try again.");
+    }
+    if (r.status === 404) throw new Error("The AI function is not set up yet (pdf-tutor is not deployed).");
+    let j = {}; try { j = await r.json(); } catch (_) {}
+    if (r.status === 401) { show("sAuth"); throw new Error("Please sign in first."); }
+    if (r.status === 429 && j.limit) throw new Error(j.error || "Daily limit reached. Come back tomorrow.");
+    if (r.ok && j.ok) return j.data;
+    const msg = j.error || "";
+    // the AI service was busy or gave a broken answer: wait a little and try again by itself (twice)
+    if (attempt < 2 && (r.status >= 500 || r.status === 429) && /HTTP (429|5\d\d)|bad JSON|no model worked/i.test(msg || "HTTP " + r.status)) {
+      const t = $("lLoadText"); if (t) t.textContent = "The AI is busy, trying again...";
+      await sleep(2500 * (attempt + 1)); continue;
+    }
+    throw new Error(msg || "The AI had a problem (" + r.status + "). Try again.");
+  }
 }
 
 const tidy = (t) => String(t || '').replace(/^\s*(?:(?:chapter|unit|module|section|lesson|topic|part)\s+)?\d+(?:\.\d+)*[.):]?\s+/i, '').trim() || String(t || '');
@@ -367,7 +380,8 @@ async function openLesson(retry, mistake) {
   } catch (er) {
     setLoad(false); $("lBody").classList.add("hide"); fail(er.message || String(er));
     const b = document.createElement("button"); b.className = "btn"; b.textContent = "Try again"; b.onclick = () => openLesson(retry, mistake);
-    $("lLoad").classList.remove("hide"); $("lLoad").innerHTML = ""; $("lLoad").append(b);
+    const em = document.createElement("p"); em.style.cssText = "margin:0 0 10px;color:#7a1b1b"; em.textContent = er.message || String(er);
+    $("lLoad").classList.remove("hide"); $("lLoad").innerHTML = ""; $("lLoad").append(em, b);
   }
 }
 function paintLesson() {
