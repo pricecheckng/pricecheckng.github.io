@@ -66,8 +66,8 @@ textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12p
   <a class="back" href="/">Open app</a>
 </header>
 <main>
-  <h1>PDF Tutor <span class="pill">prototype</span></h1>
-  <p class="sub">Upload a PDF. The AI makes a lesson plan, then teaches it step by step and checks your understanding.</p>
+  <div id="intro"><h1>PDF Tutor <span class="pill">prototype</span></h1>
+  <p class="sub">Upload a PDF. The AI makes a lesson plan, then teaches it step by step and checks your understanding.</p></div>
   <div id="err" class="err hide"></div>
 
   <!-- sign-in needed -->
@@ -116,7 +116,7 @@ textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12p
 
   <!-- learn -->
   <section id="sLearn" class="hide">
-    <div class="note" id="lPos"></div>
+    <div class="row" style="margin:0 0 8px;justify-content:space-between"><button class="btn ghost sm" id="prevBtn">&#8249; Previous</button><span class="note" id="lPos"></span><button class="btn ghost sm" id="menuBtn">Sections &#9662;</button></div>
     <div class="bar"><i id="lBar"></i></div>
     <h2 id="lTitle" style="margin:8px 0;font-size:1.25rem;line-height:1.3"></h2>
     <div id="lLoad" class="card hide"><span class="spin"></span><span id="lLoadText">Preparing this lesson...</span></div>
@@ -131,6 +131,13 @@ textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12p
     </div>
     <div class="row" style="margin-top:22px"><button class="btn ghost sm" id="planBtn">Lesson plan</button></div>
   </section>
+
+  <div id="sheet" class="hide" style="position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.45)">
+    <div style="position:absolute;left:0;right:0;bottom:0;max-height:78vh;overflow:auto;background:#fff;border-radius:18px 18px 0 0;padding:16px 18px 24px">
+      <div class="row" style="margin:0 0 6px;justify-content:space-between"><b>Sections</b><button class="btn ghost sm" id="sheetClose">Close</button></div>
+      <ul class="steps" id="sheetList"></ul>
+    </div>
+  </div>
 
   <!-- finished -->
   <section id="sDone" class="card hide">
@@ -155,7 +162,7 @@ const CHUNK_MIN = 1800, CHUNK_MAX = 5200;
 
 /* ---------- screens ---------- */
 const SCREENS = ["sAuth", "sUpload", "sWork", "sPlan", "sLearn", "sDone"];
-function show(id) { SCREENS.forEach((s) => $(s).classList.toggle("hide", s !== id)); window.scrollTo(0, 0); }
+function show(id) { SCREENS.forEach((s) => $(s).classList.toggle("hide", s !== id)); $("intro").classList.toggle("hide", id !== "sUpload" && id !== "sAuth"); window.scrollTo(0, 0); }
 function fail(msg) { const e = $("err"); e.textContent = msg; e.classList.remove("hide"); }
 function clearFail() { $("err").classList.add("hide"); }
 
@@ -354,6 +361,20 @@ function openPlan() {
 }
 $("startBtn").onclick = () => { if (S.done.every(Boolean)) { S.idx = 0; } openLesson(); };
 $("planBtn").onclick = openPlan;
+$("prevBtn").onclick = () => { if (S.idx > 0) { S.idx -= 1; save(); openLesson(); } };
+function firstOpen() { const k = S.done.indexOf(false); return k === -1 ? S.sections.length - 1 : k; }
+$("menuBtn").onclick = () => {
+  const open = firstOpen();
+  $("sheetList").innerHTML = S.sections.map((s, i) => `<li data-i="${i}" class="${S.done[i] ? "done" : i === S.idx ? "cur" : ""}" style="${i > open ? "opacity:.45" : "cursor:pointer"}"><span class="dot">${S.done[i] ? "&#10003;" : ""}</span><div><b>${i + 1}. ${esc(tidy(s.title))}</b><span>${i > open ? "Locked: finish the earlier sections first" : S.done[i] ? "Done. Tap to read again" : "Tap to open"}</span></div></li>`).join("");
+  $("sheet").classList.remove("hide");
+};
+$("sheetClose").onclick = () => $("sheet").classList.add("hide");
+$("sheet").onclick = (e) => { if (e.target === $("sheet")) $("sheet").classList.add("hide"); };
+$("sheetList").onclick = (e) => {
+  const li = e.target.closest("li"); if (!li) return;
+  const k = Number(li.dataset.i); if (k > firstOpen()) return;
+  $("sheet").classList.add("hide"); S.idx = k; save(); openLesson();
+};
 $("againBtn").onclick = openPlan;
 $("newBtn").onclick = $("newBtn2").onclick = () => { S = null; clearFail(); show("sUpload"); paintSaved(); };
 
@@ -361,6 +382,15 @@ $("newBtn").onclick = $("newBtn2").onclick = () => { S = null; clearFail(); show
 function summaryUpTo(i) { return S.recaps.slice(Math.max(0, i - 6), i).filter(Boolean).join(" ").slice(0, 1200); }
 function setLoad(on, txt) { $("lLoad").classList.toggle("hide", !on); $("lBody").classList.toggle("hide", on); if (txt) $("lLoadText").textContent = txt; }
 let cur = null; // { lesson, question }
+const inflight = {};
+function prefetch(k) {
+  const SS = S;
+  if (!SS || k >= SS.sections.length || SS.lessons[k] || inflight[k]) return;
+  const sec = SS.sections[k];
+  inflight[k] = ai("teach", { name: SS.name, title: sec.title, goal: SS.goals[k], text: sec.text, summary: SS.recaps.slice(Math.max(0, k - 6), k).filter(Boolean).join(" ").slice(0, 1200), retry: false, mistake: "" })
+    .then((d) => { if (d && d.lesson && d.question) { SS.lessons[k] = { lesson: d.lesson, question: d.question }; if (d.recap) SS.recaps[k] = d.recap; if (S === SS) save(); } })
+    .catch(() => {}).finally(() => { delete inflight[k]; });
+}
 
 async function openLesson(retry, mistake) {
   clearFail(); show("sLearn");
@@ -369,6 +399,8 @@ async function openLesson(retry, mistake) {
   $("lBar").style.width = Math.round((S.done.filter(Boolean).length / n) * 100) + "%";
   $("lTitle").textContent = tidy(sec.title);
   $("lFb").classList.add("hide"); $("lNav").innerHTML = ""; $("lAns").value = ""; $("checkBtn").classList.remove("hide");
+  $("prevBtn").classList.toggle("hide", i === 0);
+  if (!retry && !S.lessons[i] && inflight[i]) { setLoad(true, "Preparing this lesson..."); await inflight[i]; if (S.idx !== i) return; }
   const cached = !retry && S.lessons[i];
   if (cached) { cur = cached; return paintLesson(); }
   setLoad(true, retry ? "Explaining it a different way..." : "Preparing this lesson...");
@@ -388,6 +420,13 @@ function paintLesson() {
   $("lLoad").innerHTML = '<span class="spin"></span><span id="lLoadText"></span>'; setLoad(false);
   $("lLesson").innerHTML = md(cur.lesson); $("lQ").innerHTML = md(cur.question);
   $("checkBtn").disabled = false; $("checkBtn").textContent = "Check my answer";
+  const i = S.idx, n = S.sections.length;
+  if (S.done[i]) {
+    const nx = document.createElement("button"); nx.className = "btn"; nx.textContent = i >= n - 1 ? "Finish" : "Next section";
+    nx.onclick = () => { if (i >= n - 1) return finish(); S.idx = i + 1; save(); openLesson(); };
+    $("lNav").append(nx);
+  }
+  if (i + 1 < n && !S.lessons[i + 1] && (S.done[i] || true)) prefetch(i + 1);
 }
 $("checkBtn").onclick = async () => {
   const ans = $("lAns").value.trim();
