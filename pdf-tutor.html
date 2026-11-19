@@ -314,8 +314,27 @@ function painter(fn) { let q = false, v; return (x) => { v = x; if (q) return; q
 const tidy = (t) => String(t || '').replace(/^\s*(?:(?:chapter|unit|module|section|lesson|topic|part)\s+)?\d+(?:\.\d+)*[.):]?\s+/i, '').trim() || String(t || '');
 
 /* ---------- tiny markdown ---------- */
+const SUBS = { 0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅", 6: "₆", 7: "₇", 8: "₈", 9: "₉", "+": "₊", "-": "₋", "−": "₋" };
+const SUPS = { 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹", "+": "⁺", "-": "⁻", "−": "⁻" };
+const mapc = (m, x) => String(x).split("").map((c) => m[c] || c).join("");
+// cleans science/LaTeX leftovers the AI may write ($H_2$, Fe^{3+}, \rightarrow, tables) into plain readable text
+function sci(t) {
+  t = String(t || "");
+  t = t.replace(/\$\$?([^$\n]+)\$\$?/g, (m, x) => (/[\\_^{}]/.test(x) ? x : m));
+  t = t.replace(/\\(?:text|mathrm|mathbf|textbf|ce|mathit)\{([^}]*)\}/g, "$1")
+    .replace(/\\(?:rightleftharpoons|rightleftarrows)/g, "⇌").replace(/\\(?:rightarrow|to|longrightarrow)\b/g, "→").replace(/\\leftrightarrow/g, "↔").replace(/\\leftarrow/g, "←")
+    .replace(/\\times\b/g, "×").replace(/\\cdot\b/g, "·").replace(/\\Delta\b/g, "Δ").replace(/\\pm\b/g, "±").replace(/\\approx\b/g, "≈").replace(/\\leq?\b/g, "≤").replace(/\\geq?\b/g, "≥")
+    .replace(/\^\{?\\circ\}?/g, "°").replace(/\\degree/g, "°").replace(/\\[,;! ]/g, " ").replace(/\\(?:left|right)\b/g, "")
+    .replace(/<=>/g, "⇌").replace(/\s-->\s/g, " → ").replace(/\s->\s/g, " → ");
+  t = t.replace(/\^\{?(\d+)([+\-−])\}?/g, (m, d, sg) => mapc(SUPS, d + sg)).replace(/\^\{([0-9+\-−]+)\}/g, (m, x) => mapc(SUPS, x)).replace(/\^([0-9+\-−])(?![0-9A-Za-z])/g, (m, x) => mapc(SUPS, x));
+  t = t.replace(/([A-Za-z\)\]])_\{([0-9+\-−]+)\}/g, (m, a, x) => a + mapc(SUBS, x)).replace(/([A-Z][a-z]?|\)|\])_(\d+)/g, (m, a, x) => a + mapc(SUBS, x));
+  // tables -> simple lines, rules removed
+  t = t.split("\n").filter((l) => !/^\s*\|?[\s:|-]{3,}\|?\s*$/.test(l) || !/-/.test(l) || !/\|/.test(l)).filter((l) => !/^\s*-{3,}\s*$/.test(l))
+    .map((l) => (/^\s*\|.*\|\s*$/.test(l) ? "- " + l.trim().slice(1, -1).split("|").map((c) => c.trim()).filter(Boolean).join(" · ") : l)).join("\n");
+  return t;
+}
 function md(t) {
-  t = esc(t || "").replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>").replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  t = esc(sci(t || "")).replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>").replace(/(^|[^*\w])\*(?=\S)([^*\n]*\S)\*(?![*\w])/g, "$1<i>$2</i>").replace(/`([^`\n]+)`/g, "<code>$1</code>");
   const out = []; let list = null;
   const close = () => { if (list) { out.push("</" + list + ">"); list = null; } };
   t.split("\n").forEach((l) => {
