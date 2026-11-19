@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PDF Tutor (prototype) | PriceCheck NG</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#0b7a4b">
+<link rel="icon" type="image/png" href="icon-green-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--g:#0b7d4d;--g2:#e7f5ee;--ink:#0f1a14;--mut:#55635a;--line:#e3e9e5;--bg:#fff;--card:#f6f8f7;--bad:#c62828;--badbg:#fdecec}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Plus Jakarta Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{background:var(--g);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5}
+header a{color:#fff;text-decoration:none}
+.brand{font-weight:700;font-size:1.05rem}.brand b{color:#9be3bd;font-weight:800}
+.back{background:#fff;color:var(--g)!important;font-weight:800;font-size:.85rem;border-radius:999px;padding:7px 14px}
+main{max-width:720px;margin:0 auto;padding:20px 18px 60px}
+h1{font-size:1.5rem;line-height:1.25;margin:6px 0 6px}
+.sub{color:var(--mut);margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:0 0 14px}
+.btn{display:inline-block;border:0;background:var(--g);color:#fff;font:inherit;font-weight:700;border-radius:12px;padding:12px 18px;cursor:pointer;text-decoration:none}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:#fff;color:var(--g);border:1.5px solid var(--g)}
+.btn.sm{padding:8px 12px;font-size:.9rem}
+.drop{border:2px dashed #9bc9b2;border-radius:16px;background:var(--g2);padding:26px 16px;text-align:center}
+.drop p{margin:6px 0}
+.note{color:var(--mut);font-size:.88rem}
+.bar{height:9px;border-radius:99px;background:#dfe9e3;overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;background:var(--g);width:0;transition:width .3s}
+.hide{display:none!important}
+.steps{list-style:none;margin:10px 0 0;padding:0}
+.steps li{padding:9px 4px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:flex-start}
+.steps li:last-child{border:0}
+.dot{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid #b8cbc0;margin-top:2px;font-size:.75rem;font-weight:800;display:flex;align-items:center;justify-content:center;color:#fff}
+.done .dot{background:var(--g);border-color:var(--g)}
+.cur .dot{border-color:var(--g)}
+.steps b{display:block;line-height:1.3}
+.steps span{color:var(--mut);font-size:.88rem;line-height:1.4}
+.lesson{font-size:1.02rem}
+.lesson h3,.lesson h4{margin:16px 0 6px;line-height:1.3}
+.lesson ul,.lesson ol{padding-left:22px;margin:8px 0}
+.lesson p{margin:8px 0}
+.q{background:var(--g2);border:1px solid #b9dcc8;border-radius:14px;padding:14px;margin-top:16px}
+.q b{color:var(--g)}
+textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12px;padding:12px;font:inherit;resize:vertical;margin-top:10px;background:#fff;color:var(--ink)}
+.fb{border-radius:14px;padding:14px;margin-top:12px;border:1px solid}
+.fb.ok{background:var(--g2);border-color:#b9dcc8}
+.fb.no{background:var(--badbg);border-color:#f2c1c1}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;align-items:center}
+.saved{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.saved:last-child{border:0}
+.saved b{display:block;line-height:1.3;word-break:break-word}
+.err{background:var(--badbg);border:1px solid #f2c1c1;color:#7a1b1b;border-radius:12px;padding:12px;margin:12px 0}
+.spin{display:inline-block;width:16px;height:16px;border:3px solid #bfe3cf;border-top-color:var(--g);border-radius:50%;animation:s 1s linear infinite;vertical-align:-3px;margin-right:8px}
+@keyframes s{to{transform:rotate(360deg)}}
+.pill{display:inline-block;font-size:.75rem;font-weight:800;background:#fff3cd;color:#7a5b00;border-radius:99px;padding:2px 9px;vertical-align:middle}
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="/">PriceCheck <b>NG</b></a>
+  <a class="back" href="/">Open app</a>
+</header>
+<main>
+  <h1>PDF Tutor <span class="pill">prototype</span></h1>
+  <p class="sub">Upload a PDF. The AI makes a lesson plan, then teaches it step by step and checks your understanding.</p>
+  <div id="err" class="err hide"></div>
+
+  <!-- sign-in needed -->
+  <section id="sAuth" class="card hide">
+    <b>Sign in first</b>
+    <p class="note">The tutor uses AI, so it needs a signed-in account (this limits misuse). Sign in on the main app with Google, then come back to this page.</p>
+    <a class="btn" href="/#account">Go and sign in</a>
+  </section>
+
+  <!-- upload -->
+  <section id="sUpload" class="hide">
+    <label class="drop" id="drop" style="display:block;cursor:pointer">
+      <p style="font-size:1.1rem"><b>Tap to choose a PDF</b></p>
+      <p class="note">Text PDFs only (notes, textbooks, slides saved as PDF). Up to 25 MB and 400 pages.</p>
+      <input type="file" id="file" accept="application/pdf,.pdf" class="hide">
+    </label>
+    <div id="savedBox" class="card hide" style="margin-top:14px">
+      <b>Continue where you stopped</b>
+      <div id="savedList"></div>
+    </div>
+    <p class="note" style="margin-top:14px">Your PDF is read on your phone. Only the section being taught is sent to the AI. Progress is saved on this phone.</p>
+  </section>
+
+  <!-- working -->
+  <section id="sWork" class="card hide">
+    <b id="wTitle">Reading your PDF</b>
+    <div class="bar"><i id="wBar"></i></div>
+    <div class="note" id="wText"></div>
+  </section>
+
+  <!-- plan -->
+  <section id="sPlan" class="hide">
+    <div class="card">
+      <b id="pName"></b>
+      <p id="pOver" style="margin:8px 0 0"></p>
+    </div>
+    <div class="card">
+      <b>Your lesson plan</b> <span class="note" id="pCount"></span>
+      <ul class="steps" id="pList"></ul>
+    </div>
+    <div class="row">
+      <button class="btn" id="startBtn">Start learning</button>
+      <button class="btn ghost" id="newBtn">Choose another PDF</button>
+    </div>
+  </section>
+
+  <!-- learn -->
+  <section id="sLearn" class="hide">
+    <div class="note" id="lPos"></div>
+    <div class="bar"><i id="lBar"></i></div>
+    <h2 id="lTitle" style="margin:8px 0;font-size:1.25rem;line-height:1.3"></h2>
+    <div id="lLoad" class="card hide"><span class="spin"></span><span id="lLoadText">Preparing this lesson...</span></div>
+    <div id="lBody" class="hide">
+      <div class="lesson" id="lLesson"></div>
+      <div class="q"><b>Question</b><div id="lQ" style="margin-top:4px"></div>
+        <textarea id="lAns" placeholder="Type your answer in your own words..."></textarea>
+        <div class="row"><button class="btn" id="checkBtn">Check my answer</button></div>
+      </div>
+      <div id="lFb" class="fb hide"></div>
+      <div class="row" id="lNav"></div>
+    </div>
+    <div class="row" style="margin-top:22px"><button class="btn ghost sm" id="planBtn">Lesson plan</button></div>
+  </section>
+
+  <!-- finished -->
+  <section id="sDone" class="card hide">
+    <h2 style="margin:0 0 6px">You finished this PDF</h2>
+    <p id="dText" style="margin:0 0 12px"></p>
+    <div class="row"><button class="btn" id="againBtn">Review the plan</button><button class="btn ghost" id="newBtn2">Choose another PDF</button></div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script type="module">
+import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+/* ---------- limits for this prototype ---------- */
+const MAX_MB = 25, MAX_PAGES = 400, MAX_SECTIONS = 40;
+const CHUNK_MIN = 1800, CHUNK_MAX = 5200;
+
+/* ---------- screens ---------- */
+const SCREENS = ["sAuth", "sUpload", "sWork", "sPlan", "sLearn", "sDone"];
+function show(id) { SCREENS.forEach((s) => $(s).classList.toggle("hide", s !== id)); window.scrollTo(0, 0); }
+function fail(msg) { const e = $("err"); e.textContent = msg; e.classList.remove("hide"); }
+function clearFail() { $("err").classList.add("hide"); }
+
+/* ---------- saved state (this phone only) ---------- */
+let S = null; // { id, name, sections:[{title,text}], overview, goals:[], idx, done:[], recaps:[], lessons:{} }
+const KEY = (id) => "pdft_" + id;
+function save() {
+  if (!S) return;
+  try {
+    localStorage.setItem(KEY(S.id), JSON.stringify(S));
+    const idx = JSON.parse(localStorage.getItem("pdft_index") || "[]").filter((x) => x !== S.id);
+    idx.unshift(S.id);
+    localStorage.setItem("pdft_index", JSON.stringify(idx.slice(0, 8)));
+  } catch (_) { /* storage full or blocked: still works for this visit */ }
+}
+function loadState(id) { try { return JSON.parse(localStorage.getItem(KEY(id))); } catch (_) { return null; } }
+function savedDocs() {
+  try { return JSON.parse(localStorage.getItem("pdft_index") || "[]").map(loadState).filter(Boolean); } catch (_) { return []; }
+}
+function paintSaved() {
+  const docs = savedDocs();
+  $("savedBox").classList.toggle("hide", !docs.length);
+  $("savedList").innerHTML = "";
+  docs.forEach((d) => {
+    const done = d.done.filter(Boolean).length;
+    const row = document.createElement("div");
+    row.className = "saved";
+    row.innerHTML = `<div><b>${esc(d.name)}</b><span class="note">${done} of ${d.sections.length} sections done</span></div>`;
+    const go = document.createElement("button"); go.className = "btn sm"; go.textContent = "Continue";
+    go.onclick = () => { S = d; openPlan(); };
+    const del = document.createElement("button"); del.className = "btn sm ghost"; del.textContent = "Delete";
+    del.onclick = () => { try { localStorage.removeItem(KEY(d.id)); localStorage.setItem("pdft_index", JSON.stringify(JSON.parse(localStorage.getItem("pdft_index") || "[]").filter((x) => x !== d.id))); } catch (_) {} paintSaved(); };
+    const box = document.createElement("div"); box.style.cssText = "display:flex;gap:8px;flex:none"; box.append(go, del);
+    row.append(box); $("savedList").append(row);
+  });
+}
+
+/* ---------- AI helper ---------- */
+async function ai(action, payload) {
+  const { data } = await sb.auth.getSession();
+  const tok = data && data.session && data.session.access_token;
+  if (!tok) { show("sAuth"); throw new Error("Please sign in first."); }
+  let r;
+  try {
+    r = await fetch(SUPABASE_URL + "/functions/v1/pdf-tutor", {
+      method: "POST",
+      headers: { "content-type": "application/json", apikey: SUPABASE_KEY, authorization: "Bearer " + tok },
+      body: JSON.stringify({ action, ...payload }),
+    });
+  } catch (_) { throw new Error("No internet connection. Try again."); }
+  if (r.status === 404) throw new Error("The AI function is not set up yet (pdf-tutor is not deployed).");
+  let j = {}; try { j = await r.json(); } catch (_) {}
+  if (r.status === 401) { show("sAuth"); throw new Error("Please sign in first."); }
+  if (!r.ok || !j.ok) throw new Error(j.error || "The AI had a problem (" + r.status + "). Try again.");
+  return j.data;
+}
+
+const tidy = (t) => String(t || '').replace(/^\s*(?:(?:chapter|unit|module|section|lesson|topic|part)\s+)?\d+(?:\.\d+)*[.):]?\s+/i, '').trim() || String(t || '');
+
+/* ---------- tiny markdown ---------- */
+function md(t) {
+  t = esc(t || "").replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>").replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  const out = []; let list = null;
+  const close = () => { if (list) { out.push("</" + list + ">"); list = null; } };
+  t.split("\n").forEach((l) => {
+    let m;
+    if ((m = l.match(/^\s*[-*•]\s+(.*)/))) { if (list !== "ul") { close(); out.push("<ul>"); list = "ul"; } out.push("<li>" + m[1] + "</li>"); return; }
+    if ((m = l.match(/^\s*\d+[.)]\s+(.*)/))) { if (list !== "ol") { close(); out.push("<ol>"); list = "ol"; } out.push("<li>" + m[1] + "</li>"); return; }
+    close();
+    if ((m = l.match(/^#{1,4}\s+(.*)/))) { out.push("<h4>" + m[1] + "</h4>"); return; }
+    if (l.trim()) out.push("<p>" + l + "</p>");
+  });
+  close(); return out.join("");
+}
+
+/* ---------- PDF reading ---------- */
+async function sha(buf) {
+  const h = await crypto.subtle.digest("SHA-256", buf);
+  return Array.from(new Uint8Array(h)).slice(0, 8).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function readPdf(file, onProgress) {
+  if (!window.pdfjsLib) throw new Error("The PDF reader could not load. Check your internet and refresh.");
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+  const buf = await file.arrayBuffer();
+  const id = await sha(buf);
+  const pdf = await pdfjsLib.getDocument({ data: buf.slice(0) }).promise;
+  if (pdf.numPages > MAX_PAGES) throw new Error("This PDF has " + pdf.numPages + " pages. The prototype takes up to " + MAX_PAGES + ".");
+  const pages = [];
+  for (let p = 1; p <= pdf.numPages; p++) {
+    const tc = await (await pdf.getPage(p)).getTextContent();
+    let line = "", lastY = null; const lines = [];
+    tc.items.forEach((it) => {
+      const y = it.transform ? it.transform[5] : 0;
+      if (lastY !== null && Math.abs(y - lastY) > 2) { lines.push(line.trim()); line = ""; }
+      line += it.str + (it.hasEOL ? "\n" : " "); lastY = y;
+    });
+    lines.push(line.trim());
+    pages.push(lines.join("\n").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim());
+    onProgress(p, pdf.numPages);
+  }
+  return { id, pages };
+}
+
+/* ---------- split into sections ---------- */
+const isHeading = (l) => {
+  l = l.trim();
+  if (l.length < 3 || l.length > 70) return false;
+  if (/[.,;:]$/.test(l) && !/^\d+(\.\d+)*\s/.test(l)) return false;
+  if (/^(chapter|unit|module|section|lesson|topic|part)\s+[\dIVXivx]+/i.test(l)) return true;
+  if (/^\d+(\.\d+){0,2}[.)]?\s+[A-Z][^.]{2,}$/.test(l)) return true;
+  const letters = l.replace(/[^A-Za-z]/g, "");
+  return letters.length >= 4 && letters === letters.toUpperCase() && l.split(/\s+/).length <= 8;
+};
+function makeSections(pages) {
+  const secs = []; let cur = { title: "", text: "", p0: 1, p1: 1 };
+  const flush = () => { if (cur.text.trim().length > 80) secs.push(cur); cur = { title: "", text: "", p0: cur.p1, p1: cur.p1 }; };
+  pages.forEach((txt, pi) => {
+    const pg = pi + 1;
+    txt.split("\n").forEach((line) => {
+      const head = isHeading(line);
+      if (head && cur.text.length >= CHUNK_MIN) { flush(); cur.p0 = pg; }
+      if (head && !cur.title) cur.title = line.trim();
+      cur.text += line + "\n"; cur.p1 = pg;
+      if (cur.text.length >= CHUNK_MAX && /[.!?]\s*$/.test(line)) { flush(); cur.p0 = pg; }
+    });
+    cur.text += "\n";
+  });
+  flush();
+  // merge tiny leftovers into the previous section
+  for (let i = secs.length - 1; i > 0; i--) if (secs[i].text.length < 700) { secs[i - 1].text += "\n" + secs[i].text; secs[i - 1].p1 = secs[i].p1; secs.splice(i, 1); }
+  return secs.map((s, i) => ({
+    title: s.title || ("Pages " + s.p0 + (s.p1 > s.p0 ? "-" + s.p1 : "")),
+    text: s.text.replace(/\n{3,}/g, "\n\n").trim(),
+    pages: s.p0 + (s.p1 > s.p0 ? "-" + s.p1 : ""), i,
+  }));
+}
+
+/* ---------- upload flow ---------- */
+$("file").onchange = async (e) => {
+  const f = e.target.files && e.target.files[0]; e.target.value = "";
+  if (!f) return;
+  clearFail();
+  if (f.size > MAX_MB * 1048576) return fail("This file is " + Math.round(f.size / 1048576) + " MB. The prototype takes up to " + MAX_MB + " MB.");
+  if (!/pdf$/i.test(f.name) && f.type !== "application/pdf") return fail("Please choose a PDF file.");
+  show("sWork"); $("wTitle").textContent = "Reading your PDF"; $("wBar").style.width = "3%"; $("wText").textContent = "";
+  try {
+    const { id, pages } = await readPdf(f, (p, n) => { $("wBar").style.width = Math.max(3, Math.round((p / n) * 60)) + "%"; $("wText").textContent = "Page " + p + " of " + n; });
+    const same = loadState(id);
+    if (same) { S = same; return openPlan(); }
+    const chars = pages.reduce((a, p) => a + p.length, 0);
+    if (chars < Math.max(300, pages.length * 40)) throw new Error("This PDF looks like scanned pictures with almost no text. The prototype reads text PDFs only (scan support comes later).");
+    let sections = makeSections(pages), note = "";
+    if (!sections.length) throw new Error("I could not find enough text to teach from.");
+    if (sections.length > MAX_SECTIONS) { note = "This PDF is long, so the prototype teaches the first " + MAX_SECTIONS + " sections."; sections = sections.slice(0, MAX_SECTIONS); }
+    $("wTitle").textContent = "Making your lesson plan"; $("wBar").style.width = "75%"; $("wText").textContent = sections.length + " sections found" + (note ? ". " + note : "");
+    const name = f.name.replace(/\.pdf$/i, "");
+    let plan = null;
+    try {
+      plan = await ai("plan", { name, outline: sections.map((s) => ({ i: s.i, title: s.title, preview: s.text.slice(0, 220).replace(/\s+/g, " ") })) });
+    } catch (er) { if (/sign in|not set up|limit/i.test(er.message)) throw er; /* plan failed: fall back to plain section titles */ }
+    const goals = [], titles = [];
+    const byI = {}; ((plan && plan.sections) || []).forEach((x) => { byI[Number(x.i)] = x; });
+    sections.forEach((s, i) => {
+      const x = byI[i]; goals.push((x && x.goal) || "");
+      if (x && x.title && (/^Pages /.test(s.title) || s.title.length > 60)) s.title = x.title;
+      titles.push(s.title);
+    });
+    S = { id, name, sections: sections.map((s) => ({ title: s.title, text: s.text, pages: s.pages })), overview: (plan && plan.overview) || (note || "Your PDF is split into " + sections.length + " sections. We will go through them in order."), goals, idx: 0, done: sections.map(() => false), recaps: [], lessons: {}, fails: 0, firstTry: 0 };
+    if (note) S.overview += (plan && plan.overview ? " " : " ") + note;
+    save(); $("wBar").style.width = "100%";
+    openPlan();
+  } catch (er) { fail(er.message || String(er)); show(sessionOk ? "sUpload" : "sAuth"); paintSaved(); }
+};
+
+/* ---------- plan screen ---------- */
+function openPlan() {
+  clearFail(); show("sPlan");
+  $("pName").textContent = S.name; $("pOver").textContent = S.overview;
+  const done = S.done.filter(Boolean).length;
+  $("pCount").textContent = done + " of " + S.sections.length + " done";
+  $("pList").innerHTML = S.sections.map((s, i) => `<li class="${S.done[i] ? "done" : i === S.idx ? "cur" : ""}"><span class="dot">${S.done[i] ? "&#10003;" : ""}</span><div><b>${i + 1}. ${esc(tidy(s.title))}</b><span>${esc(S.goals[i] || "Pages " + s.pages)}</span></div></li>`).join("");
+  $("startBtn").textContent = done === 0 ? "Start learning" : done >= S.sections.length ? "Review from the start" : "Continue with section " + (S.idx + 1);
+}
+$("startBtn").onclick = () => { if (S.done.every(Boolean)) { S.idx = 0; } openLesson(); };
+$("planBtn").onclick = openPlan;
+$("againBtn").onclick = openPlan;
+$("newBtn").onclick = $("newBtn2").onclick = () => { S = null; clearFail(); show("sUpload"); paintSaved(); };
+
+/* ---------- lesson screen ---------- */
+function summaryUpTo(i) { return S.recaps.slice(Math.max(0, i - 6), i).filter(Boolean).join(" ").slice(0, 1200); }
+function setLoad(on, txt) { $("lLoad").classList.toggle("hide", !on); $("lBody").classList.toggle("hide", on); if (txt) $("lLoadText").textContent = txt; }
+let cur = null; // { lesson, question }
+
+async function openLesson(retry, mistake) {
+  clearFail(); show("sLearn");
+  const i = S.idx, sec = S.sections[i], n = S.sections.length;
+  $("lPos").textContent = "Section " + (i + 1) + " of " + n;
+  $("lBar").style.width = Math.round((S.done.filter(Boolean).length / n) * 100) + "%";
+  $("lTitle").textContent = tidy(sec.title);
+  $("lFb").classList.add("hide"); $("lNav").innerHTML = ""; $("lAns").value = ""; $("checkBtn").classList.remove("hide");
+  const cached = !retry && S.lessons[i];
+  if (cached) { cur = cached; return paintLesson(); }
+  setLoad(true, retry ? "Explaining it a different way..." : "Preparing this lesson...");
+  try {
+    const d = await ai("teach", { name: S.name, title: sec.title, goal: S.goals[i], text: sec.text, summary: summaryUpTo(i), retry: !!retry, mistake: mistake || "" });
+    if (!d || !d.lesson || !d.question) throw new Error("The AI gave an incomplete lesson. Tap Try again.");
+    cur = { lesson: d.lesson, question: d.question }; S.lessons[i] = cur; if (d.recap) S.recaps[i] = d.recap; save();
+    paintLesson();
+  } catch (er) {
+    setLoad(false); $("lBody").classList.add("hide"); fail(er.message || String(er));
+    const b = document.createElement("button"); b.className = "btn"; b.textContent = "Try again"; b.onclick = () => openLesson(retry, mistake);
+    $("lLoad").classList.remove("hide"); $("lLoad").innerHTML = ""; $("lLoad").append(b);
+  }
+}
+function paintLesson() {
+  $("lLoad").innerHTML = '<span class="spin"></span><span id="lLoadText"></span>'; setLoad(false);
+  $("lLesson").innerHTML = md(cur.lesson); $("lQ").innerHTML = md(cur.question);
+  $("checkBtn").disabled = false; $("checkBtn").textContent = "Check my answer";
+}
+$("checkBtn").onclick = async () => {
+  const ans = $("lAns").value.trim();
+  if (ans.length < 3) return fail("Write your answer first.");
+  clearFail(); $("checkBtn").disabled = true; $("checkBtn").textContent = "Checking...";
+  const i = S.idx;
+  try {
+    const g = await ai("grade", { text: S.sections[i].text, question: cur.question, answer: ans });
+    const ok = !!g.correct, fb = $("lFb");
+    fb.className = "fb " + (ok ? "ok" : "no");
+    fb.innerHTML = "<b>" + (ok ? "Correct." : "Not quite.") + "</b> " + esc(g.feedback || "") + (!ok && g.tip ? "<div style='margin-top:6px'><b>Hint:</b> " + esc(g.tip) + "</div>" : "");
+    const nav = $("lNav"); nav.innerHTML = "";
+    if (ok) {
+      if (!S.done[i]) { S.done[i] = true; if (!(S.tries && S.tries[i])) S.firstTry = (S.firstTry || 0) + 1; }
+      save();
+      const nx = document.createElement("button"); nx.className = "btn";
+      const last = S.done.every(Boolean) || i >= S.sections.length - 1;
+      nx.textContent = last ? "Finish" : "Next section";
+      nx.onclick = () => { if (last) return finish(); S.idx = i + 1; save(); openLesson(); };
+      nav.append(nx); $("checkBtn").classList.add("hide");
+    } else {
+      S.tries = S.tries || {}; S.tries[i] = (S.tries[i] || 0) + 1; save();
+      const rt = document.createElement("button"); rt.className = "btn"; rt.textContent = "Explain it again";
+      rt.onclick = () => { $("checkBtn").classList.remove("hide"); openLesson(true, ans); };
+      const sk = document.createElement("button"); sk.className = "btn ghost"; sk.textContent = "Try answering again";
+      sk.onclick = () => { fb.classList.add("hide"); nav.innerHTML = ""; $("checkBtn").disabled = false; $("checkBtn").textContent = "Check my answer"; $("lAns").focus(); };
+      nav.append(rt, sk); $("checkBtn").textContent = "Check my answer";
+    }
+    fb.classList.remove("hide"); fb.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } catch (er) { fail(er.message || String(er)); $("checkBtn").disabled = false; $("checkBtn").textContent = "Check my answer"; }
+};
+function finish() {
+  S.idx = 0; save(); show("sDone");
+  $("dText").textContent = "You went through " + S.sections.length + " sections of \"" + S.name + "\". You can open the plan any time to review a section.";
+}
+
+/* ---------- start ---------- */
+let sessionOk = false;
+async function init() {
+  const { data } = await sb.auth.getSession();
+  sessionOk = !!(data && data.session);
+  if (!sessionOk) { show("sAuth"); }
+  else { show("sUpload"); paintSaved(); }
+  sb.auth.onAuthStateChange((_e, s) => { sessionOk = !!s; if (s && !$("sAuth").classList.contains("hide")) { show("sUpload"); paintSaved(); } });
+}
+init();
+</script>
+</body>
+</html>
