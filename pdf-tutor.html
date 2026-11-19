@@ -146,6 +146,7 @@ textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12p
         <div class="note">Ask about this section and I will explain it from your PDF.</div>
         <div class="chips" id="askChips"></div>
         <div class="msgs" id="askMsgs"></div>
+        <label class="note" style="display:block;margin:4px 0 8px"><input type="checkbox" id="askWeb"> Also search the web for this</label>
         <div class="askrow"><textarea id="askIn" placeholder="Type your question..."></textarea><button class="btn" id="askBtn">Ask</button></div>
       </div>
     </div>
@@ -601,7 +602,7 @@ async function sendAsk(q) {
   box.scrollIntoView({ behavior: "smooth", block: "nearest" });
   let live = true; const draw = painter((t) => { if (live) box.innerHTML = md(t); });
   try {
-    const full = await aiStream("ask", { name: SS.name, title: SS.sections[i].title, text: SS.sections[i].text, lesson: (SS.lessons[i] || {}).lesson || "", question: (SS.lessons[i] || {}).question || "", history, q }, draw);
+    const full = await aiStream("ask", { name: SS.name, title: SS.sections[i].title, text: SS.sections[i].text, lesson: (SS.lessons[i] || {}).lesson || "", question: (SS.lessons[i] || {}).question || "", history, q, webSearch: $("askWeb").checked }, draw);
     live = false; box.classList.remove("cur-blink"); box.innerHTML = md(full);
     list.push({ r: "u", t: q }, { r: "a", t: full }); if (list.length > 40) list.splice(0, list.length - 40); save();
   } catch (er) {
