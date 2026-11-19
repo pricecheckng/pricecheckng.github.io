@@ -1,6 +1,3 @@
-// PDF Tutor - Edge Function "pdf-tutor" (working version, models set by the project owner)
-// Actions: plan, teach, grade. Needs sign-in, secret GEMINI_API_KEY and sql/pdf_tutor.sql.
-// Optional secret PDFT_MODELS = comma list of Gemini model names to try in order.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const CORS = {
@@ -79,6 +76,77 @@ async function gemini(system: string, prompt: string): Promise<any> {
   throw new Error(last);
 }
 
+
+const sse = (o: unknown) => `data: ${JSON.stringify(o)}\n\n`;
+
+// Streams plain text from Gemini to the phone as it is written (Server-Sent Events).
+async function geminiStream(system: string, prompt: string, left: number, maxTokens = 4096): Promise<Response> {
+  const key = Deno.env.get("GEMINI_API_KEY");
+  if (!key) return json({ error: "GEMINI_API_KEY secret is missing" }, 500);
+
+  let last = "no model worked";
+  for (const m of MODELS) {
+    try {
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(m)}:streamGenerateContent?alt=sse`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json", "x-goog-api-key": key },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: system }] },
+            contents: [{ role: "user", parts: [{ text: prompt }] }],
+            generationConfig: { temperature: 0.4, maxOutputTokens: maxTokens },
+          }),
+        }
+      );
+      if (!r.ok || !r.body) {
+        const errText = await r.text().catch(() => "");
+        last = `${m}: HTTP ${r.status}${errText ? ` - ${cut(errText, 140)}` : ""}`;
+        continue;
+      }
+
+      const enc = new TextEncoder();
+      const dec = new TextDecoder();
+      const src = r.body.getReader();
+      const stream = new ReadableStream({
+        async start(ctrl) {
+          let buf = "";
+          try {
+            while (true) {
+              const { done, value } = await src.read();
+              if (done) break;
+              buf += dec.decode(value, { stream: true });
+              let k;
+              while ((k = buf.indexOf("\n")) >= 0) {
+                const line = buf.slice(0, k).trim();
+                buf = buf.slice(k + 1);
+                if (!line.startsWith("data:")) continue;
+                const p = line.slice(5).trim();
+                if (!p || p === "[DONE]") continue;
+                try {
+                  const j = JSON.parse(p);
+                  const t = (j?.candidates?.[0]?.content?.parts || []).map((x: any) => x.text || "").join("");
+                  if (t) ctrl.enqueue(enc.encode(sse({ t })));
+                } catch (_) { /* ignore a broken fragment */ }
+              }
+            }
+            ctrl.enqueue(enc.encode(sse({ done: true, left })));
+          } catch (e) {
+            ctrl.enqueue(enc.encode(sse({ error: cut((e as Error)?.message || e, 140) })));
+          }
+          ctrl.close();
+        },
+      });
+      return new Response(stream, {
+        headers: { ...CORS, "content-type": "text/event-stream; charset=utf-8", "cache-control": "no-cache", "x-accel-buffering": "no" },
+      });
+    } catch (err) {
+      last = `${m}: ${cut((err as Error)?.message || err, 140)}`;
+    }
+  }
+  return json({ error: last }, 502);
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
@@ -101,7 +169,7 @@ Deno.serve(async (req) => {
     if (!body || typeof body !== "object") return json({ error: "Invalid JSON body" }, 400);
 
     const action = String(body.action || "");
-    if (!["plan", "teach", "grade"].includes(action)) {
+    if (!["plan", "teach", "grade", "teach_stream", "ask"].includes(action)) {
       return json({ error: "unknown action" }, 400);
     }
 
@@ -116,6 +184,42 @@ Deno.serve(async (req) => {
 
     const count = Number(n ?? 0);
     const left = Math.max(0, DAILY_MAX - count);
+
+
+    if (action === "teach_stream") {
+      return await geminiStream(
+        TEACHER,
+        `Document: "${cut(body.name, 120)}"\nSection: "${cut(body.title, 120)}"\nGoal: ${cut(body.goal, 300)}\n` +
+          `Already taught (short recap): ${cut(body.summary, 1200) || "nothing yet, this is the start"}\n` +
+          (body.retry
+            ? `The student got the last question wrong. Their mistake: ${cut(body.mistake, 600)}\nExplain it again in a DIFFERENT, simpler way with a new small example, then ask a NEW question.\n`
+            : "") +
+          `\nSECTION TEXT:\n"""\n${cut(body.text, 12000)}\n"""\n\n` +
+          `Teach this section step by step: 1) explain the main idea simply, 2) go through the key points in order, 3) give one small example (from the text if possible), 4) ask ONE question that checks understanding (not a yes/no question).\n` +
+          `Use markdown: **bold** for key terms and short bullet lists. Keep the lesson under 350 words.\n` +
+          `OUTPUT FORMAT (plain text, NOT JSON). Write the lesson first. Then on its own line write ===QUESTION=== followed by the single question. Then on its own line write ===RECAP=== followed by a one-sentence summary of what was taught. Nothing after that.`,
+        left
+      );
+    }
+    if (action === "ask") {
+      const hist = (Array.isArray(body.history) ? body.history : [])
+        .slice(-6)
+        .map((h: any) => `${h.r === "u" ? "Student" : "Tutor"}: ${cut(h.t, 700)}`)
+        .join("\n");
+      return await geminiStream(
+        TEACHER,
+        `Document: "${cut(body.name, 120)}"\nSection: "${cut(body.title, 120)}"\n\nSECTION TEXT:\n"""\n${cut(body.text, 9000)}\n"""\n\n` +
+          `The lesson already shown to the student:\n"""\n${cut(body.lesson, 3000)}\n"""\n` +
+          `The check question waiting for the student: ${cut(body.question, 400)}\n\n` +
+          (hist ? `Chat so far:\n${hist}\n\n` : "") +
+          `The student now asks: ${cut(body.q, 600)}\n\n` +
+          `Answer the student's doubt clearly and kindly, using the section text. Use simple words and a small example if it helps. Do NOT give the exact answer to the check question; help them understand so they can answer it. ` +
+          `If the doubt is not covered by the section text, say so in one short line, then give a brief general explanation starting with "Outside your PDF:". ` +
+          `Keep it under 180 words. Markdown is fine (**bold**, short bullets). Plain text only, no JSON.`,
+        left,
+        1500
+      );
+    }
 
     let out: unknown;
     if (action === "plan") {

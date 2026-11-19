@@ -57,6 +57,19 @@ textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12p
 .err{background:var(--badbg);border:1px solid #f2c1c1;color:#7a1b1b;border-radius:12px;padding:12px;margin:12px 0}
 .spin{display:inline-block;width:16px;height:16px;border:3px solid #bfe3cf;border-top-color:var(--g);border-radius:50%;animation:s 1s linear infinite;vertical-align:-3px;margin-right:8px}
 @keyframes s{to{transform:rotate(360deg)}}
+.ask{background:#fff;border:1.5px solid #b9dcc8;border-radius:16px;padding:14px;margin-top:18px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.chip{border:1px solid #b9dcc8;background:var(--g2);color:var(--g);font:inherit;font-size:.85rem;font-weight:600;border-radius:99px;padding:6px 12px;cursor:pointer}
+.chip:disabled{opacity:.5}
+.msgs{display:flex;flex-direction:column;gap:10px;margin:10px 0}
+.msg{border-radius:14px;padding:10px 13px;max-width:92%;word-break:break-word}
+.msg.u{align-self:flex-end;background:var(--g);color:#fff}
+.msg.a{align-self:flex-start;background:var(--card);border:1px solid var(--line)}
+.msg p{margin:4px 0}.msg ul,.msg ol{padding-left:20px;margin:6px 0}
+.askrow{display:flex;gap:8px;align-items:flex-end}
+.askrow textarea{margin:0;min-height:48px;height:48px}
+.cur-blink::after{content:"";display:inline-block;width:8px;height:1em;background:var(--g);margin-left:2px;vertical-align:-2px;animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{opacity:0}}
 .pill{display:inline-block;font-size:.75rem;font-weight:800;background:#fff3cd;color:#7a5b00;border-radius:99px;padding:2px 9px;vertical-align:middle}
 </style>
 </head>
@@ -122,12 +135,19 @@ textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12p
     <div id="lLoad" class="card hide"><span class="spin"></span><span id="lLoadText">Preparing this lesson...</span></div>
     <div id="lBody" class="hide">
       <div class="lesson" id="lLesson"></div>
-      <div class="q"><b>Question</b><div id="lQ" style="margin-top:4px"></div>
+      <div class="q hide" id="lQBox"><b>Question</b><div id="lQ" style="margin-top:4px"></div>
         <textarea id="lAns" placeholder="Type your answer in your own words..."></textarea>
         <div class="row"><button class="btn" id="checkBtn">Check my answer</button></div>
       </div>
       <div id="lFb" class="fb hide"></div>
       <div class="row" id="lNav"></div>
+      <div class="ask hide" id="askBox">
+        <b>Did not understand something? Ask the tutor</b>
+        <div class="note">Ask about this section and I will explain it from your PDF.</div>
+        <div class="chips" id="askChips"></div>
+        <div class="msgs" id="askMsgs"></div>
+        <div class="askrow"><textarea id="askIn" placeholder="Type your question..."></textarea><button class="btn" id="askBtn">Ask</button></div>
+      </div>
     </div>
     <div class="row" style="margin-top:22px"><button class="btn ghost sm" id="planBtn">Lesson plan</button></div>
   </section>
@@ -232,6 +252,60 @@ async function ai(action, payload) {
     throw new Error(msg || "The AI had a problem (" + r.status + "). Try again.");
   }
 }
+
+/* ---------- streaming helper ---------- */
+// Reads the AI's words as they arrive. Calls onText(allTextSoFar). Throws {old:true} if the function has no streaming yet.
+async function aiStream(action, payload, onText) {
+  const { data } = await sb.auth.getSession();
+  const tok = data && data.session && data.session.access_token;
+  if (!tok) { show("sAuth"); throw new Error("Please sign in first."); }
+  let r;
+  try {
+    r = await fetch(SUPABASE_URL + "/functions/v1/pdf-tutor", {
+      method: "POST",
+      headers: { "content-type": "application/json", apikey: SUPABASE_KEY, authorization: "Bearer " + tok },
+      body: JSON.stringify({ action, ...payload }),
+    });
+  } catch (_) { throw new Error("No internet connection. Try again."); }
+  const ct = r.headers.get("content-type") || "";
+  if (!r.ok || !/event-stream/.test(ct) || !r.body) {
+    let j = {}; try { j = await r.json(); } catch (_) {}
+    if (r.status === 401) { show("sAuth"); throw new Error("Please sign in first."); }
+    if (r.status === 400 && /unknown action/i.test(j.error || "")) { const e = new Error("old function"); e.old = true; throw e; }
+    if (r.status === 404) throw new Error("The AI function is not set up yet (pdf-tutor is not deployed).");
+    const e = new Error(j.error || "The AI had a problem (" + r.status + "). Try again."); e.busy = r.status >= 500 || r.status === 429; e.limit = r.status === 429 && j.limit; throw e;
+  }
+  const rd = r.body.getReader(), dec = new TextDecoder();
+  let buf = "", full = "", finished = false;
+  const eat = (block) => {
+    block.split("\n").forEach((ln) => {
+      if (!ln.startsWith("data:")) return;
+      let o; try { o = JSON.parse(ln.slice(5).trim()); } catch (_) { return; }
+      if (o.t) { full += o.t; onText(full); }
+      if (o.error) throw new Error("The AI stopped: " + o.error);
+      if (o.done) finished = true;
+    });
+  };
+  for (;;) {
+    const { done, value } = await rd.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    let k; while ((k = buf.indexOf("\n\n")) >= 0) { eat(buf.slice(0, k)); buf = buf.slice(k + 2); }
+  }
+  if (buf.trim()) eat(buf);
+  if (!full.trim()) throw new Error("The AI gave an empty answer. Try again.");
+  return full;
+}
+// splits the streamed lesson into lesson / question / recap
+function parseTeach(full) {
+  const qi = full.indexOf("===QUESTION==="), ri = full.indexOf("===RECAP===");
+  const lesson = (qi >= 0 ? full.slice(0, qi) : ri >= 0 ? full.slice(0, ri) : full).trim();
+  const question = qi >= 0 ? full.slice(qi + 14, ri > qi ? ri : undefined).trim() : "";
+  const recap = ri >= 0 ? full.slice(ri + 11).trim() : "";
+  return { lesson, question, recap };
+}
+// repaint at most once per frame while words arrive
+function painter(fn) { let q = false, v; return (x) => { v = x; if (q) return; q = true; requestAnimationFrame(() => { q = false; fn(v); }); }; }
 
 const tidy = (t) => String(t || '').replace(/^\s*(?:(?:chapter|unit|module|section|lesson|topic|part)\s+)?\d+(?:\.\d+)*[.):]?\s+/i, '').trim() || String(t || '');
 
@@ -404,8 +478,30 @@ async function openLesson(retry, mistake) {
   const cached = !retry && S.lessons[i];
   if (cached) { cur = cached; return paintLesson(); }
   setLoad(true, retry ? "Explaining it a different way..." : "Preparing this lesson...");
+  $("lQBox").classList.add("hide"); $("askBox").classList.add("hide");
   try {
-    const d = await ai("teach", { name: S.name, title: sec.title, goal: S.goals[i], text: sec.text, summary: summaryUpTo(i), retry: !!retry, mistake: mistake || "" });
+    let d;
+    try {
+      const L = $("lLesson"); let started = false;
+      let live = true; const draw = painter((full) => { if (!live) return; L.innerHTML = md(parseTeach(full).lesson); L.classList.add("cur-blink"); });
+      let full;
+      try {
+        full = await aiStream("teach_stream", { name: S.name, title: sec.title, goal: S.goals[i], text: sec.text, summary: summaryUpTo(i), retry: !!retry, mistake: mistake || "" }, (t) => {
+          if (S.idx !== i) return;
+          if (!started) { started = true; $("lLoad").classList.add("hide"); $("lBody").classList.remove("hide"); L.innerHTML = ""; $("lQBox").classList.add("hide"); }
+          draw(t);
+        });
+      } catch (er) {
+        if (er.busy && !started) { const t = $("lLoadText"); if (t) t.textContent = "The AI is busy, trying again..."; await new Promise((res) => setTimeout(res, 2500)); full = await aiStream("teach_stream", { name: S.name, title: sec.title, goal: S.goals[i], text: sec.text, summary: summaryUpTo(i), retry: !!retry, mistake: mistake || "" }, (t) => { if (S.idx !== i) return; if (!started) { started = true; $("lLoad").classList.add("hide"); $("lBody").classList.remove("hide"); L.innerHTML = ""; } draw(t); }); }
+        else { live = false; throw er; }
+      }
+      live = false;
+      if (S.idx !== i) return;
+      d = parseTeach(full);
+    } catch (er) {
+      if (!er.old) throw er;
+      d = await ai("teach", { name: S.name, title: sec.title, goal: S.goals[i], text: sec.text, summary: summaryUpTo(i), retry: !!retry, mistake: mistake || "" });
+    }
     if (!d || !d.lesson || !d.question) throw new Error("The AI gave an incomplete lesson. Tap Try again.");
     cur = { lesson: d.lesson, question: d.question }; S.lessons[i] = cur; if (d.recap) S.recaps[i] = d.recap; save();
     paintLesson();
@@ -418,7 +514,8 @@ async function openLesson(retry, mistake) {
 }
 function paintLesson() {
   $("lLoad").innerHTML = '<span class="spin"></span><span id="lLoadText"></span>'; setLoad(false);
-  $("lLesson").innerHTML = md(cur.lesson); $("lQ").innerHTML = md(cur.question);
+  $("lLesson").classList.remove("cur-blink"); $("lLesson").innerHTML = md(cur.lesson); $("lQ").innerHTML = md(cur.question); $("lQBox").classList.remove("hide");
+  paintAsk();
   $("checkBtn").disabled = false; $("checkBtn").textContent = "Check my answer";
   const i = S.idx, n = S.sections.length;
   if (S.done[i]) {
@@ -458,6 +555,41 @@ $("checkBtn").onclick = async () => {
     fb.classList.remove("hide"); fb.scrollIntoView({ behavior: "smooth", block: "nearest" });
   } catch (er) { fail(er.message || String(er)); $("checkBtn").disabled = false; $("checkBtn").textContent = "Check my answer"; }
 };
+/* ---------- question room ---------- */
+const CHIPS = ["Explain this more simply", "Give me another example", "What are the key words here?"];
+let asking = false;
+function bubble(role, text, live) {
+  const d = document.createElement("div"); d.className = "msg " + role;
+  d.innerHTML = role === "u" ? esc(text) : md(text); if (live) d.classList.add("cur-blink");
+  $("askMsgs").append(d); return d;
+}
+function paintAsk() {
+  const i = S.idx; $("askBox").classList.remove("hide");
+  $("askChips").innerHTML = ""; CHIPS.forEach((c) => { const b = document.createElement("button"); b.className = "chip"; b.textContent = c; b.onclick = () => sendAsk(c); $("askChips").append(b); });
+  $("askMsgs").innerHTML = ""; ((S.chats && S.chats[i]) || []).forEach((m) => bubble(m.r, m.t));
+  $("askIn").value = ""; asking = false; $("askBtn").disabled = false;
+}
+async function sendAsk(q) {
+  q = String(q || "").trim(); if (!q || asking) return;
+  const i = S.idx, SS = S; asking = true; $("askBtn").disabled = true; $("askIn").value = "";
+  SS.chats = SS.chats || {}; const list = SS.chats[i] = SS.chats[i] || [];
+  const history = list.slice(-6);
+  bubble("u", q); const box = bubble("a", "", true); box.innerHTML = '<span class="spin"></span>Thinking...';
+  box.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  let live = true; const draw = painter((t) => { if (live) box.innerHTML = md(t); });
+  try {
+    const full = await aiStream("ask", { name: SS.name, title: SS.sections[i].title, text: SS.sections[i].text, lesson: (SS.lessons[i] || {}).lesson || "", question: (SS.lessons[i] || {}).question || "", history, q }, draw);
+    live = false; box.classList.remove("cur-blink"); box.innerHTML = md(full);
+    list.push({ r: "u", t: q }, { r: "a", t: full }); if (list.length > 40) list.splice(0, list.length - 40); save();
+  } catch (er) {
+    live = false; box.classList.remove("cur-blink");
+    box.innerHTML = esc(er.old ? "Questions need the new AI function. Deploy the updated pdf-tutor function first." : (er.message || "The AI had a problem. Try again."));
+  }
+  if (S === SS && S.idx === i) { asking = false; $("askBtn").disabled = false; }
+}
+$("askBtn").onclick = () => sendAsk($("askIn").value);
+$("askIn").onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendAsk($("askIn").value); } };
+
 function finish() {
   S.idx = 0; save(); show("sDone");
   $("dText").textContent = "You went through " + S.sections.length + " sections of \"" + S.name + "\". You can open the plan any time to review a section.";
