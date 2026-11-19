@@ -217,7 +217,7 @@ Deno.serve(async (req) => {
           `If the doubt is not covered by the section text, say so in one short line, then give a brief general explanation starting with "Outside your PDF:". ` +
           `Keep it under 180 words. Markdown is fine (**bold**, short bullets). Plain text only, no JSON.`,
         left,
-        1500
+        4096
       );
     }
 

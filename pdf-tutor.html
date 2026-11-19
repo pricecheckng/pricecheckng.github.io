@@ -261,13 +261,15 @@ async function aiStream(action, payload, onText) {
   const tok = data && data.session && data.session.access_token;
   if (!tok) { show("sAuth"); throw new Error("Please sign in first."); }
   let r;
+  const ac = new AbortController(); let timedOut = false;
+  const wd = setTimeout(() => { timedOut = true; ac.abort(); }, 45000); // no first word in 45s: stop waiting
   try {
     r = await fetch(FN_URL, {
-      method: "POST",
+      method: "POST", signal: ac.signal,
       headers: { "content-type": "application/json", apikey: SUPABASE_KEY, authorization: "Bearer " + tok },
       body: JSON.stringify({ action, ...payload }),
     });
-  } catch (_) { throw new Error("Could not reach the AI. Check your internet, or the function name in Supabase."); }
+  } catch (_) { clearTimeout(wd); if (timedOut) { const e = new Error("The AI took too long to answer. Try again."); e.busy = true; throw e; } throw new Error("Could not reach the AI. Check your internet, or the function name in Supabase."); }
   const ct = r.headers.get("content-type") || "";
   if (!r.ok || !/event-stream/.test(ct) || !r.body) {
     let j = {}; try { j = await r.json(); } catch (_) {}
@@ -276,6 +278,7 @@ async function aiStream(action, payload, onText) {
     if (r.status === 404) throw new Error("The AI function is not set up yet (pdf-tutor is not deployed).");
     const e = new Error(j.error || "The AI had a problem (" + r.status + "). Try again."); e.busy = r.status >= 500 || r.status === 429; e.limit = r.status === 429 && j.limit; throw e;
   }
+  clearTimeout(wd);
   const rd = r.body.getReader(), dec = new TextDecoder();
   let buf = "", full = "", finished = false;
   const eat = (block) => {
