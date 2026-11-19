@@ -21,4 +21,9 @@ jobs:
           git config user.email "actions@github.com"
           git add -A
           git diff --cached --quiet || git commit -m "Update coin pages and sitemap"
-          git push
+          for i in 1 2 3 4 5; do
+            git pull --rebase -q || true
+            git push && exit 0
+            sleep $((i * 4))
+          done
+          exit 1
