@@ -7,7 +7,7 @@ const CORS = {
 };
 
 const DAILY_MAX = 120;
-const GROQ_MODELS = (Deno.env.get("GROQ_MODELS") || "llama-3.3-70b-versatile,llama-3.1-8b-instant")
+const GROQ_MODELS = (Deno.env.get("GROQ_MODELS") || "openai/gpt-oss-120b,openai/gpt-oss-20b")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
@@ -97,6 +97,7 @@ async function groqJson(system: string, prompt: string): Promise<any> {
           model: m,
           temperature: 0.4,
           max_tokens: 4096,
+          ...(m.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
           response_format: { type: "json_object" },
           messages: [
             { role: "system", content: system },
@@ -204,6 +205,7 @@ async function groqStream(system: string, prompt: string, left: number, maxToken
           model: m,
           temperature: 0.4,
           max_tokens: maxTokens,
+          ...(m.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
           stream: true,
           messages: [
             { role: "system", content: system },
