@@ -174,7 +174,21 @@ import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
-const FN_URL = SUPABASE_URL + "/functions/v1/pdf-tutor-"; // function slug in Supabase (has a trailing hyphen)
+// function slug in Supabase: "pdf-tutor" first; the old "pdf-tutor-" is only a fallback until the new one is deployed
+const FN_NAMES = ["pdf-tutor", "pdf-tutor-"]; let fnPick = 0;
+async function callFn(init) {
+  let last, err;
+  for (let k = 0; k < FN_NAMES.length; k++) {
+    const idx = (fnPick + k) % FN_NAMES.length;
+    try {
+      const r = await fetch(SUPABASE_URL + "/functions/v1/" + FN_NAMES[idx], init);
+      if (r.status === 404 && k < FN_NAMES.length - 1) { last = r; continue; }
+      fnPick = idx; return r;
+    } catch (e) { if (init.signal && init.signal.aborted) throw e; err = e; }
+  }
+  if (last) return last;
+  throw err;
+}
 const $ = (id) => document.getElementById(id);
 const esc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
@@ -231,7 +245,7 @@ async function ai(action, payload) {
   for (let attempt = 0; ; attempt++) {
     let r;
     try {
-      r = await fetch(FN_URL, {
+      r = await callFn({
         method: "POST",
         headers: { "content-type": "application/json", apikey: SUPABASE_KEY, authorization: "Bearer " + tok },
         body: JSON.stringify({ action, ...payload }),
@@ -265,7 +279,7 @@ async function aiStream(action, payload, onText) {
   const ac = new AbortController(); let timedOut = false;
   const wd = setTimeout(() => { timedOut = true; ac.abort(); }, 45000); // no first word in 45s: stop waiting
   try {
-    r = await fetch(FN_URL, {
+    r = await callFn({
       method: "POST", signal: ac.signal,
       headers: { "content-type": "application/json", apikey: SUPABASE_KEY, authorization: "Bearer " + tok },
       body: JSON.stringify({ action, ...payload }),
