@@ -423,17 +423,20 @@ Deno.serve(async (req) => {
         ? await tavilySearch(`${cut(body.name, 70)} ${cut(body.title, 80)} ${cut(body.q, 140)}`)
         : "";
 
+      const context =
+        `${TEACHER}\n\nYOU ARE NOW ANSWERING A STUDENT'S QUESTION. Answer exactly what the student asks. Do NOT repeat or summarise the PDF text or the lesson, and do not greet.\n\n` +
+        `Document: "${cut(body.name, 120)}"\nSection: "${cut(body.title, 120)}"\n\nSECTION TEXT (for your reference only):\n"""\n${cut(body.text, 9000)}\n"""\n` +
+        (webNotes ? `\nEXTRA WEB SEARCH NOTES:\n"""\n${webNotes}\n"""\n` : "") +
+        `\nThe lesson already shown to the student:\n"""\n${cut(body.lesson, 3000)}\n"""\n` +
+        `The check question waiting for the student: ${cut(body.question, 400)}\n\n` +
+        `How to answer: explain the student's doubt clearly and kindly, using the section text (and web notes only when helpful). Use simple words and a small example if it helps. ` +
+        `Do NOT give the exact answer to the check question; help them understand so they can answer it. ` +
+        `If the doubt is not covered by the section text, say so in one short line, then give a brief general explanation starting with "Outside your PDF:". ` +
+        `Keep it under 180 words. Markdown is fine (**bold**, short bullets). Plain text only, no JSON.`;
+
       return await askTutorStream(
-        TEACHER,
-        `Document: "${cut(body.name, 120)}"\nSection: "${cut(body.title, 120)}"\n\nSECTION TEXT:\n"""\n${cut(body.text, 9000)}\n"""\n` +
-          (webNotes ? `\nEXTRA WEB SEARCH NOTES:\n"""\n${webNotes}\n"""\n` : "") +
-          `\nThe lesson already shown to the student:\n"""\n${cut(body.lesson, 3000)}\n"""\n` +
-          `The check question waiting for the student: ${cut(body.question, 400)}\n\n` +
-          (hist ? `Chat so far:\n${hist}\n\n` : "") +
-          `The student now asks: ${cut(body.q, 600)}\n\n` +
-          `Answer the student's doubt clearly and kindly, using the section text (and web notes only when helpful). Use simple words and a small example if it helps. Do NOT give the exact answer to the check question; help them understand so they can answer it. ` +
-          `If the doubt is not covered by the section text, say so in one short line, then give a brief general explanation starting with "Outside your PDF:". ` +
-          `Keep it under 180 words. Markdown is fine (**bold**, short bullets). Plain text only, no JSON.`,
+        context,
+        (hist ? `Chat so far:\n${hist}\n\n` : "") + `STUDENT QUESTION: ${cut(body.q, 600)}\n\nAnswer this question now.`,
         left,
         4096
       );
