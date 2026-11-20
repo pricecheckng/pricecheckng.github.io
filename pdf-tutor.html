@@ -547,13 +547,16 @@ $("newBtn").onclick = $("newBtn2").onclick = () => { S = null; clearFail(); show
 function summaryUpTo(i) { return S.recaps.slice(Math.max(0, i - 6), i).filter(Boolean).join(" ").slice(0, 1200); }
 function setLoad(on, txt) { $("lLoad").classList.toggle("hide", !on); $("lBody").classList.toggle("hide", on); if (txt) $("lLoadText").textContent = txt; }
 let cur = null; // { lesson, question }
+// every question already asked for a section, so a retry never repeats one
+function askedFor(i) { return ((S.asked && S.asked[i]) || []).slice(-6); }
+function noteAsked(SS, i, q) { if (!q) return; SS.asked = SS.asked || {}; const a = SS.asked[i] = SS.asked[i] || []; if (!a.includes(q)) a.push(q); }
 const inflight = {};
 function prefetch(k) {
   const SS = S;
   if (!SS || k >= SS.sections.length || SS.lessons[k] || inflight[k]) return;
   const sec = SS.sections[k];
   inflight[k] = ai("teach", { name: SS.name, title: sec.title, goal: SS.goals[k], text: sec.text, summary: SS.recaps.slice(Math.max(0, k - 6), k).filter(Boolean).join(" ").slice(0, 1200), retry: false, mistake: "" })
-    .then((d) => { if (d && d.lesson && d.question) { SS.lessons[k] = { lesson: d.lesson, question: d.question }; if (d.recap) SS.recaps[k] = d.recap; if (S === SS) save(); } })
+    .then((d) => { if (d && d.lesson && d.question) { SS.lessons[k] = { lesson: d.lesson, question: d.question }; noteAsked(SS, k, d.question); if (d.recap) SS.recaps[k] = d.recap; if (S === SS) save(); } })
     .catch(() => {}).finally(() => { delete inflight[k]; });
 }
 
@@ -577,13 +580,13 @@ async function openLesson(retry, mistake) {
       let live = true; const draw = painter((full) => { if (!live) return; L.innerHTML = md(parseTeach(full).lesson); L.classList.add("cur-blink"); });
       let full;
       try {
-        full = await aiStream("teach_stream", { name: S.name, title: sec.title, goal: S.goals[i], text: sec.text, summary: summaryUpTo(i), retry: !!retry, mistake: mistake || "" }, (t) => {
+        full = await aiStream("teach_stream", { name: S.name, title: sec.title, goal: S.goals[i], text: sec.text, summary: summaryUpTo(i), retry: !!retry, mistake: mistake || "", asked: askedFor(i) }, (t) => {
           if (S.idx !== i) return;
           if (!started) { started = true; $("lLoad").classList.add("hide"); $("lBody").classList.remove("hide"); L.innerHTML = ""; $("lQBox").classList.add("hide"); }
           draw(t);
         });
       } catch (er) {
-        if (er.busy && !started) { const t = $("lLoadText"); if (t) t.textContent = "The AI is busy, trying again..."; await new Promise((res) => setTimeout(res, 2500)); full = await aiStream("teach_stream", { name: S.name, title: sec.title, goal: S.goals[i], text: sec.text, summary: summaryUpTo(i), retry: !!retry, mistake: mistake || "" }, (t) => { if (S.idx !== i) return; if (!started) { started = true; $("lLoad").classList.add("hide"); $("lBody").classList.remove("hide"); L.innerHTML = ""; } draw(t); }); }
+        if (er.busy && !started) { const t = $("lLoadText"); if (t) t.textContent = "The AI is busy, trying again..."; await new Promise((res) => setTimeout(res, 2500)); full = await aiStream("teach_stream", { name: S.name, title: sec.title, goal: S.goals[i], text: sec.text, summary: summaryUpTo(i), retry: !!retry, mistake: mistake || "", asked: askedFor(i) }, (t) => { if (S.idx !== i) return; if (!started) { started = true; $("lLoad").classList.add("hide"); $("lBody").classList.remove("hide"); L.innerHTML = ""; } draw(t); }); }
         else { live = false; throw er; }
       }
       live = false;
@@ -591,10 +594,10 @@ async function openLesson(retry, mistake) {
       d = parseTeach(full);
     } catch (er) {
       if (!er.old) throw er;
-      d = await ai("teach", { name: S.name, title: sec.title, goal: S.goals[i], text: sec.text, summary: summaryUpTo(i), retry: !!retry, mistake: mistake || "" });
+      d = await ai("teach", { name: S.name, title: sec.title, goal: S.goals[i], text: sec.text, summary: summaryUpTo(i), retry: !!retry, mistake: mistake || "", asked: askedFor(i) });
     }
     if (!d || !d.lesson || !d.question) throw new Error("The AI gave an incomplete lesson. Tap Try again.");
-    cur = { lesson: d.lesson, question: d.question }; S.lessons[i] = cur; if (d.recap) S.recaps[i] = d.recap; save();
+    cur = { lesson: d.lesson, question: d.question }; S.lessons[i] = cur; noteAsked(S, i, d.question); if (d.recap) S.recaps[i] = d.recap; save();
     paintLesson();
   } catch (er) {
     setLoad(false); $("lBody").classList.add("hide"); fail(er.message || String(er));

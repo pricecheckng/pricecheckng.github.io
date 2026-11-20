@@ -32,6 +32,12 @@ const json = (o: unknown, status = 200) =>
 
 const cut = (s: unknown, n: number) => String(s ?? "").slice(0, n);
 
+// questions already asked for this section: the AI must never repeat or reword them
+const askedLine = (b: any) => {
+  const list = (Array.isArray(b?.asked) ? b.asked : []).slice(-6).map((q: unknown) => `- ${cut(q, 300)}`).join("\n");
+  return list ? `Questions ALREADY asked for this section (do NOT repeat, reword or test the same fact as any of them; ask about a DIFFERENT point):\n${list}\n` : "";
+};
+
 const TEACHER = `You are a patient, friendly university tutor teaching a student from ONE uploaded PDF.
 Rules:
 - Teach primarily from the text given to you. If extra web search notes are provided, use them only to clarify, give a different example, or help when the PDF text is thin/unclear, and clearly note what came from the web.
@@ -411,6 +417,7 @@ Deno.serve(async (req) => {
           (body.retry
             ? `The student got the last question wrong. Their mistake: ${cut(body.mistake, 600)}\nExplain it again in a DIFFERENT, simpler way with a new small example, then ask a NEW question.\n`
             : "") +
+          askedLine(body) +
           `\nSECTION TEXT:\n"""\n${sectionText}\n"""\n` +
           (webNotes ? `\nEXTRA WEB SEARCH NOTES:\n"""\n${webNotes}\n"""\n` : "") +
           `\nTeach this section step by step: 1) explain the main idea simply, 2) go through the key points in order, 3) give one small example (a fresh alternative example if retrying or using web notes), 4) ask ONE question that checks understanding (not a yes/no question).\n` +
@@ -477,6 +484,7 @@ Deno.serve(async (req) => {
           (body.retry
             ? `The student got the last question wrong. Their mistake: ${cut(body.mistake, 600)}\nExplain it again in a DIFFERENT, simpler way with a new small example, then ask a NEW question.\n`
             : "") +
+          askedLine(body) +
           `\nSECTION TEXT:\n"""\n${sectionText}\n"""\n` +
           (webNotes ? `\nEXTRA WEB SEARCH NOTES:\n"""\n${webNotes}\n"""\n` : "") +
           `\nTeach this section step by step: 1) explain the main idea simply, 2) go through the key points in order, 3) give one small example (a fresh alternative example if retrying or using web notes), 4) ask ONE question that checks understanding (not a yes/no question).\n` +
