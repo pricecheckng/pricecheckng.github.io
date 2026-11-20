@@ -149,6 +149,18 @@ textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12p
         <div class="note" style="margin:4px 0 8px">Web search is on: answers also use information beyond your PDF.</div>
         <div class="askrow"><textarea id="askIn" placeholder="Type your question..."></textarea><button class="btn" id="askBtn">Ask</button></div>
       </div>
+      <div class="ask" id="ttsBox">
+        <b>Not sure how to say a word? Type it and listen</b>
+        <div class="note">Type a word or a sentence. Your phone will say it out loud.</div>
+        <textarea id="ttsIn" placeholder="For example: stoichiometry" style="margin-top:8px;min-height:56px"></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="ttsPlay">Listen</button>
+          <button class="btn ghost" id="ttsSlow">Slow: off</button>
+          <button class="btn ghost" id="ttsStop">Stop</button>
+        </div>
+        <label class="note" style="display:block;margin-top:8px">Voice <select id="ttsVoice" style="max-width:100%"></select></label>
+        <div class="note hide" id="ttsMsg" style="margin-top:6px"></div>
+      </div>
     </div>
     <div class="row" style="margin-top:22px"><button class="btn ghost sm" id="planBtn">Lesson plan</button></div>
   </section>
@@ -694,6 +706,50 @@ async function sendAsk(q) {
 }
 $("askBtn").onclick = () => sendAsk($("askIn").value);
 $("askIn").onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendAsk($("askIn").value); } };
+
+/* ---------- say it out loud (the phone's own voice, free) ---------- */
+const TTS = { ok: "speechSynthesis" in window && "SpeechSynthesisUtterance" in window, slow: false, voices: [] };
+function ttsClean(t) {
+  const sub = "₀₁₂₃₄₅₆₇₈₉", sup = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+  return String(t || "").replace(/[₀-₉]/g, (c) => sub.indexOf(c)).replace(/[⁰¹²³⁴⁵⁶⁷⁸⁹]/g, (c) => " to the power " + sup.indexOf(c))
+    .replace(/→/g, " yields ").replace(/⇌/g, " is in equilibrium with ").replace(/[*_#`>|]/g, " ").replace(/\s+/g, " ").trim();
+}
+function ttsChunks(t) { // phones cut long speech, so say it sentence by sentence
+  const out = []; (t.match(/[^.!?;:]+[.!?;:]*/g) || [t]).forEach((x) => { x = x.trim(); while (x.length > 160) { let k = x.lastIndexOf(" ", 160); if (k < 40) k = 160; out.push(x.slice(0, k)); x = x.slice(k).trim(); } if (x) out.push(x); });
+  return out;
+}
+function ttsMsg(m) { $("ttsMsg").textContent = m || ""; $("ttsMsg").classList.toggle("hide", !m); }
+function ttsLoad() {
+  if (!TTS.ok) return;
+  let v = speechSynthesis.getVoices() || [];
+  const en = v.filter((x) => /^en/i.test(x.lang)); TTS.voices = en.length ? en : v;
+  const rank = (x) => { const l = (x.lang || "").replace("_", "-").toLowerCase(); return l === "en-ng" ? 0 : l === "en-gb" ? 1 : l === "en-us" ? 2 : 3; };
+  TTS.voices.sort((a, b) => rank(a) - rank(b));
+  let saved = ""; try { saved = localStorage.getItem("pdft_voice") || ""; } catch (_) {}
+  $("ttsVoice").innerHTML = TTS.voices.map((x, k) => '<option value="' + k + '"' + (x.name === saved ? " selected" : "") + ">" + esc(x.name + " (" + x.lang + ")") + "</option>").join("");
+  if (!TTS.voices.length) $("ttsVoice").innerHTML = '<option value="-1">Phone default voice</option>';
+}
+function ttsSay() {
+  const txt = ttsClean($("ttsIn").value);
+  if (!TTS.ok) return ttsMsg("This browser cannot speak. Please open this page in Google Chrome.");
+  if (!txt) return ttsMsg("Type a word or a sentence first.");
+  ttsMsg(""); speechSynthesis.cancel();
+  const voice = TTS.voices[+$("ttsVoice").value];
+  if (voice) { try { localStorage.setItem("pdft_voice", voice.name); } catch (_) {} }
+  const parts = ttsChunks(txt);
+  parts.forEach((part, k) => {
+    const u = new SpeechSynthesisUtterance(part); if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = "en-GB";
+    u.rate = TTS.slow ? 0.55 : 0.95;
+    u.onerror = (e) => { if (e && e.error && e.error !== "interrupted" && e.error !== "canceled") ttsMsg("Your phone could not say it. Check that a Text-to-speech voice is installed (Settings, Language, Text-to-speech)."); };
+    speechSynthesis.speak(u);
+  });
+}
+if (TTS.ok) { ttsLoad(); speechSynthesis.onvoiceschanged = ttsLoad; setTimeout(() => { if (!TTS.voices.length) ttsMsg("No voice found yet. If you hear nothing, install or turn on Text-to-speech in your phone settings."); }, 2500); }
+else ttsMsg("This browser cannot speak. Please open this page in Google Chrome.");
+$("ttsPlay").onclick = ttsSay;
+$("ttsStop").onclick = () => { if (TTS.ok) speechSynthesis.cancel(); };
+$("ttsSlow").onclick = () => { TTS.slow = !TTS.slow; $("ttsSlow").textContent = "Slow: " + (TTS.slow ? "on" : "off"); };
+$("ttsIn").onkeydown = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); ttsSay(); } };
 
 function finish() {
   S.idx = 0; save(); show("sDone");
