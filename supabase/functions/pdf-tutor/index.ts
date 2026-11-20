@@ -12,6 +12,12 @@ const GROQ_MODELS = (Deno.env.get("GROQ_MODELS") || "openai/gpt-oss-120b,openai/
   .map((s) => s.trim())
   .filter(Boolean);
 
+// grading is a small job: use the faster small model first, the big one as backup
+const GRADE_MODELS = (Deno.env.get("GROQ_GRADE_MODELS") || "openai/gpt-oss-20b,openai/gpt-oss-120b")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 const DEFAULT_GEMINI_MODELS = ["gemini-3.8-flash", "gemini-3.5-flash-lite"];
 const GEMINI_MODELS = (Deno.env.get("PDFT_MODELS") || DEFAULT_GEMINI_MODELS.join(","))
   .split(",")
@@ -80,12 +86,12 @@ async function tavilySearch(query: string): Promise<string> {
   }
 }
 
-async function groqJson(system: string, prompt: string): Promise<any> {
+async function groqJson(system: string, prompt: string, opts: { models?: string[]; max?: number } = {}): Promise<any> {
   const key = Deno.env.get("GROQ_API_KEY");
   if (!key) throw new Error("GROQ_API_KEY secret is missing");
 
   let last = "no groq model worked";
-  for (const m of GROQ_MODELS) {
+  for (const m of opts.models || GROQ_MODELS) {
     try {
       const r = await fetch("https://api.groq.com/openai/v1/chat/completions", {
         method: "POST",
@@ -96,7 +102,7 @@ async function groqJson(system: string, prompt: string): Promise<any> {
         body: JSON.stringify({
           model: m,
           temperature: 0.4,
-          max_tokens: 4096,
+          max_tokens: opts.max || 4096,
           ...(m.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
           response_format: { type: "json_object" },
           messages: [
@@ -173,9 +179,9 @@ async function geminiJson(system: string, prompt: string): Promise<any> {
   throw new Error(last);
 }
 
-async function askTutorJson(system: string, prompt: string): Promise<any> {
+async function askTutorJson(system: string, prompt: string, opts: { models?: string[]; max?: number } = {}): Promise<any> {
   try {
-    return await groqJson(system, prompt);
+    return await groqJson(system, prompt, opts);
   } catch (groqErr) {
     if (Deno.env.get("GEMINI_API_KEY")) {
       return await geminiJson(system, prompt);
@@ -478,7 +484,7 @@ Deno.serve(async (req) => {
           `Return JSON: {"lesson": "markdown text", "question": "the single question", "recap": "one sentence summary of what was taught"}`
       );
     } else {
-      const sectionText = cut(body.text, 9000);
+      const sectionText = cut(body.text, 6000);
       const webNotes = body.webSearch
         ? await tavilySearch(`${cut(body.question, 160)}`)
         : "";
@@ -489,7 +495,8 @@ Deno.serve(async (req) => {
           (webNotes ? `\nEXTRA WEB SEARCH NOTES:\n"""\n${webNotes}\n"""\n` : "") +
           `\nQuestion asked: ${cut(body.question, 500)}\nStudent answer: ${cut(body.answer, 1500)}\n\n` +
           `Decide clearly whether the student's answer is correct or not. Be fair: if the main idea is right, even in the student's own words, "correct" is true.\n` +
-          `Return JSON: {"correct": true or false, "verdict": "Correct" or "Not correct", "feedback": "2-3 friendly sentences: whether it is correct or not, what was right, and what is missing or wrong", "tip": "one short hint if wrong, else empty"}`
+          `Return JSON: {"correct": true or false, "verdict": "Correct" or "Not correct", "feedback": "2-3 friendly sentences: whether it is correct or not, what was right, and what is missing or wrong", "tip": "one short hint if wrong, else empty"}`,
+        { models: GRADE_MODELS, max: 1500 }
       );
 
       const isCorrect = Boolean(graded?.correct);
