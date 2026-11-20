@@ -11,8 +11,8 @@
   ];
   var GROUPS = [
     { t: 'PCN AI', ic: 1, open: 1, rows: [
-      ['AI Analysis', '', '#pcnai', 0, 'an'],
-      ['AI Alerts', '', '#alerts', 0, 'al']
+      ['AI Analysis', '', '#pcnai'],
+      ['AI Alerts', '', '#alerts']
     ]},
     { t: 'Market', rows: [
       ['Crypto news', 'Latest headlines from top outlets', 'news.html'],
