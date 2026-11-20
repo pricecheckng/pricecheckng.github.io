@@ -143,10 +143,10 @@ textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12p
       <div class="row" id="lNav"></div>
       <div class="ask hide" id="askBox">
         <b>Did not understand something? Ask the tutor</b>
-        <div class="note">Ask about this section and I will explain it from your PDF.</div>
+        <div class="note">Ask about this section. I will use your PDF and the web to explain it.</div>
         <div class="chips" id="askChips"></div>
         <div class="msgs" id="askMsgs"></div>
-        <label class="note" style="display:block;margin:4px 0 8px"><input type="checkbox" id="askWeb"> Also search the web for this</label>
+        <div class="note" style="margin:4px 0 8px">Web search is on: answers also use information beyond your PDF.</div>
         <div class="askrow"><textarea id="askIn" placeholder="Type your question..."></textarea><button class="btn" id="askBtn">Ask</button></div>
       </div>
     </div>
@@ -168,6 +168,17 @@ textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12p
   </section>
 </main>
 
+<div id="oldMsg" style="display:none;margin:16px;padding:14px;border:1px solid #e3b4b4;background:#fbeaea;color:#7a1f1f;border-radius:12px;font-size:.95rem"></div>
+<noscript><p style="margin:16px">Please turn on JavaScript to use PDF Tutor.</p></noscript>
+<script nomodule>document.getElementById("oldMsg").style.display="block";document.getElementById("oldMsg").textContent="Your browser is too old for PDF Tutor. Please update Google Chrome from the Play Store, or open this page in Chrome.";</script>
+<script>
+window.addEventListener("error", function (e) {
+  var m = document.getElementById("oldMsg"); if (!m || m.style.display === "block") return;
+  if (e && e.filename && /pdf-tutor|config\.js|esm\.sh/.test(e.filename) || (e && !e.filename)) {
+    m.style.display = "block"; m.textContent = "PDF Tutor could not start in this browser (" + String((e && e.message) || "error").slice(0, 80) + "). Please update Google Chrome and try again.";
+  }
+});
+</script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script type="module">
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
@@ -383,8 +394,8 @@ function sci(t) {
   t = t.replace(/\^\{?\\circ\}?/g, "°").replace(/\\([%$_&#{}])/g, "$1").replace(/\\[,;:! ]/g, " ");
   t = t.replace(/\\([A-Za-z]+)/g, (m, n) => (n in SYM ? SYM[n] : FUNCS.has(n) ? n : m)); // known symbols and function names (\sin, \log...) are cleaned, anything else is left alone
   // big operators with limits: ∑_{i=1}^{n} -> ∑ (i=1 to n)
-  t = t.replace(/([∑∏∫∮])\s*_(?:\{([^}]*)\}|([^\s^{]))\s*\^(?:\{([^}]*)\}|([^\s{]))/g, (m, o, a1, a2, b1, b2) => o + " (" + (a1 ?? a2) + " to " + (b1 ?? b2) + ")")
-    .replace(/([∑∏∫∮]|\blim)\s*_(?:\{([^}]*)\}|([^\s^{]))/g, (m, o, a1, a2) => o + " (" + (a1 ?? a2) + ")");
+  t = t.replace(/([∑∏∫∮])\s*_(?:\{([^}]*)\}|([^\s^{]))\s*\^(?:\{([^}]*)\}|([^\s{]))/g, (m, o, a1, a2, b1, b2) => o + " (" + (a1 !== undefined ? a1 : a2) + " to " + (b1 !== undefined ? b1 : b2) + ")")
+    .replace(/([∑∏∫∮]|\blim)\s*_(?:\{([^}]*)\}|([^\s^{]))/g, (m, o, a1, a2) => o + " (" + (a1 !== undefined ? a1 : a2) + ")");
   t = t.replace(/<=>/g, "⇌").replace(/\s-->\s/g, " → ").replace(/\s->\s/g, " → ").replace(/\s<-\s/g, " ← ");
   // powers
   t = t.replace(/\^\{?(\d+)([+\-−])\}?/g, (m, d, sg) => mapc(SUPS, d + sg))
@@ -394,7 +405,7 @@ function sci(t) {
   // subscripts
   t = t.replace(/([A-Za-z\)\]])_\{([^}\n]+)\}/g, (m, a, x) => a + (/^[0-9+\-−]+$/.test(x) ? mapc(SUBS, x) : "\u0001" + x + "\u0002"))
     .replace(/([A-Z][a-z]?|\)|\])_(\d+)/g, (m, a, x) => a + mapc(SUBS, x))
-    .replace(/(?<![A-Za-z0-9_])([A-Za-z])_([a-z0-9])(?![A-Za-z0-9_])/g, "$1\u0001$2\u0002");
+    .replace(/(^|[^A-Za-z0-9_])([A-Za-z])_([a-z0-9])(?![A-Za-z0-9_])/g, "$1$2\u0001$3\u0002");
   // markdown leftovers: links, quotes, strike, tables, rules
   t = t.replace(/\[([^\]\n]+)\]\((?:https?:\/\/|\/)[^)\s]*\)/g, "$1").replace(/~~([^~\n]+)~~/g, "$1").replace(/^\s*>\s?/gm, "");
   t = t.split("\n").filter((l) => !/^\s*\|?[\s:|-]{3,}\|?\s*$/.test(l) || !/-/.test(l) || !/\|/.test(l)).filter((l) => !/^\s*-{3,}\s*$/.test(l))
@@ -672,7 +683,7 @@ async function sendAsk(q) {
   box.scrollIntoView({ behavior: "smooth", block: "nearest" });
   let live = true; const draw = painter((t) => { if (live) box.innerHTML = md(t); });
   try {
-    const full = await aiStream("ask", { name: SS.name, title: SS.sections[i].title, text: SS.sections[i].text, lesson: (SS.lessons[i] || {}).lesson || "", question: (SS.lessons[i] || {}).question || "", history, q, webSearch: $("askWeb").checked }, draw);
+    const full = await aiStream("ask", { name: SS.name, title: SS.sections[i].title, text: SS.sections[i].text, lesson: (SS.lessons[i] || {}).lesson || "", question: (SS.lessons[i] || {}).question || "", history, q, webSearch: true }, draw);
     live = false; box.classList.remove("cur-blink"); box.innerHTML = md(full);
     list.push({ r: "u", t: q }, { r: "a", t: full }); if (list.length > 40) list.splice(0, list.length - 40); save();
   } catch (er) {
