@@ -57,6 +57,10 @@ textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12p
 .err{background:var(--badbg);border:1px solid #f2c1c1;color:#7a1b1b;border-radius:12px;padding:12px;margin:12px 0}
 .spin{display:inline-block;width:16px;height:16px;border:3px solid #bfe3cf;border-top-color:var(--g);border-radius:50%;animation:s 1s linear infinite;vertical-align:-3px;margin-right:8px}
 @keyframes s{to{transform:rotate(360deg)}}
+.figbtn{margin-top:12px}
+.figs{margin-top:10px;display:flex;flex-direction:column;gap:10px}
+.figs canvas{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
+.figs .cap{font-size:.82rem;color:var(--mut,#667)}
 .ask{background:#fff;border:1.5px solid #b9dcc8;border-radius:16px;padding:14px;margin-top:18px}
 .chips{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
 .chip{border:1px solid #b9dcc8;background:var(--g2);color:var(--g);font:inherit;font-size:.85rem;font-weight:600;border-radius:99px;padding:6px 12px;cursor:pointer}
@@ -135,6 +139,7 @@ textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12p
     <div id="lLoad" class="card hide"><span class="spin"></span><span id="lLoadText">Preparing this lesson...</span></div>
     <div id="lBody" class="hide">
       <div class="lesson" id="lLesson"></div>
+      <div id="figBox" class="hide"></div>
       <div class="q hide" id="lQBox"><b>Question</b><div id="lQ" style="margin-top:4px"></div>
         <textarea id="lAns" placeholder="Type your answer in your own words..."></textarea>
         <div class="row"><button class="btn" id="checkBtn">Check my answer</button></div>
@@ -432,6 +437,57 @@ async function sha(buf) {
   const h = await crypto.subtle.digest("SHA-256", buf);
   return Array.from(new Uint8Array(h)).slice(0, 8).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
+/* ---------- keep the PDF on the phone (IndexedDB) so diagrams can be shown ---------- */
+function idb() {
+  return new Promise((res, rej) => {
+    try { const r = indexedDB.open("pdft", 1); r.onupgradeneeded = () => r.result.createObjectStore("pdf"); r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error); } catch (e) { rej(e); }
+  });
+}
+async function idbPut(id, buf) { try { const db = await idb(); db.transaction("pdf", "readwrite").objectStore("pdf").put(buf, id); } catch (_) {} }
+async function idbGet(id) { try { const db = await idb(); return await new Promise((res) => { const q = db.transaction("pdf").objectStore("pdf").get(id); q.onsuccess = () => res(q.result || null); q.onerror = () => res(null); }); } catch (_) { return null; } }
+
+/* ---------- diagrams from the PDF pages of the current section ---------- */
+const figCache = {};
+async function paintFigs(i) {
+  const box = $("figBox"); box.innerHTML = ""; box.classList.add("hide");
+  const SS = S, sec = SS.sections[i], m = String(sec.pages || "").match(/^(\d+)(?:-(\d+))?$/);
+  if (!m || !window.pdfjsLib) return;
+  try {
+    const buf = await idbGet(SS.id); if (!buf) return;
+    const pdf = await pdfjsLib.getDocument({ data: buf.slice(0) }).promise;
+    const p0 = +m[1], p1 = Math.min(+(m[2] || m[1]), p0 + 5, pdf.numPages), OPS = pdfjsLib.OPS, found = [];
+    for (let p = p0; p <= p1; p++) {
+      const key = SS.id + ":" + p;
+      if (!(key in figCache)) {
+        const ops = await (await pdf.getPage(p)).getOperatorList(); let img = 0, path = 0;
+        for (let k = 0; k < ops.fnArray.length; k++) { const f = ops.fnArray[k]; if (f === OPS.paintImageXObject || f === OPS.paintInlineImageXObject || f === OPS.paintImageMaskXObject || f === OPS.paintJpegXObject) img++; else if (f === OPS.constructPath) path++; }
+        figCache[key] = img > 0 || path >= 25;
+      }
+      if (figCache[key]) found.push(p);
+    }
+    if (S !== SS || S.idx !== i || !found.length) return;
+    const b = document.createElement("button"); b.className = "btn ghost figbtn";
+    b.textContent = "See the diagrams from your PDF (page" + (found.length > 1 ? "s " : " ") + found.join(", ") + ")";
+    const list = document.createElement("div"); list.className = "figs hide";
+    b.onclick = async () => {
+      if (!list.childNodes.length) {
+        b.disabled = true; b.textContent = "Loading...";
+        for (const p of found) {
+          const pg = await pdf.getPage(p), vp0 = pg.getViewport({ scale: 1 }), w = Math.min(box.clientWidth || 340, 640), sc = (w / vp0.width) * Math.min(window.devicePixelRatio || 1, 2), vp = pg.getViewport({ scale: sc });
+          const cv = document.createElement("canvas"); cv.width = Math.floor(vp.width); cv.height = Math.floor(vp.height);
+          await pg.render({ canvasContext: cv.getContext("2d"), viewport: vp }).promise;
+          const cap = document.createElement("div"); cap.className = "cap"; cap.textContent = "Page " + p + " of your PDF";
+          list.append(cap, cv);
+        }
+        b.disabled = false;
+      }
+      const open = list.classList.toggle("hide") === false;
+      b.textContent = open ? "Hide the diagrams" : "See the diagrams from your PDF (page" + (found.length > 1 ? "s " : " ") + found.join(", ") + ")";
+    };
+    box.append(b, list); box.classList.remove("hide");
+  } catch (_) { /* diagrams are optional: never break the lesson */ }
+}
+
 async function readPdf(file, onProgress) {
   if (!window.pdfjsLib) throw new Error("The PDF reader could not load. Check your internet and refresh.");
   pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
@@ -452,7 +508,7 @@ async function readPdf(file, onProgress) {
     pages.push(lines.join("\n").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").trim());
     onProgress(p, pdf.numPages);
   }
-  return { id, pages };
+  return { id, pages, buf };
 }
 
 /* ---------- split into sections ---------- */
@@ -498,7 +554,8 @@ $("file").onchange = async (e) => {
   if (!/pdf$/i.test(f.name) && f.type !== "application/pdf") return fail("Please choose a PDF file.");
   show("sWork"); $("wTitle").textContent = "Reading your PDF"; $("wBar").style.width = "3%"; $("wText").textContent = "";
   try {
-    const { id, pages } = await readPdf(f, (p, n) => { $("wBar").style.width = Math.max(3, Math.round((p / n) * 60)) + "%"; $("wText").textContent = "Page " + p + " of " + n; });
+    const { id, pages, buf } = await readPdf(f, (p, n) => { $("wBar").style.width = Math.max(3, Math.round((p / n) * 60)) + "%"; $("wText").textContent = "Page " + p + " of " + n; });
+    idbPut(id, buf); // keep the PDF on this phone so diagrams can be shown later
     const same = loadState(id);
     if (same) { S = same; return openPlan(); }
     const chars = pages.reduce((a, p) => a + p.length, 0);
@@ -620,7 +677,7 @@ async function openLesson(retry, mistake) {
 function paintLesson() {
   $("lLoad").innerHTML = '<span class="spin"></span><span id="lLoadText"></span>'; setLoad(false);
   $("lLesson").classList.remove("cur-blink"); $("lLesson").innerHTML = md(cur.lesson); $("lQ").innerHTML = md(cur.question); $("lQBox").classList.remove("hide");
-  paintAsk();
+  paintAsk(); paintFigs(S.idx);
   $("checkBtn").disabled = false; $("checkBtn").textContent = "Check my answer";
   const i = S.idx, n = S.sections.length;
   if (S.done[i]) {
