@@ -444,6 +444,7 @@ Deno.serve(async (req) => {
         `The check question waiting for the student: ${cut(body.question, 400)}\n\n` +
         `How to answer: explain the student's doubt clearly and kindly, using the section text (and web notes only when helpful). Use simple words and a small example if it helps. ` +
         `Do NOT give the exact answer to the check question; help them understand so they can answer it. ` +
+        `If the student says they do not understand, are confused, or asks the same thing again, do NOT repeat your earlier explanation. Explain it in a completely DIFFERENT way: simpler words, a real-life everyday example (Nigerian if possible), or an analogy, in small steps. End with one short question like "Does that make sense now?". ` +
         `If the doubt is not covered by the section text, say so in one short line, then give a brief general explanation starting with "Outside your PDF:". ` +
         `Keep it under 180 words. Markdown is fine (**bold**, short bullets). Plain text only, no JSON.`;
 
