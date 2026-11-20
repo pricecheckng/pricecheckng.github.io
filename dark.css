@@ -48,7 +48,7 @@ html.dk .ac-btn{background:transparent!important;color:#3ddc97!important;border-
 html.dk .hero h1 span,html.dk .doc a{color:#3ddc97}
 /* menu sheet */
 html.dk #mnu .m-sh{background:#121a15;color:#e9f1ec;box-shadow:0 -10px 40px rgba(0,0,0,.6)}
-html.dk #mnu .m-r,html.dk #mnu .m-g{background:rgba(255,255,255,.06)}
+html.dk #mnu .m-r,html.dk #mnu .m-g{background:none}
 html.dk #mnu .m-gb .m-r{background:none}
 /* PCN AI chat */
 html.dk .pcn-chat-box{background:#121a15}

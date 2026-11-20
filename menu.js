@@ -4,16 +4,13 @@
   var SPARK = '<svg class="m-ai" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg>';
   var XI = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>', IG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>', FB = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.77l-.44 2.89h-2.33v6.99A10 10 0 0 0 22 12z"/></svg>';
   var BELL = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>';
-  var TOP = [
-    ['Account', 'Profile, alerts and settings', '#account'],
-    ['Daily contest', 'Predict the price and win', 'predict.html'],
-    ['API for developers', 'Free crypto price API, 10,000 calls a month', 'api.html', 1]
+  var TOP = [];
+  var AFTER = [
+    ['API for developers', '', 'api.html', 1],
+    ['Daily contest', '', 'predict.html'],
+    ['Account', '', '#account']
   ];
   var GROUPS = [
-    { t: 'PCN AI', ic: 1, open: 1, rows: [
-      ['AI Analysis', '', '#pcnai'],
-      ['AI Alerts', '', '#alerts']
-    ]},
     { t: 'Market', rows: [
       ['Crypto news', 'Latest headlines from top outlets', 'news.html'],
       ['Market summary', 'Today in 30 seconds, written by PCN AI', 'pulse.html'],
@@ -49,6 +46,10 @@
       ['Telegram bot', 'Prices and alerts inside Telegram', 'telegram-bot.html'],
       ['Data sources', 'Where our prices and data come from', 'data-sources.html'],
       ['About & founder', 'Who built PriceCheck NG and when', 'about.html']
+    ]},
+    { t: 'PCN AI', ic: 1, rows: [
+      ['AI Analysis', '', '#pcnai'],
+      ['AI Alerts', '', '#alerts']
     ]}
   ];
   var css = '#mnu{position:fixed;inset:0;z-index:9999;visibility:hidden}' +
@@ -72,7 +73,7 @@
     '#mnu .m-g{border-radius:12px;background:rgba(127,127,127,.07);margin-bottom:6px;overflow:hidden}' +
     '#mnu .m-gh{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:none;color:inherit;font:inherit;font-weight:700;font-size:15px;padding:13px 12px;cursor:pointer;text-align:left}' +
     '#mnu .m-gh i{font-style:normal;font-size:20px;line-height:1;opacity:.6;transition:transform .2s}' +
-    '#mnu .m-g.open .m-gh i{transform:rotate(45deg)}' +
+    '#mnu .m-g.open .m-gh i{transform:rotate(180deg)}' +
     '#mnu .m-gb{display:none;padding:0 6px 6px}' +
     '#mnu .m-g.open .m-gb{display:block}' +
     '#mnu .m-gb .m-r{background:none;margin:0;padding:13px 8px;border-top:1px solid rgba(127,127,127,.15);border-radius:0}' +
@@ -104,7 +105,8 @@
     '#mnu .m-ft{display:flex;flex-wrap:wrap;gap:6px 16px;margin:14px 2px 0;font-size:13px}' +
     '#mnu .m-ft a{color:#16a34a;font-weight:600;text-decoration:none}' +
     '#mnu .m-so{display:flex;flex-wrap:wrap;justify-content:center;gap:22px;margin:18px 2px 4px;padding-top:18px;border-top:1px solid rgba(127,127,127,.2)}#mnu .m-so a{color:inherit;opacity:.6;display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;text-decoration:none}#mnu .m-so a:active{opacity:1;color:#16a34a}#mnu .m-so a span{display:none}#mnu .m-so svg{width:26px;height:26px}' +
-    '@media(min-width:640px){#mnu .m-sh{top:0;bottom:0;left:0;right:0;width:100%;max-width:none;height:100%;max-height:none;margin:0;border-radius:0;transform:translateY(-12px);opacity:0;transition:transform .2s,opacity .2s;padding:12px 20px 24px;box-sizing:border-box;overflow-y:auto}#mnu.on .m-sh{transform:none;opacity:1}#mnu .m-sh>*{max-width:none}#mnu .m-sh{padding:12px 10px 24px}#mnu .m-h b{font-size:18px}#mnu .m-gr{display:none}#mnu .m-r,#mnu .m-g{background:none;border-radius:0;border-bottom:1px solid rgba(127,127,127,.2);margin-bottom:0}#mnu .m-r{padding:14px 4px}#mnu .m-r small{display:none}#mnu .m-gh{padding:14px 4px}#mnu .m-th{background:none;padding:12px 0}#mnu .m-so{gap:28px}}';
+    '#mnu .m-r,#mnu .m-g{background:none;border-radius:0;border-bottom:1px solid rgba(127,127,127,.2);margin-bottom:0}#mnu .m-r{padding:16px 4px}#mnu .m-gh{padding:16px 4px}#mnu .m-gb{padding:0 0 6px}#mnu .m-gb .m-r{border-bottom:0;border-top:0;padding:13px 4px 13px 14px}#mnu .m-gh i{display:inline-flex;font-size:0;opacity:.6}#mnu .m-gh i svg{transform:rotate(90deg)}#mnu .m-th{background:none;padding:0;margin:10px 0 4px}#mnu .m-th>span{display:none}#mnu .m-ft{justify-content:center;gap:8px 18px}#mnu .m-ft a{color:inherit;opacity:.6;font-weight:500}' +
+    '@media(min-width:0px){#mnu .m-sh{top:0;bottom:0;left:0;right:0;width:100%;max-width:none;height:100%;max-height:none;margin:0;border-radius:0;transform:translateY(-12px);opacity:0;transition:transform .2s,opacity .2s;padding:12px 20px 24px;box-sizing:border-box;overflow-y:auto}#mnu.on .m-sh{transform:none;opacity:1}#mnu .m-sh>*{max-width:none}#mnu .m-sh{padding:12px 10px 24px}#mnu .m-h b{font-size:18px}#mnu .m-gr{display:none}#mnu .m-r,#mnu .m-g{background:none;border-radius:0;border-bottom:1px solid rgba(127,127,127,.2);margin-bottom:0}#mnu .m-r{padding:14px 4px}#mnu .m-r small{display:none}#mnu .m-gh{padding:14px 4px}#mnu .m-th{background:none;padding:12px 0}#mnu .m-so{gap:28px}}';
   var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
 
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
@@ -117,8 +119,9 @@
   TOP.forEach(function (r) { html += row(r); });
   html += '<div style="height:6px"></div>';
   GROUPS.forEach(function (g) {
-    html += '<div class="m-g' + (g.open ? ' open' : '') + '"><button type="button" class="m-gh" aria-expanded="' + (g.open ? 'true' : 'false') + '"><span>' + (g.ic ? '<img src="/logo-p.png" width="24" height="24" alt="" style="display:block;border-radius:6px">' : '') + esc(g.t) + (g.rows.some(function (r) { return r[3]; }) ? '<em class="m-d"></em>' : '') + '</span><i>+</i></button><div class="m-gb">' + g.rows.map(row).join('') + '</div></div>';
+    html += '<div class="m-g' + (g.open ? ' open' : '') + '"><button type="button" class="m-gh" aria-expanded="' + (g.open ? 'true' : 'false') + '"><span>' + (g.ic ? '<img src="/logo-p.png" width="24" height="24" alt="" style="display:block;border-radius:6px">' : '') + esc(g.t) + (g.rows.some(function (r) { return r[3]; }) ? '<em class="m-d"></em>' : '') + '</span><i>' + chev + '</i></button><div class="m-gb">' + g.rows.map(row).join('') + '</div></div>';
   });
+  AFTER.forEach(function (r) { html += row(r); });
   html += '<button type="button" class="m-lo" id="mLo" hidden>Log out</button>';
   html += '<div class="m-pair"><div class="m-cu" id="mLu"><span>Language</span><button type="button" class="m-cb" id="mLb" aria-haspopup="dialog" aria-label="Language"></button></div><div class="m-cu" id="mCu" hidden><span>Currency</span><button type="button" class="m-cb" id="mCb" aria-haspopup="dialog" aria-label="Currency"></button></div></div>';
   html += '<div class="m-th"><span>Theme</span><div class="m-ts" id="mTs" role="group" aria-label="Theme"><button type="button" data-th="light" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg> Light</button><button type="button" data-th="dark" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg> Dark</button><button type="button" data-th="system" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg> System</button></div></div>';
