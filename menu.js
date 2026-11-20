@@ -3,13 +3,17 @@
   var TG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M9.8 15.3l-.4 4.2c.6 0 .9-.3 1.2-.6l2.9-2.7 6 4.4c1.1.6 1.9.3 2.2-1L23.9 4.6c.4-1.6-.6-2.3-1.6-1.9L1.3 10.8c-1.5.6-1.5 1.4-.3 1.8l5.4 1.7L19 6.4c.6-.4 1.1-.2.7.2z"/></svg>', WA = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.5 2 2 6.5 2 12.04c0 1.77.46 3.5 1.34 5.02L2 22l5.07-1.33a10 10 0 0 0 4.97 1.27C17.58 21.94 22.08 17.44 22.08 11.9 22.08 6.45 17.58 2 12.04 2zm4.43 12.38c-.24-.12-1.43-.7-1.65-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.2-.47-.4-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.4 1.37.5.58.18 1.1.16 1.51.1.46-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>';
   var SPARK = '<svg class="m-ai" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg>';
   var XI = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>', IG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor"/></svg>', FB = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M22 12a10 10 0 1 0-11.56 9.88v-6.99H7.9V12h2.54V9.8c0-2.5 1.49-3.89 3.77-3.89 1.09 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56V12h2.77l-.44 2.89h-2.33v6.99A10 10 0 0 0 22 12z"/></svg>';
+  var BELL = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>';
   var TOP = [
-    ['Ask PCN AI', '', '#pcnai', 0, 1],
     ['Account', 'Profile, alerts and settings', '#account'],
     ['Daily contest', 'Predict the price and win', 'predict.html'],
     ['API for developers', 'Free crypto price API, 10,000 calls a month', 'api.html', 1]
   ];
   var GROUPS = [
+    { t: 'PCN AI', ic: 1, open: 1, rows: [
+      ['AI Analysis', '', '#pcnai', 0, 'an'],
+      ['AI Alerts', '', '#alerts', 0, 'al']
+    ]},
     { t: 'Market', rows: [
       ['Crypto news', 'Latest headlines from top outlets', 'news.html'],
       ['Market summary', 'Today in 30 seconds, written by PCN AI', 'pulse.html'],
@@ -63,7 +67,7 @@
     '#mnu .m-d{display:inline-block;width:8px;height:8px;border-radius:50%;background:#12a150;margin-left:7px;vertical-align:middle;box-shadow:0 0 0 3px rgba(18,161,80,.2)}' +
     '#mnu .m-r:active{background:rgba(18,161,80,.15)}' +
     '#mnu .m-r span{display:block;font-weight:600;font-size:15px}' +
-    '#mnu .m-r span{display:flex;align-items:center;gap:10px}#mnu .m-aiR span{color:#16a34a}#mnu .m-aiR{background:rgba(18,161,80,.1)}' +
+    '#mnu .m-r span,#mnu .m-gh span{display:flex;align-items:center;gap:10px}#mnu .m-g.open,html.dk #mnu .m-g.open{color:inherit}#mnu .m-ci{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:#12a150;color:#fff;font-style:normal;flex:none}#mnu .m-ci svg{width:18px;height:18px}#mnu .m-gb .m-r span{gap:12px}#mnu .m-hl{display:flex;align-items:center;gap:10px}#mnu .m-hl img{display:block;border-radius:8px}' +
     '#mnu .m-r svg{flex:0 0 auto;opacity:.5}' +
     '#mnu .m-g{border-radius:12px;background:rgba(127,127,127,.07);margin-bottom:6px;overflow:hidden}' +
     '#mnu .m-gh{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:none;color:inherit;font:inherit;font-weight:700;font-size:15px;padding:13px 12px;cursor:pointer;text-align:left}' +
@@ -106,14 +110,14 @@
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
   var chev = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
   var html = '<div class="m-sc" data-x></div><div class="m-sh" role="dialog" aria-modal="true" aria-label="Menu"><div class="m-gr"></div>' +
-    '<div class="m-h"><b>PriceCheck <span style="color:#16a34a">NG</span></b><button class="m-x" type="button" aria-label="Close" data-x><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg></button></div>';
+    '<div class="m-h"><b class="m-hl"><img src="/logo-p.png" width="32" height="32" alt="">PriceCheck NG</b><button class="m-x" type="button" aria-label="Close" data-x><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg></button></div>';
   function row(r) {
-    return '<a class="m-r' + (r[4] ? ' m-aiR' : '') + '" href="' + r[2] + '"><div><span>' + (r[4] ? SPARK : '') + esc(r[0]) + (r[3] ? '<em class="m-d"></em>' : '') + '</span></div>' + chev + '</a>';
+    return '<a class="m-r" href="' + r[2] + '"><div><span>' + (r[4] ? '<i class="m-ci">' + (r[4] === 'al' ? BELL : SPARK) + '</i>' : '') + esc(r[0]) + (r[3] ? '<em class="m-d"></em>' : '') + '</span></div>' + chev + '</a>';
   }
   TOP.forEach(function (r) { html += row(r); });
   html += '<div style="height:6px"></div>';
   GROUPS.forEach(function (g) {
-    html += '<div class="m-g"><button type="button" class="m-gh" aria-expanded="false"><span>' + esc(g.t) + (g.rows.some(function (r) { return r[3]; }) ? '<em class="m-d"></em>' : '') + '</span><i>+</i></button><div class="m-gb">' + g.rows.map(row).join('') + '</div></div>';
+    html += '<div class="m-g' + (g.open ? ' open' : '') + '"><button type="button" class="m-gh" aria-expanded="' + (g.open ? 'true' : 'false') + '"><span>' + (g.ic ? '<img src="/logo-p.png" width="24" height="24" alt="" style="display:block;border-radius:6px">' : '') + esc(g.t) + (g.rows.some(function (r) { return r[3]; }) ? '<em class="m-d"></em>' : '') + '</span><i>+</i></button><div class="m-gb">' + g.rows.map(row).join('') + '</div></div>';
   });
   html += '<button type="button" class="m-lo" id="mLo" hidden>Log out</button>';
   html += '<div class="m-pair"><div class="m-cu" id="mLu"><span>Language</span><button type="button" class="m-cb" id="mLb" aria-haspopup="dialog" aria-label="Language"></button></div><div class="m-cu" id="mCu" hidden><span>Currency</span><button type="button" class="m-cb" id="mCb" aria-haspopup="dialog" aria-label="Currency"></button></div></div>';
