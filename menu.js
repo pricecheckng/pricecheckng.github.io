@@ -1,7 +1,9 @@
 /* PriceCheck NG - bottom "Menu" tab: opens a sheet with Account, all tools and links */
 (function () {
   var TG = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M9.8 15.3l-.4 4.2c.6 0 .9-.3 1.2-.6l2.9-2.7 6 4.4c1.1.6 1.9.3 2.2-1L23.9 4.6c.4-1.6-.6-2.3-1.6-1.9L1.3 10.8c-1.5.6-1.5 1.4-.3 1.8l5.4 1.7L19 6.4c.6-.4 1.1-.2.7.2z"/></svg>', WA = '<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M12.04 2C6.5 2 2 6.5 2 12.04c0 1.77.46 3.5 1.34 5.02L2 22l5.07-1.33a10 10 0 0 0 4.97 1.27C17.58 21.94 22.08 17.44 22.08 11.9 22.08 6.45 17.58 2 12.04 2zm4.43 12.38c-.24-.12-1.43-.7-1.65-.78-.22-.08-.38-.12-.54.12-.16.24-.62.78-.76.94-.14.16-.28.18-.52.06-.24-.12-1.02-.38-1.94-1.2-.72-.64-1.2-1.43-1.34-1.67-.14-.24-.02-.37.1-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.2-.47-.4-.4-.54-.41h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.4 1.37.5.58.18 1.1.16 1.51.1.46-.07 1.43-.58 1.63-1.15.2-.56.2-1.04.14-1.15-.06-.1-.22-.16-.46-.28z"/></svg>';
+  var SPARK = '<svg class="m-ai" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 16l.8 2.2L22 19l-2.2.8L19 22l-.8-2.2L16 19l2.2-.8z"/></svg>';
   var TOP = [
+    ['Ask PCN AI', '', '#pcnai', 0, 1],
     ['Account', 'Profile, alerts and settings', '#account'],
     ['Daily contest', 'Predict the price and win', 'predict.html'],
     ['API for developers', 'Free crypto price API, 10,000 calls a month', 'api.html', 1]
@@ -56,11 +58,11 @@
     '#mnu .m-h b{font-size:18px}' +
     '#mnu .m-x{border:0;background:rgba(127,127,127,.15);color:inherit;width:32px;height:32px;border-radius:50%;padding:0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}' +
     '#mnu .m-t{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;opacity:.55;margin:14px 0 6px}' +
-    '#mnu .m-r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border-radius:12px;text-decoration:none;color:inherit;background:rgba(127,127,127,.07);margin-bottom:6px}' +
+    '#mnu .m-r{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 12px;border-radius:12px;text-decoration:none;color:inherit;background:rgba(127,127,127,.07);margin-bottom:6px}' +
     '#mnu .m-d{display:inline-block;width:8px;height:8px;border-radius:50%;background:#12a150;margin-left:7px;vertical-align:middle;box-shadow:0 0 0 3px rgba(18,161,80,.2)}' +
     '#mnu .m-r:active{background:rgba(18,161,80,.15)}' +
     '#mnu .m-r span{display:block;font-weight:600;font-size:15px}' +
-    '#mnu .m-r small{display:block;font-size:12px;opacity:.65;margin-top:1px}' +
+    '#mnu .m-r span{display:flex;align-items:center;gap:10px}#mnu .m-aiR span{color:#16a34a}#mnu .m-aiR{background:rgba(18,161,80,.1)}' +
     '#mnu .m-r svg{flex:0 0 auto;opacity:.5}' +
     '#mnu .m-g{border-radius:12px;background:rgba(127,127,127,.07);margin-bottom:6px;overflow:hidden}' +
     '#mnu .m-gh{display:flex;align-items:center;justify-content:space-between;width:100%;border:0;background:none;color:inherit;font:inherit;font-weight:700;font-size:15px;padding:13px 12px;cursor:pointer;text-align:left}' +
@@ -68,7 +70,7 @@
     '#mnu .m-g.open .m-gh i{transform:rotate(45deg)}' +
     '#mnu .m-gb{display:none;padding:0 6px 6px}' +
     '#mnu .m-g.open .m-gb{display:block}' +
-    '#mnu .m-gb .m-r{background:none;margin:0;padding:10px 8px;border-top:1px solid rgba(127,127,127,.15);border-radius:0}' +
+    '#mnu .m-gb .m-r{background:none;margin:0;padding:13px 8px;border-top:1px solid rgba(127,127,127,.15);border-radius:0}' +
     '#mnu .m-gb .m-r:first-child{border-top:0}' +
     '#mnu .m-cu{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 2px}' +
     '#mnu .m-cu span{font-weight:600;font-size:15px}' +
@@ -105,7 +107,7 @@
   var html = '<div class="m-sc" data-x></div><div class="m-sh" role="dialog" aria-modal="true" aria-label="Menu"><div class="m-gr"></div>' +
     '<div class="m-h"><b>PriceCheck <span style="color:#16a34a">NG</span></b><button class="m-x" type="button" aria-label="Close" data-x><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg></button></div>';
   function row(r) {
-    return '<a class="m-r" href="' + r[2] + '"><div><span>' + esc(r[0]) + (r[3] ? '<em class="m-d"></em>' : '') + '</span>' + (r[1] ? '<small>' + esc(r[1]) + '</small>' : '') + '</div>' + chev + '</a>';
+    return '<a class="m-r' + (r[4] ? ' m-aiR' : '') + '" href="' + r[2] + '"><div><span>' + (r[4] ? SPARK : '') + esc(r[0]) + (r[3] ? '<em class="m-d"></em>' : '') + '</span></div>' + chev + '</a>';
   }
   TOP.forEach(function (r) { html += row(r); });
   html += '<div style="height:6px"></div>';
@@ -128,6 +130,12 @@
       var g = gh.parentNode, was = g.classList.contains('open');
       box.querySelectorAll('.m-g.open').forEach(function (x) { x.classList.remove('open'); x.firstChild.setAttribute('aria-expanded', 'false'); });
       if (!was) { g.classList.add('open'); gh.setAttribute('aria-expanded', 'true'); }
+      return;
+    }
+    var ai = e.target.closest && e.target.closest('a.m-r[href="#pcnai"]');
+    if (ai) {
+      e.preventDefault(); close();
+      setTimeout(function () { var t = document.querySelector('.tabs a[data-tab="pcnai"]'); if (t) t.click(); }, 60);
       return;
     }
     if (e.target.closest && (e.target.closest('[data-x]') || e.target.closest('a.m-r'))) close();
