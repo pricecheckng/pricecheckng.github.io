@@ -354,15 +354,15 @@ function sci(t) {
     .replace(/\\times\b/g, "×").replace(/\\cdot\b/g, "·").replace(/\\Delta\b/g, "Δ").replace(/\\pm\b/g, "±").replace(/\\approx\b/g, "≈").replace(/\\leq?\b/g, "≤").replace(/\\geq?\b/g, "≥")
     .replace(/\^\{?\\circ\}?/g, "°").replace(/\\degree/g, "°").replace(/\\[,;! ]/g, " ").replace(/\\(?:left|right)\b/g, "")
     .replace(/<=>/g, "⇌").replace(/\s-->\s/g, " → ").replace(/\s->\s/g, " → ");
-  t = t.replace(/\^\{?(\d+)([+\-−])\}?/g, (m, d, sg) => mapc(SUPS, d + sg)).replace(/\^\{([0-9+\-−]+)\}/g, (m, x) => mapc(SUPS, x)).replace(/\^([0-9+\-−])(?![0-9A-Za-z])/g, (m, x) => mapc(SUPS, x));
-  t = t.replace(/([A-Za-z\)\]])_\{([0-9+\-−]+)\}/g, (m, a, x) => a + mapc(SUBS, x)).replace(/([A-Z][a-z]?|\)|\])_(\d+)/g, (m, a, x) => a + mapc(SUBS, x));
+  t = t.replace(/\^\{?(\d+)([+\-−])\}?/g, (m, d, sg) => mapc(SUPS, d + sg)).replace(/\^\{([^}\n]+)\}/g, (m, x) => (/^[0-9+\-−]+$/.test(x) ? mapc(SUPS, x) : "\u0003" + x + "\u0004")).replace(/\^([0-9+\-−])(?![0-9A-Za-z])/g, (m, x) => mapc(SUPS, x));
+  t = t.replace(/([A-Za-z\)\]])_\{([^}\n]+)\}/g, (m, a, x) => a + (/^[0-9+\-−]+$/.test(x) ? mapc(SUBS, x) : "\u0001" + x + "\u0002")).replace(/([A-Z][a-z]?|\)|\])_(\d+)/g, (m, a, x) => a + mapc(SUBS, x));
   // tables -> simple lines, rules removed
   t = t.split("\n").filter((l) => !/^\s*\|?[\s:|-]{3,}\|?\s*$/.test(l) || !/-/.test(l) || !/\|/.test(l)).filter((l) => !/^\s*-{3,}\s*$/.test(l))
     .map((l) => (/^\s*\|.*\|\s*$/.test(l) ? "- " + l.trim().slice(1, -1).split("|").map((c) => c.trim()).filter(Boolean).join(" · ") : l)).join("\n");
   return t;
 }
 function md(t) {
-  t = esc(sci(t || "")).replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>").replace(/(^|[^*\w])\*(?=\S)([^*\n]*\S)\*(?![*\w])/g, "$1<i>$2</i>").replace(/`([^`\n]+)`/g, "<code>$1</code>");
+  t = esc(sci(t || "")).replace(/\u0001/g, "<sub>").replace(/\u0002/g, "</sub>").replace(/\u0003/g, "<sup>").replace(/\u0004/g, "</sup>").replace(/\*\*([^*\n]+)\*\*/g, "<b>$1</b>").replace(/(^|[^*\w])\*(?=\S)([^*\n]*\S)\*(?![*\w])/g, "$1<i>$2</i>").replace(/`([^`\n]+)`/g, "<code>$1</code>");
   const out = []; let list = null;
   const close = () => { if (list) { out.push("</" + list + ">"); list = null; } };
   t.split("\n").forEach((l) => {
