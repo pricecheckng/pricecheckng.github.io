@@ -31,7 +31,7 @@ jobs:
             exit 1
           fi
           set +e
-          out=$(supabase functions deploy pdf-tutor --project-ref lbkpdepqymfjgmoouafv --no-verify-jwt --use-api 2>&1)
+          out=$(supabase functions deploy pdf-tutor --remote=lbkpdepqymfjgmoouafv --no-verify-jwt --use-api --yes 2>&1)
           code=$?
           echo "$out"
           {
