@@ -57,7 +57,7 @@ textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12p
 .err{background:var(--badbg);border:1px solid #f2c1c1;color:#7a1b1b;border-radius:12px;padding:12px;margin:12px 0}
 .spin{display:inline-block;width:16px;height:16px;border:3px solid #bfe3cf;border-top-color:var(--g);border-radius:50%;animation:s 1s linear infinite;vertical-align:-3px;margin-right:8px}
 @keyframes s{to{transform:rotate(360deg)}}
-.figbtn{margin-top:12px}
+.figbtn{display:inline-block;width:auto!important;margin-top:12px;padding:7px 14px;font-size:.82rem;border-radius:99px}
 .figs{margin-top:10px;display:flex;flex-direction:column;gap:10px}
 .figs canvas{width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:#fff}
 .figs .cap{font-size:.82rem;color:var(--mut,#667)}
@@ -461,13 +461,13 @@ async function paintFigs(i) {
       if (!(key in figCache)) {
         const ops = await (await pdf.getPage(p)).getOperatorList(); let img = 0, path = 0;
         for (let k = 0; k < ops.fnArray.length; k++) { const f = ops.fnArray[k]; if (f === OPS.paintImageXObject || f === OPS.paintInlineImageXObject || f === OPS.paintImageMaskXObject || f === OPS.paintJpegXObject) img++; else if (f === OPS.constructPath) path++; }
-        figCache[key] = img > 0 || path >= 25;
+        figCache[key] = img > 0 || path >= 50; // pictures, or lots of drawn lines (a table has fewer)
       }
       if (figCache[key]) found.push(p);
     }
     if (S !== SS || S.idx !== i || !found.length) return;
     const b = document.createElement("button"); b.className = "btn ghost figbtn";
-    b.textContent = "See the diagrams from your PDF (page" + (found.length > 1 ? "s " : " ") + found.join(", ") + ")";
+    b.textContent = "View PDF page" + (found.length > 1 ? "s " : " ") + found.join(", ");
     const list = document.createElement("div"); list.className = "figs hide";
     b.onclick = async () => {
       if (!list.childNodes.length) {
@@ -482,7 +482,7 @@ async function paintFigs(i) {
         b.disabled = false;
       }
       const open = list.classList.toggle("hide") === false;
-      b.textContent = open ? "Hide the diagrams" : "See the diagrams from your PDF (page" + (found.length > 1 ? "s " : " ") + found.join(", ") + ")";
+      b.textContent = open ? "Hide pages" : "View PDF page" + (found.length > 1 ? "s " : " ") + found.join(", ");
     };
     box.append(b, list); box.classList.remove("hide");
   } catch (_) { /* diagrams are optional: never break the lesson */ }
