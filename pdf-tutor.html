@@ -679,7 +679,7 @@ let asking = false;
 function bubble(role, text, live) {
   const d = document.createElement("div"); d.className = "msg " + role;
   d.innerHTML = role === "u" ? esc(text) : md(text); if (live) d.classList.add("cur-blink");
-  $("askMsgs").append(d); return d;
+  $("askMsgs").append(d); if (role === "a" && !live && text) addListen(d, text); return d;
 }
 function paintAsk() {
   const i = S.idx; $("askBox").classList.remove("hide");
@@ -697,7 +697,7 @@ async function sendAsk(q) {
   let live = true; const draw = painter((t) => { if (live) box.innerHTML = md(t); });
   try {
     const full = await aiStream("ask", { name: SS.name, title: SS.sections[i].title, text: SS.sections[i].text, lesson: (SS.lessons[i] || {}).lesson || "", question: (SS.lessons[i] || {}).question || "", history, q, webSearch: true }, draw);
-    live = false; box.classList.remove("cur-blink"); box.innerHTML = md(full);
+    live = false; box.classList.remove("cur-blink"); box.innerHTML = md(full); addListen(box, full);
     list.push({ r: "u", t: q }, { r: "a", t: full }); if (list.length > 40) list.splice(0, list.length - 40); save();
   } catch (er) {
     live = false; box.classList.remove("cur-blink");
@@ -751,7 +751,8 @@ function ttsSay() {
 }
 // read the whole lesson aloud
 let lsnOn = false;
-function lsnStop() { lsnOn = false; if ($("lsnBtn")) $("lsnBtn").textContent = "Listen to this lesson"; if (TTS.ok) speechSynthesis.cancel(); }
+let spkBtn = null;
+function lsnStop() { if (spkBtn) { spkBtn.textContent = "Listen"; spkBtn = null; } lsnOn = false; if ($("lsnBtn")) $("lsnBtn").textContent = "Listen to this lesson"; if (TTS.ok) speechSynthesis.cancel(); }
 $("lsnBtn").onclick = () => {
   if (!TTS.ok) return ttsMsg("This browser cannot speak. Please open this page in Google Chrome.");
   if (lsnOn) return lsnStop();
@@ -759,6 +760,16 @@ $("lsnBtn").onclick = () => {
   ttsMsg(""); lsnOn = true; $("lsnBtn").textContent = "Stop listening";
   ttsSpeak(ttsClean(sci(cur.lesson).replace(/[\u0001-\u0004]/g, "")), () => { if (lsnOn) { lsnOn = false; $("lsnBtn").textContent = "Listen to this lesson"; } });
 };
+function addListen(box, text) {
+  if (!TTS.ok) return;
+  const b = document.createElement("button"); b.className = "chip"; b.textContent = "Listen"; b.style.cssText = "display:block;margin-top:8px;font-size:.78rem;padding:4px 12px";
+  b.onclick = () => {
+    if (spkBtn === b) return lsnStop();
+    lsnStop(); spkBtn = b; b.textContent = "Stop";
+    ttsSpeak(ttsClean(sci(text).replace(/[\u0001-\u0004]/g, "")), () => { if (spkBtn === b) { b.textContent = "Listen"; spkBtn = null; } });
+  };
+  box.append(b);
+}
 window.addEventListener("pagehide", () => { if (TTS.ok) speechSynthesis.cancel(); });
 if (TTS.ok) { ttsLoad(); speechSynthesis.onvoiceschanged = ttsLoad; setTimeout(() => { if (!TTS.voices.length) ttsMsg("No voice found yet. If you hear nothing, install or turn on Text-to-speech in your phone settings."); }, 2500); }
 else ttsMsg("This browser cannot speak. Please open this page in Google Chrome.");
