@@ -345,18 +345,58 @@ const tidy = (t) => String(t || '').replace(/^\s*(?:(?:chapter|unit|module|secti
 const SUBS = { 0: "₀", 1: "₁", 2: "₂", 3: "₃", 4: "₄", 5: "₅", 6: "₆", 7: "₇", 8: "₈", 9: "₉", "+": "₊", "-": "₋", "−": "₋" };
 const SUPS = { 0: "⁰", 1: "¹", 2: "²", 3: "³", 4: "⁴", 5: "⁵", 6: "⁶", 7: "⁷", 8: "⁸", 9: "⁹", "+": "⁺", "-": "⁻", "−": "⁻" };
 const mapc = (m, x) => String(x).split("").map((c) => m[c] || c).join("");
-// cleans science/LaTeX leftovers the AI may write ($H_2$, Fe^{3+}, \rightarrow, tables) into plain readable text
+const SYM = {
+  alpha:"α",beta:"β",gamma:"γ",delta:"δ",epsilon:"ε",varepsilon:"ε",zeta:"ζ",eta:"η",theta:"θ",vartheta:"ϑ",iota:"ι",kappa:"κ",lambda:"λ",mu:"μ",nu:"ν",xi:"ξ",pi:"π",rho:"ρ",sigma:"σ",tau:"τ",upsilon:"υ",phi:"φ",varphi:"φ",chi:"χ",psi:"ψ",omega:"ω",
+  Gamma:"Γ",Delta:"Δ",Theta:"Θ",Lambda:"Λ",Xi:"Ξ",Pi:"Π",Sigma:"Σ",Phi:"Φ",Psi:"Ψ",Omega:"Ω",
+  infty:"∞",partial:"∂",nabla:"∇",sum:"∑",prod:"∏",int:"∫",oint:"∮",pm:"±",mp:"∓",times:"×",div:"÷",cdot:"·",cdotp:"·",cdots:"⋯",ldots:"…",dots:"…",vdots:"⋮",
+  neq:"≠",ne:"≠",approx:"≈",sim:"∼",simeq:"≃",cong:"≅",equiv:"≡",propto:"∝",leq:"≤",le:"≤",geq:"≥",ge:"≥",ll:"≪",gg:"≫",
+  in:"∈",notin:"∉",subset:"⊂",subseteq:"⊆",supset:"⊃",supseteq:"⊇",cup:"∪",cap:"∩",emptyset:"∅",varnothing:"∅",setminus:"∖",
+  forall:"∀",exists:"∃",neg:"¬",lnot:"¬",land:"∧",wedge:"∧",lor:"∨",vee:"∨",
+  Rightarrow:"⇒",Leftarrow:"⇐",Leftrightarrow:"⇔",implies:"⟹",iff:"⇔",rightarrow:"→",to:"→",leftarrow:"←",leftrightarrow:"↔",longrightarrow:"→",longleftarrow:"←",uparrow:"↑",downarrow:"↓",mapsto:"↦",
+  rightleftharpoons:"⇌",rightleftarrows:"⇄",leftrightharpoons:"⇌",therefore:"∴",because:"∵",angle:"∠",perp:"⊥",parallel:"∥",degree:"°",circ:"°",prime:"′",hbar:"ħ",ell:"ℓ",Re:"ℜ",Im:"ℑ",aleph:"ℵ",
+  mid:"|",lbrace:"{",rbrace:"}",langle:"⟨",rangle:"⟩",lfloor:"⌊",rfloor:"⌋",lceil:"⌈",rceil:"⌉",bullet:"•",star:"⋆",ast:"∗",oplus:"⊕",otimes:"⊗",triangle:"△",square:"□",checkmark:"✓",
+  quad:" ",qquad:" ",left:"",right:"",big:"",Big:"",bigg:"",displaystyle:"",limits:"",nonumber:"",noindent:"",
+};
+const FUNCS = new Set("sin cos tan sec csc cot sinh cosh tanh arcsin arccos arctan log ln lg exp lim max min sup inf det dim gcd mod arg deg ker Pr".split(" "));
+const BB = { R: "ℝ", N: "ℕ", Z: "ℤ", Q: "ℚ", C: "ℂ" };
+const sciMark = (c, x) => (c ? c + x + (c === "\u0001" ? "\u0002" : "\u0004") : x);
+// cleans leftovers the AI may write (LaTeX, HTML, markdown, chemistry, maths, physics) into plain readable text
 function sci(t) {
   t = String(t || "");
-  t = t.replace(/\$\$?([^$\n]+)\$\$?/g, (m, x) => (/[\\_^{}]/.test(x) ? x : m));
-  t = t.replace(/\\(?:text|mathrm|mathbf|textbf|ce|mathit)\{([^}]*)\}/g, "$1")
-    .replace(/\\(?:rightleftharpoons|rightleftarrows)/g, "⇌").replace(/\\(?:rightarrow|to|longrightarrow)\b/g, "→").replace(/\\leftrightarrow/g, "↔").replace(/\\leftarrow/g, "←")
-    .replace(/\\times\b/g, "×").replace(/\\cdot\b/g, "·").replace(/\\Delta\b/g, "Δ").replace(/\\pm\b/g, "±").replace(/\\approx\b/g, "≈").replace(/\\leq?\b/g, "≤").replace(/\\geq?\b/g, "≥")
-    .replace(/\^\{?\\circ\}?/g, "°").replace(/\\degree/g, "°").replace(/\\[,;! ]/g, " ").replace(/\\(?:left|right)\b/g, "")
-    .replace(/<=>/g, "⇌").replace(/\s-->\s/g, " → ").replace(/\s->\s/g, " → ");
-  t = t.replace(/\^\{?(\d+)([+\-−])\}?/g, (m, d, sg) => mapc(SUPS, d + sg)).replace(/\^\{([^}\n]+)\}/g, (m, x) => (/^[0-9+\-−]+$/.test(x) ? mapc(SUPS, x) : "\u0003" + x + "\u0004")).replace(/\^([0-9+\-−])(?![0-9A-Za-z])/g, (m, x) => mapc(SUPS, x));
-  t = t.replace(/([A-Za-z\)\]])_\{([^}\n]+)\}/g, (m, a, x) => a + (/^[0-9+\-−]+$/.test(x) ? mapc(SUBS, x) : "\u0001" + x + "\u0002")).replace(/([A-Z][a-z]?|\)|\])_(\d+)/g, (m, a, x) => a + mapc(SUBS, x));
-  // tables -> simple lines, rules removed
+  const hadEnv = /\\begin\{/.test(t);
+  // stray HTML the AI may write
+  t = t.replace(/<br\s*\/?>/gi, "\n").replace(/<sub>([^<]*)<\/sub>/gi, "\u0001$1\u0002").replace(/<sup>([^<]*)<\/sup>/gi, "\u0003$1\u0004")
+    .replace(/<\/?(?:strong|b)>/gi, "**").replace(/<\/?(?:em|i)>/gi, "*").replace(/<\/?(?:p|div|span|u|code|font|small|big|mark)(?:\s[^>]*)?>/gi, "");
+  // math delimiters
+  t = t.replace(/\$\$([\s\S]+?)\$\$/g, (m, x) => (/[\\_^{}]/.test(x) ? x : m)).replace(/\$([^$\n]+)\$/g, (m, x) => (/[\\_^{}]/.test(x) ? x : m));
+  t = t.replace(/\\[()[\]]/g, "").replace(/\\begin\{[^}]*\}|\\end\{[^}]*\}/g, "").replace(/\\\\(?![A-Za-z])/g, "\n").replace(/\\n(?![A-Za-z])/g, "\n");
+  if (hadEnv) t = t.replace(/\s*&\s*/g, " ");
+  // commands that wrap text
+  for (let k = 0; k < 3; k++) {
+    t = t.replace(/\\(?:text|textrm|textit|textbf|mathrm|mathbf|mathit|mathcal|mathsf|mathtt|boldsymbol|bm|ce|operatorname|underline|boxed|mbox|emph)\s*\{([^{}]*)\}/g, "$1")
+      .replace(/\\mathbb\s*\{([A-Z])\}/g, (m, c) => BB[c] || c)
+      .replace(/\\vec\s*\{([^{}]*)\}/g, "$1⃗").replace(/\\(?:bar|overline)\s*\{([^{}]*)\}/g, "$1̄").replace(/\\hat\s*\{([^{}]*)\}/g, "$1̂").replace(/\\(?:dot)\s*\{([^{}]*)\}/g, "$1̇")
+      .replace(/\\[dt]?frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g, (m, a, b) => { const w = (x) => (/^[\w.]+$/.test(x.trim()) ? x.trim() : "(" + x.trim() + ")"); return w(a) + "/" + w(b); })
+      .replace(/\\sqrt\s*\[([^\]]*)\]\s*\{([^{}]*)\}/g, (m, n, x) => mapc(SUPS, n) + "√" + (/^[\w.]+$/.test(x) ? x : "(" + x + ")"))
+      .replace(/\\sqrt\s*\{([^{}]*)\}/g, (m, x) => "√" + (/^[\w.]+$/.test(x) ? x : "(" + x + ")"));
+  }
+  t = t.replace(/\^\{?\\circ\}?/g, "°").replace(/\\([%$_&#{}])/g, "$1").replace(/\\[,;:! ]/g, " ");
+  t = t.replace(/\\([A-Za-z]+)/g, (m, n) => (n in SYM ? SYM[n] : FUNCS.has(n) ? n : m)); // known symbols and function names (\sin, \log...) are cleaned, anything else is left alone
+  // big operators with limits: ∑_{i=1}^{n} -> ∑ (i=1 to n)
+  t = t.replace(/([∑∏∫∮])\s*_(?:\{([^}]*)\}|([^\s^{]))\s*\^(?:\{([^}]*)\}|([^\s{]))/g, (m, o, a1, a2, b1, b2) => o + " (" + (a1 ?? a2) + " to " + (b1 ?? b2) + ")")
+    .replace(/([∑∏∫∮]|\blim)\s*_(?:\{([^}]*)\}|([^\s^{]))/g, (m, o, a1, a2) => o + " (" + (a1 ?? a2) + ")");
+  t = t.replace(/<=>/g, "⇌").replace(/\s-->\s/g, " → ").replace(/\s->\s/g, " → ").replace(/\s<-\s/g, " ← ");
+  // powers
+  t = t.replace(/\^\{?(\d+)([+\-−])\}?/g, (m, d, sg) => mapc(SUPS, d + sg))
+    .replace(/\^\{([^}\n]+)\}/g, (m, x) => (/^[0-9+\-−]+$/.test(x) ? mapc(SUPS, x) : "\u0003" + x + "\u0004"))
+    .replace(/\^([0-9+\-−])(?![0-9A-Za-z])/g, (m, x) => mapc(SUPS, x))
+    .replace(/([A-Za-z0-9\)\]])\^([A-Za-z])(?![A-Za-z0-9])/g, "$1\u0003$2\u0004");
+  // subscripts
+  t = t.replace(/([A-Za-z\)\]])_\{([^}\n]+)\}/g, (m, a, x) => a + (/^[0-9+\-−]+$/.test(x) ? mapc(SUBS, x) : "\u0001" + x + "\u0002"))
+    .replace(/([A-Z][a-z]?|\)|\])_(\d+)/g, (m, a, x) => a + mapc(SUBS, x))
+    .replace(/(?<![A-Za-z0-9_])([A-Za-z])_([a-z0-9])(?![A-Za-z0-9_])/g, "$1\u0001$2\u0002");
+  // markdown leftovers: links, quotes, strike, tables, rules
+  t = t.replace(/\[([^\]\n]+)\]\((?:https?:\/\/|\/)[^)\s]*\)/g, "$1").replace(/~~([^~\n]+)~~/g, "$1").replace(/^\s*>\s?/gm, "");
   t = t.split("\n").filter((l) => !/^\s*\|?[\s:|-]{3,}\|?\s*$/.test(l) || !/-/.test(l) || !/\|/.test(l)).filter((l) => !/^\s*-{3,}\s*$/.test(l))
     .map((l) => (/^\s*\|.*\|\s*$/.test(l) ? "- " + l.trim().slice(1, -1).split("|").map((c) => c.trim()).filter(Boolean).join(" · ") : l)).join("\n");
   return t;
