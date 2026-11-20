@@ -134,6 +134,7 @@ textarea{width:100%;min-height:96px;border:1.5px solid #c9d6ce;border-radius:12p
     <h2 id="lTitle" style="margin:8px 0;font-size:1.25rem;line-height:1.3"></h2>
     <div id="lLoad" class="card hide"><span class="spin"></span><span id="lLoadText">Preparing this lesson...</span></div>
     <div id="lBody" class="hide">
+      <button class="chip" id="lsnBtn" style="margin-bottom:8px">Listen to this lesson</button>
       <div class="lesson" id="lLesson"></div>
       <div class="q hide" id="lQBox"><b>Question</b><div id="lQ" style="margin-top:4px"></div>
         <textarea id="lAns" placeholder="Type your answer in your own words..."></textarea>
@@ -584,7 +585,7 @@ function prefetch(k) {
 }
 
 async function openLesson(retry, mistake) {
-  clearFail(); show("sLearn");
+  clearFail(); show("sLearn"); lsnStop();
   const i = S.idx, sec = S.sections[i], n = S.sections.length;
   $("lPos").textContent = "Section " + (i + 1) + " of " + n;
   $("lBar").style.width = Math.round((S.done.filter(Boolean).length / n) * 100) + "%";
@@ -729,11 +730,8 @@ function ttsLoad() {
   $("ttsVoice").innerHTML = TTS.voices.map((x, k) => '<option value="' + k + '"' + (x.name === saved ? " selected" : "") + ">" + esc(x.name + " (" + x.lang + ")") + "</option>").join("");
   if (!TTS.voices.length) $("ttsVoice").innerHTML = '<option value="-1">Phone default voice</option>';
 }
-function ttsSay() {
-  const txt = ttsClean($("ttsIn").value);
-  if (!TTS.ok) return ttsMsg("This browser cannot speak. Please open this page in Google Chrome.");
-  if (!txt) return ttsMsg("Type a word or a sentence first.");
-  ttsMsg(""); speechSynthesis.cancel();
+function ttsSpeak(txt, onDone) {
+  speechSynthesis.cancel();
   const voice = TTS.voices[+$("ttsVoice").value];
   if (voice) { try { localStorage.setItem("pdft_voice", voice.name); } catch (_) {} }
   const parts = ttsChunks(txt);
@@ -741,9 +739,27 @@ function ttsSay() {
     const u = new SpeechSynthesisUtterance(part); if (voice) { u.voice = voice; u.lang = voice.lang; } else u.lang = "en-GB";
     u.rate = TTS.slow ? 0.55 : 0.95;
     u.onerror = (e) => { if (e && e.error && e.error !== "interrupted" && e.error !== "canceled") ttsMsg("Your phone could not say it. Check that a Text-to-speech voice is installed (Settings, Language, Text-to-speech)."); };
+    if (k === parts.length - 1 && onDone) { u.onend = onDone; const er = u.onerror; u.onerror = (e) => { er(e); onDone(); }; }
     speechSynthesis.speak(u);
   });
 }
+function ttsSay() {
+  const txt = ttsClean($("ttsIn").value);
+  if (!TTS.ok) return ttsMsg("This browser cannot speak. Please open this page in Google Chrome.");
+  if (!txt) return ttsMsg("Type a word or a sentence first.");
+  ttsMsg(""); lsnStop(); ttsSpeak(txt);
+}
+// read the whole lesson aloud
+let lsnOn = false;
+function lsnStop() { lsnOn = false; if ($("lsnBtn")) $("lsnBtn").textContent = "Listen to this lesson"; if (TTS.ok) speechSynthesis.cancel(); }
+$("lsnBtn").onclick = () => {
+  if (!TTS.ok) return ttsMsg("This browser cannot speak. Please open this page in Google Chrome.");
+  if (lsnOn) return lsnStop();
+  if (!cur || !cur.lesson) return;
+  ttsMsg(""); lsnOn = true; $("lsnBtn").textContent = "Stop listening";
+  ttsSpeak(ttsClean(sci(cur.lesson).replace(/[\u0001-\u0004]/g, "")), () => { if (lsnOn) { lsnOn = false; $("lsnBtn").textContent = "Listen to this lesson"; } });
+};
+window.addEventListener("pagehide", () => { if (TTS.ok) speechSynthesis.cancel(); });
 if (TTS.ok) { ttsLoad(); speechSynthesis.onvoiceschanged = ttsLoad; setTimeout(() => { if (!TTS.voices.length) ttsMsg("No voice found yet. If you hear nothing, install or turn on Text-to-speech in your phone settings."); }, 2500); }
 else ttsMsg("This browser cannot speak. Please open this page in Google Chrome.");
 $("ttsPlay").onclick = ttsSay;
