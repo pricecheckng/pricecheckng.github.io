@@ -700,7 +700,11 @@
       var tB = Date.now();
       if (aj && aj.intent === 'alert') {
         var nm = (aj.alert && aj.alert.name) || (aj.suggest && aj.suggest.name) || '';
-        sb.add('Checking live price', (nm ? nm + ': ' : '') + 'compared with the live market price', tB - tA);
+        var tx = String(aj.text || ''), dm = tx.match(/Delivery:\s*([^\n]+)/i), pm = tx.match(/(?:From now|now|currently|price is)\s*\(?([$\u20a6][\d,]+\.?\d*)/i);
+        sb.add('Finding ' + (nm || 'the coin'), 'matched your request to the right coin', tB - tA);
+        if (pm) sb.add('Checking live price', (nm ? nm + ' is ' : 'price is ') + pm[1] + ' right now');
+        else sb.add('Checking live price', 'compared with the live market price');
+        if (dm) sb.add('Checking delivery channel', 'your alert will arrive by ' + dm[1].replace(/\.$/, ''));
         var tC = Date.now(); showAlert(cfg, aj, bodyHost);
         sb.add('Preparing confirmation', aj.status === 'confirm' || aj.status === 'flip' ? 'ready for you to confirm' : 'needs one more detail from you', Date.now() - tC);
         sb.end(); return true;
