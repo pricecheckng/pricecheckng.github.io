@@ -3774,7 +3774,7 @@ async function renderAdmin() {
     view.innerHTML = gate("Sign in to continue.");
     return;
   }
-  view.innerHTML = `<section class="page"><h1>Admin</h1><div id="admUsage"></div><div id="admBroadcast"></div><div id="adm">${skeleton(3)}</div></section>`;
+  view.innerHTML = `<section class="page"><h1>Admin</h1><div id="admUsage"></div><div id="admBroadcast"></div><div id="admFeedback"></div><div id="adm">${skeleton(3)}</div></section>`;
   const { data: ok } = await sb.rpc("is_admin");
   if (!$("#adm")) return;
   if (!ok) {
@@ -3783,6 +3783,7 @@ async function renderAdmin() {
   }
   loadAdminUsage();
   loadAdminBroadcast();
+  loadAdminFeedback();
   await loadAdminUsers();
 }
 
@@ -4298,6 +4299,30 @@ function loadAdminBroadcast() {
     if (error) { msg.textContent = "Could not send: " + error.message; return; }
     msg.textContent = "Sent to " + data + " users. Push and Telegram go out within a minute.";
     $("#bcTitle").value = ""; $("#bcBody").value = "";
+  };
+}
+
+/* ---------- admin: PCN AI feedback (likes and dislikes) ---------- */
+async function loadAdminFeedback() {
+  acctCss();
+  const box = $("#admFeedback");
+  if (!box) return;
+  const { data, error } = await sb.rpc("admin_feedback_list", { p_limit: 50 });
+  if (!$("#admFeedback") || error || !Array.isArray(data)) return;
+  const nNew = data.filter((x) => x.status === "new").length;
+  const rows = data.map((x) => `<div class="fbk" data-id="${x.id}" style="border-top:1px solid rgba(127,127,127,.25);padding:10px 0">
+      <div style="display:flex;justify-content:space-between;gap:8px;font-size:.8rem;opacity:.8"><span>${x.rating === "up" ? "\ud83d\udc4d" : "\ud83d\udc4e"} ${esc(x.issue || "")} \u00b7 ${esc(x.mode || "")}</span><span>${esc(String(x.created_at).slice(0, 16).replace("T", " "))}</span></div>
+      ${x.note ? `<p style="margin:6px 0 0"><b>${esc(x.note)}</b></p>` : ""}
+      <p style="margin:6px 0 0;font-size:.85rem"><b>Q:</b> ${esc(x.question || "")}</p>
+      <details style="margin-top:4px"><summary style="font-size:.8rem;cursor:pointer;opacity:.8">Show answer</summary><p style="font-size:.82rem;white-space:pre-wrap;margin:6px 0 0">${esc(x.answer || "")}</p></details>
+      <button class="ac-btn fbk-b" type="button" data-st="${x.status === "new" ? "done" : "new"}" style="margin-top:8px;padding:6px 12px;font-size:.8rem">${x.status === "new" ? "Mark as fixed" : "Reopen"}</button></div>`).join("");
+  box.innerHTML = `<div class="ac-card"><h3 style="margin:0 0 4px">PCN AI feedback</h3><p class="ac-note" style="margin:0 0 6px">${nNew} new \u00b7 latest 50</p>${rows || '<p class="ac-note">No feedback yet.</p>'}</div>`;
+  box.onclick = async (e) => {
+    const b = e.target.closest(".fbk-b");
+    if (!b) return;
+    b.disabled = true;
+    await sb.rpc("admin_feedback_set_status", { p_id: Number(b.closest(".fbk").dataset.id), p_status: b.dataset.st });
+    loadAdminFeedback();
   };
 }
 

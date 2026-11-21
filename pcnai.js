@@ -58,6 +58,19 @@
         .pcn-srcitem small { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: #5b6b64; font-size: 13px; }
         .pcn-srcitem small img { width: 22px; height: 22px; border-radius: 6px; background: #fff; }
         .pcn-copy { align-self: flex-start; margin-top: 8px; background: none; border: 1px solid #d5e0da; color: #5b6b64; border-radius: 8px; padding: 3px 9px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
+        #pcnFb { position: fixed; inset: 0; z-index: 100000; }
+        #pcnFb .fb-bg { position: absolute; inset: 0; background: rgba(0,0,0,.55); }
+        #pcnFb .fb-sh { position: absolute; left: 0; right: 0; bottom: 0; max-height: 92%; overflow: auto; background: #fff; color: #10201a; border-radius: 22px 22px 0 0; padding: 10px 18px 22px; box-sizing: border-box; font-family: inherit; }
+        #pcnFb .fb-grab { width: 44px; height: 5px; border-radius: 3px; background: #c9d3ce; margin: 0 auto 10px; }
+        #pcnFb .fb-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 17px; }
+        #pcnFb .fb-x { background: none; border: 0; font-size: 20px; color: inherit; cursor: pointer; padding: 4px 8px; }
+        #pcnFb .fb-top span { width: 32px; }
+        #pcnFb label { display: block; font-size: 14px; font-weight: 600; color: #4a5c53; margin: 12px 0 6px; }
+        #pcnFb .fb-sel, #pcnFb .fb-note { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; padding: 12px; border: 1px solid #cfdad4; border-radius: 12px; background: transparent; color: inherit; }
+        #pcnFb .fb-p { font-size: 12px; color: #6b7c74; margin: 14px 0 10px; }
+        #pcnFb .fb-go { width: 100%; background: #12a150; color: #fff; border: 0; border-radius: 999px; padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        #pcnFb .fb-go:disabled { opacity: .6; }
+        #pcnFb .fb-msg { text-align: center; font-size: 13px; color: #4a5c53; margin: 8px 0 0; min-height: 16px; }
         .pcn-acts { display: flex; gap: 6px; margin-top: 8px; }
         .pcn-acts button { background: none; border: 0; color: #5b6b64; padding: 6px; border-radius: 8px; cursor: pointer; line-height: 0; }
         .pcn-acts button.on { color: #12a150; }
@@ -731,6 +744,33 @@
       if (a) modal.classList.remove('open');
     });
 
+    function openFeedback(kind, question, answer, onSent) {
+      var old = document.getElementById('pcnFb'); if (old) old.remove();
+      var opts = kind === 'up' ? ['Accurate', 'Helpful', 'Clear explanation', 'Fast', 'Other'] : ['Wrong information', 'Outdated data', 'Not helpful', 'Too slow', 'Cut off or unclear', 'Other'];
+      var w = document.createElement('div'); w.id = 'pcnFb';
+      w.innerHTML = '<div class="fb-bg"></div><div class="fb-sh"><div class="fb-grab"></div><div class="fb-top"><button type="button" class="fb-x" aria-label="Close">\u2715</button><b>Submit feedback ' + (kind === 'up' ? '\ud83d\udc4d' : '\ud83d\udc4e') + '</b><span></span></div>' +
+        '<label>What type of ' + (kind === 'up' ? 'praise' : 'issue') + '? (optional)</label><select class="fb-sel">' + opts.map(function (o) { return '<option>' + o + '</option>'; }).join('') + '</select>' +
+        '<label>Please provide details: (optional)</label><textarea class="fb-note" maxlength="500" rows="4" placeholder="' + (kind === 'up' ? 'What did you like about this response?' : 'What was unsatisfying about this response?') + '"></textarea>' +
+        '<p class="fb-p">Submitting sends this question and answer to PriceCheck NG so we can improve PCN AI.</p><button type="button" class="fb-go">Submit Feedback</button><p class="fb-msg"></p></div>';
+      document.body.appendChild(w);
+      function close() { w.remove(); }
+      w.querySelector('.fb-bg').onclick = close; w.querySelector('.fb-x').onclick = close;
+      var go = w.querySelector('.fb-go'), msg = w.querySelector('.fb-msg');
+      go.onclick = async function () {
+        var tok = getToken();
+        if (!tok) { msg.textContent = 'Please sign in to send feedback.'; return; }
+        go.disabled = true; msg.textContent = 'Sending...';
+        try {
+          var cfg = await import('./config.js');
+          var r = await fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/submit_ai_feedback', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + tok },
+            body: JSON.stringify({ p_rating: kind, p_issue: w.querySelector('.fb-sel').value, p_note: w.querySelector('.fb-note').value.slice(0, 500), p_question: String(question).slice(0, 400), p_answer: String(answer).slice(0, 4000), p_mode: getMode() }) });
+          var j = ''; try { j = await r.json(); } catch (e) {}
+          if (!r.ok) throw new Error('x');
+          if (j === 'limit') { msg.textContent = 'You have sent a lot of feedback today. Please try again tomorrow.'; go.disabled = false; return; }
+          onSent(); msg.textContent = 'Thank you! Your feedback was sent.'; setTimeout(close, 1100);
+        } catch (e) { go.disabled = false; msg.textContent = 'Could not send. Please try again.'; }
+      };
+    }
     function addCopy(el) {
       var t = document.createElement('div');
       t.innerHTML = el.innerHTML.replace(/<br\s*\/?>/gi, '\n').replace(/<\/(div|h\d)>/gi, '\n');
@@ -762,8 +802,15 @@
         if (navigator.share) { try { navigator.share({ text: msg }).catch(function () {}); return; } catch (_) {} }
         copyText(function () { flash(bs); });
       };
-      bu.onclick = function () { bd.classList.remove('on'); bu.classList.toggle('on'); };
-      bd.onclick = function () { bu.classList.remove('on'); bd.classList.toggle('on'); };
+      var question = '';
+      for (var pv = el.previousElementSibling; pv; pv = pv.previousElementSibling) { if (pv.classList.contains('user')) { question = pv.textContent || ''; break; } }
+      var sent = '';
+      function rate(kind, btn, other) {
+        if (sent) { flash(btn); return; }
+        openFeedback(kind, question, txt, function () { sent = kind; btn.classList.add('on'); other.classList.remove('on'); });
+      }
+      bu.onclick = function () { rate('up', bu, bd); };
+      bd.onclick = function () { rate('down', bd, bu); };
       el.appendChild(row);
     }
 
