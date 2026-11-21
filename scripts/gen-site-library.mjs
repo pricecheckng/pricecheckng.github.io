@@ -12,7 +12,7 @@ for (const f of files) {
   const h = fs.readFileSync(f, "utf8");
   const title = strip((h.match(/<title[^>]*>([\s\S]*?)<\/title>/i) || [])[1]).replace(/\s*[|\-–]\s*PriceCheck NG\s*$/i, "");
   const desc = strip((h.match(/<meta[^>]+name=["']description["'][^>]*content=["']([^"']*)["']/i) || h.match(/<meta[^>]+content=["']([^"']*)["'][^>]*name=["']description["']/i) || [])[1]);
-  const row = { url: "https://pricecheckng.com.ng/" + f, title, about: desc.slice(0, 220) };
+  const row = { url: "https://pricecheckng.com.ng/" + (f === "index.html" ? "" : f.replace(/\.html$/, "")), title, about: desc.slice(0, 220) };
   if (/^exchange-/.test(f)) exchanges.push(row);
   else if (/^category-/.test(f)) categories.push({ url: row.url, title });
   else pages.push(row);
