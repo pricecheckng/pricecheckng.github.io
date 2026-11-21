@@ -50,6 +50,7 @@ img { display: block; }
 .bellbtn svg { width: 21px; height: 21px; }
 .bellbtn { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: #fff; }
 .buy.off { visibility: hidden; pointer-events: none; }
+.deskmenu { display: none; border: 0; background: none; color: #fff !important; padding: 0; cursor: pointer; }
 .bellbtn:active { background: rgba(255,255,255,.18); }
 .pill {
   border: 1.5px solid var(--green); color: var(--green); background: #fff;
@@ -254,8 +255,9 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
   main:has(#lwrap) { max-width: 1240px; }
   main:has(#lwrap) .hero { max-width: 560px; }
   .top { padding-left: max(16px, calc((100vw - 1240px) / 2 + 16px)); padding-right: max(16px, calc((100vw - 1240px) / 2 + 16px)); }
-  :root { --nav: 72px; }
-  .tabs a { font-size: 13px; }
+  :root { --nav: 0px; }
+  .tabs { display: none !important; }
+  .deskmenu { display: grid; }
   #colBtn { display: none; }
   .mk-tools button { flex: none !important; min-width: 140px; }
   .mk-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; }

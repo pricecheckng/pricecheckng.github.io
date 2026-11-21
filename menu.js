@@ -237,6 +237,8 @@
     if (sv) sv.innerHTML = '<path d="M4 6h16M4 12h16M4 18h16"/>';
     a.setAttribute('aria-label', 'Menu');
     a.addEventListener('click', function (e) { e.preventDefault(); e.stopPropagation(); open(); }, true);
+    var dm = document.getElementById('deskMenu');
+    if (dm) dm.addEventListener('click', function (e) { e.preventDefault(); open(); });
     return true;
   }
   if (!init()) document.addEventListener('DOMContentLoaded', init);
