@@ -49,6 +49,7 @@ img { display: block; }
 .topr { display: flex; align-items: center; gap: 8px; }
 .bellbtn svg { width: 21px; height: 21px; }
 .bellbtn { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: #fff; }
+.buy.off { visibility: hidden; pointer-events: none; }
 .bellbtn:active { background: rgba(255,255,255,.18); }
 .pill {
   border: 1.5px solid var(--green); color: var(--green); background: #fff;

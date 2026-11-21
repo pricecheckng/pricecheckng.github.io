@@ -742,8 +742,10 @@ function paintBuy() {
   document.querySelectorAll("#list .coin:not([data-bz])").forEach((b) => {
     b.dataset.bz = "1";
     const sym = ((b.querySelector(".meta b") || {}).textContent || "").toUpperCase(), rk = parseInt((b.querySelector(".rk") || {}).textContent, 10), px = b.querySelector(".px");
-    if (!sym || !px || px.textContent.length > 10 || !rk || rk > 500 || !bybitSet.has(sym) || /Tokenized/.test((b.querySelector(".meta span") || {}).textContent || "")) return;
-    const s = document.createElement("span"); s.className = "buy"; s.dataset.buy = "1"; s.setAttribute("role", "link"); s.textContent = "Buy";
+    if (!sym || !px) return;
+    const ok = px.textContent.length <= 10 && rk && rk <= 500 && bybitSet.has(sym) && !/Tokenized/.test((b.querySelector(".meta span") || {}).textContent || "");
+    const s = document.createElement("span"); s.className = ok ? "buy" : "buy off"; s.textContent = "Buy";
+    if (ok) { s.dataset.buy = "1"; s.setAttribute("role", "link"); } else s.setAttribute("aria-hidden", "true");
     px.parentNode.insertBefore(s, px);
   });
 }
