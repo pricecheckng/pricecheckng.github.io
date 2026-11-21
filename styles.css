@@ -299,7 +299,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
 }
 
 /* Coin page section tabs */
-.cp-tabs { display: flex; gap: 4px; overflow-x: auto; margin: 0 0 14px; padding: 0; border-bottom: 1px solid rgba(128,128,128,.25); position: sticky; top: 48px; z-index: 10; background: #fff; -webkit-overflow-scrolling: touch; }
+.cp-tabs { display: flex; gap: 4px; overflow-x: auto; margin: 0 0 14px; padding: 0; border-bottom: 1px solid rgba(128,128,128,.25); position: sticky; top: 0; z-index: 10; background: #fff; -webkit-overflow-scrolling: touch; }
 .cp-tabs a { flex: none; padding: 10px 14px; font-size: 14px; font-weight: 600; text-decoration: none; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
 .cp-tabs a.on { color: #16a34a; border-bottom-color: #16a34a; }
 /* Coin page: full-width sections on wide screens, like CoinMarketCap */
