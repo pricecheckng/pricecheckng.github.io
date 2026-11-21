@@ -8,6 +8,11 @@
    "about": "PriceCheck NG is a free crypto price tracker from Nigeria, founded in 2026. Live prices from many exchanges, in dollars and your local currency."
   },
   {
+   "url": "https://pricecheckng.com.ng/ai-agent-chart.html",
+   "title": "Agentic Charts: AI Chart Analysis",
+   "about": "Ask questions on a live crypto chart. PCN AI reads the chart, marks support and resistance, and sets price alerts by chat."
+  },
+  {
    "url": "https://pricecheckng.com.ng/api.html",
    "title": "PriceCheck NG API: crypto prices in naira",
    "about": "A simple JSON API for crypto prices in naira, exchange rates and market data from PriceCheck NG."
@@ -23,7 +28,7 @@
    "about": "Browse crypto by category: memes, AI, DeFi, gaming, layer 1 and more. Live prices in US dollars and Nigerian naira."
   },
   {
-   "url": "https://pricecheckng.com.ng/ai-agent-chart",
+   "url": "https://pricecheckng.com.ng/chart.html",
    "title": "Agentic Charts: AI Chart Analysis",
    "about": ""
   },
