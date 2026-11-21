@@ -59,7 +59,8 @@
         .pcn-srcitem small img { width: 22px; height: 22px; border-radius: 6px; background: #fff; }
         .pcn-copy { align-self: flex-start; margin-top: 8px; background: none; border: 1px solid #d5e0da; color: #5b6b64; border-radius: 8px; padding: 3px 9px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
         .pcn-copy:hover { border-color: #12a150; color: #12a150; }
-        .pcn-msg .ag-steps { margin: 0 0 8px; }
+        .pcn-msg.pcn-proc { background: none !important; border: 0 !important; padding: 0 !important; box-shadow: none !important; }
+        .pcn-msg .ag-steps { margin: 0; }
         .pcn-msg .ags-b { font-family: ui-monospace, Menlo, Consolas, monospace; }
         .pcn-msg .ags-h { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; padding: 2px 0; cursor: pointer; text-align: left; font: inherit; color: inherit; }
         .pcn-msg .ags-dot { flex: none; width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #12a150, #5be6a0); }
@@ -691,7 +692,7 @@
       }
       if (!(numM || ALERT_RE.test(text)) || !getToken()) return false;
       var cfg = await import('./config.js');
-      host.innerHTML = ''; var bodyHost = document.createElement('div'); host.appendChild(bodyHost);
+      host.innerHTML = ''; host.className = 'pcn-msg ai pcn-proc'; var bodyHost = document.createElement('div'); bodyHost.className = 'pcn-msg ai'; host.parentNode.insertBefore(bodyHost, host.nextSibling);
       var sb = stepsBox(host), tA = Date.now();
       sb.add('Reading your request', numM ? 'got your answer for the pending alert' : 'looks like a price alert', Date.now() - tA);
       var tv = 0; if (numM) tv = parseFloat(numM[1].replace(/,/g, '')) * (/k/i.test(numM[2] || '') ? 1e3 : /m/i.test(numM[2] || '') ? 1e6 : 1);
@@ -704,7 +705,7 @@
         sb.add('Preparing confirmation', aj.status === 'confirm' || aj.status === 'flip' ? 'ready for you to confirm' : 'needs one more detail from you', Date.now() - tC);
         sb.end(); return true;
       }
-      sb.end(); host.innerHTML = '<i>Thinking...</i>';
+      sb.end(); host.className = 'pcn-msg ai'; host.innerHTML = '<i>Thinking...</i>'; if (bodyHost.parentNode) bodyHost.parentNode.removeChild(bodyHost);
       return false;
     }
 
