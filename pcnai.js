@@ -59,6 +59,14 @@
         .pcn-srcitem small img { width: 22px; height: 22px; border-radius: 6px; background: #fff; }
         .pcn-copy { align-self: flex-start; margin-top: 8px; background: none; border: 1px solid #d5e0da; color: #5b6b64; border-radius: 8px; padding: 3px 9px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
         .pcn-copy:hover { border-color: #12a150; color: #12a150; }
+        .pcn-msg .ag-card { background: #f0f7f3; border: 1px solid #d5e0da; border-radius: 12px; padding: 10px 12px; margin: 2px 0; line-height: 1.55; }
+        .pcn-msg .ag-card b.t { display: block; font-size: 15px; margin-bottom: 2px; }
+        .pcn-msg .ag-logo { width: 26px; height: 26px; border-radius: 50%; vertical-align: middle; margin-right: 8px; background: #fff; object-fit: cover; }
+        .pcn-msg .ag-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+        .pcn-msg .ag-btns button, .pcn-msg .ag-btns a { border: 1px solid #cfe3d6; background: #fff; color: #10201a; border-radius: 10px; padding: 9px 14px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .pcn-msg .ag-btns button.pri { background: #12a150; border-color: #12a150; color: #fff; }
+        .pcn-msg .ag-btns button:disabled { opacity: .55; }
+        .pcn-msg .ag-btns .ag-logo { width: 20px; height: 20px; margin-right: 6px; }
         @media (min-width: 720px) {
           #pcn-chat-modal { align-items: center; background: rgba(8,14,11,0.82); }
           .pcn-chat-box { max-width: 760px; height: 86vh; border-radius: 16px; }
@@ -517,6 +525,118 @@
       return body + (srcs.length ? srcChip(srcs) : '') + note(left + 'AI answers can be wrong. Not financial advice.');
     }
 
+    // ---- set price alerts by chatting (same flow as the chart page) ----
+    var ALERT_RE = /alert|notif|\bping\b|remind|tell me (when|if)|let me know|hit me|inform me|warn me|wake me|buzz|message me|text me|\b(when|once|if|as soon as)\b.*\b(hits?|reach(es)?|cross(es)?|touch(es)?|moons?|pumps?|dumps?|crash(es)?|rises?|falls?|drops?|breaks?|above|below|over|under)\b.*(\d|%)/i;
+    var pendingAlert = null;
+    function aHead(cfg, tok) { return { 'Content-Type': 'application/json', apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + tok }; }
+    async function alertCall(cfg, body) {
+      var tok = getToken(); if (!tok) return null;
+      try {
+        var r = await fetch(cfg.SUPABASE_URL + '/functions/v1/pcn-alert', { method: 'POST', headers: aHead(cfg, tok), body: JSON.stringify(body) });
+        if (!r.ok) return null; return await r.json();
+      } catch (e) { return null; }
+    }
+    function logoHtml(u) { return /^https?:\/\//i.test(u || '') ? '<img class="ag-logo" loading="lazy" referrerpolicy="no-referrer" alt="" src="' + escapeHtml(u) + '" onerror="this.remove()">' : ''; }
+    function cardHtml(t, img) { var L = String(t).split('\n'); return '<div class="ag-card"><b class="t">' + logoHtml(img) + escapeHtml(L[0]) + '</b>' + L.slice(1).map(escapeHtml).join('<br>') + '</div>'; }
+    async function countActive(cfg, table, H) {
+      try { var q = await fetch(cfg.SUPABASE_URL + '/rest/v1/' + table + '?select=id&status=eq.active', { headers: H }); var a = await q.json(); return Array.isArray(a) ? a.length : 0; } catch (e) { return 0; }
+    }
+    async function savePct(cfg, al) {
+      var tok = getToken(); if (!tok) return { ok: false, msg: 'Please sign in again.' };
+      var H = aHead(cfg, tok);
+      try {
+        var r = await fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/create_percent_alert', { method: 'POST', headers: H, body: JSON.stringify({ p_coin: al.coin_id, p_pct: al.pct, p_dir: al.dir }) });
+        if (!r.ok) {
+          var e = {}; try { e = await r.json(); } catch (x) {}
+          var m = (e.message || '') + ' ' + (e.details || '');
+          if (/limit/i.test(m)) return { ok: false, msg: 'You have reached your limit of move alerts. Cancel one in the Alerts tab, then ask me again.' };
+          if (/blocked/i.test(m)) return { ok: false, msg: 'Alerts are turned off for your account.' };
+          if (/email/i.test(m)) return { ok: false, msg: 'Confirm your email before setting alerts.' };
+          return { ok: false, msg: 'Could not save the alert. Please try again.' };
+        }
+        return { ok: true, n: await countActive(cfg, 'percent_alerts', H) };
+      } catch (e) { return { ok: false, msg: 'No connection. Please check your network and try again.' }; }
+    }
+    async function saveAlert(cfg, al) {
+      var tok = getToken(); if (!tok) return { ok: false, msg: 'Please sign in again.' };
+      var H = aHead(cfg, tok), uid = '';
+      try { uid = JSON.parse(atob(tok.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub; } catch (e) {}
+      try {
+        var h2 = { 'Content-Type': 'application/json', apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + tok, Prefer: 'return=minimal' };
+        var r = await fetch(cfg.SUPABASE_URL + '/rest/v1/price_alerts', { method: 'POST', headers: h2, body: JSON.stringify({ user_id: uid, coin_id: al.coin_id, target_price: al.target, currency: al.currency, direction: al.direction }) });
+        if (!r.ok) {
+          var e = {}; try { e = await r.json(); } catch (x) {}
+          var m = (e.message || '') + ' ' + (e.details || '');
+          if (/limit/i.test(m)) return { ok: false, msg: 'You have reached your limit of coin price alerts. Cancel one in the Alerts tab, then ask me again.' };
+          if (e.code === '42501' || r.status === 401 || r.status === 403) return { ok: false, msg: 'Alerts are not allowed on this account right now. Check that notifications are on and your email is confirmed, then try again.' };
+          return { ok: false, msg: 'Could not save the alert. Please try again.' };
+        }
+        var n = await countActive(cfg, 'price_alerts', H), lim = 20;
+        try { var b = await fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/my_alert_bonus', { method: 'POST', headers: H, body: '{}' }); var v = await b.json(); if (typeof v === 'number' && v > 0) lim += v; } catch (x) {}
+        return { ok: true, n: n, lim: lim };
+      } catch (e) { return { ok: false, msg: 'No connection. Please check your network and try again.' }; }
+    }
+    function showAlert(cfg, j, host) {
+      pendingAlert = j.coin && (j.status === 'clarify' || j.status === 'nonsense') ? { kind: j.kind || '', coin: 'id:' + j.coin, dir: j.dir || null, cur: j.cur || 'usd', image: j.image || '', sym: j.cur === 'ngn' ? '₦' : '$' } : null;
+      var sym = j.alert && j.alert.currency === 'ngn' ? '₦' : '$';
+      var logo = (j.alert && j.alert.image) || (j.suggest && j.suggest.image) || j.image || '';
+      host.innerHTML = cardHtml(j.text || '', logo);
+      var msgs = document.getElementById('pcnMsgs');
+      var row = document.createElement('div'); row.className = 'ag-btns'; host.querySelector('.ag-card').appendChild(row);
+      function btn(label, cls, fn, img) {
+        var b = document.createElement('button'); b.type = 'button';
+        if (img) b.innerHTML = logoHtml(img);
+        b.appendChild(document.createTextNode(label)); if (cls) b.className = cls;
+        b.onclick = async function () { row.querySelectorAll('button').forEach(function (x) { x.disabled = true; }); await fn(); };
+        row.appendChild(b);
+      }
+      function fin() { msgs.scrollTop = msgs.scrollHeight; }
+      async function again(body) {
+        var r = await alertCall(cfg, { alert: body });
+        if (r && r.intent === 'alert') showAlert(cfg, r, host); else { host.innerHTML = cardHtml('Sorry, I could not check that alert. Please try again.'); fin(); }
+      }
+      var viewLink = '<div class="ag-btns"><a href="#alerts">View my alerts</a></div>';
+      if ((j.status === 'confirm' || j.status === 'flip') && j.alert) {
+        var al = j.alert;
+        btn(j.status === 'flip' ? 'Yes, set it' : 'Confirm', 'pri', async function () {
+          if (al.kind === 'pct') {
+            var pr = await savePct(cfg, al);
+            if (!pr.ok) host.innerHTML = cardHtml(pr.msg);
+            else { host.innerHTML = cardHtml('Alert set ✅\n' + al.name + ' (' + al.symbol + ') moves ' + (al.dir === 'up' ? 'up ' : al.dir === 'down' ? 'down ' : '') + al.pct + '%' + (al.dir === 'either' ? ' either way' : '') + '\n' + pr.n + ' active move alert' + (pr.n === 1 ? '' : 's') + '.', al.image); host.querySelector('.ag-card').insertAdjacentHTML('beforeend', viewLink); }
+            fin(); return;
+          }
+          var r = await saveAlert(cfg, al);
+          if (!r.ok) host.innerHTML = cardHtml(r.msg);
+          else { host.innerHTML = cardHtml('Alert set ✅\n' + al.name + ' (' + al.symbol + ') ' + al.direction + ' ' + sym + Number(al.target).toLocaleString('en-US', { maximumFractionDigits: 8 }) + '\n' + r.n + ' of ' + r.lim + ' coin price alerts used.', al.image); host.querySelector('.ag-card').insertAdjacentHTML('beforeend', viewLink); }
+          fin();
+        });
+        btn('Cancel', '', async function () { host.innerHTML = cardHtml('Okay, I did not set the alert.'); fin(); });
+      } else if (j.status === 'nonsense' && j.suggest) {
+        var sg = j.suggest; btn('Yes, ' + sg.label, 'pri', function () { return again({ coin: 'id:' + sg.coin_id, dir: null, target: sg.target, cur: sg.currency }); });
+        btn('No', '', async function () { host.innerHTML = cardHtml('Okay. Tell me the price you want.'); fin(); });
+      } else if (j.status === 'pick' && j.options) {
+        j.options.forEach(function (o) { btn(o.name + ' (' + o.symbol + ')' + (o.rank ? ' · #' + o.rank : ''), '', function () { return again(j.kind === 'pct' ? { kind: 'pct', coin: 'id:' + o.id, dir: j.dir, pct: j.pct } : { coin: 'id:' + o.id, dir: j.dir, target: j.target, cur: j.cur }); }, o.image); });
+      } else { row.remove(); }
+      fin();
+    }
+    // true when the message was handled as an alert request
+    async function tryAlert(text, host) {
+      var pend = pendingAlert; pendingAlert = null;
+      var isCancel = /^\s*(cancel|no|nope|stop|never ?mind|forget it|leave it)\b/i.test(text);
+      var numM = pend && text.match(pend.kind === 'pct' ? /^\s*(\d[\d,]*\.?\d*|\.\d+)\s*%?\s*()$/ : /^[$₦]?\s*(\d[\d,]*\.?\d*|\.\d+)\s*([km])?$/i);
+      if (pend && !numM && (isCancel || (text.length <= 30 && /%|\d/.test(text)))) {
+        if (!isCancel) pendingAlert = pend;
+        host.innerHTML = cardHtml(isCancel ? 'Okay, I did not set an alert.' : pend.kind === 'pct' ? 'I need a percent for the alert, for example 5%. Send the percent, or say cancel.' : 'I need a price in ' + (pend.sym === '₦' ? 'Naira' : 'dollars') + ' for the alert, for example ' + pend.sym + '0.09. Send the price, or say cancel.', pend.image);
+        return true;
+      }
+      if (!(numM || ALERT_RE.test(text)) || !getToken()) return false;
+      var cfg = await import('./config.js');
+      var tv = 0; if (numM) tv = parseFloat(numM[1].replace(/,/g, '')) * (/k/i.test(numM[2] || '') ? 1e3 : /m/i.test(numM[2] || '') ? 1e6 : 1);
+      var aj = await alertCall(cfg, numM ? (pend.kind === 'pct' ? { alert: { kind: 'pct', coin: pend.coin, dir: pend.dir, pct: tv } } : { alert: { coin: pend.coin, dir: pend.dir, target: tv, cur: pend.cur } }) : { question: text });
+      if (aj && aj.intent === 'alert') { showAlert(cfg, aj, host); return true; }
+      return false;
+    }
+
     var ROUTES = {
       "What is the latest crypto news?": answerNews,
       "Why is the market moving today?": answerSummary,
@@ -564,6 +684,10 @@
       var loadingId = 'loading-' + Date.now();
       msgs.insertAdjacentHTML('beforeend', '<div class="pcn-msg ai" id="' + loadingId + '"><i>Thinking...</i></div>');
       msgs.scrollTop = msgs.scrollHeight;
+
+      try {
+        if (await tryAlert(text, document.getElementById(loadingId))) { msgs.scrollTop = msgs.scrollHeight; busy = false; return; }
+      } catch (err) {}
 
       var html;
       try {
