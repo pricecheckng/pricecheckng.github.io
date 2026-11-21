@@ -96,6 +96,86 @@
     inn.style.transition = ''; inn.style.transform = 'translateY(-' + tickI * 26 + 'px)';
     if (tickI >= n - 1) setTimeout(function () { inn.style.transition = 'none'; inn.style.transform = 'translateY(0)'; tickI = 0; }, 500);
   }, 3500);
+
+  /* scrolling chip row under the cards (like CoinMarketCap): latest news, new features, ask-AI questions */
+  var chipCss = '.mkc{margin:-4px -16px 12px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 16px}.mkc::-webkit-scrollbar{display:none}' +
+    '.mkc-i{display:inline-flex;align-items:center;gap:6px;margin-right:8px;padding:2px 10px;border-radius:999px;font-size:11.5px;line-height:16px;font-weight:500;color:inherit;text-decoration:none;border:1px solid rgba(37,99,235,.45);background:rgba(37,99,235,.08);cursor:pointer;font-family:inherit;vertical-align:top;-webkit-tap-highlight-color:transparent}' +
+    '.mkc-i svg{width:13px;height:13px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}' +
+    '.mkc-tp{border-color:rgba(234,138,40,.7);background:rgba(234,138,40,.1)}.mkc-tp i{font-style:normal;font-size:10.5px;padding:0 7px;border-radius:999px;background:#f2c48c;color:#3a2200}' +
+    '.mkc-nw{border-color:rgba(124,58,237,.6);background:rgba(124,58,237,.1)}.mkc-nw i{font-style:normal;font-size:10.5px;padding:0 7px;border-radius:999px;background:#19c37d;color:#04281a;font-weight:600}' +
+    '.mkc-al{border-color:rgba(124,58,237,.6);background:rgba(124,58,237,.1)}.mkc-x{display:inline-flex;margin:0 -4px 0 2px;padding:2px;border-radius:50%;opacity:.7}' +
+    '.mkc-hot{border-color:rgba(234,138,40,.5);background:rgba(234,138,40,.08)}.mkc-hot svg{color:#ea580c}' +
+    'html.dk .mkc-i{background:rgba(59,130,246,.12);border-color:rgba(96,140,255,.5)}html.dk .mkc-tp{background:rgba(234,138,40,.12)}html.dk .mkc-nw,html.dk .mkc-al{background:rgba(124,58,237,.18);border-color:rgba(150,110,255,.65)}html.dk .mkc-hot{background:rgba(234,138,40,.1)}';
+  var cs = document.createElement('style'); cs.textContent = chipCss; document.head.appendChild(cs);
+  var chipNews = [], chipTimer = null, chipPause = 0;
+  function ce(t) { return String(t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
+  function clip(t) { t = String(t || '').replace(/\s+/g, ' ').trim(); return t.length > 62 ? t.slice(0, 60).replace(/\s+\S*$/, '') + '…' : t; }
+  var IC = {
+    up: '<svg viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></svg>',
+    alts: '<svg viewBox="0 0 24 24"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>',
+    talk: '<svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.4A8 8 0 1 1 21 12z"/></svg>',
+    bars: '<svg viewBox="0 0 24 24"><path d="M3 20h18M6 16V9M11 16V5M16 16v-5M21 16V8"/></svg>',
+    clock: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+    gauge: '<svg viewBox="0 0 24 24"><path d="M3 18a9 9 0 1 1 18 0"/><path d="M12 18l4-5"/></svg>',
+    bell: '<svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>',
+    flame: '<svg viewBox="0 0 24 24"><path d="M12 22c4 0 7-2.8 7-7 0-3-2-5-3-7-1 1.5-2 2-3 2 0-3-1-5-3-7-1 3-5 6-5 12 0 4.2 3 7 7 7z"/></svg>',
+    cand: '<svg viewBox="0 0 24 24"><path d="M7 3v4M7 17v4M17 3v2M17 15v6"/><rect x="5" y="7" width="4" height="10" rx="1"/><rect x="15" y="5" width="4" height="10" rx="1"/></svg>'
+  };
+  function chipList() {
+    var up = !data || !(Number(data.cap_change_24h) < 0), a = [];
+    function news(n, hot) { return '<a class="mkc-i ' + (hot ? 'mkc-hot' : 'mkc-tp') + '" href="' + ce(n.url) + '" target="_blank" rel="noopener">' + (hot ? IC.flame : '<i>Topic</i>') + '<span>' + ce(clip(n.title)) + '</span></a>'; }
+    function q(ic, t) { return '<button type="button" class="mkc-i" data-q="' + ce(t) + '">' + ic + '<span>' + ce(t) + '</span></button>'; }
+    if (chipNews[0]) a.push(news(chipNews[0], false));
+    a.push('<a class="mkc-i mkc-nw" href="/ai-agent-chart?s=BTC"><i>New</i>' + IC.cand + '<span>Try Agentic Charts</span></a>');
+    var hide = false; try { hide = localStorage.getItem('pcn_chip_alert_x') === '1'; } catch (e) {}
+    if (!hide) a.push('<span class="mkc-i mkc-al" data-al="1">' + IC.bell + '<span>Add AI alert</span><button type="button" class="mkc-x" data-x="1" aria-label="Hide" style="background:none;border:0;color:inherit;cursor:pointer"><svg viewBox="0 0 24 24" style="width:11px;height:11px"><path d="M6 6l12 12M18 6L6 18"/></svg></button></span>');
+    if (chipNews[1]) a.push(news(chipNews[1], true));
+    a.push(q(IC.up, up ? 'Why is the market up today?' : 'Why is the market down today?'));
+    a.push(q(IC.alts, 'Are altcoins outperforming Bitcoin?'));
+    a.push(q(IC.talk, 'What are the trending narratives?'));
+    a.push(q(IC.bars, 'What cryptos are showing bullish momentum?'));
+    if (chipNews[2]) a.push(news(chipNews[2], true));
+    a.push(q(IC.clock, 'What upcoming events may impact crypto?'));
+    a.push(q(IC.gauge, 'What is the market sentiment?'));
+    a.push(q(IC.talk, 'What are KOLs discussing?'));
+    return a;
+  }
+  function askChip(text, prefill) {
+    var t = document.querySelector('.tabs a[data-tab="pcnai"]'); if (!t) return; t.click();
+    setTimeout(function () {
+      var i = document.getElementById('pcnInput'); if (!i) return;
+      i.value = text; i.focus();
+      if (!prefill) { var f = document.getElementById('pcnForm'); if (f && f.requestSubmit) f.requestSubmit(); else if (f) f.dispatchEvent(new Event('submit', { cancelable: true })); }
+    }, 300);
+  }
+  function chipMove() {
+    var el = document.getElementById('mktChips'); if (!el || document.hidden || Date.now() < chipPause) return;
+    var half = el.scrollWidth / 2; if (!(half > el.clientWidth)) return;
+    el.scrollLeft += 0.6; if (el.scrollLeft >= half) el.scrollLeft -= half;
+  }
+  function injectChips() {
+    if (!data) return;
+    var view = document.getElementById('view'); if (!view) return;
+    var box = document.getElementById('mkt'); if (!box || document.getElementById('mktChips')) return;
+    var els = chipList(), el = document.createElement('div'); el.id = 'mktChips'; el.className = 'mkc';
+    el.innerHTML = els.join('') + els.join('').replace(/ data-al="1"/, '');
+    el.addEventListener('click', function (e) {
+      var x = e.target.closest ? e.target.closest('[data-x]') : null;
+      if (x) { try { localStorage.setItem('pcn_chip_alert_x', '1'); } catch (er) {} reChips(); e.preventDefault(); return; }
+      var c = e.target.closest ? e.target.closest('[data-q],[data-al]') : null; if (!c) return;
+      if (c.getAttribute('data-al')) askChip('Alert me when ', true); else askChip(c.getAttribute('data-q'), false);
+    });
+    ['touchstart', 'pointerdown', 'wheel'].forEach(function (n) { el.addEventListener(n, function () { chipPause = Date.now() + 4000; }, { passive: true }); });
+    box.parentNode.insertBefore(el, box.nextSibling);
+    if (!chipTimer && !(window.matchMedia && matchMedia('(prefers-reduced-motion:reduce)').matches)) chipTimer = setInterval(chipMove, 30);
+  }
+  function reChips() { var o = document.getElementById('mktChips'); if (o) o.remove(); injectChips(); }
+  function loadChipNews(cfg) {
+    var H = { apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_KEY };
+    fetch(cfg.SUPABASE_URL + '/rest/v1/news?select=title,url&order=published_at.desc&limit=3', { headers: H }).then(function (r) { return r.json(); }).then(function (l) {
+      if (Array.isArray(l) && l.length) { chipNews = l.filter(function (n) { return n && n.title && n.url; }); reChips(); }
+    }).catch(function () {});
+  }
   function build() {
     var d = data; if (!d) return null;
     var ch = Number(d.cap_change_24h), chTxt = '';
@@ -147,12 +227,13 @@
       data = r0;
       var old = document.getElementById('mkt'); if (old) old.remove();
       var ot = document.getElementById('mktTick'); if (ot) ot.remove();
-      inject(); injectTick();
+      var oc = document.getElementById('mktChips'); if (oc) oc.remove();
+      inject(); injectChips(); injectTick();
     }).catch(function () {});
     });
   }
   import('./config.js').then(function (cfg) {
-    refresh(cfg);
+    refresh(cfg); loadChipNews(cfg);
     setInterval(function () { refresh(cfg); }, 5 * 60 * 1000);
     var H = { apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + cfg.SUPABASE_KEY };
     fetch(cfg.SUPABASE_URL + '/rest/v1/coins?select=id&limit=1', { headers: Object.assign({ Prefer: 'count=exact' }, H) }).then(function (r) {
@@ -167,6 +248,6 @@
     fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/eth_status', { method: 'POST', headers: Object.assign({ 'Content-Type': 'application/json' }, H), body: '{}' }).then(function (r) { return r.json(); }).then(function (g) {
       if (g && Number(g.gas_wei) > 0) { counts.gas = Number(g.gas_wei) / 1e9; reTick(); }
     }).catch(function () {});
-    new MutationObserver(function () { inject(); injectTick(); }).observe(document.body, { childList: true, subtree: true });
+    new MutationObserver(function () { inject(); injectChips(); injectTick(); }).observe(document.body, { childList: true, subtree: true });
   }).catch(function () {});
 })();
