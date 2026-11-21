@@ -59,10 +59,16 @@
         .pcn-srcitem small img { width: 22px; height: 22px; border-radius: 6px; background: #fff; }
         .pcn-copy { align-self: flex-start; margin-top: 8px; background: none; border: 1px solid #d5e0da; color: #5b6b64; border-radius: 8px; padding: 3px 9px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
         .pcn-copy:hover { border-color: #12a150; color: #12a150; }
-        .pcn-msg .ag-steps { margin: 0 0 8px; font-family: ui-monospace, Menlo, Consolas, monospace; }
-        .pcn-msg .ags-h { display: flex; align-items: center; justify-content: flex-start; text-align: left; white-space: nowrap; width: 100%; gap: 8px; background: none; border: 0; color: #5b6e64; font: inherit; font-size: 12px; padding: 2px 0; cursor: pointer; }
-        .pcn-msg .ags-h .chev { display: inline-block; transition: transform .15s; transform: rotate(-90deg); }
-        .pcn-msg .ag-steps.open .chev { transform: none; }
+        .pcn-msg .ag-steps { margin: 0 0 8px; }
+        .pcn-msg .ags-b { font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .pcn-msg .ags-h { display: flex; align-items: center; gap: 10px; width: 100%; background: none; border: 0; padding: 2px 0; cursor: pointer; text-align: left; font: inherit; color: inherit; }
+        .pcn-msg .ags-dot { flex: none; width: 26px; height: 26px; border-radius: 50%; background: linear-gradient(135deg, #12a150, #5be6a0); }
+        .pcn-msg .ags-tt { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.3; }
+        .pcn-msg .ags-tt b { font-size: 14px; font-weight: 600; }
+        .pcn-msg .ags-tt small { font-size: 12px; color: #5b6e64; }
+        .pcn-msg .ags-v { flex: none; font-size: 13px; color: #12a150; white-space: nowrap; }
+        .pcn-msg .ags-v .vh, .pcn-msg .ag-steps.open .ags-v .vd { display: none; }
+        .pcn-msg .ag-steps.open .ags-v .vh { display: inline; }
         .pcn-msg .ags-b { display: none; background: #f0f7f3; border: 1px solid #d5e0da; border-radius: 12px; padding: 6px 12px; margin-top: 4px; }
         .pcn-msg .ag-steps.open .ags-b { display: block; }
         .pcn-msg .ags-r { display: flex; gap: 12px; padding: 7px 0; }
@@ -70,7 +76,7 @@
         .pcn-msg .ags-r > div { flex: 1; min-width: 0; }
         .pcn-msg .ags-l { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
         .pcn-msg .ags-l .d, .pcn-msg .ags-s { color: #5b6e64; font-size: 12px; }
-        .pcn-msg .ag-card { background: #f0f7f3; border: 1px solid #d5e0da; border-radius: 12px; padding: 10px 12px; margin: 2px 0; line-height: 1.55; }
+        .pcn-msg .ag-card { margin: 8px 0 2px; line-height: 1.55; }
         .pcn-msg .ag-card b.t { display: block; font-size: 15px; margin-bottom: 2px; }
         .pcn-msg .ag-logo { width: 26px; height: 26px; border-radius: 50%; vertical-align: middle; margin-right: 8px; background: #fff; object-fit: cover; }
         .pcn-msg .ag-btns { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
@@ -661,12 +667,12 @@
     }
     // step-by-step breakdown shown while an alert request is checked
     function stepsBox(host) {
-      var el = document.createElement('div'); el.className = 'ag-steps open';
-      el.innerHTML = '<button class="ags-h" type="button"><span class="chev">\u2304</span><span class="ags-t"></span></button><div class="ags-b"></div>';
+      var el = document.createElement('div'); el.className = 'ag-steps';
+      el.innerHTML = '<button class="ags-h" type="button"><span class="ags-dot"></span><span class="ags-tt"><b class="ags-t1"></b><small class="ags-t2"></small></span><span class="ags-v"><span class="vd">View detail \u2304</span><span class="vh">Hide \u2303</span></span></button><div class="ags-b"></div>';
       host.insertBefore(el, host.firstChild);
       var body = el.querySelector('.ags-b'), t0 = Date.now(), n = 0, run = true, timer;
       function ms(d) { return d < 10 ? d.toFixed(1) + 'ms' : d < 1000 ? Math.round(d) + 'ms' : (d / 1000).toFixed(1) + 's'; }
-      function upd() { var sec = Math.round((Date.now() - t0) / 1000); el.querySelector('.ags-t').textContent = (run ? 'Working \u00b7 ' + sec + 's' : 'Research complete \u00b7 ' + ms(Date.now() - t0) + ' \u00b7 ' + n + ' step' + (n === 1 ? '' : 's')); }
+      function upd() { var sec = Math.round((Date.now() - t0) / 1000); el.querySelector('.ags-t1').textContent = run ? 'Working...' : 'Research complete'; el.querySelector('.ags-t2').textContent = (run ? sec + 's' : ms(Date.now() - t0)) + ' \u00b7 ' + n + ' step' + (n === 1 ? '' : 's'); }
       timer = setInterval(upd, 400); upd();
       return {
         add: function (name, desc, t) { n++; var r = document.createElement('div'); r.className = 'ags-r'; r.innerHTML = '<i class="ags-i">' + n + '</i><div><div class="ags-l"><b>' + escapeHtml(name) + '</b><span class="d">' + (t == null ? '' : ms(t)) + '</span></div><div class="ags-s">' + escapeHtml(desc) + '</div></div>'; body.appendChild(r); upd(); },
