@@ -51,7 +51,7 @@
       ['About & founder', 'Who built PriceCheck NG and when', 'about.html']
     ]},
     { t: 'PCN AI', ic: 1, rows: [
-      ['AI Analysis', '', '/chart?s=BTC'],
+      ['AI Analysis', '', '/ai-agent-chart?s=BTC'],
       ['AI Alerts', '', '#pcnai-alerts']
     ]}
   ];

@@ -1,4 +1,4 @@
-/* PriceCheck NG - exchange data for the chart page (OKX, Bybit, Gate, MEXC). Binance is handled inside chart.html. */
+/* PriceCheck NG - exchange data for the chart page (OKX, Bybit, Gate, MEXC). Binance is handled inside ai-agent-chart.html. */
 (function () {
   var ALLOWED = /^https:\/\/(www\.okx\.com|aws\.okx\.com|api\.mexc\.com|contract\.mexc\.com|www\.mexc\.com|api\.upbit\.com|fapi\.binance\.com|eapi\.binance\.com|fapi\.asterdex\.com|api\.bybit\.com|api\.gateio\.ws|api\.bitget\.com)\//;
   var direct = function (u, opt, ms) { var c = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (c) c.abort(); }, ms || 8000);
