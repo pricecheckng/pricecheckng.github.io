@@ -58,7 +58,9 @@
         .pcn-srcitem small { display: flex; align-items: center; gap: 8px; margin-top: 8px; color: #5b6b64; font-size: 13px; }
         .pcn-srcitem small img { width: 22px; height: 22px; border-radius: 6px; background: #fff; }
         .pcn-copy { align-self: flex-start; margin-top: 8px; background: none; border: 1px solid #d5e0da; color: #5b6b64; border-radius: 8px; padding: 3px 9px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
-        .pcn-copy:hover { border-color: #12a150; color: #12a150; }
+        .pcn-acts { display: flex; gap: 6px; margin-top: 8px; }
+        .pcn-acts button { background: none; border: 0; color: #5b6b64; padding: 6px; border-radius: 8px; cursor: pointer; line-height: 0; }
+        .pcn-acts button.on { color: #12a150; }
         .pcn-msg.pcn-proc { background: none !important; border: 0 !important; padding: 0 !important; box-shadow: none !important; }
         .pcn-msg .ag-steps { margin: 0; }
         .pcn-msg .ags-b { font-family: ui-monospace, Menlo, Consolas, monospace; }
@@ -736,15 +738,33 @@
       if (lk) lk.remove();
       t.querySelectorAll('p,[data-nocopy]').forEach(function (x) { x.remove(); });
       var txt = (t.textContent || '').trim() + (url ? '\n' + url : '');
-      var b = document.createElement('button');
-      b.type = 'button'; b.className = 'pcn-copy';
-      b.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span>Copy</span>';
-      b.onclick = function () {
-        function done() { b.lastChild.textContent = 'Copied'; setTimeout(function () { b.lastChild.textContent = 'Copy'; }, 1800); }
-        try { navigator.clipboard.writeText(txt).then(done, fb); } catch (_) { fb(); }
-        function fb() { var a = document.createElement('textarea'); a.value = txt; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch (_) {} a.remove(); done(); }
+      var row = document.createElement('div'); row.className = 'pcn-acts';
+      var IC = {
+        copy: '<rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/>',
+        share: '<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>',
+        up: '<path d="M7 11v9H4v-9h3zM7 11l4-8a2 2 0 0 1 2 2v4h6a2 2 0 0 1 2 2.3l-1.3 7A2 2 0 0 1 17.7 20H7"/>',
+        down: '<path d="M17 13V4h3v9h-3zM17 13l-4 8a2 2 0 0 1-2-2v-4H5a2 2 0 0 1-2-2.3l1.3-7A2 2 0 0 1 6.3 4H17"/>'
       };
-      el.appendChild(b);
+      function mk(k, label) {
+        var x = document.createElement('button'); x.type = 'button'; x.setAttribute('aria-label', label); x.dataset.k = k;
+        x.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + IC[k] + '</svg>';
+        row.appendChild(x); return x;
+      }
+      function copyText(then) {
+        function fb() { var a = document.createElement('textarea'); a.value = txt; document.body.appendChild(a); a.select(); try { document.execCommand('copy'); } catch (_) {} a.remove(); then(); }
+        try { navigator.clipboard.writeText(txt).then(then, fb); } catch (_) { fb(); }
+      }
+      function flash(x) { x.classList.add('on'); setTimeout(function () { x.classList.remove('on'); }, 1400); }
+      var bc = mk('copy', 'Copy'), bs = mk('share', 'Share'), bu = mk('up', 'Good answer'), bd = mk('down', 'Bad answer');
+      bc.onclick = function () { copyText(function () { flash(bc); }); };
+      bs.onclick = function () {
+        var msg = txt + '\n\nvia PriceCheck NG - https://pricecheckng.com.ng';
+        if (navigator.share) { try { navigator.share({ text: msg }).catch(function () {}); return; } catch (_) {} }
+        copyText(function () { flash(bs); });
+      };
+      bu.onclick = function () { bd.classList.remove('on'); bu.classList.toggle('on'); };
+      bd.onclick = function () { bu.classList.remove('on'); bd.classList.toggle('on'); };
+      el.appendChild(row);
     }
 
     async function sendQuery(text, forceAI, mode) {
