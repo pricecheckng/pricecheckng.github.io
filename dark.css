@@ -101,8 +101,11 @@ html.dk .pcn-msg .ag-logo{background:#16201a}
 html.dk .pcn-msg .ag-steps.open,html.dk .pcn-msg .ags-l b{color:#e9f1ec}
 html.dk .pcn-acts button{color:#8fa399}
 html.dk .pcn-acts button.on{color:#3ddc97}
-html.dk #pcnFb .fb-sh{background:#141816;color:#e9f1ec}
-html.dk #pcnFb label,html.dk #pcnFb .fb-msg{color:#b4c2ba}
-html.dk #pcnFb .fb-sel,html.dk #pcnFb .fb-note{border-color:#2c3a33;background:#0f1411}
-html.dk #pcnFb .fb-grab{background:#33423a}
-html.dk #pcnFb .fb-p{color:#8fa399}
+
+html.dk #pcnFb .fb-sh{background:#161616;color:#f1f1ee}
+html.dk #pcnFb .fb-grab{background:#3a3a3a}
+html.dk #pcnFb label{color:#cfcfc8}
+html.dk #pcnFb .fb-sel,html.dk #pcnFb .fb-note{border-color:#3a3a3a;background:#161616 !important}
+html.dk #pcnFb .fb-menu{background:#232323;box-shadow:0 10px 30px rgba(0,0,0,.6)}
+html.dk #pcnFb .fb-p,html.dk #pcnFb .fb-msg{color:#8d8d86}
+html.dk #pcnFb .fb-go{background:#fff;color:#111}

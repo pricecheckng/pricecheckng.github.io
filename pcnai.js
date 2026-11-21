@@ -9,8 +9,9 @@
       <style>
         #pcn-chat-modal { display: none; position: fixed; inset: 0; background: rgba(6,11,8,0.94); z-index: 10000; align-items: flex-end; justify-content: center; }
         #pcn-chat-modal.open { display: flex; }
-        .pcn-chat-box { background: #fff; width: 100%; max-width: 480px; height: 80vh; max-height: 100%; border-top-left-radius: 18px; border-top-right-radius: 18px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
-        .pcn-chat-header { background: #12a150; color: #fff; padding: 14px 16px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+        .pcn-chat-box { background: #fff; width: 100%; max-width: 100%; height: 100%; max-height: 100%; border-top-left-radius: 0; border-top-right-radius: 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); }
+        @media (min-width: 760px) { .pcn-chat-box { max-width: 760px; height: 92%; border-radius: 18px 18px 0 0 !important; } }
+        .pcn-chat-header { background: #12a150; color: #fff; padding: 14px 16px; padding-top: calc(14px + env(safe-area-inset-top)); font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
         .pcn-chat-body { flex: 1; padding: 14px; overflow-y: auto; background: #f5f8f6; display: flex; flex-direction: column; gap: 10px; }
         .pcn-msg { max-width: 85%; padding: 10px 14px; border-radius: 14px; font-size: 14px; line-height: 1.4; }
         .pcn-msg.ai { background: #fff; border: 1px solid #e1e9e4; color: #10201a; align-self: flex-start; border-bottom-left-radius: 4px; }
@@ -59,18 +60,27 @@
         .pcn-srcitem small img { width: 22px; height: 22px; border-radius: 6px; background: #fff; }
         .pcn-copy { align-self: flex-start; margin-top: 8px; background: none; border: 1px solid #d5e0da; color: #5b6b64; border-radius: 8px; padding: 3px 9px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
         #pcnFb { position: fixed; inset: 0; z-index: 100000; }
-        #pcnFb .fb-bg { position: absolute; inset: 0; background: rgba(0,0,0,.55); }
-        #pcnFb .fb-sh { position: absolute; left: 0; right: 0; bottom: 0; max-height: 92%; overflow: auto; background: #fff; color: #10201a; border-radius: 22px 22px 0 0; padding: 10px 18px 22px; box-sizing: border-box; font-family: inherit; }
-        #pcnFb .fb-grab { width: 44px; height: 5px; border-radius: 3px; background: #c9d3ce; margin: 0 auto 10px; }
-        #pcnFb .fb-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 17px; }
-        #pcnFb .fb-x { background: none; border: 0; font-size: 20px; color: inherit; cursor: pointer; padding: 4px 8px; }
-        #pcnFb .fb-top span { width: 32px; }
-        #pcnFb label { display: block; font-size: 14px; font-weight: 600; color: #4a5c53; margin: 12px 0 6px; }
-        #pcnFb .fb-sel, #pcnFb .fb-note { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; padding: 12px; border: 1px solid #cfdad4; border-radius: 12px; background: transparent; color: inherit; }
-        #pcnFb .fb-p { font-size: 12px; color: #6b7c74; margin: 14px 0 10px; }
-        #pcnFb .fb-go { width: 100%; background: #12a150; color: #fff; border: 0; border-radius: 999px; padding: 14px; font-size: 16px; font-weight: 700; cursor: pointer; }
+        #pcnFb .fb-bg { position: absolute; inset: 0; background: rgba(0,0,0,.45); }
+        #pcnFb .fb-sh { position: absolute; left: 0; right: 0; bottom: 0; top: 5.5%; display: flex; flex-direction: column; overflow-y: auto; background: #fff; color: #10201a; border-radius: 26px 26px 0 0; padding: 12px 20px 22px; box-sizing: border-box; font-family: inherit; }
+        #pcnFb .fb-grab { width: 56px; height: 5px; border-radius: 3px; background: #c9d3ce; margin: 0 auto 18px; flex: none; }
+        #pcnFb .fb-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; font-size: 22px; flex: none; }
+        #pcnFb .fb-top b { font-weight: 600; }
+        #pcnFb .fb-x { background: none; border: 0; font-size: 24px; color: inherit; cursor: pointer; padding: 6px 10px; }
+        #pcnFb .fb-top span { width: 42px; }
+        #pcnFb label { display: block; font-size: 16px; font-weight: 600; color: #4a5c53; margin: 14px 0 8px; }
+        #pcnFb .fb-dd { position: relative; }
+        #pcnFb .fb-sel { width: 100%; display: flex; align-items: center; justify-content: space-between; box-sizing: border-box; font: inherit; font-size: 18px; padding: 15px 16px; border: 1px solid #cfdad4; border-radius: 16px; background: transparent; color: inherit; cursor: pointer; text-align: left; }
+        #pcnFb .fb-menu { position: absolute; left: 0; top: calc(100% + 8px); width: 76%; background: #f2f5f3; border-radius: 18px; padding: 8px 0; box-shadow: 0 8px 28px rgba(0,0,0,.25); z-index: 5; }
+        #pcnFb .fb-menu[hidden] { display: none; }
+        #pcnFb .fb-opt { width: 100%; display: flex; align-items: center; justify-content: space-between; background: none; border: 0; color: inherit; font: inherit; font-size: 18px; padding: 15px 20px; cursor: pointer; text-align: left; }
+        #pcnFb .fb-opt .ck { visibility: hidden; }
+        #pcnFb .fb-opt.sel .ck { visibility: visible; }
+        #pcnFb .fb-note { width: 100%; box-sizing: border-box; font: inherit; font-size: 18px; padding: 16px; height: 150px; resize: none; border: 1px solid #cfdad4; border-radius: 16px; background: transparent; color: inherit; }
+        #pcnFb .fb-sp { flex: 1; min-height: 16px; }
+        #pcnFb .fb-p { font-size: 15px; line-height: 1.45; color: #6b7c74; margin: 0 0 16px; flex: none; }
+        #pcnFb .fb-go { flex: none; width: 100%; background: #10201a; color: #fff; border: 0; border-radius: 999px; padding: 18px; font-size: 19px; font-weight: 600; cursor: pointer; }
         #pcnFb .fb-go:disabled { opacity: .6; }
-        #pcnFb .fb-msg { text-align: center; font-size: 13px; color: #4a5c53; margin: 8px 0 0; min-height: 16px; }
+        #pcnFb .fb-msg { text-align: center; font-size: 14px; color: #4a5c53; margin: 10px 0 0; min-height: 18px; flex: none; }
         .pcn-acts { display: flex; gap: 6px; margin-top: 8px; }
         .pcn-acts button { background: none; border: 0; color: #5b6b64; padding: 6px; border-radius: 8px; cursor: pointer; line-height: 0; }
         .pcn-acts button.on { color: #12a150; }
@@ -749,10 +759,15 @@
       var opts = kind === 'up' ? ['Accurate', 'Helpful', 'Clear explanation', 'Fast', 'Other'] : ['Wrong information', 'Outdated data', 'Not helpful', 'Too slow', 'Cut off or unclear', 'Other'];
       var w = document.createElement('div'); w.id = 'pcnFb';
       w.innerHTML = '<div class="fb-bg"></div><div class="fb-sh"><div class="fb-grab"></div><div class="fb-top"><button type="button" class="fb-x" aria-label="Close">\u2715</button><b>Submit feedback ' + (kind === 'up' ? '\ud83d\udc4d' : '\ud83d\udc4e') + '</b><span></span></div>' +
-        '<label>What type of ' + (kind === 'up' ? 'praise' : 'issue') + '? (optional)</label><select class="fb-sel">' + opts.map(function (o) { return '<option>' + o + '</option>'; }).join('') + '</select>' +
+        '<label>What type of ' + (kind === 'up' ? 'praise' : 'issue') + '? (optional)</label><div class="fb-dd"><button type="button" class="fb-sel"><span class="fb-val"></span><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button><div class="fb-menu" hidden>' + opts.map(function (o) { return '<button type="button" class="fb-opt" data-v="' + o + '"><span>' + o + '</span><svg class="ck" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"/></svg></button>'; }).join('') + '</div></div>' +
         '<label>Please provide details: (optional)</label><textarea class="fb-note" maxlength="500" rows="4" placeholder="' + (kind === 'up' ? 'What did you like about this response?' : 'What was unsatisfying about this response?') + '"></textarea>' +
-        '<p class="fb-p">Submitting sends this question and answer to PriceCheck NG so we can improve PCN AI.</p><button type="button" class="fb-go">Submit Feedback</button><p class="fb-msg"></p></div>';
+        '<div class="fb-sp"></div><p class="fb-p">Submitting sends this question and answer to PriceCheck NG so we can improve PCN AI.</p><button type="button" class="fb-go">Submit Feedback</button><p class="fb-msg"></p></div>';
       document.body.appendChild(w);
+      var chosen = opts[opts.length - 1], menu = w.querySelector('.fb-menu'), val = w.querySelector('.fb-val');
+      function paintOpt() { val.textContent = chosen; [].forEach.call(menu.querySelectorAll('.fb-opt'), function (x) { x.classList.toggle('sel', x.getAttribute('data-v') === chosen); }); }
+      paintOpt();
+      w.querySelector('.fb-sel').onclick = function () { menu.hidden = !menu.hidden; };
+      [].forEach.call(menu.querySelectorAll('.fb-opt'), function (x) { x.onclick = function () { chosen = x.getAttribute('data-v'); paintOpt(); menu.hidden = true; }; });
       function close() { w.remove(); }
       w.querySelector('.fb-bg').onclick = close; w.querySelector('.fb-x').onclick = close;
       var go = w.querySelector('.fb-go'), msg = w.querySelector('.fb-msg');
@@ -763,7 +778,7 @@
         try {
           var cfg = await import('./config.js');
           var r = await fetch(cfg.SUPABASE_URL + '/rest/v1/rpc/submit_ai_feedback', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + tok },
-            body: JSON.stringify({ p_rating: kind, p_issue: w.querySelector('.fb-sel').value, p_note: w.querySelector('.fb-note').value.slice(0, 500), p_question: String(question).slice(0, 400), p_answer: String(answer).slice(0, 4000), p_mode: getMode() }) });
+            body: JSON.stringify({ p_rating: kind, p_issue: chosen, p_note: w.querySelector('.fb-note').value.slice(0, 500), p_question: String(question).slice(0, 400), p_answer: String(answer).slice(0, 4000), p_mode: getMode() }) });
           var j = ''; try { j = await r.json(); } catch (e) {}
           if (!r.ok) throw new Error('x');
           if (j === 'limit') { msg.textContent = 'You have sent a lot of feedback today. Please try again tomorrow.'; go.disabled = false; return; }
