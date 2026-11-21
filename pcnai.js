@@ -59,6 +59,17 @@
         .pcn-srcitem small img { width: 22px; height: 22px; border-radius: 6px; background: #fff; }
         .pcn-copy { align-self: flex-start; margin-top: 8px; background: none; border: 1px solid #d5e0da; color: #5b6b64; border-radius: 8px; padding: 3px 9px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
         .pcn-copy:hover { border-color: #12a150; color: #12a150; }
+        .pcn-msg .ag-steps { margin: 0 0 8px; font-family: ui-monospace, Menlo, Consolas, monospace; }
+        .pcn-msg .ags-h { display: flex; align-items: center; justify-content: flex-start; text-align: left; white-space: nowrap; width: 100%; gap: 8px; background: none; border: 0; color: #5b6e64; font: inherit; font-size: 12px; padding: 2px 0; cursor: pointer; }
+        .pcn-msg .ags-h .chev { display: inline-block; transition: transform .15s; transform: rotate(-90deg); }
+        .pcn-msg .ag-steps.open .chev { transform: none; }
+        .pcn-msg .ags-b { display: none; background: #f0f7f3; border: 1px solid #d5e0da; border-radius: 12px; padding: 6px 12px; margin-top: 4px; }
+        .pcn-msg .ag-steps.open .ags-b { display: block; }
+        .pcn-msg .ags-r { display: flex; gap: 12px; padding: 7px 0; }
+        .pcn-msg .ags-i { flex: none; width: 24px; height: 24px; border-radius: 50%; border: 1px solid #bcd0c4; background: #fff; display: inline-flex; align-items: center; justify-content: center; color: #12a150; font-style: normal; font-size: 12px; }
+        .pcn-msg .ags-r > div { flex: 1; min-width: 0; }
+        .pcn-msg .ags-l { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+        .pcn-msg .ags-l .d, .pcn-msg .ags-s { color: #5b6e64; font-size: 12px; }
         .pcn-msg .ag-card { background: #f0f7f3; border: 1px solid #d5e0da; border-radius: 12px; padding: 10px 12px; margin: 2px 0; line-height: 1.55; }
         .pcn-msg .ag-card b.t { display: block; font-size: 15px; margin-bottom: 2px; }
         .pcn-msg .ag-logo { width: 26px; height: 26px; border-radius: 50%; vertical-align: middle; margin-right: 8px; background: #fff; object-fit: cover; }
@@ -648,6 +659,20 @@
       } else { row.remove(); }
       fin();
     }
+    // step-by-step breakdown shown while an alert request is checked
+    function stepsBox(host) {
+      var el = document.createElement('div'); el.className = 'ag-steps open';
+      el.innerHTML = '<button class="ags-h" type="button"><span class="chev">\u2304</span><span class="ags-t"></span></button><div class="ags-b"></div>';
+      host.insertBefore(el, host.firstChild);
+      var body = el.querySelector('.ags-b'), t0 = Date.now(), n = 0, run = true, timer;
+      function ms(d) { return d < 10 ? d.toFixed(1) + 'ms' : d < 1000 ? Math.round(d) + 'ms' : (d / 1000).toFixed(1) + 's'; }
+      function upd() { var sec = Math.round((Date.now() - t0) / 1000); el.querySelector('.ags-t').textContent = (run ? 'Working \u00b7 ' + sec + 's' : 'Research complete \u00b7 ' + ms(Date.now() - t0) + ' \u00b7 ' + n + ' step' + (n === 1 ? '' : 's')); }
+      timer = setInterval(upd, 400); upd();
+      return {
+        add: function (name, desc, t) { n++; var r = document.createElement('div'); r.className = 'ags-r'; r.innerHTML = '<i class="ags-i">' + n + '</i><div><div class="ags-l"><b>' + escapeHtml(name) + '</b><span class="d">' + (t == null ? '' : ms(t)) + '</span></div><div class="ags-s">' + escapeHtml(desc) + '</div></div>'; body.appendChild(r); upd(); },
+        end: function () { run = false; clearInterval(timer); upd(); }
+      };
+    }
     // true when the message was handled as an alert request
     async function tryAlert(text, host) {
       var pend = pendingAlert; pendingAlert = null;
@@ -660,12 +685,24 @@
       }
       if (!(numM || ALERT_RE.test(text)) || !getToken()) return false;
       var cfg = await import('./config.js');
+      host.innerHTML = ''; var bodyHost = document.createElement('div'); host.appendChild(bodyHost);
+      var sb = stepsBox(host), tA = Date.now();
+      sb.add('Reading your request', numM ? 'got your answer for the pending alert' : 'looks like a price alert', Date.now() - tA);
       var tv = 0; if (numM) tv = parseFloat(numM[1].replace(/,/g, '')) * (/k/i.test(numM[2] || '') ? 1e3 : /m/i.test(numM[2] || '') ? 1e6 : 1);
       var aj = await alertCall(cfg, numM ? (pend.kind === 'pct' ? { alert: { kind: 'pct', coin: pend.coin, dir: pend.dir, pct: tv } } : { alert: { coin: pend.coin, dir: pend.dir, target: tv, cur: pend.cur } }) : { question: text });
-      if (aj && aj.intent === 'alert') { showAlert(cfg, aj, host); return true; }
+      var tB = Date.now();
+      if (aj && aj.intent === 'alert') {
+        var nm = (aj.alert && aj.alert.name) || (aj.suggest && aj.suggest.name) || '';
+        sb.add('Checking live price', (nm ? nm + ': ' : '') + 'compared with the live market price', tB - tA);
+        var tC = Date.now(); showAlert(cfg, aj, bodyHost);
+        sb.add('Preparing confirmation', aj.status === 'confirm' || aj.status === 'flip' ? 'ready for you to confirm' : 'needs one more detail from you', Date.now() - tC);
+        sb.end(); return true;
+      }
+      sb.end(); host.innerHTML = '<i>Thinking...</i>';
       return false;
     }
 
+    document.addEventListener('click', function (e) { var h = e.target.closest && e.target.closest('.ags-h'); if (h) h.parentElement.classList.toggle('open'); });
     var ROUTES = {
       "What is the latest crypto news?": answerNews,
       "Why is the market moving today?": answerSummary,
