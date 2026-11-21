@@ -258,6 +258,7 @@ function route() {
     return;
   }
   const tab = routes[h] ? h : "market";
+  if (tab === "market" && /[?&]tab=watch(&|$)/.test(location.hash || "")) state.tab = "watch";
   document.querySelectorAll(".tabs a").forEach((a) => a.classList.toggle("on", a.dataset.tab === tab));
   routes[tab]();
   window.scrollTo(0, 0);
