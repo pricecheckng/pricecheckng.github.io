@@ -39,14 +39,16 @@ img { display: block; }
 .top {
   position: relative; z-index: 20;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 16px; padding-top: calc(10px + env(safe-area-inset-top));
+  padding: 4px 16px; padding-top: calc(4px + env(safe-area-inset-top));
   background: var(--green); color: #fff;
   border-bottom: 1px solid var(--green-d);
 }
-.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: -.02em; font-size: 18px; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 800; letter-spacing: -.02em; font-size: 16px; }
+.brand img { width: 26px; height: 26px; }
 .brand b { color: #9be3bd; }
 .topr { display: flex; align-items: center; gap: 8px; }
-.bellbtn { width: 42px; height: 42px; display: grid; place-items: center; border-radius: 50%; color: #fff; }
+.bellbtn svg { width: 21px; height: 21px; }
+.bellbtn { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: #fff; }
 .bellbtn:active { background: rgba(255,255,255,.18); }
 .pill {
   border: 1.5px solid var(--green); color: var(--green); background: #fff;
