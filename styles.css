@@ -50,7 +50,8 @@ img { display: block; }
 .bellbtn svg { width: 21px; height: 21px; }
 .bellbtn { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: #fff; }
 .buy.off { visibility: hidden; pointer-events: none; }
-.deskmenu { display: none; border: 0; background: none; color: #fff !important; padding: 0; cursor: pointer; }
+.deskmenu { display: none; width: 34px; height: 34px; place-items: center; border: 0; border-radius: 50%; background: none; color: #fff !important; padding: 0; cursor: pointer; }
+.deskmenu:active { background: rgba(255,255,255,.18); }
 .bellbtn:active { background: rgba(255,255,255,.18); }
 .pill {
   border: 1.5px solid var(--green); color: var(--green); background: #fff;
