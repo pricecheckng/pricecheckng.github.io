@@ -46,7 +46,7 @@ async function load() {
     const by = {}; rows.forEach((c) => (by[c.id] = c));
     document.getElementById("rows").innerHTML = ids.filter((i) => by[i]).map((i) => {
       const c = by[i], ch = Number(c.change_24h_pct), px = cur === "USD" ? c.price_usd : cur === "NGN" && c.price_ngn != null ? c.price_ngn : fx[cur] ? Number(c.price_usd) * fx[cur] : null;
-      return '<a class="r" target="_blank" rel="noopener" href="https://pricecheckng.com.ng/' + encodeURIComponent(c.id) + '-price.html?utm_source=widget&utm_medium=embed"><img alt="" src="' + esc(c.image_url) + '"><span class="n"><b>' + esc(String(c.symbol).toUpperCase()) + "</b><small>" + esc(c.name) + '</small></span><span class="p">' + fmt(px) + '</span><span class="c ' + (ch >= 0 ? "u" : "d") + '">' + (isFinite(ch) ? (ch >= 0 ? "+" : "") + ch.toFixed(2) + "%" : "–") + "</span></a>";
+      return '<a class="r" target="_blank" rel="noopener" href="https://pricecheckng.com.ng/' + encodeURIComponent(c.id) + '-price?utm_source=widget&utm_medium=embed"><img alt="" src="' + esc(c.image_url) + '"><span class="n"><b>' + esc(String(c.symbol).toUpperCase()) + "</b><small>" + esc(c.name) + '</small></span><span class="p">' + fmt(px) + '</span><span class="c ' + (ch >= 0 ? "u" : "d") + '">' + (isFinite(ch) ? (ch >= 0 ? "+" : "") + ch.toFixed(2) + "%" : "–") + "</span></a>";
     }).join("") || '<div class="e">No coins found</div>';
   } catch (e) { document.getElementById("rows").innerHTML = '<div class="e">Prices unavailable</div>'; }
 }

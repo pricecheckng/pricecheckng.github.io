@@ -5,10 +5,10 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Crypto Fear &amp; Greed Index Today | PriceCheck NG</title>
 <meta name="description" content="Live Crypto Fear & Greed Index today. See if the crypto market is scared or greedy, what the number means and how to use it. Free on PriceCheck NG.">
-<link rel="canonical" href="https://pricecheckng.com.ng/fear-greed.html">
+<link rel="canonical" href="https://pricecheckng.com.ng/fear-greed">
 <meta property="og:title" content="Crypto Fear & Greed Index Today">
 <meta property="og:description" content="Is the crypto market scared or greedy right now? Check the live index.">
-<meta property="og:url" content="https://pricecheckng.com.ng/fear-greed.html">
+<meta property="og:url" content="https://pricecheckng.com.ng/fear-greed">
 <meta name="theme-color" content="#12a150">
 <style>
 :root{--bg:#f5f8f6;--card:#fff;--tx:#10201a;--mu:#5b6b64;--bd:#e1e9e4;--g:#12a150}
@@ -71,7 +71,7 @@ p{margin:0 0 10px}
     <p>The index measures the mood of the crypto market. It looks at things like price swings, trading volume, social media activity and how dominant Bitcoin is.</p>
     <p>Some traders get careful when everyone is extremely greedy, and look for chances when everyone is extremely fearful. It is a mood gauge, not a signal to buy or sell on its own. Always check the price chart too.</p>
     <a class="btn" href="./#coin/bitcoin">See Bitcoin price</a>
-    <a class="btn alt" href="p2p.html">USDT in naira</a>
+    <a class="btn alt" href="p2p">USDT in naira</a>
     <a class="btn alt" id="wa" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
   </div>
 
@@ -100,7 +100,7 @@ function ago(t){ const m = Math.round((Date.now() - new Date(t)) / 60000); retur
     $('y').textContent = d.fng_prev != null ? d.fng_prev : '--';
     $('needle').style.transform = `rotate(${(v/100)*180 - 90}deg)`;
     if (d.fng_at) $('u').textContent = 'Updated ' + ago(d.fng_at);
-    $('wa').href = 'https://wa.me/?text=' + encodeURIComponent(`Crypto Fear & Greed today: ${v} (${d.fng_label}). Check it free on PriceCheck NG: https://pricecheckng.com.ng/fear-greed.html`);
+    $('wa').href = 'https://wa.me/?text=' + encodeURIComponent(`Crypto Fear & Greed today: ${v} (${d.fng_label}). Check it free on PriceCheck NG: https://pricecheckng.com.ng/fear-greed`);
   } catch (e) { $('l').textContent = 'Not available right now. Try again soon.'; }
 })();
 </script>

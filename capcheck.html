@@ -33,7 +33,7 @@ document.getElementById('go').onclick=async function(){
 document.getElementById('cat').onclick=async function(){
   out.innerHTML='';LOG=[];sum.textContent='loading categories...';
   try{
-    var idx=await (await fetch('categories.html',{cache:'no-store'})).text();
+    var idx=await (await fetch('categories',{cache:'no-store'})).text();
     var pages=[...new Set((idx.match(/category-[a-z0-9-]+\.html/g)||[]))];
     var cats=[];
     for(var i=0;i<pages.length;i++){var t=await (await fetch(pages[i],{cache:'no-store'})).text();var tt=t.replace(/<[^>]+>/g,'');

@@ -23,13 +23,13 @@
   const html = `<div class="tl-card" id="toolsCard">
   <div class="tl-wrap">
     <div class="tl-strip" role="navigation" aria-label="Tools">
-      <a class="tl-hot" href="p2p.html"><i>🔁</i>USDT P2P</a>      <a href="pulse.html"><i>📰</i>Market today</a>
-      <a href="market-chart.html"><i>📈</i>Market chart</a>
-      <a href="converter.html"><i>💱</i>Converter</a>
-      <a href="movers.html"><i>🔥</i>Movers</a>
-      <a href="predict.html"><i>🎯</i>Daily contest</a>
-      <a href="profit-calculator.html"><i>🧮</i>Profit calculator</a>
-      <a href="learn-candlesticks.html"><i>📚</i>Learn charts</a>
+      <a class="tl-hot" href="p2p"><i>🔁</i>USDT P2P</a>      <a href="pulse"><i>📰</i>Market today</a>
+      <a href="market-chart"><i>📈</i>Market chart</a>
+      <a href="converter"><i>💱</i>Converter</a>
+      <a href="movers"><i>🔥</i>Movers</a>
+      <a href="predict"><i>🎯</i>Daily contest</a>
+      <a href="profit-calculator"><i>🧮</i>Profit calculator</a>
+      <a href="learn-candlesticks"><i>📚</i>Learn charts</a>
     </div>
     <button class="tl-go" type="button" aria-label="Show more tools">›</button>
   </div>

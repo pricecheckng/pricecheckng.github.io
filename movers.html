@@ -5,20 +5,20 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Top Crypto Gainers and Losers Today + Fear &amp; Greed Index | PriceCheck NG</title>
 <meta name="description" content="See today's top crypto gainers and losers in the last 24 hours, with prices in USD and Naira, plus the live Crypto Fear &amp; Greed Index. Free on PriceCheck NG.">
-<link rel="canonical" href="https://pricecheckng.com.ng/movers.html">
+<link rel="canonical" href="https://pricecheckng.com.ng/movers">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="theme-color" content="#0b7a4b">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="PriceCheck NG">
 <meta property="og:title" content="Top crypto gainers and losers today + Fear &amp; Greed Index">
 <meta property="og:description" content="Today's biggest crypto movers in USD and Naira, plus the live Fear &amp; Greed Index.">
-<meta property="og:url" content="https://pricecheckng.com.ng/movers.html">
+<meta property="og:url" content="https://pricecheckng.com.ng/movers">
 <meta property="og:image" content="https://pricecheckng.com.ng/icon-green-512.png">
 <link rel="icon" type="image/png" href="icon-green-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Top crypto gainers and losers today","url":"https://pricecheckng.com.ng/movers.html","description":"Today's top crypto gainers and losers with prices in USD and Naira, plus the Fear & Greed Index.","isPartOf":{"@type":"WebSite","name":"PriceCheck NG","url":"https://pricecheckng.com.ng/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Top crypto gainers and losers today","url":"https://pricecheckng.com.ng/movers","description":"Today's top crypto gainers and losers with prices in USD and Naira, plus the Fear & Greed Index.","isPartOf":{"@type":"WebSite","name":"PriceCheck NG","url":"https://pricecheckng.com.ng/"}}</script>
 <style>
 :root{--g:#0b7d4d;--ink:#0f1a14;--mut:#55635a;--line:#e3e9e5;--bg:#fff;--card:#f6f8f7;--up:#0b7d4d;--down:#c62828}
 @media (prefers-color-scheme:dark){:root{--ink:#e9f1ec;--mut:#9db0a5;--line:#26332c;--bg:#0e1511;--card:#16201a;--up:#3ddc97;--down:#ff6b6b}}
@@ -90,10 +90,10 @@ footer a{color:var(--mut)}
 <p>Gainers are coins whose price rose the most in the last 24 hours, and losers are the ones that fell the most. Big moves can reverse quickly, so check a coin's chart before you act. The Fear &amp; Greed Index summarizes the market mood from 0 (extreme fear) to 100 (extreme greed), and it is a rough guide, not a signal to buy or sell.</p>
 
 <h2>More tools</h2>
-<div class="links"><a href="converter.html">Crypto converter</a><a href="bitcoin-price.html">Bitcoin price</a><a href="ethereum-price.html">Ethereum price</a><a href="tether-price.html">Tether price</a><a href="coins.html">More coins</a><a href="./">All coins</a></div>
+<div class="links"><a href="converter">Crypto converter</a><a href="bitcoin-price">Bitcoin price</a><a href="ethereum-price">Ethereum price</a><a href="tether-price">Tether price</a><a href="coins">More coins</a><a href="./">All coins</a></div>
 <p class="note">Prices come from third-party sources and may be delayed or differ from the price on an exchange. Naira values use exchange rates and may differ from the rate you would actually get. Information only, not financial advice.</p>
 </main>
-<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="glossary.html">Glossary</a> · <a href="faq.html">FAQ</a> · <a href="methodology.html">Methodology</a> · <a href="plus.html">Plus &amp; Contact</a></footer>
+<footer><a href="privacy">Privacy Policy</a> · <a href="terms">Terms of Service</a> · <a href="glossary">Glossary</a> · <a href="faq">FAQ</a> · <a href="methodology">Methodology</a> · <a href="plus">Plus &amp; Contact</a></footer>
 <script type="module">
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
 const H = { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY };
@@ -140,7 +140,7 @@ function render() {
   const top = rows[0];
   if (top) {
     const ch = Number(top.change_24h_pct);
-    const txt = "Top crypto " + (mode === "g" ? "gainer" : "loser") + " today: " + String(top.symbol || top.id).toUpperCase() + " " + (ch >= 0 ? "+" : "") + ch.toFixed(2) + "%. See all movers and the Fear & Greed Index: https://pricecheckng.com.ng/movers.html";
+    const txt = "Top crypto " + (mode === "g" ? "gainer" : "loser") + " today: " + String(top.symbol || top.id).toUpperCase() + " " + (ch >= 0 ? "+" : "") + ch.toFixed(2) + "%. See all movers and the Fear & Greed Index: https://pricecheckng.com.ng/movers";
     $("wa").href = "https://wa.me/?text=" + encodeURIComponent(txt);
   }
 }

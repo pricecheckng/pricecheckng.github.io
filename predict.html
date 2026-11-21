@@ -5,14 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Daily Bitcoin Prediction Contest: Higher or Lower? | PriceCheck NG</title>
 <meta name="description" content="Free daily Bitcoin prediction game. Will BTC be higher or lower tomorrow? Pick, earn points and climb the leaderboard on PriceCheck NG.">
-<link rel="canonical" href="https://pricecheckng.com.ng/predict.html">
+<link rel="canonical" href="https://pricecheckng.com.ng/predict">
 <meta name="robots" content="index,follow,max-image-preview:large">
 <meta name="theme-color" content="#0b7a4b">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="PriceCheck NG">
 <meta property="og:title" content="Daily Bitcoin prediction contest: higher or lower?">
 <meta property="og:description" content="Pick whether BTC will be higher or lower tomorrow, earn points and climb the leaderboard. Free.">
-<meta property="og:url" content="https://pricecheckng.com.ng/predict.html">
+<meta property="og:url" content="https://pricecheckng.com.ng/predict">
 <meta property="og:image" content="https://pricecheckng.com.ng/icon-green-512.png">
 <link rel="icon" type="image/png" href="icon-green-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -83,9 +83,9 @@ footer a{color:var(--mut)}
 <p>This is a free game for fun. There is no money, no entry fee and no cash prize, and it is not financial advice.</p>
 
 <h2>More tools</h2>
-<div class="links"><a href="converter.html">Crypto converter</a><a href="movers.html">Gainers and losers</a><a href="bitcoin-price.html">Bitcoin price</a><a href="coins.html">More coins</a><a href="./">All coins</a></div>
+<div class="links"><a href="converter">Crypto converter</a><a href="movers">Gainers and losers</a><a href="bitcoin-price">Bitcoin price</a><a href="coins">More coins</a><a href="./">All coins</a></div>
 </main>
-<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="glossary.html">Glossary</a> · <a href="faq.html">FAQ</a> · <a href="methodology.html">Methodology</a> · <a href="plus.html">Plus &amp; Contact</a></footer>
+<footer><a href="privacy">Privacy Policy</a> · <a href="terms">Terms of Service</a> · <a href="glossary">Glossary</a> · <a href="faq">FAQ</a> · <a href="methodology">Methodology</a> · <a href="plus">Plus &amp; Contact</a></footer>
 <script type="module">
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -104,7 +104,7 @@ function countdown(iso) {
 }
 
 async function signIn() {
-  await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname } });
+  await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + '/predict.html' } });
 }
 
 async function pick(roundId, p) {
@@ -144,7 +144,7 @@ function render() {
     box.innerHTML = html;
     const s = $("signin"); if (s) s.onclick = signIn;
     box.querySelectorAll(".picks button").forEach((b) => (b.onclick = () => pick(cur.id, b.dataset.p)));
-    $("wa").href = "https://wa.me/?text=" + encodeURIComponent("Will Bitcoin be higher or lower tomorrow? Play the free daily prediction contest on PriceCheck NG: https://pricecheckng.com.ng/predict.html");
+    $("wa").href = "https://wa.me/?text=" + encodeURIComponent("Will Bitcoin be higher or lower tomorrow? Play the free daily prediction contest on PriceCheck NG: https://pricecheckng.com.ng/predict");
   }
 
   const l = state.last;

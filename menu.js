@@ -8,47 +8,47 @@
   var AFTER = [
     ['Watchlist', '', '#market?tab=watch'],
     ['Portfolio', '', '#portfolio'],
-    ['API for developers', '', 'api.html', 1],
-    ['Daily contest', '', 'predict.html'],
+    ['API for developers', '', 'api', 1],
+    ['Daily contest', '', 'predict'],
     ['Notifications', '', '#alerts'],
     ['Account', '', '#account']
   ];
   var GROUPS = [
     { t: 'Market', rows: [
-      ['Crypto news', 'Latest headlines from top outlets', 'news.html'],
-      ['Market summary', 'Today in 30 seconds, written by PCN AI', 'pulse.html'],
-      ['Market chart', 'Total market cap and Bitcoin dominance', 'market-chart.html'],
-      ['Heatmap', 'The whole market in one picture', 'heatmap.html'],
-      ['Fear & Greed', 'Is the market scared or greedy?', 'fear-greed.html'],
-      ['Compare coins', 'Put two to four coins side by side', 'compare.html'],
-      ['Top movers', 'Biggest gainers and losers', 'movers.html'],
-      ['Bitcoin network', 'Fees, mempool, blocks and halving', 'network.html'],
-      ['Ethereum gas fees', 'What it costs to send ETH and USDT', 'gas.html'],
-      ['Stablecoin health', 'Is USDT holding its $1 price?', 'stablecoins.html'],
-      ['Exchanges compared', 'Volume and coins on each exchange', 'exchanges.html'],
-      ['Treasuries', 'Which companies and countries hold crypto', 'treasuries.html']
+      ['Crypto news', 'Latest headlines from top outlets', 'news'],
+      ['Market summary', 'Today in 30 seconds, written by PCN AI', 'pulse'],
+      ['Market chart', 'Total market cap and Bitcoin dominance', 'market-chart'],
+      ['Heatmap', 'The whole market in one picture', 'heatmap'],
+      ['Fear & Greed', 'Is the market scared or greedy?', 'fear-greed'],
+      ['Compare coins', 'Put two to four coins side by side', 'compare'],
+      ['Top movers', 'Biggest gainers and losers', 'movers'],
+      ['Bitcoin network', 'Fees, mempool, blocks and halving', 'network'],
+      ['Ethereum gas fees', 'What it costs to send ETH and USDT', 'gas'],
+      ['Stablecoin health', 'Is USDT holding its $1 price?', 'stablecoins'],
+      ['Exchanges compared', 'Volume and coins on each exchange', 'exchanges'],
+      ['Treasuries', 'Which companies and countries hold crypto', 'treasuries']
     ]},
     { t: 'Naira & P2P', rows: [
-      ['USDT P2P rates', 'Naira prices on Bybit, OKX and Bitget', 'p2p.html'],
-      ['Is my P2P rate fair?', 'Check an agent\'s USDT rate', 'p2p-check.html'],
-      ['Converter', 'Naira to crypto and back', 'converter.html'],
-      ['Profit calculator', 'Work out your gain or loss', 'profit-calculator.html'],
-      ['Price widget for your website', 'Free live prices for your blog', 'widget.html']
+      ['USDT P2P rates', 'Naira prices on Bybit, OKX and Bitget', 'p2p'],
+      ['Is my P2P rate fair?', 'Check an agent\'s USDT rate', 'p2p-check'],
+      ['Converter', 'Naira to crypto and back', 'converter'],
+      ['Profit calculator', 'Work out your gain or loss', 'profit-calculator'],
+      ['Price widget for your website', 'Free live prices for your blog', 'widget']
     ]},
     { t: 'Safety tools', rows: [
-      ['Crypto network checker', 'Avoid sending on the wrong network', 'network-check.html'],
-      ['Coin risk check', 'Warning signs before you buy', 'coin-risk.html'],
-      ['Track any token', 'Not in the list? Paste a link or address', 'track-token.html', 1]
+      ['Crypto network checker', 'Avoid sending on the wrong network', 'network-check'],
+      ['Coin risk check', 'Warning signs before you buy', 'coin-risk'],
+      ['Track any token', 'Not in the list? Paste a link or address', 'track-token', 1]
     ]},
     { t: 'Learn', rows: [
-      ['How to read candlesticks', 'A simple lesson for beginners', 'learn-candlesticks.html'],
-      ['How to avoid crypto scams', 'Stay safe on P2P and online', 'learn-scams.html'],
-      ['What is market cap?', 'Why price alone can fool you', 'learn-market-cap.html'],
-      ['What is a stablecoin?', 'USDT and USDC explained', 'learn-stablecoins.html'],
-      ['Fear & Greed Index', 'How to read the market mood', 'learn-fear-greed.html'],
-      ['Telegram bot', 'Prices and alerts inside Telegram', 'telegram-bot.html'],
-      ['Data sources', 'Where our prices and data come from', 'data-sources.html'],
-      ['About & founder', 'Who built PriceCheck NG and when', 'about.html']
+      ['How to read candlesticks', 'A simple lesson for beginners', 'learn-candlesticks'],
+      ['How to avoid crypto scams', 'Stay safe on P2P and online', 'learn-scams'],
+      ['What is market cap?', 'Why price alone can fool you', 'learn-market-cap'],
+      ['What is a stablecoin?', 'USDT and USDC explained', 'learn-stablecoins'],
+      ['Fear & Greed Index', 'How to read the market mood', 'learn-fear-greed'],
+      ['Telegram bot', 'Prices and alerts inside Telegram', 'telegram-bot'],
+      ['Data sources', 'Where our prices and data come from', 'data-sources'],
+      ['About & founder', 'Who built PriceCheck NG and when', 'about']
     ]},
     { t: 'PCN AI', ic: 1, rows: [
       ['AI Analysis', '', '/ai-agent-chart?s=BTC'],
@@ -128,7 +128,7 @@
   html += '<button type="button" class="m-lo" id="mLo" hidden>Log out</button>';
   html += '<div class="m-pair"><div class="m-cu" id="mLu"><span>Language</span><button type="button" class="m-cb" id="mLb" aria-haspopup="dialog" aria-label="Language"></button></div><div class="m-cu" id="mCu" hidden><span>Currency</span><button type="button" class="m-cb" id="mCb" aria-haspopup="dialog" aria-label="Currency"></button></div></div>';
   html += '<div class="m-th"><span>Theme</span><div class="m-ts" id="mTs" role="group" aria-label="Theme"><button type="button" data-th="light" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg> Light</button><button type="button" data-th="dark" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg> Dark</button><button type="button" data-th="system" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg> System</button></div></div>';
-  html += '<div class="m-ft"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a><a href="about.html">About</a><a href="contact.html">Contact</a></div>';
+  html += '<div class="m-ft"><a href="privacy">Privacy Policy</a><a href="terms">Terms of Service</a><a href="about">About</a><a href="contact">Contact</a></div>';
   html += '<div class="m-so"><a href="https://t.me/pricecheckNG" target="_blank" rel="noopener" aria-label="Telegram channel">'+TG+'<span>Telegram channel</span></a><a href="https://whatsapp.com/channel/0029Vb92PIYEQIasRKfKYR0s" target="_blank" rel="noopener" aria-label="WhatsApp channel">'+WA+'<span>WhatsApp channel</span></a>' +
     '<a href="https://x.com/pricecheck_ng1" target="_blank" rel="noopener" aria-label="X (Twitter)">'+XI+'<span>X (Twitter)</span></a>' +
     '<a href="https://www.instagram.com/pricecheckng.official" target="_blank" rel="noopener" aria-label="Instagram">'+IG+'<span>Instagram</span></a>' +

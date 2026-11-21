@@ -291,11 +291,11 @@
     }
     async function answerSummary(cfg) {
       var rows = await api(cfg, 'market_summary?select=day,headline,body,created_at&order=day.desc&limit=1');
-      if (!rows.length) return 'No summary yet. The first one arrives at 6:00 AM Nigeria time. <a href="pulse.html" style="' + HL + '">Daily summary</a>';
+      if (!rows.length) return 'No summary yet. The first one arrives at 6:00 AM Nigeria time. <a href="pulse" style="' + HL + '">Daily summary</a>';
       var r = rows[0], when = '';
       try { when = new Date(r.created_at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }); } catch (e) {}
       var paras = String(r.body || '').trim().split(/\n\s*\n/).map(function (p) { return '<p style="margin:6px 0">' + escapeHtml(p.trim()) + '</p>'; }).join('');
-      return '<b>' + escapeHtml(r.headline) + '</b>' + paras + note('Written by AI' + (when ? ' on ' + when : '') + ' from market data at that time, so live prices may differ. <a href="pulse.html" style="' + HL + '">Open full summary</a>');
+      return '<b>' + escapeHtml(r.headline) + '</b>' + paras + note('Written by AI' + (when ? ' on ' + when : '') + ' from market data at that time, so live prices may differ. <a href="pulse" style="' + HL + '">Open full summary</a>');
     }
     async function answerFng(cfg) {
       var g = (await api(cfg, 'market_global?select=fng_value,fng_label,fng_prev&id=eq.1'))[0];
@@ -306,7 +306,7 @@
         : v <= 55 ? 'Neutral: the market is balanced, with no strong fear or greed.'
         : v <= 74 ? 'Greed: people are confident and buying more.'
         : 'Extreme greed: people are very excited. Prices can fall fast when the mood turns.';
-      return 'The Fear &amp; Greed index is <b>' + v + ' (' + escapeHtml(g.fng_label) + ')</b>. Yesterday it was ' + p + ', so it ' + (d === 0 ? 'did not change' : (d > 0 ? 'rose ' : 'fell ') + Math.abs(d) + ' points') + '.<p style="margin:6px 0">' + mean + '</p>' + note('<a href="fear-greed.html" style="' + HL + '">Open the Fear &amp; Greed page</a>');
+      return 'The Fear &amp; Greed index is <b>' + v + ' (' + escapeHtml(g.fng_label) + ')</b>. Yesterday it was ' + p + ', so it ' + (d === 0 ? 'did not change' : (d > 0 ? 'rose ' : 'fell ') + Math.abs(d) + ' points') + '.<p style="margin:6px 0">' + mean + '</p>' + note('<a href="fear-greed" style="' + HL + '">Open the Fear &amp; Greed page</a>');
     }
     async function answerAlts(cfg) {
       var coins = await topCoins(cfg);
@@ -318,14 +318,14 @@
       var sorted = alts.map(function (c) { return +c.change_24h_pct; }).sort(function (a, b) { return a - b; });
       var med = sorted[Math.floor(sorted.length / 2)];
       var verdict = share > 55 ? 'Altcoins are ahead of Bitcoin over the last 24 hours.' : share < 45 ? 'Bitcoin is ahead of most altcoins over the last 24 hours.' : 'Altcoins and Bitcoin are about even over the last 24 hours.';
-      return '<b>' + verdict + '</b><p style="margin:6px 0">Bitcoin is ' + pct(btc.change_24h_pct) + '. ' + better + ' of the top ' + alts.length + ' other coins did better than Bitcoin. The middle coin moved ' + pct(med) + '.</p>' + note('Based on 24-hour price changes only. <a href="heatmap.html" style="' + HL + '">See the heatmap</a>');
+      return '<b>' + verdict + '</b><p style="margin:6px 0">Bitcoin is ' + pct(btc.change_24h_pct) + '. ' + better + ' of the top ' + alts.length + ' other coins did better than Bitcoin. The middle coin moved ' + pct(med) + '.</p>' + note('Based on 24-hour price changes only. <a href="heatmap" style="' + HL + '">See the heatmap</a>');
     }
     async function answerBullish(cfg) {
       var coins = await topCoins(cfg);
       var top = coins.slice().sort(function (a, b) { return +b.change_24h_pct - +a.change_24h_pct; }).slice(0, 5);
       if (!top.length) throw 0;
       var li = top.map(function (c) { return '<div style="display:flex;justify-content:space-between;gap:10px;padding:3px 0"><a href="./#coin/' + encodeURIComponent(c.id) + '" style="color:#10201a;text-decoration:none"><b>' + escapeHtml((c.symbol || '').toUpperCase()) + '</b> ' + escapeHtml(c.name || '') + '</a><span style="color:#12a150;font-weight:700">' + pct(c.change_24h_pct) + '</span></div>'; }).join('');
-      return '<b>Biggest 24-hour gainers in the top 100:</b><div style="margin-top:6px">' + li + '</div>' + note('A big rise does not mean it will keep rising. Not financial advice. <a href="movers.html" style="' + HL + '">All movers</a>');
+      return '<b>Biggest 24-hour gainers in the top 100:</b><div style="margin-top:6px">' + li + '</div>' + note('A big rise does not mean it will keep rising. Not financial advice. <a href="movers" style="' + HL + '">All movers</a>');
     }
 
 
@@ -371,14 +371,14 @@
         var k = String(r.title).toLowerCase().replace(/[^a-z0-9]+/g, ' ').slice(0, 40);
         if (!seen[k] && out.length < 5 && /^https?:\/\//i.test(r.url)) { seen[k] = 1; out.push(r); }
       });
-      if (!out.length) return 'No news to show right now. <a href="news.html" style="' + HL + '">Open the news page</a>';
+      if (!out.length) return 'No news to show right now. <a href="news" style="' + HL + '">Open the news page</a>';
       var li = out.map(function (r) {
         var sm = r.summary ? String(r.summary).slice(0, 130).replace(/\s+\S*$/, '') + '…' : '';
         return '<li style="margin:0 0 10px"><a href="' + escapeHtml(r.url) + '" target="_blank" rel="noopener nofollow" style="color:#10201a;font-weight:700;text-decoration:none">' + escapeHtml(r.title) + '</a>' +
           (sm ? '<div style="color:#5b6b64;font-size:13px;margin-top:2px">' + escapeHtml(sm) + '</div>' : '') +
           '<div style="margin-top:4px"><span style="display:inline-block;border:1px solid #e1e9e4;border-radius:8px;padding:1px 8px;font-size:12px">' + escapeHtml(r.source) + '</span> <span style="color:#5b6b64;font-size:12px">' + agoShort(r.published_at) + '</span></div></li>';
       }).join('');
-      var more = coin ? 'news.html?coin=' + encodeURIComponent(coin.id) : topic ? 'news.html?topic=' + topic : 'news.html';
+      var more = coin ? 'news?coin=' + encodeURIComponent(coin.id) : topic ? 'news?topic=' + topic : 'news';
       return '<b>Latest ' + escapeHtml(label) + ' news</b><ul style="margin:8px 0 0;padding-left:18px">' + li + '</ul>' + note('Headlines come from publishers. Tap one to read it on their site. <a href="' + more + '" style="' + HL + '">See all news</a>');
     }
     var NEWS_Q = /(news|headline|happening|what'?s new|hack|exploit|scam|etf|regulat|lawsuit|\bsec\b|\btax)/i;
@@ -857,7 +857,7 @@
         var ai0 = ((fn && AIFIRST[text]) || forceAI) ? await askAI(cfg, text, true, mode) : null;
         html = ai0 ? ai0 : fn ? await fn(cfg, text) : (NEWS_Q.test(text) ? await answerNews(cfg, text) : await askAI(cfg, text, false, mode));
       } catch (err) {
-        html = 'Could not load live data right now. Try again in a moment. <a href="pulse.html" style="' + HL + '">Daily summary</a>';
+        html = 'Could not load live data right now. Try again in a moment. <a href="pulse" style="' + HL + '">Daily summary</a>';
       }
       curLive = null;
       var el = document.getElementById(loadingId);

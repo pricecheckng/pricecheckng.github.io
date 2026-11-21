@@ -210,7 +210,7 @@ async function priceCard(sb, c, lang) {
     (lv ? `<i>${t("live", { ex: EXNAME[lv.ex] || lv.ex })}</i>` : `<i>${t("updated")}</i>`);
   const page = SITE + UTM + "#coin/" + encodeURIComponent(c.id); // opens the live chart inside the app
   return { text, photo: chartUrl(c), ...kb([
-    [{ text: t("chart"), url: page }, { text: t("news"), url: link("news.html") }],
+    [{ text: t("chart"), url: page }, { text: t("news"), url: link("news") }],
     [{ text: t("alert"), url: link("") + "#alerts" }, { text: t("site"), url: link("") }],
   ]) };
 }
@@ -219,7 +219,7 @@ async function p2pCard(sb, lang) {
   const t = (k, v) => T(lang, k, v);
   const { data: rows } = await sb.from("p2p_rates").select("*");
   const { data: fx } = await sb.from("fx_rates").select("per_usd").eq("currency", "NGN").maybeSingle();
-  if (!rows || !rows.length) return { text: t("p2pNone"), ...kb([[{ text: t("p2pOpen"), url: link("p2p.html") }]]) };
+  if (!rows || !rows.length) return { text: t("p2pNone"), ...kb([[{ text: t("p2pOpen"), url: link("p2p") }]]) };
   const names = { bybit: "Bybit", okx: "OKX", bitget: "Bitget", mexc: "MEXC", luno: "Luno" };
   const src = {};
   let latest = 0;
@@ -240,7 +240,7 @@ async function p2pCard(sb, lang) {
     `<b>${t("p2pHead")}</b>  <i>${t("buySell")}</i>\n${lines.join("\n")}\n` +
     (off > 0 ? `${t("official")} ${r0(off)}` : "") +
     (mins !== null ? ` · ${mins < 1 ? t("justNow") : mins < 60 ? t("minAgo", { n: mins }) : t("hAgo", { n: Math.round(mins / 60) })}` : "");
-  return { text, ...kb([[{ text: t("compare"), url: link("p2p.html") }, { text: t("check"), url: link("p2p-check.html") }], [{ text: t("site"), url: link("") }]]) };
+  return { text, ...kb([[{ text: t("compare"), url: link("p2p") }, { text: t("check"), url: link("p2p-check") }], [{ text: t("site"), url: link("") }]]) };
 }
 
 async function topCard(sb, lang) {
@@ -252,19 +252,19 @@ async function topCard(sb, lang) {
   ]);
   const row = (c) => `${esc(String(c.symbol).toUpperCase())}  ${usd(c.price_usd)}  ${pct(c.change_24h_pct)}`;
   const text = `<b>${t("gain")}</b>\n${(up || []).slice(0, 3).map(row).join("\n")}\n<b>${t("lose")}</b>\n${(dn || []).slice(0, 3).map(row).join("\n")}`;
-  return { text, ...kb([[{ text: t("movers"), url: link("movers.html") }, { text: t("site"), url: link("") }]]) };
+  return { text, ...kb([[{ text: t("movers"), url: link("movers") }, { text: t("site"), url: link("") }]]) };
 }
 
 async function fearCard(sb, lang) {
   const t = (k, v) => T(lang, k, v);
   const { data } = await sb.from("market_global").select("fng_value,fng_label,fng_prev").eq("id", 1).maybeSingle();
-  if (!data || data.fng_value == null) return { text: t("fearNone"), ...kb([[{ text: t("fearOpen"), url: link("fear-greed.html") }]]) };
+  if (!data || data.fng_value == null) return { text: t("fearNone"), ...kb([[{ text: t("fearOpen"), url: link("fear-greed") }]]) };
   const v = num(data.fng_value);
   const icon = v < 25 ? "😱" : v < 45 ? "😟" : v < 56 ? "😐" : v < 75 ? "😀" : "🤑";
   const lk = { "extreme fear": "l_xfear", fear: "l_fear", neutral: "l_neutral", greed: "l_greed", "extreme greed": "l_xgreed" }[String(data.fng_label || "").toLowerCase().trim()];
   const label = lang !== "en" && lk ? t(lk) : esc(data.fng_label || "");
   const text = `<b>${t("fearTitle")}</b>\n${icon} <b>${v}</b> / 100 · ${label}` + (data.fng_prev != null ? ` · ${t("yesterday", { n: num(data.fng_prev) })}` : "");
-  return { text, ...kb([[{ text: t("details"), url: link("fear-greed.html") }, { text: t("site"), url: link("") }]]) };
+  return { text, ...kb([[{ text: t("details"), url: link("fear-greed") }, { text: t("site"), url: link("") }]]) };
 }
 
 // ---- plain-text price questions ----
@@ -358,7 +358,7 @@ export async function handle(update, ctx) {
     }
     const coin = await findCoin(sb, term);
     if (!coin) {
-      if (isPrivate || ["price", "p", "rate", "coin", "check"].includes(command)) return void (await say(t("notFound", { t: esc(String(term).slice(0, 30)) }), kb([[{ text: t("track"), url: link("track-token.html") }]])));
+      if (isPrivate || ["price", "p", "rate", "coin", "check"].includes(command)) return void (await say(t("notFound", { t: esc(String(term).slice(0, 30)) }), kb([[{ text: t("track"), url: link("track-token") }]])));
       return;
     }
     const c = await priceCard(sb, coin, lang);

@@ -60,19 +60,19 @@
   function tickItems() {
     var d = data, a = [];
     if (counts.coins) a.push(['Coins', counts.coins.toLocaleString('en-US'), '']);
-    if (counts.ex) a.push(['Exchanges', String(counts.ex), '', 'exchanges.html']);
+    if (counts.ex) a.push(['Exchanges', String(counts.ex), '', 'exchanges']);
     if (d) {
       var ch = Number(d.cap_change_24h);
-      if (Number(d.market_cap) > 0) a.push(['Market Cap', money2(d.market_cap), isFinite(ch) ? '<span class="' + (ch >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (ch >= 0 ? '\u25B2 ' : '\u25BC ') + Math.abs(ch).toFixed(2) + '%</span>' : '', 'market-chart.html']);
-      if (Number(d.volume_24h) > 0) { var vcT = volPrev > 0 ? (Number(d.volume_24h) / volPrev - 1) * 100 : NaN; a.push(['24h Vol', money2(d.volume_24h), isFinite(vcT) && Math.abs(vcT) >= 0.005 ? '<span class="' + (vcT >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (vcT >= 0 ? '\u25B2 ' : '\u25BC ') + Math.abs(vcT).toFixed(2) + '%</span>' : '', 'market-chart.html']); }
+      if (Number(d.market_cap) > 0) a.push(['Market Cap', money2(d.market_cap), isFinite(ch) ? '<span class="' + (ch >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (ch >= 0 ? '\u25B2 ' : '\u25BC ') + Math.abs(ch).toFixed(2) + '%</span>' : '', 'market-chart']);
+      if (Number(d.volume_24h) > 0) { var vcT = volPrev > 0 ? (Number(d.volume_24h) / volPrev - 1) * 100 : NaN; a.push(['24h Vol', money2(d.volume_24h), isFinite(vcT) && Math.abs(vcT) >= 0.005 ? '<span class="' + (vcT >= 0 ? 'mkt-up' : 'mkt-dn') + '">' + (vcT >= 0 ? '\u25B2 ' : '\u25BC ') + Math.abs(vcT).toFixed(2) + '%</span>' : '', 'market-chart']); }
       var bd = Number(d.btc_dom);
       if (isFinite(bd) && bd > 0) {
         var ed = counts.ethCap > 0 && Number(d.market_cap) > 0 ? counts.ethCap / Number(d.market_cap) * 100 : NaN;
-        a.push(['Dominance', 'BTC: ' + bd.toFixed(1) + '%' + (isFinite(ed) && ed > 0 && ed < 60 ? ' ETH: ' + ed.toFixed(1) + '%' : ''), '', 'market-chart.html']);
+        a.push(['Dominance', 'BTC: ' + bd.toFixed(1) + '%' + (isFinite(ed) && ed > 0 && ed < 60 ? ' ETH: ' + ed.toFixed(1) + '%' : ''), '', 'market-chart']);
       }
-      if (d.fng_value != null) a.push(['Fear &amp; Greed', d.fng_value + '/100', '<span>' + String(d.fng_label || '').replace(/</g, '&lt;') + '</span>', 'fear-greed.html']);
+      if (d.fng_value != null) a.push(['Fear &amp; Greed', d.fng_value + '/100', '<span>' + String(d.fng_label || '').replace(/</g, '&lt;') + '</span>', 'fear-greed']);
     }
-    if (counts.gas > 0) a.push(['\u26FD ETH Gas', String(parseFloat(counts.gas >= 10 ? counts.gas.toFixed(1) : counts.gas >= 1 ? counts.gas.toFixed(2) : counts.gas.toFixed(3))) + ' Gwei', '', 'gas.html']);
+    if (counts.gas > 0) a.push(['\u26FD ETH Gas', String(parseFloat(counts.gas >= 10 ? counts.gas.toFixed(1) : counts.gas >= 1 ? counts.gas.toFixed(2) : counts.gas.toFixed(3))) + ' Gwei', '', 'gas']);
     return a;
   }
   function tickHtml() {
@@ -109,7 +109,7 @@
       card('vol', '24h volume', money(d.volume_24h), volTxt) +
       card('dom', 'BTC dom.', isFinite(dom) ? dom.toFixed(1) + '%' : '-', domTxt);
     if (d.fng_value != null) {
-      h += '<a class="mkt-c" href="fear-greed.html" aria-label="Fear and Greed index ' + d.fng_value + '"><small>Fear &amp; Greed</small><span class="mkt-gw">' + gauge(Number(d.fng_value)) + '<b>' + d.fng_value + '</b></span></a>';
+      h += '<a class="mkt-c" href="fear-greed" aria-label="Fear and Greed index ' + d.fng_value + '"><small>Fear &amp; Greed</small><span class="mkt-gw">' + gauge(Number(d.fng_value)) + '<b>' + d.fng_value + '</b></span></a>';
     } else {
       h += card('fng', 'Fear & Greed', '-');
     }

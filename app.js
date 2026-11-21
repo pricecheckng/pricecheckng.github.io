@@ -237,8 +237,8 @@ const emptyBox = (title, text) => `<div class="empty"><b>${esc(title)}</b>${esc(
 const footer = () =>
   `<footer class="foot">
   <div class="fcols">
-    <div class="fcol"><div><h4>Learn</h4><a href="learn-candlesticks.html">Candlesticks</a><a href="learn-scams.html">Avoid scams</a><a href="learn-market-cap.html">Market cap</a><a href="learn-stablecoins.html">Stablecoins</a><a href="learn-fear-greed.html">Fear &amp; Greed</a></div><div><h4>Company</h4><a href="about.html">About us</a><a href="contact.html">Contact</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Service</a></div><div><h4>Price data</h4><a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a><a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Exchange rate</a><a href="https://www.livecoinwatch.com" target="_blank" rel="noopener">Live coin watch</a></div></div>
-    <div class="fcol"><div><h4>Tools</h4><a href="compare.html">Compare coins</a><a href="telegram-bot.html">Telegram bot</a><a href="widget.html">Price widget</a><a href="api.html">API for developers</a></div><div><h4>Support</h4><a href="https://t.me/pricecheckng_support" target="_blank" rel="noopener">Telegram support</a><a href="mailto:support@pricecheckng.com.ng">Email support</a><a href="faq.html">FAQ</a><a href="glossary.html">Glossary</a></div><div><h4>Socials</h4><a href="https://t.me/pricecheckNG" target="_blank" rel="noopener">Telegram</a><a href="https://whatsapp.com/channel/0029Vb92PIYEQIasRKfKYR0s" target="_blank" rel="noopener">WhatsApp</a><a href="https://x.com/pricecheck_ng1" target="_blank" rel="noopener">X (Twitter)</a><a href="https://www.instagram.com/pricecheckng.official" target="_blank" rel="noopener">Instagram</a><a href="https://www.facebook.com/pricecheckng.official" target="_blank" rel="noopener">Facebook</a></div></div>
+    <div class="fcol"><div><h4>Learn</h4><a href="learn-candlesticks">Candlesticks</a><a href="learn-scams">Avoid scams</a><a href="learn-market-cap">Market cap</a><a href="learn-stablecoins">Stablecoins</a><a href="learn-fear-greed">Fear &amp; Greed</a></div><div><h4>Company</h4><a href="about">About us</a><a href="contact">Contact</a><a href="privacy">Privacy Policy</a><a href="terms">Terms of Service</a></div><div><h4>Price data</h4><a href="https://www.coingecko.com/" target="_blank" rel="noopener">CoinGecko</a><a href="https://www.exchangerate-api.com" target="_blank" rel="noopener">Exchange rate</a><a href="https://www.livecoinwatch.com" target="_blank" rel="noopener">Live coin watch</a></div></div>
+    <div class="fcol"><div><h4>Tools</h4><a href="compare">Compare coins</a><a href="telegram-bot">Telegram bot</a><a href="widget">Price widget</a><a href="api">API for developers</a></div><div><h4>Support</h4><a href="https://t.me/pricecheckng_support" target="_blank" rel="noopener">Telegram support</a><a href="mailto:support@pricecheckng.com.ng">Email support</a><a href="faq">FAQ</a><a href="glossary">Glossary</a></div><div><h4>Socials</h4><a href="https://t.me/pricecheckNG" target="_blank" rel="noopener">Telegram</a><a href="https://whatsapp.com/channel/0029Vb92PIYEQIasRKfKYR0s" target="_blank" rel="noopener">WhatsApp</a><a href="https://x.com/pricecheck_ng1" target="_blank" rel="noopener">X (Twitter)</a><a href="https://www.instagram.com/pricecheckng.official" target="_blank" rel="noopener">Instagram</a><a href="https://www.facebook.com/pricecheckng.official" target="_blank" rel="noopener">Facebook</a></div></div>
   </div>
   <p class="fnote">© ${new Date().getFullYear()} PriceCheck NG. All rights reserved.</p>
   </footer>`;
@@ -284,7 +284,7 @@ async function loadPopular() {
     document.getElementById("popBox").innerHTML =
       '<div style="font-size:.85rem;font-weight:700;opacity:.65;margin:12px 0 6px">Popular coins</div><div style="display:flex;gap:8px;overflow-x:auto;white-space:nowrap;margin:0 -16px 12px;padding:0 16px 4px;scrollbar-width:none;-webkit-overflow-scrolling:touch">' +
       list
-        .map((c) => `<a href="${esc(c.id)}-price.html" style="flex:none;padding:7px 14px;border-radius:999px;border:1px solid rgba(127,127,127,.3);background:rgba(127,127,127,.06);color:inherit;text-decoration:none;font-size:.88rem;font-weight:600">${esc(c.name)}</a>`)
+        .map((c) => `<a href="${esc(c.id)}-price" style="flex:none;padding:7px 14px;border-radius:999px;border:1px solid rgba(127,127,127,.3);background:rgba(127,127,127,.06);color:inherit;text-decoration:none;font-size:.88rem;font-weight:600">${esc(c.name)}</a>`)
         .join("") +
       "</div>";
   } catch (_) {}
@@ -790,29 +790,29 @@ function renderPager() {
 
 /* ---------- search also finds our tools and pages ---------- */
 const TOOLS = [
-  ["📉", "Top gainers and losers", "Biggest price moves in the last 24 hours", "movers.html", "top loser losers gainer gainers mover movers pump dump biggest drop rise falling rising winners worst best performers"],
-  ["😨", "Fear & Greed index", "Is the market scared or greedy today?", "fear-greed.html", "fear greed green greedy index sentiment mood scared fear and greed"],
-  ["💵", "USDT to Naira P2P rate", "Dollar rate in Naira from Bybit, OKX, Bitget and MEXC", "p2p.html", "p2p naira dollar rate usdt black market parallel buy sell naira exchange rate"],
-  ["📊", "Market chart", "Total market cap, Bitcoin dominance and Fear & Greed over time", "market-chart.html", "market cap chart total dominance bitcoin dominance history graph"],
-  ["🗺️", "Heatmap", "See which coins are up and down at a glance", "heatmap.html", "heatmap heat map colours overview"],
-  ["📰", "Crypto news", "Latest crypto headlines", "news.html", "news headlines latest articles updates"],
-  ["📝", "Market summary", "Today's market in plain words", "pulse.html", "market summary today pulse overview report daily brief"],
-  ["🔁", "Crypto converter", "Convert coins to Naira, dollars and more", "converter.html", "converter convert calculator exchange naira dollar"],
-  ["⚖️", "Compare coins", "Put up to four coins side by side", "compare.html", "compare comparison versus vs side by side"],
-  ["🧮", "Profit calculator", "Work out your profit or loss on a trade", "profit-calculator.html", "profit loss calculator pnl gain trade roi"],
-  ["⛽", "Ethereum gas fees", "What it costs to send Ether or USDT right now", "gas.html", "gas fees ethereum gwei transaction cost eth fee"],
-  ["₿", "Bitcoin network", "Bitcoin fees, mempool and blocks", "network.html", "bitcoin network fees mempool blocks sat difficulty halving transaction fee confirm"],
-  ["🪙", "Stablecoin health", "Are stablecoins holding their $1 price?", "stablecoins.html", "stablecoin stablecoins usdt usdc depeg peg dollar stable health"],
-  ["🏦", "Exchanges compared", "Prices and volume across exchanges", "exchanges.html", "exchanges exchange binance bybit okx coinbase kucoin compare volume where to buy cheapest"],
-  ["🏢", "Crypto treasuries", "Companies holding Bitcoin and other coins", "treasuries.html", "treasuries treasury companies holding bitcoin strategy microstrategy mstr metaplanet"],
-  ["🛡️", "Coin risk check", "Check a coin before you buy", "coin-risk.html", "risk check scam safe rug pull legit safety"],
-  ["🔎", "Track any token", "Paste a contract address to track a token", "track-token.html", "track token contract address dexscreener pump meme shib pepe custom"],
-  ["🎯", "Daily price contest", "Predict the price and win", "predict.html", "contest predict prediction win game prize daily"],
-  ["🕯️", "Learn: candlesticks", "How to read a price chart", "learn-candlesticks.html", "learn candlestick candlesticks chart read guide beginner"],
-  ["📚", "Learn: market cap", "What market cap really means", "learn-market-cap.html", "learn market cap capitalisation guide beginner explain"],
-  ["⚠️", "Learn: avoid scams", "How to spot crypto scams", "learn-scams.html", "learn scam scams avoid fraud safety ponzi guide"],
-  ["💡", "Learn: stablecoins", "What a stablecoin is", "learn-stablecoins.html", "learn stablecoin stablecoins usdt usdc guide beginner explain"],
-  ["🔌", "Free price API", "Crypto price API for developers", "api.html", "api developer developers free key data json"],
+  ["📉", "Top gainers and losers", "Biggest price moves in the last 24 hours", "movers", "top loser losers gainer gainers mover movers pump dump biggest drop rise falling rising winners worst best performers"],
+  ["😨", "Fear & Greed index", "Is the market scared or greedy today?", "fear-greed", "fear greed green greedy index sentiment mood scared fear and greed"],
+  ["💵", "USDT to Naira P2P rate", "Dollar rate in Naira from Bybit, OKX, Bitget and MEXC", "p2p", "p2p naira dollar rate usdt black market parallel buy sell naira exchange rate"],
+  ["📊", "Market chart", "Total market cap, Bitcoin dominance and Fear & Greed over time", "market-chart", "market cap chart total dominance bitcoin dominance history graph"],
+  ["🗺️", "Heatmap", "See which coins are up and down at a glance", "heatmap", "heatmap heat map colours overview"],
+  ["📰", "Crypto news", "Latest crypto headlines", "news", "news headlines latest articles updates"],
+  ["📝", "Market summary", "Today's market in plain words", "pulse", "market summary today pulse overview report daily brief"],
+  ["🔁", "Crypto converter", "Convert coins to Naira, dollars and more", "converter", "converter convert calculator exchange naira dollar"],
+  ["⚖️", "Compare coins", "Put up to four coins side by side", "compare", "compare comparison versus vs side by side"],
+  ["🧮", "Profit calculator", "Work out your profit or loss on a trade", "profit-calculator", "profit loss calculator pnl gain trade roi"],
+  ["⛽", "Ethereum gas fees", "What it costs to send Ether or USDT right now", "gas", "gas fees ethereum gwei transaction cost eth fee"],
+  ["₿", "Bitcoin network", "Bitcoin fees, mempool and blocks", "network", "bitcoin network fees mempool blocks sat difficulty halving transaction fee confirm"],
+  ["🪙", "Stablecoin health", "Are stablecoins holding their $1 price?", "stablecoins", "stablecoin stablecoins usdt usdc depeg peg dollar stable health"],
+  ["🏦", "Exchanges compared", "Prices and volume across exchanges", "exchanges", "exchanges exchange binance bybit okx coinbase kucoin compare volume where to buy cheapest"],
+  ["🏢", "Crypto treasuries", "Companies holding Bitcoin and other coins", "treasuries", "treasuries treasury companies holding bitcoin strategy microstrategy mstr metaplanet"],
+  ["🛡️", "Coin risk check", "Check a coin before you buy", "coin-risk", "risk check scam safe rug pull legit safety"],
+  ["🔎", "Track any token", "Paste a contract address to track a token", "track-token", "track token contract address dexscreener pump meme shib pepe custom"],
+  ["🎯", "Daily price contest", "Predict the price and win", "predict", "contest predict prediction win game prize daily"],
+  ["🕯️", "Learn: candlesticks", "How to read a price chart", "learn-candlesticks", "learn candlestick candlesticks chart read guide beginner"],
+  ["📚", "Learn: market cap", "What market cap really means", "learn-market-cap", "learn market cap capitalisation guide beginner explain"],
+  ["⚠️", "Learn: avoid scams", "How to spot crypto scams", "learn-scams", "learn scam scams avoid fraud safety ponzi guide"],
+  ["💡", "Learn: stablecoins", "What a stablecoin is", "learn-stablecoins", "learn stablecoin stablecoins usdt usdc guide beginner explain"],
+  ["🔌", "Free price API", "Crypto price API for developers", "api", "api developer developers free key data json"],
 ];
 function toolsHtml(term) {
   const t = String(term || "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").trim();
@@ -1029,7 +1029,7 @@ async function loadCoins(reset, pg) {
   state.page += 1;
   list.innerHTML = state.coins.length
     ? rowsHtml(state.coins)
-    : emptyBox("No coins found", term ? `Nothing matches “${term}”. Try another name or symbol.` : state.net ? "No coins found on this network with your filters. Pick All Networks to see everything." : "Prices are still loading. Check back in a few minutes.") + (term ? `<div style="text-align:center;margin:14px 16px 4px"><p class="muted" style="margin:0 0 10px">Can't find it? Paste its contract address or link and we'll look it up.</p><a href="track-token.html" style="display:inline-block;background:#16a34a;color:#fff;font-weight:700;text-decoration:none;padding:13px 22px;border-radius:12px;font-size:1rem">Track any token &rarr;</a></div>` : "");
+    : emptyBox("No coins found", term ? `Nothing matches “${term}”. Try another name or symbol.` : state.net ? "No coins found on this network with your filters. Pick All Networks to see everything." : "Prices are still loading. Check back in a few minutes.") + (term ? `<div style="text-align:center;margin:14px 16px 4px"><p class="muted" style="margin:0 0 10px">Can't find it? Paste its contract address or link and we'll look it up.</p><a href="track-token" style="display:inline-block;background:#16a34a;color:#fff;font-weight:700;text-decoration:none;padding:13px 22px;border-radius:12px;font-size:1rem">Track any token &rarr;</a></div>` : "");
   $("#moreBtn").hidden = true;
   renderPager();
   if (state.restoreY != null) {
@@ -2327,7 +2327,7 @@ async function loadCoinNews(c) {
     if (!$("#coinNews") || !data || !data.length) return;
     const safe = (u) => (/^https?:\/\//i.test(u || "") ? u : "#");
     box.innerHTML = `<div class="cp-card" style="user-select:auto;-webkit-user-select:auto">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><h3 style="margin:0">${esc(c.name)} news</h3><a href="news.html?coin=${encodeURIComponent(c.id)}" style="font-size:.85rem;font-weight:600;color:#15803d;text-decoration:none">View all →</a></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px"><h3 style="margin:0">${esc(c.name)} news</h3><a href="news?coin=${encodeURIComponent(c.id)}" style="font-size:.85rem;font-weight:600;color:#15803d;text-decoration:none">View all →</a></div>
       ${data.map((n) => `<a href="${esc(safe(n.url))}" target="_blank" rel="noopener nofollow" style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid rgba(128,128,128,.2);color:inherit;text-decoration:none">
         <div style="flex:1;min-width:0"><div style="font-weight:600;line-height:1.35;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${esc(n.title)}</div>
         <div style="font-size:.8rem;opacity:.65;margin-top:4px"><b>${esc(n.source)}</b> · ${ago(n.published_at)}</div></div>
@@ -4220,7 +4220,7 @@ try {
             ? `<div class="nt-list" id="ntList"><p class="muted">Loading…</p></div><a class="btn ghost" href="#alerts" data-close>Go to my alerts</a>`
             : `<p class="muted" style="margin:6px 0 10px">Sign in to see your price alert notifications.</p><button class="btn ghost" type="button" id="ntSignin">Sign in</button>`) +
           `</div>` +
-          `<div class="nt-panel" id="ntPanelW"${startNews ? "" : " hidden"}><div class="nt-list" id="ntNews"><p class="muted">Loading…</p></div><a class="btn ghost" href="news.html">See all news</a></div>`
+          `<div class="nt-panel" id="ntPanelW"${startNews ? "" : " hidden"}><div class="nt-list" id="ntNews"><p class="muted">Loading…</p></div><a class="btn ghost" href="news">See all news</a></div>`
       );
       const tabs = $("#ntTabs");
       if (tabs)

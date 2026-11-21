@@ -131,6 +131,9 @@ const XT = new Map();
 const CAT_FIX = { cex: "CEX", iot: "IoT", dns: "DNS", ecommerce: "E-commerce", ai: "AI", nfts: "NFTs", nft: "NFT", defi: "DeFi", dex: "DEX", rwa: "RWA", depin: "DePIN", dao: "DAO", dapp: "dApp", dapps: "dApps", btc: "Bitcoin", eth: "Ethereum", bnb: "BNB", sol: "Solana", usd: "USD", l1: "Layer 1", l2: "Layer 2", x402: "x402" };
 const catTitle = (k) => k === "pre_ipo_stocks" ? "Pre-IPO stocks" : String(k).split("_").map((w) => CAT_FIX[w] || w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
 const catFile = (k) => "category-" + String(k).replace(/_/g, "-") + ".html";
+// clean address without .html (GitHub Pages serves foo.html at /foo)
+const clean = (f) => String(f).replace(/\.html$/, "");
+const catHref = (k) => clean(catFile(k));
 const CATS = new Map();
 {
   for (const c of top) {
@@ -204,8 +207,8 @@ function snapshot(c, i) {
   }
   t += "</p>";
   const bits = [];
-  if (prev && Number(prev.market_cap_usd) > 0 && cap > 0) bits.push(`The next coin up by market cap is <a href="${prev.id}-price.html">${esc(prev.name)}</a>, which is ${(Number(prev.market_cap_usd) / cap).toFixed(2)} times as large.`);
-  if (next && Number(next.market_cap_usd) > 0 && cap > 0) bits.push(`Just below it is <a href="${next.id}-price.html">${esc(next.name)}</a>, at ${(100 * Number(next.market_cap_usd) / cap).toFixed(0)}% of its size.`);
+  if (prev && Number(prev.market_cap_usd) > 0 && cap > 0) bits.push(`The next coin up by market cap is <a href="${prev.id}-price">${esc(prev.name)}</a>, which is ${(Number(prev.market_cap_usd) / cap).toFixed(2)} times as large.`);
+  if (next && Number(next.market_cap_usd) > 0 && cap > 0) bits.push(`Just below it is <a href="${next.id}-price">${esc(next.name)}</a>, at ${(100 * Number(next.market_cap_usd) / cap).toFixed(0)}% of its size.`);
   if (btc && btc.id !== c.id && Number(btc.market_cap_usd) > 0 && cap > 0) { const r = (100 * cap) / Number(btc.market_cap_usd); bits.push(`Compared with Bitcoin, its market cap is ${r < 0.01 ? "under 0.01" : r.toFixed(r < 1 ? 2 : 1)}% of Bitcoin's.`); }
   if (bits.length) t += "<p>" + bits.join(" ") + "</p>";
   const faq = [];
@@ -241,7 +244,7 @@ function keyFacts(c) {
     out += ` Its all-time high price is ${fUsd(ath)}${below != null && below < -0.5 ? ", so today's price is " + Math.abs(below).toFixed(1) + "% below the peak" : below != null && below >= -0.5 ? ", and today's price is at or very close to that peak" : ""}.`;
   }
   const cats = Array.isArray(x.categories) ? x.categories.filter((v) => typeof v === "string" && v).slice(0, 6) : [];
-  if (cats.length) out += ` It is grouped under: ${cats.map((v) => (CATS.has(v) ? `<a href="${catFile(v)}">${esc(catTitle(v))}</a>` : esc(catTitle(v)))).join(", ")}.`;
+  if (cats.length) out += ` It is grouped under: ${cats.map((v) => (CATS.has(v) ? `<a href="${catHref(v)}">${esc(catTitle(v))}</a>` : esc(catTitle(v)))).join(", ")}.`;
   const LN = { website: "Website", whitepaper: "Whitepaper", reddit: "Reddit", twitter: "X (Twitter)", telegram: "Telegram", discord: "Discord", medium: "Medium", youtube: "YouTube", linkedin: "LinkedIn" };
   const lk = x.links && typeof x.links === "object" ? x.links : {};
   const links = Object.keys(LN).filter((k) => typeof lk[k] === "string" && /^https:\/\/[^\s"<>]+$/.test(lk[k])).map((k) => `<a href="${esc(lk[k])}" target="_blank" rel="noopener nofollow">${LN[k]}</a>`);
@@ -261,7 +264,7 @@ function badge(c, sym, name) {
 function page(c, i) {
   const sym = c.symbol.toUpperCase();
   const name = c.name;
-  const url = SITE + "/" + c.id + "-price.html";
+  const url = SITE + "/" + c.id + "-price";
   const title = `${name} (${sym}) Price in Naira, USD, GBP, EUR and More | PriceCheck NG`;
   const desc = `Live ${name} (${sym}) price in NGN, USD, GBP, EUR, GHS, ZAR, KES and more, with free price alerts on PriceCheck NG.`;
   const rk = rankCol && Number.isFinite(Number(c[rankCol])) ? Math.round(Number(c[rankCol])) : 0;
@@ -272,7 +275,7 @@ function page(c, i) {
   for (let k = Math.max(0, i - 5); k <= Math.min(top.length - 1, i + 5); k++) if (k !== i) near.push(top[k]);
   const seen = new Set([c.id, ...near.map((o) => o.id)]);
   const big6 = top.filter((o) => !seen.has(o.id)).slice(0, 6);
-  const others = near.concat(big6).map((o) => `<a href="${o.id}-price.html">${esc(o.name)} price</a>`).join("");
+  const others = near.concat(big6).map((o) => `<a href="${o.id}-price">${esc(o.name)} price</a>`).join("");
   const faq = [
     [`What is the ${name} (${sym}) price in naira today?`, `The live ${name} price in Nigerian naira is shown at the top of this page and in the currency table. It is converted from the US dollar price at market exchange rates and updates through the day.`],
     [`Where does PriceCheck NG get its ${sym} prices?`, `Prices come from public market data providers and are refreshed regularly. Prices are for information only, and the price on a particular exchange can be slightly different.`],
@@ -337,12 +340,12 @@ ${keyFacts(c)}
 <h2>About ${esc(name)} prices on PriceCheck NG</h2>
 <p>PriceCheck NG shows the live ${esc(name)} (${esc(sym)}) price in US dollars and in your choice of Nigerian naira (NGN), British pounds (GBP), euros (EUR), Ghanaian cedis (GHS), South African rand (ZAR), Kenyan shillings (KES), and more. You can set an alert for when ${esc(sym)} reaches a price or moves by a percent, and get notified by push notification or Telegram. It is free to use.</p>
 ${faqHtml}
-<section id="news" hidden><div class="nhead"><h2>${esc(name)} news</h2><a href="news.html?coin=${c.id}">View all →</a></div><div id="newsList"></div><p class="note">Headlines from publishers' public feeds. Each story opens on the publisher's own site.</p></section>
+<section id="news" hidden><div class="nhead"><h2>${esc(name)} news</h2><a href="news?coin=${c.id}">View all →</a></div><div id="newsList"></div><p class="note">Headlines from publishers' public feeds. Each story opens on the publisher's own site.</p></section>
 <h2>Other coins</h2>
 <div class="links">${others}<a href="./">All coins</a></div>
 <p class="note">Prices come from third-party sources and may be delayed or differ from the price on an exchange. Currency conversions use exchange rates and may differ from the rate you would actually get. This is information only, not financial advice.</p>
 </main>
-<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="api.html">API</a> · <a href="data-sources.html">Data sources</a> · <a href="compare.html">Compare coins</a> · <a href="treasuries.html">Treasuries</a> · <a href="pulse.html">Daily market summary</a> · <a href="categories.html">Categories</a> · <a href="glossary.html">Glossary</a> · <a href="faq.html">FAQ</a> · <a href="methodology.html">Methodology</a> · <a href="network.html">Bitcoin network</a> · <a href="gas.html">Ethereum gas</a> · <a href="stablecoins.html">Stablecoins</a> · <a href="exchanges.html">Exchanges</a> · <a href="contact.html">Contact</a><br>© <span class="yr">${new Date().getUTCFullYear()}</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a><br>Some supply data: <a href="https://www.livecoinwatch.com" target="_blank" rel="noopener">Live Coin Watch</a></footer>
+<footer><a href="privacy">Privacy Policy</a> · <a href="terms">Terms of Service</a> · <a href="api">API</a> · <a href="data-sources">Data sources</a> · <a href="compare">Compare coins</a> · <a href="treasuries">Treasuries</a> · <a href="pulse">Daily market summary</a> · <a href="categories">Categories</a> · <a href="glossary">Glossary</a> · <a href="faq">FAQ</a> · <a href="methodology">Methodology</a> · <a href="network">Bitcoin network</a> · <a href="gas">Ethereum gas</a> · <a href="stablecoins">Stablecoins</a> · <a href="exchanges">Exchanges</a> · <a href="contact">Contact</a><br>© <span class="yr">${new Date().getUTCFullYear()}</span> PriceCheck NG. All rights reserved. · <a href="about">About</a><br>Some supply data: <a href="https://www.livecoinwatch.com" target="_blank" rel="noopener">Live Coin Watch</a></footer>
 <script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script>
 <script type="module">
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
@@ -436,13 +439,13 @@ if (top.length >= 300) {
     if (!/^[a-z0-9-]+-price\.html$/.test(f) || keepNames.has(f)) continue;
     let body = "";
     try { body = read(f); } catch (e) { continue; }
-    if (body.includes('<link rel="canonical" href="' + SITE + "/" + f + '">') && body.includes("PriceCheck NG")) { fs.unlinkSync(f); removed++; }
+    if ((body.includes('<link rel="canonical" href="' + SITE + "/" + f + '">') || body.includes('<link rel="canonical" href="' + SITE + "/" + clean(f) + '">')) && body.includes("PriceCheck NG")) { fs.unlinkSync(f); removed++; }
   }
   console.log("Removed " + removed + " old coin pages that no longer qualify");
 }
 
 
-// ---- Exchange pages: one page per exchange, plus an index (exchanges.html). Needs public.exchange_list() and public.exchange_markets(). ----
+// ---- Exchange pages: one page per exchange, plus an index (exchanges). Needs public.exchange_list() and public.exchange_markets(). ----
 const EX_ORDER2 = ["bitflyer", "bitbank", "btcbox", "coincheck", "btcmarkets", "independentreserve", "coinjar", "foxbit", "paribu", "buda", "deribit"];
 const EX_ORDER = ["binance", "bybit", "okx", "kucoin", "gate", "mexc", "bitget", "htx", "cryptocom", "lbank", "whitebit", "poloniex", "digifinex", "xt", "kraken", "bitstamp", "bitfinex", "bitvavo", "valr", "btcturk", "coinbase", "bingx", "phemex", "bitmart", "coinex", "bit2me", "pionex", "bigone", "coindcx", "hashkey", "wazirx", "bitopro", "bitso", "luno", "upbit", "bithumb", "coinone", "korbit", "bitkub"];
 const exName = (k) => EX_NAMES[k] || (k.charAt(0).toUpperCase() + k.slice(1));
@@ -473,7 +476,7 @@ function exHtml(rows, name, key, meta, when, links, local) {
   if (local) t += `${e(name)} trades in ${e(local)}, so the dollar prices here are converted and include local market differences. `;
   t += `</p>`;
   const lk = new Set(links || []);
-  const tr = list.slice(0, 40).map((r, i) => `<tr><td>${i + 1}. ${lk.has(r.coin_id) ? `<a href="${e(r.coin_id)}-price.html">${e(r.symbol)}</a>` : e(r.symbol)} <small>${e(r.name)}</small></td><td>${px(r.price_usd)}</td><td>${big(r.volume_usd)}</td><td>${pct(r.diff_pct)}</td></tr>`).join("");
+  const tr = list.slice(0, 40).map((r, i) => `<tr><td>${i + 1}. ${lk.has(r.coin_id) ? `<a href="${e(r.coin_id)}-price">${e(r.symbol)}</a>` : e(r.symbol)} <small>${e(r.name)}</small></td><td>${px(r.price_usd)}</td><td>${big(r.volume_usd)}</td><td>${pct(r.diff_pct)}</td></tr>`).join("");
   t += `<table class="mk"><thead><tr><th>Coin</th><th>Price</th><th>24h volume</th><th>vs market</th></tr></thead><tbody>${tr}</tbody></table>`;
   t += `<p class="note">${d ? "Snapshot from " + d + ". " : ""}Volume counts only the coins we track on this exchange (at least $50 thousand a day each), so it is smaller than the headline figure other sites publish. “vs market” is how far this exchange's price is from the middle price across all exchanges we track. Prices are collected from the exchange directly. PriceCheck NG does not run, own or recommend any exchange. Before you deposit money, check that the exchange is allowed to serve customers in your country. Not financial advice.</p>`;
   return t;
@@ -522,7 +525,7 @@ ${exCss}
 <main>
 ${body}
 </main>
-<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="api.html">API</a> · <a href="data-sources.html">Data sources</a> · <a href="compare.html">Compare coins</a> · <a href="treasuries.html">Treasuries</a> · <a href="pulse.html">Daily market summary</a> · <a href="categories.html">Categories</a> · <a href="glossary.html">Glossary</a> · <a href="faq.html">FAQ</a> · <a href="methodology.html">Methodology</a> · <a href="network.html">Bitcoin network</a> · <a href="gas.html">Ethereum gas</a> · <a href="stablecoins.html">Stablecoins</a> · <a href="exchanges.html">Exchanges</a> · <a href="contact.html">Contact</a><br>© <span class="yr">${new Date().getUTCFullYear()}</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></footer>
+<footer><a href="privacy">Privacy Policy</a> · <a href="terms">Terms of Service</a> · <a href="api">API</a> · <a href="data-sources">Data sources</a> · <a href="compare">Compare coins</a> · <a href="treasuries">Treasuries</a> · <a href="pulse">Daily market summary</a> · <a href="categories">Categories</a> · <a href="glossary">Glossary</a> · <a href="faq">FAQ</a> · <a href="methodology">Methodology</a> · <a href="network">Bitcoin network</a> · <a href="gas">Ethereum gas</a> · <a href="stablecoins">Stablecoins</a> · <a href="exchanges">Exchanges</a> · <a href="contact">Contact</a><br>© <span class="yr">${new Date().getUTCFullYear()}</span> PriceCheck NG. All rights reserved. · <a href="about">About</a></footer>
 <script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script>
 ${extraJs || ""}
 </body>
@@ -537,13 +540,13 @@ ${extraJs || ""}
     const k = EX_ORDER.indexOf(x.exchange);
     const k2 = EX_ORDER2.indexOf(x.exchange);
     const logoHtml = k < 0 && k2 >= 0 ? `<span class="exb" style="background:url(exchanges2.png) no-repeat;background-size:264px 88px;background-position:-${(k2 % 6) * 44}px -${Math.floor(k2 / 6) * 44}px"></span>` : k < 0 ? `<span class="exb" style="display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--g)">${esc(name.charAt(0))}</span>` : `<span class="exb" style="background:url(exchanges.png) no-repeat;background-size:264px 308px;background-position:-${(k % 6) * 44}px -${Math.floor(k / 6) * 44}px"></span>`;
-    const others = EXLIST.filter((o) => o.exchange !== x.exchange).slice(0, 12).map((o) => `<a href="exchange-${o.exchange}.html">${esc(exName(o.exchange))}</a>`).join("");
+    const others = EXLIST.filter((o) => o.exchange !== x.exchange).slice(0, 12).map((o) => `<a href="exchange-${o.exchange}">${esc(exName(o.exchange))}</a>`).join("");
     const file = `exchange-${x.exchange}.html`;
     const body = `<div class="coinrow">${logoHtml}<div><h1>${esc(name)}: coins, prices and trading volume</h1></div></div>
 <p class="sub">Live prices and 24 hour trading volume for coins on ${esc(name)}, collected by PriceCheck NG.</p>
 <section id="ex">${body0}</section>
 <h2>Compare with other exchanges</h2>
-<div class="links">${others}<a href="exchanges.html">All exchanges</a></div>
+<div class="links">${others}<a href="exchanges">All exchanges</a></div>
 <p class="note">Prices come from the exchange and may be delayed. This is information only, not financial advice.</p>`;
     const js = `<script type="module">
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
@@ -562,17 +565,17 @@ Promise.all([rpc("exchange_markets", { p_ex: KEY }), rpc("exchange_list")]).then
   if (h) document.getElementById("ex").innerHTML = h;
 }).catch(() => {});
 </script>`;
-    fs.writeFileSync(file, exShell(`${name} exchange: top coins, prices and trading volume | PriceCheck NG`, `Live prices and 24 hour trading volume for the most traded coins on ${name}, compared with the market price. Collected by PriceCheck NG.`, file, body, js));
+    fs.writeFileSync(file, exShell(`${name} exchange: top coins, prices and trading volume | PriceCheck NG`, `Live prices and 24 hour trading volume for the most traded coins on ${name}, compared with the market price. Collected by PriceCheck NG.`, clean(file), body, js));
     exPages.push(file);
   }
   // Index page
   if (exPages.length) {
-    const items = EXLIST.filter((x) => exPages.includes(`exchange-${x.exchange}.html`)).map((x, i) => `<a href="exchange-${x.exchange}.html"><span><b>${i + 1}. ${esc(exName(x.exchange))}</b><br><small>${x.coins} coins tracked · ${shr(100 * Number(x.volume_usd) / exTotal)}% of volume</small></span><span style="text-align:right"><b>${Number(x.volume_usd) >= 1e9 ? "$" + (Number(x.volume_usd) / 1e9).toFixed(2) + " B" : "$" + (Number(x.volume_usd) / 1e6).toFixed(0) + " M"}</b><br><small>24h volume</small></span></a>`).join("");
+    const items = EXLIST.filter((x) => exPages.includes(`exchange-${x.exchange}.html`)).map((x, i) => `<a href="exchange-${x.exchange}"><span><b>${i + 1}. ${esc(exName(x.exchange))}</b><br><small>${x.coins} coins tracked · ${shr(100 * Number(x.volume_usd) / exTotal)}% of volume</small></span><span style="text-align:right"><b>${Number(x.volume_usd) >= 1e9 ? "$" + (Number(x.volume_usd) / 1e9).toFixed(2) + " B" : "$" + (Number(x.volume_usd) / 1e6).toFixed(0) + " M"}</b><br><small>24h volume</small></span></a>`).join("");
     const body = `<h1>Crypto exchanges compared</h1>
 <p class="sub">${exPages.length} exchanges that PriceCheck NG tracks directly, ranked by 24 hour trading volume across the coins we follow. Exchanges do not have a market cap like coins do, so trading volume and number of coins are the best way to compare their size. Open one to see its coins, prices and how they compare with the market.</p>
 <div class="box exl">${items}</div>
 <p class="note">Snapshot from ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}. Volume is the 24 hour spot trading volume across the coins we track on each exchange, in US dollars. It only counts coins with at least $50 thousand of daily volume, so these totals are smaller than the headline figures other sites publish for the same exchanges. PriceCheck NG does not run, own or recommend any exchange. Not financial advice.</p>`;
-    fs.writeFileSync("exchanges.html", exShell("Crypto exchanges compared: volume and coins tracked | PriceCheck NG", `Compare ${exPages.length} crypto exchanges by 24 hour trading volume and number of coins tracked. Live data collected by PriceCheck NG.`, "exchanges.html", body, ""));
+    fs.writeFileSync("exchanges.html", exShell("Crypto exchanges compared: volume and coins tracked | PriceCheck NG", `Compare ${exPages.length} crypto exchanges by 24 hour trading volume and number of coins tracked. Live data collected by PriceCheck NG.`, "exchanges", body, ""));
     exPages.push("exchanges.html");
   }
 }
@@ -584,10 +587,10 @@ const seenSym = new Set();
 const listed = top.filter((c) => { const k = String(c.symbol).toUpperCase(); if (seenSym.has(k)) return false; seenSym.add(k); return true; });
 fs.writeFileSync("coin-pages.json", JSON.stringify(listed.map((c) => ({ id: c.id, symbol: c.symbol, name: c.name }))));
 
-// ---- Category pages: one page per category, plus an index (categories.html). ----
+// ---- Category pages: one page per category, plus an index (categories). ----
 const catFiles = [];
 {
-  const FOOTC = `<footer><a href="privacy.html">Privacy Policy</a> · <a href="terms.html">Terms of Service</a> · <a href="api.html">API</a> · <a href="data-sources.html">Data sources</a> · <a href="compare.html">Compare coins</a> · <a href="pulse.html">Daily market summary</a> · <a href="categories.html">Categories</a> · <a href="glossary.html">Glossary</a> · <a href="faq.html">FAQ</a> · <a href="methodology.html">Methodology</a> · <a href="exchanges.html">Exchanges</a> · <a href="contact.html">Contact</a><br>© <span class="yr">${new Date().getUTCFullYear()}</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></footer>`;
+  const FOOTC = `<footer><a href="privacy">Privacy Policy</a> · <a href="terms">Terms of Service</a> · <a href="api">API</a> · <a href="data-sources">Data sources</a> · <a href="compare">Compare coins</a> · <a href="pulse">Daily market summary</a> · <a href="categories">Categories</a> · <a href="glossary">Glossary</a> · <a href="faq">FAQ</a> · <a href="methodology">Methodology</a> · <a href="exchanges">Exchanges</a> · <a href="contact">Contact</a><br>© <span class="yr">${new Date().getUTCFullYear()}</span> PriceCheck NG. All rights reserved. · <a href="about">About</a></footer>`;
   const CSSC = css + `
 .tw{overflow-x:auto;margin-top:8px}.catt{min-width:520px}.catt th,.catt td{padding:10px 6px;font-size:.88rem;text-align:right;white-space:nowrap}.catt th:nth-child(-n+2),.catt td:nth-child(-n+2){text-align:left}.catt td:last-child,.catt th:last-child{font-weight:500}.catt th{font-size:.75rem;color:var(--mut);font-weight:700}
 .cl{display:flex;align-items:center;gap:8px;color:var(--ink);text-decoration:none;font-weight:700}.cl img{width:24px;height:24px;border-radius:50%;flex:none;background:#fff}.cl small{color:var(--mut);font-weight:500}
@@ -641,9 +644,9 @@ ${script || ""}
       ranked.push({ k: "pre_ipo_stocks", list: okp, cap: okp.reduce((t, c) => t + (Number(c.market_cap_usd) || 0), 0), tok: true });
     }
   } catch (e) { console.log("Pre-IPO list skipped:", e.message); }
-  const hrefOf = (c) => (TOK.has(c.id) ? "./#coin/" + c.id : c.id + "-price.html");
+  const hrefOf = (c) => (TOK.has(c.id) ? "./#coin/" + c.id : c.id + "-price");
   for (const { k, list, cap, tok } of ranked) {
-    const name = catTitle(k), file = catFile(k), url = SITE + "/" + file;
+    const name = catTitle(k), file = catFile(k), url = SITE + "/" + clean(file);
     const rows = list.slice(0, 100);
     const chs = list.filter((c) => Number.isFinite(Number(c.change_24h_pct)) && c.change_24h_pct !== null);
     const avg = chs.length ? chs.reduce((t, c) => t + Number(c.change_24h_pct), 0) / chs.length : null;
@@ -663,9 +666,9 @@ ${script || ""}
     const body = `<h1>${esc(name)} crypto prices</h1><p class="sub">Live prices in US dollars and Nigerian naira for ${list.length} ${esc(name)} coins.</p>` + t +
       `<div class="tw"><table class="catt"><thead><tr><th>#</th><th>Coin</th><th>Price</th><th>Price (NGN)</th><th>24h</th><th>Market cap</th></tr></thead><tbody>${tr}</tbody></table></div>` +
       `<p class="note">${list.length > 100 ? "Showing the top 100 of " + list.length + " coins. " : ""}Prices in the table update when the page loads. ${tok ? "These are tokens that track shares of private companies. They are not issued by the companies they track, they trade very little, and prices can be far from the real value of the shares. " : ""}Categories come from third-party data and a coin can belong to more than one. Not financial advice.</p>` +
-      `<h2>More categories</h2><div class="links">${ranked.filter((r) => r.k !== k).slice(0, 12).map((r) => `<a href="${catFile(r.k)}">${esc(catTitle(r.k))}</a>`).join("")}<a href="categories.html">All categories</a></div>`;
+      `<h2>More categories</h2><div class="links">${ranked.filter((r) => r.k !== k).slice(0, 12).map((r) => `<a href="${catHref(r.k)}">${esc(catTitle(r.k))}</a>`).join("")}<a href="categories">All categories</a></div>`;
     const ld = [{ "@context": "https://schema.org", "@type": "CollectionPage", name: `${name} crypto prices`, url, isPartOf: { "@type": "WebSite", name: "PriceCheck NG", url: SITE + "/" } },
-      { "@context": "https://schema.org", "@type": "ItemList", itemListElement: rows.slice(0, 10).map((c, i) => ({ "@type": "ListItem", position: i + 1, url: SITE + "/" + (TOK.has(c.id) ? "#coin/" + c.id : c.id + "-price.html"), name: c.name })) }];
+      { "@context": "https://schema.org", "@type": "ItemList", itemListElement: rows.slice(0, 10).map((c, i) => ({ "@type": "ListItem", position: i + 1, url: SITE + "/" + (TOK.has(c.id) ? "#coin/" + c.id : c.id + "-price"), name: c.name })) }];
     const ids = rows.map((c) => c.id);
     const script = `<script type="module">
 import { SUPABASE_URL, SUPABASE_KEY } from "./config.js";
@@ -697,11 +700,11 @@ fetch(SUPABASE_URL + "/rest/v1/coins?select=id,price_usd,change_24h_pct,market_c
   }
   // index page (only when there are real categories, never an empty page)
   if (ranked.length >= 3) {
-  fs.writeFileSync("categories.json", JSON.stringify(ranked.map((r) => ({ k: r.k, t: catTitle(r.k), f: catFile(r.k), ids: r.list.map((c) => c.id), ...(r.tok ? { tok: 1 } : {}) }))));
+  fs.writeFileSync("categories.json", JSON.stringify(ranked.map((r) => ({ k: r.k, t: catTitle(r.k), f: catHref(r.k), ids: r.list.map((c) => c.id), ...(r.tok ? { tok: 1 } : {}) }))));
   const idxBody = `<h1>Crypto categories</h1><p class="sub">Browse coins by what they do. Each category page shows live prices in US dollars and Nigerian naira.</p>` +
-    `<div class="cats">${ranked.map((r) => `<a href="${catFile(r.k)}"><span>${esc(catTitle(r.k))}</span><small>${r.list.length} coins${r.cap > 0 ? " · " + fBig(r.cap) : ""}</small></a>`).join("")}</div>` +
+    `<div class="cats">${ranked.map((r) => `<a href="${catHref(r.k)}"><span>${esc(catTitle(r.k))}</span><small>${r.list.length} coins${r.cap > 0 ? " · " + fBig(r.cap) : ""}</small></a>`).join("")}</div>` +
     `<p class="note">Categories come from third-party data and a coin can belong to more than one. Only categories with at least 5 coins are listed.</p>`;
-  const idxLd = [{ "@context": "https://schema.org", "@type": "CollectionPage", name: "Crypto categories", url: SITE + "/categories.html", isPartOf: { "@type": "WebSite", name: "PriceCheck NG", url: SITE + "/" } }];
+  const idxLd = [{ "@context": "https://schema.org", "@type": "CollectionPage", name: "Crypto categories", url: SITE + "/categories", isPartOf: { "@type": "WebSite", name: "PriceCheck NG", url: SITE + "/" } }];
   fs.writeFileSync("categories.html", shell("Crypto Categories: Memes, AI, DeFi, Gaming and More | PriceCheck NG", "Browse crypto by category: memes, AI, DeFi, gaming, layer 1 and more. Live prices in US dollars and Nigerian naira.", SITE + "/categories.html", idxLd, idxBody, ""));
   }
   // remove category pages that no longer qualify (only files this script made)
@@ -710,7 +713,7 @@ fetch(SUPABASE_URL + "/rest/v1/coins?select=id,price_usd,change_24h_pct,market_c
     let gone = 0;
     for (const f of fs.readdirSync(".")) {
       if (!/^category-[a-z0-9-]+\.html$/.test(f) || keepC.has(f)) continue;
-      try { const b = read(f); if (b.includes('<link rel="canonical" href="' + SITE + "/" + f + '">') && b.includes("PriceCheck NG")) { fs.unlinkSync(f); gone++; } } catch (e) {}
+      try { const b = read(f); if ((b.includes('<link rel="canonical" href="' + SITE + "/" + f + '">') || b.includes('<link rel="canonical" href="' + SITE + "/" + clean(f) + '">')) && b.includes("PriceCheck NG")) { fs.unlinkSync(f); gone++; } } catch (e) {}
     }
     console.log("Category pages written:", catFiles.length, "removed:", gone);
   }
@@ -721,15 +724,15 @@ const TODAY = new Date().toISOString().slice(0, 10);
 let sm = "";
 try { sm = read("sitemap.xml"); } catch (e) {}
 const blocks = sm.match(/<url>[\s\S]*?<\/url>/g) || [];
-const keep = blocks.filter((b) => !/-price\.html<\/loc>|category-[a-z0-9-]+\.html<\/loc>|categories\.html<\/loc>/.test(b)).map((b) => "  " + b.trim().replace(/\n\s*/g, "\n    ").replace(/\n    <\/url>/, "\n  </url>"));
-const coinBlocks = top.map((c) => `  <url>\n    <loc>${SITE}/${c.id}-price.html</loc>\n    <lastmod>${TODAY}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>`);
+const keep = blocks.filter((b) => !/-price(\.html)?<\/loc>|category-[a-z0-9-]+(\.html)?<\/loc>|categories(\.html)?<\/loc>/.test(b)).map((b) => "  " + b.trim().replace(/\n\s*/g, "\n    ").replace(/\n    <\/url>/, "\n  </url>"));
+const coinBlocks = top.map((c) => `  <url>\n    <loc>${SITE}/${c.id}-price</loc>\n    <lastmod>${TODAY}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>`);
 const PAIRS = ["", "?c=bitcoin,solana", "?c=ethereum,solana", "?c=bitcoin,ripple", "?c=ethereum,binancecoin", "?c=dogecoin,shiba-inu", "?c=solana,cardano"];
-const cmpBlocks = PAIRS.map((q) => `  <url>\n    <loc>${SITE}/compare.html${q}</loc>\n    <lastmod>${TODAY}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.7</priority>\n  </url>`);
-const keep2 = keep.filter((b) => !/compare\.html/.test(b));
-const aboutBlock = `  <url>\n    <loc>${SITE}/about.html</loc>\n    <lastmod>${TODAY}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>`;
-const trBlock = `  <url>\n    <loc>${SITE}/treasuries.html</loc>\n    <lastmod>${TODAY}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.7</priority>\n  </url>`;
-const netBlock = `  <url>\n    <loc>${SITE}/network.html</loc>\n    <lastmod>${TODAY}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.7</priority>\n  </url>`;
+const cmpBlocks = PAIRS.map((q) => `  <url>\n    <loc>${SITE}/compare${q}</loc>\n    <lastmod>${TODAY}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.7</priority>\n  </url>`);
+const keep2 = keep.filter((b) => !/compare(\.html)?[?<]/.test(b));
+const aboutBlock = `  <url>\n    <loc>${SITE}/about</loc>\n    <lastmod>${TODAY}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>`;
+const trBlock = `  <url>\n    <loc>${SITE}/treasuries</loc>\n    <lastmod>${TODAY}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.7</priority>\n  </url>`;
+const netBlock = `  <url>\n    <loc>${SITE}/network</loc>\n    <lastmod>${TODAY}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.7</priority>\n  </url>`;
 const mk = (f) => `  <url>\n    <loc>${SITE}/${f}</loc>\n    <lastmod>${TODAY}</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.7</priority>\n  </url>`;
-const out = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...keep2.filter((b) => !/about\.html|treasuries\.html|network\.html|gas\.html|stablecoins\.html|exchanges\.html|exchange-[a-z0-9]+\.html/.test(b)), aboutBlock, trBlock, netBlock, mk("gas.html"), mk("stablecoins.html"), ...exPages.map((f) => mk(f)), mk("categories.html"), ...catFiles.map((f) => mk(f)), ...cmpBlocks, ...coinBlocks].join("\n")}\n</urlset>\n`;
+const out = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${[...keep2.filter((b) => !/\/(about|treasuries|network|gas|stablecoins|exchanges|exchange-[a-z0-9]+)(\.html)?<\/loc>/.test(b)), aboutBlock, trBlock, netBlock, mk("gas"), mk("stablecoins"), ...exPages.map((f) => mk(clean(f))), mk("categories"), ...catFiles.map((f) => mk(clean(f))), ...cmpBlocks, ...coinBlocks].join("\n")}\n</urlset>\n`;
 fs.writeFileSync("sitemap.xml", out);
 console.log(`Wrote ${top.length} coin pages (rank column: ${rankCol || "market_cap"}) and a sitemap with ${keep.length + coinBlocks.length} URLs for ${SITE}`);

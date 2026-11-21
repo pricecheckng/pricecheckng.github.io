@@ -3,7 +3,7 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Compare crypto coins side by side | PriceCheck NG</title>
 <meta name="description" content="Compare two to four coins side by side: price in dollars and naira, 24h and 7 day change, market cap, volume and supply, with a 7 day performance chart.">
-<link rel="canonical" href="https://pricecheckng.com.ng/compare.html">
+<link rel="canonical" href="https://pricecheckng.com.ng/compare">
 <style>
 :root{--bg:#fff;--card:#f6f7f8;--ink:#0f1a14;--mu:#5d6b64;--g:#16a34a;--gd:#0a7a3a;--line:#e3e8e5;--red:#d93b3b}
 @media (prefers-color-scheme:dark){:root{--wh:#16201a;--bg:#0e1511;--card:#16201a;--ink:#e9f1ec;--mu:#9db0a5;--line:#26332c;--red:#ff6b6b}svg line[stroke="#e1e9e4"],svg line[stroke="#e3e8e5"],svg line[stroke="#e3e9e5"],svg line[stroke="#eee"]{stroke:#26332c}svg text[fill="#5b6b64"],svg text[fill="#5d6b64"],svg text[fill="#55635a"]{fill:#9db0a5}thead th,thead th:first-child{background:#1b2a22!important}.best{background:#14301f!important}.up{color:#3ddc97!important}.dn{color:#ff6b6b!important}.tw,.chart{background:var(--card)!important}details{background:var(--card)!important}div.note{background:#16261d!important;border-color:#26332c!important}pre,code{color:#7ee2a8!important}div.warn,p.warn.box,.warn.box{background:#2b2410!important;border-color:#4a3c14!important;color:#f0d9a0!important}.chip,.pg button,.nx2{background:var(--card)}.fee.top{background:#14301f;border-color:#26523a}.b-n{background:#33270f;color:#f0b44c}.b-b{background:#331818;color:#ff8a8a}.bar{background:#26332c}main a:not([class]),p a:not([class]),li a:not([class]){color:#3ddc97}input,select,textarea{background:var(--card);color:var(--ink);border-color:var(--line)}thead th{background:var(--card)!important}thead th:first-child{background:var(--card)!important}.best{background:#14301f!important}}
@@ -66,7 +66,7 @@ button.share{padding:10px 16px;border:1px solid var(--g);border-radius:12px;back
 <div class="pop" id="pop"></div>
 <p class="note" style="margin-top:22px">Prices and figures come from PriceCheck NG's own exchange data and other public sources and can be a few minutes old. A higher price per coin does not mean a bigger or better coin: compare market cap instead. This is information only and not financial advice.</p>
 </main>
-<footer style="border-top:1px solid #e3e8e5;padding:18px 16px;text-align:center;color:var(--mu,#5d6b64);font-size:.9rem"><a href="privacy.html" style="color:var(--mu,#5d6b64)">Privacy Policy</a> · <a href="terms.html" style="color:var(--mu,#5d6b64)">Terms of Service</a><div style="margin-top:8px">© <span class="yr">2026</span> PriceCheck NG. All rights reserved. · <a href="about.html">About</a></div><script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script></footer>
+<footer style="border-top:1px solid #e3e8e5;padding:18px 16px;text-align:center;color:var(--mu,#5d6b64);font-size:.9rem"><a href="privacy" style="color:var(--mu,#5d6b64)">Privacy Policy</a> · <a href="terms" style="color:var(--mu,#5d6b64)">Terms of Service</a><div style="margin-top:8px">© <span class="yr">2026</span> PriceCheck NG. All rights reserved. · <a href="about">About</a></div><script>for(const e of document.querySelectorAll(".yr"))e.textContent=new Date().getFullYear()</script></footer>
 <script type="module">
 const $ = (id) => document.getElementById(id);
 const COLORS = ["#16a34a", "#2563eb", "#d97706", "#9333ea"];
@@ -102,7 +102,7 @@ const ids = () => coins.map((c) => c.id);
 
 function setUrl() {
   const q = ids().join(",");
-  try { history.replaceState(null, "", q ? "compare.html?c=" + encodeURIComponent(q) : "compare.html"); } catch (_) {}
+  try { history.replaceState(null, "", q ? "compare?c=" + encodeURIComponent(q) : "compare"); } catch (_) {}
 }
 async function fetchCoins(list) {
   const clean = list.filter((x) => /^[a-z0-9._-]{1,100}$/.test(x)).slice(0, 4);
@@ -234,7 +234,7 @@ document.addEventListener("click", (e) => { if (!e.target.closest(".search")) $(
 (async () => {
   const pop = $("pop");
   for (const p of POPULAR) {
-    pop.append(el("a", { href: "compare.html?c=" + p.join(","), text: p.map((x) => x.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())).join(" vs ") }));
+    pop.append(el("a", { href: "compare?c=" + p.join(","), text: p.map((x) => x.replace(/-/g, " ").replace(/\b\w/g, (m) => m.toUpperCase())).join(" vs ") }));
   }
   try {
     const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm");
