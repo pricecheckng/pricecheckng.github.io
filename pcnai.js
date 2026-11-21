@@ -510,7 +510,7 @@
       var r = await fetch(cfg.SUPABASE_URL + '/functions/v1/pcn-chat2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + tok },
-        body: JSON.stringify({ question: text, mode: mode, stream: !!curLive })
+        body: JSON.stringify({ question: text, mode: mode, stream: false })
       });
       var j = {};
       if (r.ok && /event-stream/.test(r.headers.get('Content-Type') || '')) j = await readStream(r);
