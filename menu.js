@@ -52,7 +52,7 @@
     ]},
     { t: 'PCN AI', ic: 1, rows: [
       ['AI Analysis', '', '#pcnai'],
-      ['AI Alerts', '', '#alerts']
+      ['AI Alerts', '', '#pcnai-alerts']
     ]}
   ];
   var css = '#mnu{position:fixed;inset:0;z-index:9999;visibility:hidden}' +
@@ -144,6 +144,18 @@
       var g = gh.parentNode, was = g.classList.contains('open');
       box.querySelectorAll('.m-g.open').forEach(function (x) { x.classList.remove('open'); x.firstChild.setAttribute('aria-expanded', 'false'); });
       if (!was) { g.classList.add('open'); gh.setAttribute('aria-expanded', 'true'); }
+      return;
+    }
+    var aa = e.target.closest && e.target.closest('a.m-r[href="#pcnai-alerts"]');
+    if (aa) {
+      e.preventDefault(); close();
+      setTimeout(function () {
+        var t = document.querySelector('.tabs a[data-tab="pcnai"]'); if (t) t.click();
+        setTimeout(function () {
+          var i = document.getElementById('pcnInput');
+          if (i) { if (!i.value) i.value = 'Alert me when '; i.focus(); try { i.setSelectionRange(i.value.length, i.value.length); } catch (x) {} }
+        }, 250);
+      }, 60);
       return;
     }
     var ai = e.target.closest && e.target.closest('a.m-r[href="#pcnai"]');
