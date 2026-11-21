@@ -1,0 +1,41 @@
+name: Export Edge Functions
+
+# Read-only: downloads the deployed code of chosen Edge Functions and saves it in the repo.
+# Run it by hand: Actions > Export Edge Functions > Run workflow.
+on:
+  workflow_dispatch:
+    inputs:
+      names:
+        description: "Function names, separated by spaces"
+        default: "pcn-chat2 pcn-alert"
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - name: Download
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          set +e
+          for n in ${{ github.event.inputs.names }}; do
+            echo "== $n"
+            supabase functions download "$n" --project-ref lbkpdepqymfjgmoouafv --use-api 2>&1 | tail -15
+          done
+          ls -R supabase/functions | head -40
+      - name: Save
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add supabase/functions
+          if git diff --cached --quiet; then echo "Nothing new to save."; exit 0; fi
+          git commit -m "Export Edge Functions: ${{ github.event.inputs.names }}"
+          git pull --rebase -q
+          git push
