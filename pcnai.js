@@ -475,6 +475,33 @@
       }).join('');
     }
 
+    var curLive = null;
+    function livePaint(raw) {
+      if (!curLive) return;
+      var t = raw.replace(/\s*\[N\d+\]/g, '').replace(/\(?https?:\/\/[^\s<)]+\)?/g, '');
+      curLive.innerHTML = /^#{1,3}\s|\*\*|^[-*] /m.test(t) ? mdRender(t) : escapeHtml(t).replace(/\n/g, '<br>');
+      var m = document.getElementById('pcnMsgs'); if (m) m.scrollTop = m.scrollHeight;
+    }
+    async function readStream(r) {
+      var full = '', out = {}, buf = '', last = 0;
+      function eat(chunk) {
+        buf += chunk; var i;
+        while ((i = buf.indexOf('\n')) >= 0) {
+          var line = buf.slice(0, i).trim(); buf = buf.slice(i + 1);
+          if (line.indexOf('data:') !== 0) continue;
+          var o; try { o = JSON.parse(line.slice(5)); } catch (e) { continue; }
+          if (o.d) { full += o.d; var n = Date.now(); if (n - last > 120) { last = n; livePaint(full); } }
+          else if (o.done) out = { answer: o.answer, left: o.left };
+          else if (o.error) out = { error: o.error };
+        }
+      }
+      if (r.body && r.body.getReader && window.TextDecoder) {
+        var rd = r.body.getReader(), dec = new TextDecoder();
+        for (;;) { var x = await rd.read(); if (x.done) break; eat(dec.decode(x.value, { stream: true })); }
+      } else eat(await r.text());
+      eat('\n');
+      return out;
+    }
     async function askAI(cfg, text, soft, mode) {
       mode = mode || 'quick';
       var tok = getToken();
@@ -483,9 +510,11 @@
       var r = await fetch(cfg.SUPABASE_URL + '/functions/v1/pcn-chat2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', apikey: cfg.SUPABASE_KEY, Authorization: 'Bearer ' + tok },
-        body: JSON.stringify({ question: text, mode: mode })
+        body: JSON.stringify({ question: text, mode: mode, stream: !!curLive })
       });
-      var j = {}; try { j = await r.json(); } catch (e) {}
+      var j = {};
+      if (r.ok && /event-stream/.test(r.headers.get('Content-Type') || '')) j = await readStream(r);
+      else { try { j = await r.json(); } catch (e) {} }
       if (soft && !r.ok) return null;
       if (j && j.left != null) { LEFT[mode] = j.left; paintMode(); }
       if (r.status === 401) return 'Your sign-in has expired. Please ' + signin + ' again.';
@@ -692,6 +721,7 @@
       var html;
       try {
         var cfg = await import('./config.js');
+        curLive = document.getElementById(loadingId);
         var fn = ROUTES[text];
         var AIFIRST = { "Why is the market moving today?": 1, "Are altcoins outperforming Bitcoin?": 1, "What cryptos are showing bullish momentum?": 1, "What are the trending narratives?": 1 };
         var ai0 = ((fn && AIFIRST[text]) || forceAI) ? await askAI(cfg, text, true, mode) : null;
@@ -699,6 +729,7 @@
       } catch (err) {
         html = 'Could not load live data right now. Try again in a moment. <a href="pulse.html" style="' + HL + '">Daily summary</a>';
       }
+      curLive = null;
       var el = document.getElementById(loadingId);
       if (el) {
         el.innerHTML = html;
