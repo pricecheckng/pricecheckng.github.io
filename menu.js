@@ -51,6 +51,7 @@
       ['About & founder', 'Who built PriceCheck NG and when', 'about']
     ]},
     { t: 'PCN AI', ic: 1, rows: [
+      ['Ask PCN AI', '', '#pcnai'],
       ['AI Analysis', '', '/ai-agent-chart?s=BTC'],
       ['AI Alerts', '', '/ai-alerts']
     ]}
@@ -161,7 +162,7 @@
     var ai = e.target.closest && e.target.closest('a.m-r[href="#pcnai"]');
     if (ai) {
       e.preventDefault(); close();
-      setTimeout(function () { var t = document.querySelector('.tabs a[data-tab="pcnai"]'); if (t) t.click(); }, 60);
+      setTimeout(function () { var t = document.querySelector('.tabs a[data-tab="pcnai"]'); if (t) t.click(); else location.href = '/?pcnq=&go=0'; }, 60);
       return;
     }
     if (e.target.closest && (e.target.closest('[data-x]') || e.target.closest('a.m-r'))) close();
