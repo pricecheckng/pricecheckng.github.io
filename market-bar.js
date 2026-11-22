@@ -99,13 +99,13 @@
 
   /* scrolling chip row under the cards (like CoinMarketCap): latest news, new features, ask-AI questions */
   var chipCss = '.mkc{margin:-4px -16px 12px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 16px}.mkc::-webkit-scrollbar{display:none}' +
-    '.mkc-i{display:inline-flex;align-items:center;gap:6px;margin-right:8px;padding:2px 10px;border-radius:999px;font-size:11.5px;line-height:16px;font-weight:500;color:inherit;text-decoration:none;border:1px solid rgba(37,99,235,.45);background:rgba(37,99,235,.08);cursor:pointer;font-family:inherit;vertical-align:top;-webkit-tap-highlight-color:transparent}' +
+    '.mkc-i{display:inline-flex;align-items:center;gap:6px;margin-right:8px;padding:2px 10px;border-radius:999px;font-size:11.5px;line-height:16px;font-weight:500;color:inherit;text-decoration:none;border:1px solid rgba(18,161,80,.5);background:rgba(18,161,80,.08);cursor:pointer;font-family:inherit;vertical-align:top;-webkit-tap-highlight-color:transparent}' +
     '.mkc-i svg{width:13px;height:13px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}' +
     '.mkc-tp{border-color:rgba(234,138,40,.7);background:rgba(234,138,40,.1)}.mkc-tp i{font-style:normal;font-size:10.5px;padding:0 7px;border-radius:999px;background:#f2c48c;color:#3a2200}' +
-    '.mkc-nw{border-color:rgba(124,58,237,.6);background:rgba(124,58,237,.1)}.mkc-nw i{font-style:normal;font-size:10.5px;padding:0 7px;border-radius:999px;background:#19c37d;color:#04281a;font-weight:600}' +
-    '.mkc-al{border-color:rgba(124,58,237,.6);background:rgba(124,58,237,.1)}.mkc-x{display:inline-flex;margin:0 -4px 0 2px;padding:2px;border-radius:50%;opacity:.7}' +
+    '.mkc-nw{border-color:rgba(18,161,80,.6);background:rgba(18,161,80,.1)}.mkc-nw i{font-style:normal;font-size:10.5px;padding:0 7px;border-radius:999px;background:#19c37d;color:#04281a;font-weight:600}' +
+    '.mkc-al{border-color:rgba(18,161,80,.6);background:rgba(18,161,80,.1)}.mkc-x{display:inline-flex;margin:0 -4px 0 2px;padding:2px;border-radius:50%;opacity:.7}' +
     '.mkc-hot{border-color:rgba(234,138,40,.5);background:rgba(234,138,40,.08)}.mkc-hot svg{color:#ea580c}' +
-    'html.dk .mkc-i{background:rgba(59,130,246,.12);border-color:rgba(96,140,255,.5)}html.dk .mkc-tp{background:rgba(234,138,40,.12)}html.dk .mkc-nw,html.dk .mkc-al{background:rgba(124,58,237,.18);border-color:rgba(150,110,255,.65)}html.dk .mkc-hot{background:rgba(234,138,40,.1)}';
+    'html.dk .mkc-i{background:rgba(47,214,138,.1);border-color:rgba(47,214,138,.45)}html.dk .mkc-tp{background:rgba(234,138,40,.12)}html.dk .mkc-nw,html.dk .mkc-al{background:rgba(47,214,138,.14);border-color:rgba(47,214,138,.6)}html.dk .mkc-hot{background:rgba(234,138,40,.1)}';
   var cs = document.createElement('style'); cs.textContent = chipCss; document.head.appendChild(cs);
   var chipNews = [], chipTimer = null, chipPause = 0;
   function ce(t) { return String(t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;'); }
