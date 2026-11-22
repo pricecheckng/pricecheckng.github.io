@@ -171,7 +171,7 @@ const N = (n) => {
 };
 const NAMES = { bybit: "Bybit", okx: "OKX", bitget: "Bitget", mexc: "MEXC", luno: "Luno" };
 const EX_ORDER = ["binance", "bybit", "okx", "kucoin", "gate", "mexc", "bitget", "htx", "cryptocom", "lbank", "whitebit", "poloniex", "digifinex", "xt", "kraken", "bitstamp", "bitfinex", "bitvavo", "valr", "btcturk", "coinbase", "bingx", "phemex", "bitmart", "coinex", "bit2me", "pionex", "bigone", "coindcx", "hashkey", "wazirx", "bitopro", "bitso", "luno", "upbit", "bithumb", "coinone", "korbit", "bitkub"];
-const logo = (s) => { const k = EX_ORDER.indexOf(s); return k < 0 ? "" : '<span style="position:absolute;inset:0;background:#fff url(exchanges.png) no-repeat;background-size:168px 196px;background-position:-' + (k % 6) * 28 + "px -" + Math.floor(k / 6) * 28 + 'px"></span>'; };
+const logo = (s) => { const k = EX_ORDER.indexOf(s); return k < 0 ? "" : '<span style="position:absolute;top:0;right:0;bottom:0;left:0;background:#fff url(exchanges.png) no-repeat;background-size:600% 700%;background-position:' + ((k % 6) * 20) + "% " + (Math.floor(k / 6) * (100 / 6)).toFixed(3) + '%"></span>'; };
 const COL = { bybit: "#f7a600", okx: "#7a8a82", bitget: "#1da2b4", mexc: "#2e6ee6", luno: "#2a6df4" };
 const STALE_MIN = 60;
 const T_RATES = () => (CUR === "NGN" ? "p2p_rates?select=*" : "p2p_world?select=*&currency=eq." + CUR);
