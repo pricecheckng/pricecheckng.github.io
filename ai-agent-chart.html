@@ -47,6 +47,17 @@
   #jumpBtn { position:absolute; right:62px; bottom:30px; width:38px; height:38px; z-index:4; border-radius:50%; background:#16241d; border:1px solid var(--line); color:var(--txt); display:none; align-items:center; justify-content:center; cursor:pointer; padding:0; box-shadow:0 2px 8px rgba(0,0,0,.4); } #jumpBtn.on { display:flex; }
   #aBtn, #lBtn2 { position:absolute; bottom:26px; width:24px; height:22px; z-index:4; border:1px solid var(--line); border-radius:5px; background:#14211a; color:var(--mut); font:700 12px system-ui; display:flex; align-items:center; justify-content:center; padding:0; cursor:pointer; } #aBtn { right:32px; } #lBtn2 { right:4px; } #aBtn.on, #lBtn2.on { background:#2563eb; border-color:#2563eb; color:#fff; }
   #scBtn { position:absolute; right:14px; bottom:0; width:30px; height:22px; z-index:4; background:none; border:0; color:var(--mut); display:flex; align-items:center; justify-content:center; cursor:pointer; padding:0; }
+  .agt { display:inline-flex; align-items:center; gap:8px; } #agHelp { width:20px; height:20px; padding:0!important; border-radius:50%; border:1.5px solid var(--mut)!important; color:var(--mut)!important; font-size:12px!important; font-weight:800; display:inline-flex; align-items:center; justify-content:center; line-height:1; }
+  #hpBg { position:fixed; inset:0; z-index:41; display:none; background:rgba(0,0,0,.6); padding:16px; overflow-y:auto; } #hpBg.on { display:block; }
+  #hpCard { max-width:520px; margin:7vh auto 20px; background:#101a15; border:1px solid var(--acc); border-radius:18px; overflow:hidden; }
+  #hpCard .hph { display:flex; align-items:center; justify-content:space-between; padding:16px 18px; border-bottom:1px solid var(--line); font-weight:800; font-size:17px; }
+  #hpCard .hph button { background:none; border:0; color:var(--mut); font-size:20px; cursor:pointer; padding:2px 6px; }
+  #hpCard p.hpi { margin:0; padding:16px 18px 6px; color:var(--mut); font-size:14.5px; line-height:1.55; }
+  #hpCard .hpt { margin:12px 14px 16px; background:#0b120e; border:1px solid var(--line); border-radius:12px; padding:4px 14px; }
+  #hpCard .hpr { display:grid; grid-template-columns:34% 1fr; gap:12px; padding:12px 0; border-bottom:1px solid var(--line); font-size:14px; line-height:1.45; } #hpCard .hpr:last-child { border-bottom:0; }
+  #hpCard .hpr.hh { color:var(--acc2,#16c784); font-weight:700; font-size:13px; }
+  #hpCard .hpr b { font-weight:700; } #hpCard .hpr button { background:none; border:0; color:var(--txt); font:inherit; text-align:left; padding:0; cursor:pointer; } #hpCard .hpr button span { color:var(--mut); }
+  #hpCard .hpf { padding:0 18px 16px; color:var(--mut); font-size:12.5px; }
   #sxBg { position:fixed; inset:0; z-index:40; display:none; background:rgba(0,0,0,.55); } #sxBg.on { display:block; }
   #sxSheet { position:absolute; left:0; right:0; bottom:0; max-width:560px; margin:0 auto; max-height:94%; overflow-y:auto; background:#101a15; border-top:1px solid var(--line); border-radius:20px 20px 0 0; padding:14px 18px 22px; }
   #sxSheet .sxh { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; font-weight:800; font-size:17px; }
@@ -275,7 +286,7 @@
   <div id="rsiWrap"><span class="lbl">RSI 14</span><div class="c" id="cRsi"></div></div><div id="subWrap" style="display:none"></div>
   <div id="agent">
     <div class="aghandle" id="agHandle"><i></i></div>
-    <div class="aghead"><span>Chat with PCN AI</span><span><button id="agShare" aria-label="Share"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button id="agNew" aria-label="New chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v5a3 3 0 0 1-3 3H9l-5 3V7a3 3 0 0 1 3-3h6"/><path d="M18 3v6M15 6h6"/></svg></button><button id="agHist" aria-label="Past chats"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></button><button id="agFull" aria-label="Full screen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button id="agClose" aria-label="Hide chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></span></div>
+    <div class="aghead"><span class="agt">Chat with PCN AI <button type="button" id="agHelp" aria-label="What can PCN AI do?">?</button></span><span><button id="agShare" aria-label="Share"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button id="agNew" aria-label="New chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v5a3 3 0 0 1-3 3H9l-5 3V7a3 3 0 0 1 3-3h6"/><path d="M18 3v6M15 6h6"/></svg></button><button id="agHist" aria-label="Past chats"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></button><button id="agFull" aria-label="Full screen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button id="agClose" aria-label="Hide chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></span></div>
     <div id="agMsgs"></div>
     <div id="agModeMenu"><button data-m="quick">Quick<small>Short answer, uses your Quick questions</small></button><button data-m="pro">Pro<small>More detail, uses your Pro questions</small></button><button data-m="deep">Deep<small>Full analysis with news, uses your Deep questions</small></button></div>
     <form id="agForm" autocomplete="off">
@@ -310,6 +321,20 @@
   </nav>
 </div>
 
+<div id="hpBg"><div id="hpCard" role="dialog" aria-modal="true" aria-label="What PCN AI can do">
+  <div class="hph"><span>Your chart, worked for you</span><button type="button" id="hpX" aria-label="Close">&#10005;</button></div>
+  <p class="hpi">Ask in plain words and PCN AI does the chart work: it reads the candles, RSI and moving averages, marks what matters and explains its reasoning. Everything it draws is a real line on your chart that you can move or delete.</p>
+  <div class="hpt">
+    <div class="hpr hh"><span>Ask it to</span><span>Try (tap to use)</span></div>
+    <div class="hpr"><b>read the chart</b><button type="button" data-q="What is the current trend?">"What is the current trend?" <span>&rarr; trend, RSI and the story in plain words</span></button></div>
+    <div class="hpr"><b>mark what matters</b><button type="button" data-q="Mark the support and resistance.">"Mark the support and resistance." <span>&rarr; key levels drawn in seconds</span></button></div>
+    <div class="hpr"><b>draw the range</b><button type="button" data-q="Draw the current range.">"Draw the current range." <span>&rarr; the high and low box on your chart</span></button></div>
+    <div class="hpr"><b>add indicators</b><button type="button" data-q="Add the 50 and 200 averages.">"Add the 50 and 200 averages." <span>&rarr; moving averages added and on</span></button></div>
+    <div class="hpr"><b>find a setup</b><button type="button" data-q="Outline the upside and downside levels">"Outline the upside and downside levels" <span>&rarr; where it could go either way</span></button></div>
+    <div class="hpr"><b>clean up</b><button type="button" data-q="Clear the lines you drew.">"Clear the lines you drew." <span>&rarr; the chart is clean again</span></button></div>
+  </div>
+  <div class="hpf">For information only, not financial advice.</div>
+</div></div>
 <div id="sxBg"><div id="sxSheet" role="dialog" aria-modal="true" aria-label="Share image">
   <div class="sxh"><span>Share image</span><button type="button" id="sxX" aria-label="Close">&#10005;</button></div>
   <div class="sxm"><button type="button" id="sxCC" class="on">chart + chat</button><button type="button" id="sxCO">chart only</button></div>
@@ -1099,6 +1124,17 @@ $('agUp').onclick = () => setOpen(!agent.classList.contains('open'));
 $('agClose').onclick = () => setOpen(false);
 $('agNew').onclick = () => { cur = null; intro(); };
 
+
+(function () {
+  var bg = $('hpBg');
+  $('agHelp').onclick = function (e) { e.stopPropagation(); bg.classList.add('on'); };
+  $('hpX').onclick = function () { bg.classList.remove('on'); };
+  bg.addEventListener('click', function (e) {
+    var q = e.target.closest && e.target.closest('[data-q]');
+    if (q) { var t = $('agIn'); t.value = q.getAttribute('data-q'); bg.classList.remove('on'); try { t.dispatchEvent(new Event('input')); t.focus(); } catch (x) {} return; }
+    if (e.target === bg) bg.classList.remove('on');
+  });
+})();
 /* ---- Share the chart (and the last chat answer) as an image ---- */
 (function () {
   var mode = 'cc', blob = null, url = '';
