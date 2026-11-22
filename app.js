@@ -1815,11 +1815,9 @@ function paintCoin(c) {
     <div id="coinNews"></div>
     <div id="cpAbout">${explainerHtml(c, sym)}</div>
     <div id="coinMore"></div>
-    <button class="btn" type="button" id="alertBtn" style="padding:10px 14px;min-height:0;font-size:.95rem;border-radius:12px">🔔 Set price alert</button>
     `;
   cpLayout();
   loadCoinMore(c);
-  $("#alertBtn").onclick = () => alertForm(c);
   loadCoinNews(c);
   loadCoinMarkets(c);
   loadCoinChanges(c);
