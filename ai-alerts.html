@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>AI Alerts | PriceCheck NG</title>
+<meta name="description" content="Set crypto price and move alerts by chatting with PCN AI. Delivered to Telegram and push notifications.">
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.ico">
+<script>try{var t=localStorage.getItem("pcn_theme");if(!t){var f=localStorage.getItem("pcn_dark");t=f==="1"?"dark":f==="0"?"light":"system"}if(t==="dark"||(t!=="light"&&window.matchMedia&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dk")}catch(e){}</script>
+<style>
+  :root{--bg:#fff;--card:#f4f6f8;--line:#e3e7ea;--txt:#111a16;--mut:#62736a;--acc:#6d5cff;--hd:#0f8a4b}
+  html.dk{--bg:#0b120e;--card:#16201b;--line:#22322a;--txt:#e8f1ec;--mut:#8aa396;--acc:#9b7bff;--hd:#16c784}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:"Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+  #wrap{max-width:640px;margin:0 auto;padding:0 16px 96px}
+  .bar{display:flex;align-items:center;gap:10px;height:54px}
+  .bk{width:36px;height:36px;border-radius:10px;display:inline-flex;align-items:center;justify-content:center;color:var(--txt);text-decoration:none;background:var(--card)}
+  .bk svg,.ic svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .bar b{font-size:15px;color:var(--mut);font-weight:600}
+  .hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 16px}
+  .hd h1{margin:0;font-size:24px;font-weight:800;display:flex;align-items:center;gap:10px}
+  .inf{width:22px;height:22px;border-radius:50%;border:2px solid var(--mut);color:var(--mut);background:none;font-weight:700;font-size:12px;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+  .go{border:0;border-radius:10px;padding:11px 16px;color:#fff;font-weight:700;font-size:14px;font-family:inherit;cursor:pointer;background:linear-gradient(90deg,#5b7cff,#c14bf2);display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+  .tip{display:none;margin:-6px 0 14px;padding:12px 14px;border-radius:12px;background:var(--card);font-size:13.5px;line-height:1.5;color:var(--mut)}.tip.on{display:block}
+  .promo{border-radius:18px;padding:18px;color:#fff;background:linear-gradient(120deg,#0e2a6b 0%,#0a1236 55%,#2a0a45 100%);border:1px solid rgba(120,140,255,.25)}
+  .promo h2{margin:0 0 8px;font-size:18px;font-weight:800}.promo p{margin:0 0 14px;font-size:14px;line-height:1.5;color:#b9c3e6}
+  .promo a{display:inline-block;padding:10px 18px;border-radius:10px;background:linear-gradient(90deg,#5b7cff,#c14bf2);color:#fff;font-weight:700;font-size:14px;text-decoration:none}
+  h3{margin:22px 0 10px;font-size:18px;font-weight:800}
+  .sg{display:flex;align-items:center;gap:14px;width:100%;margin:0 0 10px;padding:14px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-weight:600;font-size:15px;line-height:1.45;font-family:inherit;text-align:left;cursor:pointer}
+  .sg .ic{color:var(--acc);flex:none;display:inline-flex}.sg span{flex:1}.sg .ch{color:var(--mut);flex:none}
+  .act{margin:14px 4px 0;font-size:13.5px;color:var(--mut)}.act a{color:var(--hd);font-weight:700;text-decoration:none}.act small{display:block;margin-top:3px;font-size:12px}
+  nav{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);background:var(--bg);border-top:1px solid var(--line);padding:6px 0 max(6px,env(safe-area-inset-bottom))}
+  nav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--mut);text-decoration:none;padding:4px 0}
+  nav a svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  nav a.on{color:var(--hd)}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div class="bar"><a class="bk" href="/" aria-label="Back"><svg viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></svg></a><b>PriceCheck NG</b></div>
+  <div class="hd">
+    <h1>Alerts <button class="inf" id="inf" type="button" aria-label="About AI alerts">i</button></h1>
+    <button class="go" id="create" type="button"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>Create Alert</button>
+  </div>
+  <div class="tip" id="tip">Tell PCN AI what you want in plain words, like "Alert me when Bitcoin moves up 2%" or "Alert me when ETH goes below $1,500". PCN AI shows you the alert first. Tap Confirm and it is saved. When it fires you get a Telegram message and a push notification.</div>
+
+  <section class="promo">
+    <h2>Free price and move alerts</h2>
+    <p>Up to 20 coin price alerts, 10 move alerts and 10 portfolio alerts. Sent to Telegram and push. No payment needed.</p>
+    <a href="/#alerts">See my alerts</a>
+  </section>
+
+  <h3>Suggested Alerts</h3>
+  <div id="sg"></div>
+  <div class="act" id="act"></div>
+</div>
+
+<nav aria-label="Main">
+  <a href="/#market"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Market</a>
+  <a href="/#portfolio"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9v9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg>Portfolio</a>
+  <a class="on" href="/ai-alerts"><svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>Alerts</a>
+  <a href="/?pcnq=&go=0"><svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></svg>PCN AI</a>
+  <a href="/#account"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>Menu</a>
+</nav>
+
+<script type="module">
+import { SUPABASE_URL as U, SUPABASE_KEY as K } from "./config.js";
+var $ = function (i) { return document.getElementById(i); };
+function open(text, send) { location.href = "/?pcnq=" + encodeURIComponent(text) + (send ? "&go=1" : "&go=0"); }
+$("create").onclick = function () { open("Alert me when ", false); };
+$("inf").onclick = function () { $("tip").classList.toggle("on"); };
+
+var bell = '<svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>';
+var chev = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>';
+function cards(px) {
+  var list = ["Alert me when Bitcoin moves up 2%", "Alert me when Bitcoin moves down 5%", "Alert me when ETH moves up 3%"];
+  if (px > 0) { var t = px * 1.05, r = t >= 1000 ? Math.round(t / 500) * 500 : Math.round(t); list.splice(1, 0, "Alert me when Bitcoin reaches $" + r.toLocaleString("en-US")); }
+  $("sg").innerHTML = list.slice(0, 4).map(function (t) {
+    return '<button type="button" class="sg" data-t="' + t.replace(/"/g, "&quot;") + '"><span class="ic">' + bell + '</span><span>' + t + '</span><span class="ch">' + chev + '</span></button>';
+  }).join("");
+}
+cards(0);
+$("sg").onclick = function (e) { var b = e.target.closest(".sg"); if (b) open(b.getAttribute("data-t"), true); };
+var H0 = { apikey: K };
+fetch(U + "/rest/v1/coins?select=price_usd&id=eq.bitcoin", { headers: H0 }).then(function (r) { return r.json(); }).then(function (l) { if (l && l[0] && Number(l[0].price_usd) > 0) cards(Number(l[0].price_usd)); }).catch(function () {});
+
+function token() {
+  try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k)) { var v = JSON.parse(localStorage.getItem(k)); var s = v && (v.access_token ? v : v.currentSession); if (s && s.access_token) return s.access_token; } } } catch (e) {}
+  return null;
+}
+var tk = token();
+if (!tk) { $("act").innerHTML = 'Active alerts: sign in to see yours. <a href="/#account">Sign in</a>'; }
+else {
+  var H = { apikey: K, Authorization: "Bearer " + tk };
+  var cnt = function (t) { return fetch(U + "/rest/v1/" + t + "?select=id&status=eq.active", { headers: H }).then(function (r) { return r.json(); }).then(function (a) { return Array.isArray(a) ? a.length : 0; }).catch(function () { return 0; }); };
+  Promise.all([cnt("price_alerts"), cnt("percent_alerts"), cnt("portfolio_alerts")]).then(function (c) {
+    $("act").innerHTML = "Active alerts: " + (c[0] + c[1] + c[2]) + ' <a href="/#alerts">View</a><small>Coin ' + c[0] + "/20 · Move " + c[1] + "/10 · Portfolio " + c[2] + "/10</small>";
+  });
+}
+</script>
+</body>
+</html>

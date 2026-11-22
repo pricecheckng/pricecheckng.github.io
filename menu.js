@@ -52,7 +52,7 @@
     ]},
     { t: 'PCN AI', ic: 1, rows: [
       ['AI Analysis', '', '/ai-agent-chart?s=BTC'],
-      ['AI Alerts', '', '#pcnai-alerts']
+      ['AI Alerts', '', '/ai-alerts']
     ]}
   ];
   var css = '#mnu{position:fixed;inset:0;z-index:9999;visibility:hidden}' +

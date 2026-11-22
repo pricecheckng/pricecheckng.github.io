@@ -163,7 +163,7 @@
       var x = e.target.closest ? e.target.closest('[data-x]') : null;
       if (x) { try { localStorage.setItem('pcn_chip_alert_x', '1'); } catch (er) {} reChips(); e.preventDefault(); return; }
       var c = e.target.closest ? e.target.closest('[data-q],[data-al]') : null; if (!c) return;
-      if (c.getAttribute('data-al')) askChip('Alert me when ', true); else askChip(c.getAttribute('data-q'), false);
+      if (c.getAttribute('data-al')) { location.href = '/ai-alerts'; return; } else askChip(c.getAttribute('data-q'), false);
     });
     ['touchstart', 'pointerdown', 'wheel'].forEach(function (n) { el.addEventListener(n, function () { chipPause = Date.now() + 4000; }, { passive: true }); });
     box.parentNode.insertBefore(el, box.nextSibling);

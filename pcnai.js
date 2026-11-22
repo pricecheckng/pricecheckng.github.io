@@ -967,5 +967,23 @@
 
   if (!setupTabs()) document.addEventListener('DOMContentLoaded', setupTabs);
   var n = 0, iv = setInterval(function () { if (setupTabs() || ++n > 20) clearInterval(iv); }, 500);
+
+  /* /ai-alerts page sends people here with ?pcnq=text&go=1 (send) or go=0 (just fill the box) */
+  (function () {
+    var m = /[?&]pcnq=([^&]*)/.exec(location.search); if (!m) return;
+    var q = ''; try { q = decodeURIComponent(m[1].replace(/\+/g, ' ')); } catch (e) {}
+    var go = /[?&]go=1/.test(location.search);
+    try { history.replaceState(null, '', location.pathname + location.hash); } catch (e) {}
+    var tries = 0, iv = setInterval(function () {
+      var t = document.querySelector('.tabs a[data-tab="pcnai"]');
+      if (!t || !t.__pcnH) { if (++tries > 40) clearInterval(iv); return; }
+      clearInterval(iv); t.click();
+      setTimeout(function () {
+        var i = document.getElementById('pcnInput'); if (!i) return;
+        if (q) i.value = q; i.focus();
+        if (go && q) { var f = document.getElementById('pcnForm'); if (f && f.requestSubmit) f.requestSubmit(); }
+      }, 350);
+    }, 300);
+  })();
 })();
                                                                    
