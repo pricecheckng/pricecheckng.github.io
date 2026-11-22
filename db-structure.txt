@@ -1,0 +1,28 @@
+## apply
+[{"schedule":212}]
+## fill 0
+[{"sync_p2p_world":"batch 0/10: AED:6 ARS:8 AUD:6 BDT:8 BGN:2 "}]
+## fill 1
+[{"sync_p2p_world":"batch 1/10: BRL:8 CAD:8 CHF:6 CLP:8 CNY:4 "}]
+## fill 2
+[{"sync_p2p_world":"batch 2/10: COP:8 CZK:4 DKK:2 EGP:8 EUR:8 "}]
+## fill 3
+[{"sync_p2p_world":"batch 3/10: GBP:8 GHS:8 HKD:2 HUF:6 IDR:8 "}]
+## fill 4
+[{"sync_p2p_world":"batch 4/10: ILS:8 INR:6 JPY:6 KES:8 "}]
+## fill 5
+[{"sync_p2p_world":"batch 5/10: MAD:8 MXN:8 NOK:4 "}]
+## fill 6
+[{"sync_p2p_world":"batch 6/10: NZD:4 PHP:8 PKR:8 PLN:8 RON:8 "}]
+## fill 7
+[{"sync_p2p_world":"batch 7/10: SAR:8 SEK:6 "}]
+## fill 8
+[{"sync_p2p_world":"batch 8/10: TRY:8 TZS:6 UAH:8 UGX:8 "}]
+## fill 9
+[{"sync_p2p_world":"batch 9/10: VES:8 VND:8 ZAR:4 "}]
+## binance KES
+[{"r":"{\"code\":\"000002\",\"message\":\"illegal parameter\",\"messageDetail\":null,\"data\":null,\"success\":false}"}]
+## kucoin KES
+[{"r":"{\"success\":true,\"code\":\"200\",\"msg\":\"success\",\"retry\":false,\"currentPage\":1,\"pageSize\":3,\"totalNum\":2,\"totalPage\":1,\"items\":[{\"id\":\"647228f321ab4e0001fd9c08\",\"side\":\"SELL\",\"legal\":\"KES\",\"currency\":\"USDT\",\"currencyQuantity\":\"705.74\",\"currencyBalanceQuantity\":\"44.405058\",\"premium\":\"131.8\",\"status\":\"PUT"}]
+## result
+[{"currency":"AED","rows":6},{"currency":"ARS","rows":8},{"currency":"AUD","rows":6},{"currency":"BDT","rows":8},{"currency":"BGN","rows":2},{"currency":"BRL","rows":8},{"currency":"CAD","rows":8},{"currency":"CHF","rows":6},{"currency":"CLP","rows":8},{"currency":"CNY","rows":4},{"currency":"COP","rows":8},{"currency":"CZK","rows":4},{"currency":"DKK","rows":2},{"currency":"EGP","rows":8},{"currency":"EUR","rows":8},{"currency":"GBP","rows":8},{"currency":"GHS","rows":8},{"currency":"HKD","rows":2},{"currency":"HUF","rows":6},{"currency":"IDR","rows":8},{"currency":"ILS","rows":8},{"currency":"INR","rows":6},{"currency":"JPY","rows":6},{"currency":"KES","rows":8},{"currency":"MAD","rows":8},{"currency":"MXN","rows":8},{"currency":"NOK","rows":4},{"currency":"NZD","rows":4},{"currency":"PHP","rows":8},{"currency":"PKR","rows":8},{"currency":"PLN","rows":8},{"currency":"RON","rows":8},{"currency":"SAR","rows":8},{"currency":"SEK","rows":6},{"currency":"TRY","rows":8},{"currency":"TZS","rows":6},{"currency":"UAH","rows":8},{"currency":"UGX","rows":8},{"currency":"VES","rows":8},{"currency":"VND","rows":8},{"currency":"ZAR","rows":4}]
