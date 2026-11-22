@@ -1,0 +1,36 @@
+name: Inspect database structure
+
+# Read-only: lists table and column NAMES (no user data), extension names and cron job names.
+# Long token-like strings are hidden. Result is saved to db-structure.txt.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Query
+        env:
+          T: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          q() { curl -s -X POST "https://api.supabase.com/v1/projects/lbkpdepqymfjgmoouafv/database/query" -H "Authorization: Bearer $T" -H "Content-Type: application/json" --data "$(jq -n --arg q "$1" '{query:$q}')" ; echo; }
+          {
+            echo "## extensions"; q "select extname from pg_extension order by 1"
+            echo "## tables+columns (public, private)"; q "select table_schema||'.'||table_name as t, string_agg(column_name||' '||data_type, ', ' order by ordinal_position) as cols from information_schema.columns where table_schema in ('public','private') and table_name !~ '^(coins|news|market_)' group by 1 order by 1"
+            echo "## cron jobs"; q "select jobname, schedule, left(command,400) as cmd from cron.job"
+            echo "## send_telegram"; q "select n.nspname||'.'||p.proname as fn, left(pg_get_functiondef(p.oid),3000) as def from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.proname='send_telegram'"
+            echo "## triggers on notifications"; q "select tgname, left(pg_get_triggerdef(oid),300) as d from pg_trigger where tgrelid='public.notifications'::regclass and not tgisinternal"
+          } 2>&1 | sed -E 's/[A-Za-z0-9_.:-]{36,}/<hidden>/g' > db-structure.txt
+          wc -c db-structure.txt
+      - name: Save
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add db-structure.txt
+          git commit -m "Inspect database structure" || exit 0
+          git pull --rebase -q
+          git push
