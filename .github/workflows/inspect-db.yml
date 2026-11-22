@@ -19,9 +19,7 @@ jobs:
         run: |
           q() { curl -s -X POST "https://api.supabase.com/v1/projects/lbkpdepqymfjgmoouafv/database/query" -H "Authorization: Bearer $T" -H "Content-Type: application/json" --data "$(jq -n --arg q "$1" '{query:$q}')" ; echo; }
           {
-            echo "## binance"; q "select left(content,500) r from extensions.http_post('https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search', '{\"fiat\":\"NGN\",\"page\":1,\"rows\":3,\"tradeType\":\"BUY\",\"asset\":\"USDT\",\"countries\":[],\"proMerchantAds\":false,\"shieldMerchantAds\":false,\"publisherType\":null,\"payTypes\":[],\"classifies\":[\"mass\",\"profession\"]}', 'application/json')"
-            echo "## kucoin"; q "select status, left(content,500) r from extensions.http_get('https://www.kucoin.com/_api/otc/ad/list?currency=USDT&side=SELL&legal=NGN&page=1&pageSize=3&status=PUTUP&lang=en_US')"
-            echo "## mexc ghs"; q "select left(content,300) r from extensions.http_get('https://p2p.mexc.com/api/market?allowTrade=false&blockTrade=false&coinId=128f589271cb4951b03e71e6323eb7be&countryCode=&currency=GHS&follow=false&haveTrade=false&page=1&payMethod=&tradeType=SELL')"
+            echo "## exchanges per currency"; q "select currency, count(distinct source) exchanges, string_agg(distinct source, ',' order by source) names from public.p2p_world where updated_at > now() - interval '3 hours' group by currency order by 2 desc, 1"
           } 2>&1 | sed -E 's/[A-Za-z0-9_.:-]{40,}/<hidden>/g' > db-structure.txt
           wc -c db-structure.txt
       - name: Save
