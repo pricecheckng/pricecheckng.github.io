@@ -95,7 +95,7 @@ else {
   var H = { apikey: K, Authorization: "Bearer " + tk };
   var cnt = function (t) { return fetch(U + "/rest/v1/" + t + "?select=id&status=eq.active", { headers: H }).then(function (r) { return r.json(); }).then(function (a) { return Array.isArray(a) ? a.length : 0; }).catch(function () { return 0; }); };
   Promise.all([cnt("price_alerts"), cnt("percent_alerts"), cnt("portfolio_alerts")]).then(function (c) {
-    $("act").innerHTML = "Active alerts: " + (c[0] + c[1] + c[2]) + ' <a href="/#alerts">View</a><small>Coin ' + c[0] + "/20 · Move " + c[1] + "/10 · Portfolio " + c[2] + "/10</small>";
+    $("act").innerHTML = "Active alerts: " + (c[0] + c[1] + c[2]) + "/40" + ' · <a href="/#alerts">View</a><small>Coin ' + c[0] + "/20 · Move " + c[1] + "/10 · Portfolio " + c[2] + "/10</small>";
   });
 }
 </script>
