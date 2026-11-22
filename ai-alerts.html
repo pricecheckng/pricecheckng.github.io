@@ -59,6 +59,12 @@
   .opt .oi{flex:none;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(18,161,80,.14);color:var(--hd)}.opt .oi svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
   .opt .ot{flex:1;min-width:0}.opt b{font-size:17px;font-weight:800;margin-right:8px}.opt .rc{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12.5px;font-weight:700;color:#fff;background:linear-gradient(90deg,#14a85a,#0d7a43);vertical-align:2px}
   .opt p{margin:4px 0 0;font-size:14.5px;line-height:1.45;color:var(--mut)}.opt .ch{flex:none;color:var(--mut);display:inline-flex}
+
+  .dd{display:flex;align-items:center;gap:12px;width:100%;border:0;border-radius:12px;background:var(--card);color:var(--txt);font-family:inherit;font-size:16px;padding:15px 14px;cursor:pointer;text-align:left}
+  .dd svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex:none;color:var(--mut)}.dd .t{flex:1;font-weight:600}.dd img{width:26px;height:26px;border-radius:50%;flex:none}
+  .ddl{display:none;margin-top:6px;border-radius:12px;background:var(--card);overflow:hidden;border:1px solid var(--line)}.ddl.on{display:block}
+  .ddl button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--txt);font-family:inherit;font-size:15.5px;font-weight:600;padding:14px;cursor:pointer;text-align:left}.ddl button svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;color:var(--mut)}.ddl button.on{color:var(--hd)}
+  .suf{position:relative}.suf .fld{padding-right:44px}.suf i{position:absolute;right:16px;top:50%;transform:translateY(-50%);font-style:normal;color:var(--mut);font-size:17px}
   nav{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);background:var(--bg);border-top:1px solid var(--line);padding:6px 0 max(6px,env(safe-area-inset-bottom))}
   nav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--mut);text-decoration:none;padding:4px 0}
   nav a svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -95,7 +101,8 @@
 <div id="st" role="dialog" aria-modal="true" aria-label="Alert Settings"><div class="in">
   <div class="th"><b>Alert Settings</b><button class="x" id="stx" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <h4>Alert Type</h4>
-  <div class="seg" id="sType"><button type="button" data-v="sched" class="on">Scheduled AI summary</button><button type="button" data-v="price">Price or move</button></div>
+  <button type="button" class="dd" id="tBtn"><svg id="tIc" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span class="t" id="tTx">Scheduled</span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
+  <div class="ddl" id="tList"><button type="button" data-v="sched" class="on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Scheduled</button><button type="button" data-v="price"><svg viewBox="0 0 24 24"><path d="M12 3v18M16 7.5c0-1.7-1.8-3-4-3s-4 1.3-4 3 1.8 2.8 4 3 4 1.3 4 3-1.8 3-4 3-4-1.3-4-3"/></svg>Price-based</button></div>
   <div id="sSched">
     <h4>Model</h4>
     <div class="seg" id="sModel"><button type="button" data-v="quick" class="on">Quick</button><button type="button" data-v="pro">Pro</button><button type="button" data-v="deep">Deep</button></div>
@@ -116,15 +123,16 @@
   <div id="sPrice" style="display:none">
     <h4>Coin</h4>
     <input class="fld" id="pCoin" type="text" placeholder="Search Bitcoin, ETH, Solana..." autocomplete="off" autocapitalize="off">
+    <button type="button" class="dd" id="pBox" style="display:none"><img id="pImg" alt=""><span class="t" id="pNm"></span><svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg></button>
     <div id="pList"></div>
     <div id="pPick" class="hint"></div>
-    <h4>Alert when</h4>
-    <div class="seg" id="pKind"><button type="button" data-v="price" class="on">Price reaches</button><button type="button" data-v="up">Moves up</button><button type="button" data-v="down">Moves down</button></div>
-    <h4><span id="pLbl">Target price (USD)</span></h4>
-    <input class="fld" id="pVal" type="text" inputmode="decimal" placeholder="0">
-    <p class="hint" id="pHint">You get an alert when the price crosses your target.</p>
+    <h4>Trigger</h4>
+    <div class="seg" id="pKind"><button type="button" data-v="pct">Price % change</button><button type="button" data-v="price" class="on">Target price</button></div>
+    <div class="seg" id="pDir" style="display:none;margin-top:10px"><button type="button" data-v="up" class="on">Rises</button><button type="button" data-v="down">Falls</button></div>
+    <div class="suf" style="margin-top:10px"><input class="fld" id="pVal" type="text" inputmode="decimal" placeholder="Enter target price"><i id="pSuf">$</i></div>
+    <p class="hint" id="pHint">You get an alert when the price crosses your target. It sends once.</p>
     <h4>Deliver to</h4>
-    <p class="hint" style="margin-top:0">Price and move alerts are sent the way you chose in Menu (Telegram, push or both).</p>
+    <p class="hint" style="margin-top:0">Price alerts are sent the way you chose in Menu (Telegram, push or both).</p>
   </div>
   <p class="err" id="sErr"></p>
   <button class="btn p" id="sGo" type="button">Create</button>
@@ -170,7 +178,7 @@ function cnt() { $("tC").textContent = $("sTitle").value.length + "/200"; $("pC"
 function pad(n) { return (n < 10 ? "0" : "") + n; }
 function openSettings(x) {
   x = x || {};
-  $("sTitle").value = x.t || ""; $("sPrompt").value = x.p || ""; st.freq = x.f || "once"; segSet("sFreq", st.freq); st.type = "sched"; segSet("sType", "sched"); $("sSched").style.display = ""; $("sPrice").style.display = "none";
+  $("sTitle").value = x.t || ""; $("sPrompt").value = x.p || ""; st.freq = x.f || "once"; segSet("sFreq", st.freq); setType("sched");
   var d = new Date(Date.now() + 15 * 60000); d.setSeconds(0, 0); d.setMinutes(Math.ceil(d.getMinutes() / 5) * 5);
   $("sDate").value = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); $("sTime").value = pad(d.getHours()) + ":" + pad(d.getMinutes());
   var o = -d.getTimezoneOffset(), a = Math.abs(o); $("tz").textContent = "GMT" + (o >= 0 ? "+" : "-") + Math.floor(a / 60) + (a % 60 ? ":" + pad(a % 60) : "");
@@ -183,57 +191,66 @@ $("crx").onclick = closeCr;
 $("crChat").onclick = function () { closeCr(); open("Alert me when ", false); };
 $("crMan").onclick = function () { closeCr(); openSettings({}); };
 $("stx").onclick = closeSettings; $("sNo").onclick = closeSettings;
-$("sType").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; st.type = b.getAttribute("data-v"); segSet("sType", st.type); $("sSched").style.display = st.type === "sched" ? "" : "none"; $("sPrice").style.display = st.type === "price" ? "" : "none"; $("sErr").textContent = ""; };
+var TI = { sched: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>', price: '<path d="M12 3v18M16 7.5c0-1.7-1.8-3-4-3s-4 1.3-4 3 1.8 2.8 4 3 4 1.3 4 3-1.8 3-4 3-4-1.3-4-3"/>' };
+function setType(v) { st.type = v; $("tTx").textContent = v === "sched" ? "Scheduled" : "Price-based"; $("tIc").innerHTML = TI[v]; Array.prototype.forEach.call($("tList").children, function (b) { b.classList.toggle("on", b.getAttribute("data-v") === v); }); $("tList").classList.remove("on"); $("sSched").style.display = v === "sched" ? "" : "none"; $("sPrice").style.display = v === "price" ? "" : "none"; $("sErr").textContent = ""; }
+$("tBtn").onclick = function () { $("tList").classList.toggle("on"); };
+$("tList").onclick = function (e) { var b = e.target.closest("button"); if (b) setType(b.getAttribute("data-v")); };
 $("sModel").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; st.model = b.getAttribute("data-v"); segSet("sModel", st.model); };
 $("sFreq").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; st.freq = b.getAttribute("data-v"); segSet("sFreq", st.freq); };
 Array.prototype.forEach.call(document.querySelectorAll(".tg"), function (b) { b.onclick = function () { var c = b.getAttribute("data-ch"); st.ch[c] = st.ch[c] ? 0 : 1; b.classList.toggle("on", !!st.ch[c]); }; });
 
 /* ---- price or move form ---- */
-var pc = { coin: null, kind: "price" }, pT = 0;
+var pc = { coin: null, trig: "price", dir: "up" }, pT = 0;
 function esc(t) { return String(t || "").replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
 function fmtUsd(n) { n = Number(n); return "$" + (n >= 1 ? n.toLocaleString("en-US", { maximumFractionDigits: 2 }) : n.toPrecision(4)); }
 $("pCoin").oninput = function () {
   var q = $("pCoin").value.trim().replace(/[^A-Za-z0-9 .-]/g, ""); clearTimeout(pT);
   if (q.length < 1) { $("pList").innerHTML = ""; return; }
   pT = setTimeout(function () {
-    fetch(U + "/rest/v1/coins?select=id,symbol,name,price_usd&or=(symbol.ilike." + encodeURIComponent(q) + "*,name.ilike." + encodeURIComponent(q) + "*)&order=market_cap_rank.asc.nullslast&limit=6", { headers: { apikey: K } })
+    fetch(U + "/rest/v1/coins?select=id,symbol,name,price_usd,image_url&or=(symbol.ilike." + encodeURIComponent(q) + "*,name.ilike." + encodeURIComponent(q) + "*)&order=market_cap_rank.asc.nullslast&limit=6", { headers: { apikey: K } })
       .then(function (r) { return r.json(); }).then(function (l) {
         if (!Array.isArray(l)) return;
-        $("pList").innerHTML = l.map(function (c) { return '<button type="button" class="sg" style="padding:10px 14px;margin:6px 0 0" data-id="' + esc(c.id) + '" data-n="' + esc(c.name) + '" data-s="' + esc(String(c.symbol).toUpperCase()) + '" data-p="' + (c.price_usd || 0) + '"><span>' + esc(c.name) + ' <b style="color:var(--mut);font-weight:600">' + esc(String(c.symbol).toUpperCase()) + '</b></span><span class="ch" style="font-size:13px">' + (c.price_usd ? fmtUsd(c.price_usd) : "") + '</span></button>'; }).join("");
+        $("pList").innerHTML = l.map(function (c) { return '<button type="button" class="sg" style="padding:10px 14px;margin:6px 0 0" data-id="' + esc(c.id) + '" data-n="' + esc(c.name) + '" data-s="' + esc(String(c.symbol).toUpperCase()) + '" data-p="' + (c.price_usd || 0) + '" data-i="' + esc(c.image_url || "") + '"><span>' + esc(c.name) + ' <b style="color:var(--mut);font-weight:600">' + esc(String(c.symbol).toUpperCase()) + '</b></span><span class="ch" style="font-size:13px">' + (c.price_usd ? fmtUsd(c.price_usd) : "") + '</span></button>'; }).join("");
       }).catch(function () {});
   }, 250);
 };
 $("pList").onclick = function (e) {
   var b = e.target.closest("button"); if (!b) return;
   pc.coin = { id: b.getAttribute("data-id"), name: b.getAttribute("data-n"), sym: b.getAttribute("data-s"), px: Number(b.getAttribute("data-p")) };
-  $("pCoin").value = pc.coin.name + " (" + pc.coin.sym + ")"; $("pList").innerHTML = "";
+  var im = b.getAttribute("data-i"); $("pImg").style.display = im ? "" : "none"; $("pImg").src = im || "";
+  $("pNm").innerHTML = "<b>" + esc(pc.coin.name) + "</b> <span style='color:var(--mut);font-weight:500'>" + esc(pc.coin.sym) + "</span>";
+  $("pCoin").style.display = "none"; $("pBox").style.display = ""; $("pList").innerHTML = "";
   $("pPick").textContent = pc.coin.px ? "Price now: " + fmtUsd(pc.coin.px) : "";
 };
-$("pKind").onclick = function (e) {
-  var b = e.target.closest("button"); if (!b) return; pc.kind = b.getAttribute("data-v"); segSet("pKind", pc.kind);
-  $("pLbl").textContent = pc.kind === "price" ? "Target price (USD)" : "Move by (%)";
-  $("pHint").textContent = pc.kind === "price" ? "You get an alert when the price crosses your target." : "You get an alert when the price " + (pc.kind === "up" ? "rises" : "falls") + " by this percent from now. Minimum 0.5%.";
-  $("pVal").placeholder = pc.kind === "price" ? "0" : "2";
-};
+$("pBox").onclick = function () { $("pBox").style.display = "none"; $("pCoin").style.display = ""; $("pCoin").value = ""; $("pCoin").focus(); pc.coin = null; $("pPick").textContent = ""; };
+function pHints() {
+  var pr = pc.trig === "price";
+  $("pDir").style.display = pr ? "none" : ""; $("pSuf").textContent = pr ? "$" : "%";
+  $("pVal").placeholder = pr ? "Enter target price" : "Enter percent (0.5 to 99)";
+  $("pHint").textContent = pr ? "You get an alert when the price crosses your target. It sends once." : "You get an alert when the price " + (pc.dir === "up" ? "rises" : "falls") + " by this percent from now. It sends once. Minimum 0.5%.";
+}
+$("pKind").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; pc.trig = b.getAttribute("data-v"); segSet("pKind", pc.trig); pHints(); };
+$("pDir").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; pc.dir = b.getAttribute("data-v"); segSet("pDir", pc.dir); pHints(); };
 function savePrice() {
   var err = $("sErr"), tok = token();
   if (!pc.coin) return void (err.textContent = "Pick a coin first.");
   var v = parseFloat(String($("pVal").value).replace(/,/g, ""));
-  if (!(v > 0)) return void (err.textContent = pc.kind === "price" ? "Enter a target price." : "Enter a percent.");
-  if (pc.kind !== "price" && !(v >= 0.5 && v <= 99)) return void (err.textContent = "Move alerts must be between 0.5% and 99%.");
-  if (pc.kind === "price" && !(pc.coin.px > 0)) return void (err.textContent = "No live price for this coin right now. Try another coin.");
+  var kind = pc.trig === "price" ? "price" : pc.dir;
+  if (!(v > 0)) return void (err.textContent = kind === "price" ? "Enter a target price." : "Enter a percent.");
+  if (kind !== "price" && !(v >= 0.5 && v <= 99)) return void (err.textContent = "Move alerts must be between 0.5% and 99%.");
+  if (kind === "price" && !(pc.coin.px > 0)) return void (err.textContent = "No live price for this coin right now. Try another coin.");
   if (!tok) { err.innerHTML = 'Please <a href="/#account" style="color:var(--hd);font-weight:700">sign in</a> first.'; return; }
   var H = { apikey: K, Authorization: "Bearer " + tok, "Content-Type": "application/json", Prefer: "return=minimal" }, uid = "";
   try { uid = JSON.parse(atob(tok.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).sub; } catch (e) {}
   err.textContent = ""; $("sGo").disabled = true;
-  var req = pc.kind === "price"
+  var req = kind === "price"
     ? fetch(U + "/rest/v1/price_alerts", { method: "POST", headers: H, body: JSON.stringify({ user_id: uid, coin_id: pc.coin.id, target_price: v, currency: "USD", direction: v > pc.coin.px ? "above" : "below" }) })
-    : fetch(U + "/rest/v1/rpc/create_percent_alert", { method: "POST", headers: H, body: JSON.stringify({ p_coin: pc.coin.id, p_pct: v, p_dir: pc.kind }) });
+    : fetch(U + "/rest/v1/rpc/create_percent_alert", { method: "POST", headers: H, body: JSON.stringify({ p_coin: pc.coin.id, p_pct: v, p_dir: kind }) });
   req.then(function (r) { return r.text().then(function (t) { var j = {}; try { j = JSON.parse(t); } catch (e) {} return { ok: r.ok, j: j }; }); })
     .then(function (r) {
       $("sGo").disabled = false;
       if (!r.ok) { var m = (r.j && (r.j.message || "")) + " " + (r.j && (r.j.details || "")); err.textContent = /limit/i.test(m) ? "You have reached your limit for this kind of alert. Cancel one in the Alerts tab." : /blocked/i.test(m) ? "Alerts are turned off for your account." : /email/i.test(m) ? "Confirm your email before setting alerts." : r.j && r.j.code === "42501" ? "Turn on push notifications or connect Telegram in Menu first, then try again." : "Could not save the alert. Please try again."; return; }
-      closeSettings(); loadCount(); $("pCoin").value = ""; $("pVal").value = ""; $("pPick").textContent = ""; pc.coin = null;
+      closeSettings(); loadCount(); $("pBox").onclick(); $("pCoin").style.display = ""; $("pVal").value = "";
     }).catch(function () { $("sGo").disabled = false; err.textContent = "No internet. Please try again."; });
 }
 $("sTitle").oninput = cnt; $("sPrompt").oninput = cnt;
