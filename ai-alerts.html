@@ -112,10 +112,23 @@
     <div class="seg" id="sFreq"><button type="button" data-v="once" class="on">One time</button><button type="button" data-v="daily">Daily</button><button type="button" data-v="weekly">Weekly</button></div>
     <h4>Alert Time <small id="tz">GMT+1</small></h4>
     <div class="row2"><input class="fld" id="sDate" type="date"><input class="fld" id="sTime" type="time"></div>
-    <p class="err" id="sErr"></p>
-    <button class="btn p" id="sGo" type="button">Create</button>
-    <button class="btn c" id="sNo" type="button">Cancel</button>
   </div>
+  <div id="sPrice" style="display:none">
+    <h4>Coin</h4>
+    <input class="fld" id="pCoin" type="text" placeholder="Search Bitcoin, ETH, Solana..." autocomplete="off" autocapitalize="off">
+    <div id="pList"></div>
+    <div id="pPick" class="hint"></div>
+    <h4>Alert when</h4>
+    <div class="seg" id="pKind"><button type="button" data-v="price" class="on">Price reaches</button><button type="button" data-v="up">Moves up</button><button type="button" data-v="down">Moves down</button></div>
+    <h4><span id="pLbl">Target price (USD)</span></h4>
+    <input class="fld" id="pVal" type="text" inputmode="decimal" placeholder="0">
+    <p class="hint" id="pHint">You get an alert when the price crosses your target.</p>
+    <h4>Deliver to</h4>
+    <p class="hint" style="margin-top:0">Price and move alerts are sent the way you chose in Menu (Telegram, push or both).</p>
+  </div>
+  <p class="err" id="sErr"></p>
+  <button class="btn p" id="sGo" type="button">Create</button>
+  <button class="btn c" id="sNo" type="button">Cancel</button>
 </div></div>
 <nav aria-label="Main">
   <a href="/#market"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Market</a>
@@ -157,7 +170,7 @@ function cnt() { $("tC").textContent = $("sTitle").value.length + "/200"; $("pC"
 function pad(n) { return (n < 10 ? "0" : "") + n; }
 function openSettings(x) {
   x = x || {};
-  $("sTitle").value = x.t || ""; $("sPrompt").value = x.p || ""; st.freq = x.f || "once"; segSet("sFreq", st.freq); st.type = "sched"; segSet("sType", "sched"); $("sSched").style.display = "";
+  $("sTitle").value = x.t || ""; $("sPrompt").value = x.p || ""; st.freq = x.f || "once"; segSet("sFreq", st.freq); st.type = "sched"; segSet("sType", "sched"); $("sSched").style.display = ""; $("sPrice").style.display = "none";
   var d = new Date(Date.now() + 15 * 60000); d.setSeconds(0, 0); d.setMinutes(Math.ceil(d.getMinutes() / 5) * 5);
   $("sDate").value = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); $("sTime").value = pad(d.getHours()) + ":" + pad(d.getMinutes());
   var o = -d.getTimezoneOffset(), a = Math.abs(o); $("tz").textContent = "GMT" + (o >= 0 ? "+" : "-") + Math.floor(a / 60) + (a % 60 ? ":" + pad(a % 60) : "");
@@ -170,12 +183,62 @@ $("crx").onclick = closeCr;
 $("crChat").onclick = function () { closeCr(); open("Alert me when ", false); };
 $("crMan").onclick = function () { closeCr(); openSettings({}); };
 $("stx").onclick = closeSettings; $("sNo").onclick = closeSettings;
-$("sType").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; if (b.getAttribute("data-v") === "price") { closeSettings(); open("Alert me when ", false); } };
+$("sType").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; st.type = b.getAttribute("data-v"); segSet("sType", st.type); $("sSched").style.display = st.type === "sched" ? "" : "none"; $("sPrice").style.display = st.type === "price" ? "" : "none"; $("sErr").textContent = ""; };
 $("sModel").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; st.model = b.getAttribute("data-v"); segSet("sModel", st.model); };
 $("sFreq").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; st.freq = b.getAttribute("data-v"); segSet("sFreq", st.freq); };
 Array.prototype.forEach.call(document.querySelectorAll(".tg"), function (b) { b.onclick = function () { var c = b.getAttribute("data-ch"); st.ch[c] = st.ch[c] ? 0 : 1; b.classList.toggle("on", !!st.ch[c]); }; });
+
+/* ---- price or move form ---- */
+var pc = { coin: null, kind: "price" }, pT = 0;
+function esc(t) { return String(t || "").replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+function fmtUsd(n) { n = Number(n); return "$" + (n >= 1 ? n.toLocaleString("en-US", { maximumFractionDigits: 2 }) : n.toPrecision(4)); }
+$("pCoin").oninput = function () {
+  var q = $("pCoin").value.trim().replace(/[^A-Za-z0-9 .-]/g, ""); clearTimeout(pT);
+  if (q.length < 1) { $("pList").innerHTML = ""; return; }
+  pT = setTimeout(function () {
+    fetch(U + "/rest/v1/coins?select=id,symbol,name,price_usd&or=(symbol.ilike." + encodeURIComponent(q) + "*,name.ilike." + encodeURIComponent(q) + "*)&order=market_cap_rank.asc.nullslast&limit=6", { headers: { apikey: K } })
+      .then(function (r) { return r.json(); }).then(function (l) {
+        if (!Array.isArray(l)) return;
+        $("pList").innerHTML = l.map(function (c) { return '<button type="button" class="sg" style="padding:10px 14px;margin:6px 0 0" data-id="' + esc(c.id) + '" data-n="' + esc(c.name) + '" data-s="' + esc(String(c.symbol).toUpperCase()) + '" data-p="' + (c.price_usd || 0) + '"><span>' + esc(c.name) + ' <b style="color:var(--mut);font-weight:600">' + esc(String(c.symbol).toUpperCase()) + '</b></span><span class="ch" style="font-size:13px">' + (c.price_usd ? fmtUsd(c.price_usd) : "") + '</span></button>'; }).join("");
+      }).catch(function () {});
+  }, 250);
+};
+$("pList").onclick = function (e) {
+  var b = e.target.closest("button"); if (!b) return;
+  pc.coin = { id: b.getAttribute("data-id"), name: b.getAttribute("data-n"), sym: b.getAttribute("data-s"), px: Number(b.getAttribute("data-p")) };
+  $("pCoin").value = pc.coin.name + " (" + pc.coin.sym + ")"; $("pList").innerHTML = "";
+  $("pPick").textContent = pc.coin.px ? "Price now: " + fmtUsd(pc.coin.px) : "";
+};
+$("pKind").onclick = function (e) {
+  var b = e.target.closest("button"); if (!b) return; pc.kind = b.getAttribute("data-v"); segSet("pKind", pc.kind);
+  $("pLbl").textContent = pc.kind === "price" ? "Target price (USD)" : "Move by (%)";
+  $("pHint").textContent = pc.kind === "price" ? "You get an alert when the price crosses your target." : "You get an alert when the price " + (pc.kind === "up" ? "rises" : "falls") + " by this percent from now. Minimum 0.5%.";
+  $("pVal").placeholder = pc.kind === "price" ? "0" : "2";
+};
+function savePrice() {
+  var err = $("sErr"), tok = token();
+  if (!pc.coin) return void (err.textContent = "Pick a coin first.");
+  var v = parseFloat(String($("pVal").value).replace(/,/g, ""));
+  if (!(v > 0)) return void (err.textContent = pc.kind === "price" ? "Enter a target price." : "Enter a percent.");
+  if (pc.kind !== "price" && !(v >= 0.5 && v <= 99)) return void (err.textContent = "Move alerts must be between 0.5% and 99%.");
+  if (pc.kind === "price" && !(pc.coin.px > 0)) return void (err.textContent = "No live price for this coin right now. Try another coin.");
+  if (!tok) { err.innerHTML = 'Please <a href="/#account" style="color:var(--hd);font-weight:700">sign in</a> first.'; return; }
+  var H = { apikey: K, Authorization: "Bearer " + tok, "Content-Type": "application/json", Prefer: "return=minimal" }, uid = "";
+  try { uid = JSON.parse(atob(tok.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).sub; } catch (e) {}
+  err.textContent = ""; $("sGo").disabled = true;
+  var req = pc.kind === "price"
+    ? fetch(U + "/rest/v1/price_alerts", { method: "POST", headers: H, body: JSON.stringify({ user_id: uid, coin_id: pc.coin.id, target_price: v, currency: "USD", direction: v > pc.coin.px ? "above" : "below" }) })
+    : fetch(U + "/rest/v1/rpc/create_percent_alert", { method: "POST", headers: H, body: JSON.stringify({ p_coin: pc.coin.id, p_pct: v, p_dir: pc.kind }) });
+  req.then(function (r) { return r.text().then(function (t) { var j = {}; try { j = JSON.parse(t); } catch (e) {} return { ok: r.ok, j: j }; }); })
+    .then(function (r) {
+      $("sGo").disabled = false;
+      if (!r.ok) { var m = (r.j && (r.j.message || "")) + " " + (r.j && (r.j.details || "")); err.textContent = /limit/i.test(m) ? "You have reached your limit for this kind of alert. Cancel one in the Alerts tab." : /blocked/i.test(m) ? "Alerts are turned off for your account." : /email/i.test(m) ? "Confirm your email before setting alerts." : r.j && r.j.code === "42501" ? "Turn on push notifications or connect Telegram in Menu first, then try again." : "Could not save the alert. Please try again."; return; }
+      closeSettings(); loadCount(); $("pCoin").value = ""; $("pVal").value = ""; $("pPick").textContent = ""; pc.coin = null;
+    }).catch(function () { $("sGo").disabled = false; err.textContent = "No internet. Please try again."; });
+}
 $("sTitle").oninput = cnt; $("sPrompt").oninput = cnt;
 $("sGo").onclick = function () {
+  if (st.type === "price") return savePrice();
   var err = $("sErr"), title = $("sTitle").value.trim(), prompt = $("sPrompt").value.trim();
   if (!title) return void (err.textContent = "Add a title.");
   if (!prompt) return void (err.textContent = "Add a prompt.");
