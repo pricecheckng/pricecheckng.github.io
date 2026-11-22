@@ -3315,6 +3315,7 @@ function paintPortfolio() {
     })
     .join("");
   box.innerHTML = `
+    <div class="pf-l">
     <div class="cp-price">
       <small>TOTAL VALUE</small>
       <div class="big">${mny(total)}</div>
@@ -3326,11 +3327,14 @@ function paintPortfolio() {
     <div class="pf-btns"><button class="btn" type="button" id="pfAdd">+ Add holding</button><button class="ac-btn" type="button" id="pfAlertBtn">🔔 Alert on total</button></div>
     ${alertsLine}
     ${allocHtml}
+    </div>
+    <div class="pf-r">
     <div id="pfHist" style="margin-top:14px"></div>
-    <div style="margin-top:6px">
+    <h3 class="pf-ht">Your holdings</h3>
+    <div class="pf-hold" style="margin-top:6px">
       ${groupHtml}
     </div>
-    ${referralCardHtml()}`;
+    </div>`;
   paintPortfolioHistory(pf.total);
   $("#pfAdd").onclick = () => holdingSheet();
   $("#pfAlertBtn").onclick = () => portfolioAlertSheet();
@@ -4493,6 +4497,23 @@ function acctCss() {
   const s = document.createElement("style");
   s.id = "acctCss";
   s.textContent = `
+.pf-ht{display:none}
+@media(min-width:960px){
+main:has(#pf){max-width:1240px}
+main:has(#pf) .page>h1{font-size:2rem;margin:10px 0 18px}
+#pf{display:grid;grid-template-columns:400px minmax(0,1fr);gap:24px;align-items:start}
+#pf .pf-l{position:sticky;top:16px}
+#pf .pf-r #pfHist{margin-top:0!important}
+#pf .cp-price{padding:22px 24px}
+#pf .cp-price .big{font-size:2.7rem;line-height:1.1;margin:6px 0 10px}
+#pf .cp-price small{letter-spacing:.08em;font-size:.78rem}
+#pf .pf-btns{margin:14px 0 6px}
+#pf .pf-btns .btn,#pf .pf-btns .ac-btn{padding:14px;font-size:1rem}
+#pf .pf-ht{display:block;margin:22px 0 4px;font-size:1.15rem}
+#pf .pf-hold{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px;margin-top:10px!important}
+#pf .pf-hold .pf-row{margin:0!important}
+#pf .cp-card{padding:20px}
+}
 .acct h1{margin-bottom:2px}.acct-sub{margin:0 0 14px;opacity:.7}
 .ac-card{border:1px solid rgba(127,127,127,.22);border-radius:18px;padding:14px;margin:0 0 12px;background:rgba(127,127,127,.05)}
 .ac-card h3{margin:0 0 2px;font-size:1.05rem}
