@@ -1,0 +1,6 @@
+## binance
+[{"r":"{\"code\":\"000000\",\"message\":null,\"messageDetail\":null,\"data\":[],\"total\":0,\"success\":true}"}]
+## kucoin
+[{"status":200,"r":"{\"success\":true,\"code\":\"200\",\"msg\":\"success\",\"retry\":false,\"currentPage\":1,\"pageSize\":3,\"totalNum\":0,\"totalPage\":0,\"items\":[]}"}]
+## mexc ghs
+[{"r":"{\"responseTime\":1795361284018,\"msg\":\"success\",\"code\":0,\"data\":[{\"id\":\"a1687256822540171269\",\"price\":12.52,\"availableQuantity\":1200.0,\"coinName\":\"USDT\",\"countryCode\":\"GH\",\"updateTime\":1795361220000,\"currency\":\"GHS\",\"tradeType\":1,\"payMethod\":\"591,361,592\",\"merchant\":{\"nickName\":\"Kingstrade\",\"imId\":\"ee"}]
