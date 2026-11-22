@@ -164,7 +164,7 @@ function spark(h) {
   const med = (a) => { const b = a.slice().sort((x, y) => x - y); return b[Math.floor(b.length / 2)]; };
   Object.keys(by).forEach((s) => {
     let a = by[s].slice().sort((x, y) => x.t - y.t);
-    if (mid > 0) a = a.filter((p) => Math.abs(p.v / mid - 1) <= 0.025);
+    if (mid > 0) a = a.filter((p) => Math.abs(p.v / mid - 1) <= (CUR === "NGN" ? 0.025 : 0.1));
     // drop short dips and spikes: compare each point with the middle value of the points around it
     const W = 12;
     a = a.filter((p, i) => { const win = a.slice(Math.max(0, i - W), i + W + 1).map((q) => q.v); return win.length < 5 || Math.abs(p.v / med(win) - 1) <= 0.01; });
@@ -191,7 +191,7 @@ function dropOutliers(rows) {
     const v = rows.filter((r) => r.side === side && Number(r.typical) > 0).map((r) => Number(r.typical)).sort((a, b) => a - b);
     if (v.length < 3) return;
     const mid = v[Math.floor(v.length / 2)];
-    for (let i = out.length - 1; i >= 0; i--) if (out[i].side === side && Math.abs(Number(out[i].typical) / mid - 1) > 0.02) out.splice(i, 1);
+    for (let i = out.length - 1; i >= 0; i--) if (out[i].side === side && Math.abs(Number(out[i].typical) / mid - 1) > (CUR === "NGN" ? 0.02 : 0.1)) out.splice(i, 1);
   });
   return out;
 }
