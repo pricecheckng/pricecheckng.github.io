@@ -19,10 +19,11 @@ jobs:
         run: |
           q() { curl -s -X POST "https://api.supabase.com/v1/projects/lbkpdepqymfjgmoouafv/database/query" -H "Authorization: Bearer $T" -H "Content-Type: application/json" --data "$(jq -n --arg q "$1" '{query:$q}')" ; echo; }
           {
-            echo "## call_send_push"; q "select left(pg_get_functiondef(p.oid),2500) as def from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='private' and p.proname='call_send_push'"
-            echo "## send_daily_summaries"; q "select left(pg_get_functiondef(p.oid),3000) as def from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='private' and p.proname='send_daily_summaries'"
-            echo "## vault secret names"; q "select name from vault.secrets order by 1"
-            echo "## notifications policies"; q "select policyname, cmd from pg_policies where tablename in ('notifications','ai_feedback')"
+            echo "## schedules (no text, no user ids)"; q "select status, freq, model, channels, run_at, last_run_at, last_status, created_at from public.ai_schedules order by created_at desc limit 10"
+            echo "## cron runs"; q "select d.status, left(d.return_message,200) as msg, d.start_time from cron.job_run_details d join cron.job j on j.jobid=d.jobid where j.jobname='ai-schedules' order by d.start_time desc limit 5"
+            echo "## ai notifications (no text)"; q "select created_at, sent_at, telegram_sent_at, length(body) as len from public.notifications where title like E'\\U0001F916%' order by created_at desc limit 5"
+            echo "## function deployed? (401 = yes, 404 = no)"; curl -s -o /dev/null -w "%{http_code}\n" -X POST -H "x-sched-secret: wrong" -H "Content-Type: application/json" -d '{}' "https://lbkpdepqymfjgmoouafv.supabase.co/functions/v1/pcn-sched"
+            echo "## run function by hand via db"; q "select private.run_ai_schedules()"
           } 2>&1 | sed -E 's/[A-Za-z0-9_.:-]{36,}/<hidden>/g' > db-structure.txt
           wc -c db-structure.txt
       - name: Save
