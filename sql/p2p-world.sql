@@ -59,6 +59,13 @@ begin
           from jsonb_array_elements(j->'data'->'dataList') x;
       exception when others then null; end;
     end loop;
+    foreach s in array array['BUY','SELL'] loop
+      begin
+        select content::jsonb into j from extensions.http_get('https://p2p.mexc.com/api/market?allowTrade=false&blockTrade=false&coinId=128f589271cb4951b03e71e6323eb7be&countryCode=&currency='||c||'&follow=false&haveTrade=false&page=1&payMethod=&tradeType='||s);
+        insert into tmp_pw select 'mexc', s, nullif(x->>'price','')::numeric, nullif(x->>'availableQuantity','')::numeric
+          from jsonb_array_elements(coalesce(j->'data','[]'::jsonb)) x;
+      exception when others then null; end;
+    end loop;
     -- keep adverts with at least about 30 USDT available, then drop outliers
     delete from tmp_pw where price is null or usdt is null or price <= 0 or usdt < 30;
     select percentile_cont(0.5) within group (order by price) into v_med from tmp_pw;

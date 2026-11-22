@@ -17,6 +17,8 @@ jobs:
           {
             echo "## apply"; q "$(cat sql/p2p-world.sql)"
             for k in 0 1 2 3 4 5 6 7 8 9; do echo "## fill $k"; q "select private.sync_p2p_world(true, $k)"; done
+            echo "## binance KES"; q "select left(content,300) r from extensions.http_post('https://p2p.binance.com/bapi/c2c/v2/friendly/c2c/adv/search', '{\\"fiat\\":\\"KES\\",\\"page\\":1,\\"rows\\":3,\\"tradeType\\":\\"BUY\\",\\"asset\\":\\"USDT\\",\\"countries\\":[],\\"payTypes\\":[]}', 'application/json')"
+            echo "## kucoin KES"; q "select left(content,300) r from extensions.http_get('https://www.kucoin.com/_api/otc/ad/list?currency=USDT&side=SELL&legal=KES&page=1&pageSize=3&status=PUTUP&lang=en_US')"
             echo "## result"; q "select currency, count(*) rows from public.p2p_world group by 1 order by 1"
           } 2>&1 | sed -E 's/[A-Za-z0-9_.:-]{40,}/<hidden>/g' > db-structure.txt
           wc -c db-structure.txt
