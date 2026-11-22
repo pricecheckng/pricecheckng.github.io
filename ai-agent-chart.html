@@ -1202,7 +1202,8 @@ $('agNew').onclick = () => { cur = null; intro(); };
   }
   function setMode(m) { mode = m; $('sxCC').classList.toggle('on', m === 'cc'); $('sxCO').classList.toggle('on', m === 'co'); refresh(); }
   function pairTxt() { return 'Looking at ' + ($('pTxt').textContent || '') + ' (' + ($('tfTxt').textContent || '') + ') on PCN AI Charts by PriceCheck NG. My agent reads, draws and analyses the chart with me.'; }
-  var LINK = 'https://pricecheckng.com.ng/ai-agent-chart';
+  var LINKB = 'https://pricecheckng.com.ng/ai-agent-chart';
+  function linkNow() { var b = ''; try { b = BASE(); } catch (e) {} return LINKB + '?s=' + encodeURIComponent(b || 'BTC') + '&ref=share'; }
   function save() { if (!blob) return; var a = document.createElement('a'); a.href = url; a.download = 'pricecheck-ai-chart.png'; document.body.appendChild(a); a.click(); a.remove(); msg('Image saved.'); }
   $('agShare').onclick = function () {
     $('sxCC').disabled = false; mode = 'cc';
@@ -1218,13 +1219,13 @@ $('agNew').onclick = () => { cur = null; intro(); };
     if (!blob) return;
     try {
       var f = new File([blob], 'pricecheck-ai-chart.png', { type: 'image/png' });
-      if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: pairTxt() + ' ' + LINK }); return; }
-      if (navigator.share) { await navigator.share({ text: pairTxt(), url: LINK }); msg('Your phone cannot attach the image here. Use Save image.'); return; }
+      if (navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], text: pairTxt() + ' ' + linkNow() }); return; }
+      if (navigator.share) { await navigator.share({ text: pairTxt(), url: linkNow() }); msg('Your phone cannot attach the image here. Use Save image.'); return; }
     } catch (e) { if (e && e.name === 'AbortError') return; }
     save(); msg('Sharing is not supported here, so the image was saved.');
   };
-  $('sxTw').onclick = function () { window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(pairTxt()) + '&url=' + encodeURIComponent(LINK), '_blank'); msg('Tip: tap Save image first to attach the picture to your post.'); };
-  $('sxTg').onclick = function () { window.open('https://t.me/share/url?url=' + encodeURIComponent(LINK) + '&text=' + encodeURIComponent(pairTxt()), '_blank'); msg('Tip: tap Save image first to send the picture too.'); };
+  $('sxTw').onclick = function () { window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(pairTxt()) + '&url=' + encodeURIComponent(linkNow()), '_blank'); msg('Tip: tap Save image first to attach the picture to your post.'); };
+  $('sxTg').onclick = function () { window.open('https://t.me/share/url?url=' + encodeURIComponent(linkNow()) + '&text=' + encodeURIComponent(pairTxt()), '_blank'); msg('Tip: tap Save image first to send the picture too.'); };
   $('sxCopy').onclick = async function () {
     if (!blob) return;
     try { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); msg('Image copied.'); }
