@@ -1751,17 +1751,11 @@ async function priceCardBlob(c, sym, second, d, sp) {
   } catch (_) { return null; }
 }
 
-/* ---------- Referral card (Bybit) ---------- */
+/* ---------- Bybit link (used by the Buy button) ---------- */
 const BYBIT_REF = "https://www.bybit.com/invite?ref=EGZLPPX&medium=referral&utm_campaign=evergreen&share_to=post";
 
-function referralCardHtml() {
-  return `<div class="cp-card" style="margin-top:14px">
-      <h3>Want to start trading?</h3>
-      <p class="muted" style="margin:6px 0 12px;font-size:.9rem">Create an account on Bybit, a crypto exchange. Availability depends on your country.</p>
-      <a class="btn ghost" href="${esc(BYBIT_REF)}" target="_blank" rel="noopener sponsored" style="display:flex;align-items:center;justify-content:center;text-decoration:none">Open Bybit</a>
-      <p class="muted" style="margin:10px 0 0;font-size:.78rem">Referral link: PriceCheck NG may earn a commission if you sign up. Trading is risky and this is not financial advice.</p>
-    </div>`;
-}
+// The "Want to start trading?" box was removed. Only the Buy button in the coin list uses the Bybit link now.
+function referralCardHtml() { return ""; }
 
 function paintCoin(c) {
   const d = chg(c.change_24h_pct);
