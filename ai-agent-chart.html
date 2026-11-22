@@ -11,7 +11,11 @@
 <meta property="og:site_name" content="PriceCheck NG">
 <meta property="og:title" content="Agentic Charts: AI Chart Analysis | PriceCheck NG">
 <meta property="og:url" content="https://pricecheckng.com.ng/ai-agent-chart">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://pricecheckng.com.ng/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://pricecheckng.com.ng/og-image.png">
 <style>
   :root { --bg:#0b120e; --panel:#101a15; --line:#1e2d25; --txt:#e8f1ec; --mut:#8aa396; --up:#16c784; --dn:#ea3943; --acc:#12a150; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -1192,7 +1196,7 @@ $('agNew').onclick = () => { cur = null; intro(); };
     url = URL.createObjectURL(b); $('sxPrev').innerHTML = '<img alt="Preview" src="' + url + '">';
   }
   function setMode(m) { mode = m; $('sxCC').classList.toggle('on', m === 'cc'); $('sxCO').classList.toggle('on', m === 'co'); refresh(); }
-  function pairTxt() { return 'PCN AI chart analysis: ' + ($('pTxt').textContent || '') + ' on ' + ($('tfTxt').textContent || ''); }
+  function pairTxt() { return 'Looking at ' + ($('pTxt').textContent || '') + ' (' + ($('tfTxt').textContent || '') + ') on PCN AI Charts by PriceCheck NG. My agent reads, draws and analyses the chart with me.'; }
   var LINK = 'https://pricecheckng.com.ng/ai-agent-chart';
   function save() { if (!blob) return; var a = document.createElement('a'); a.href = url; a.download = 'pricecheck-ai-chart.png'; document.body.appendChild(a); a.click(); a.remove(); msg('Image saved.'); }
   $('agShare').onclick = function () {
