@@ -2914,7 +2914,7 @@ function authSheet(mode = "in", msg = "") {
     <p class="err" id="err" hidden></p>
     <p class="hint" style="text-align:center;margin-top:14px">New here? Pick Google or email and your account is created automatically. No password needed.</p>`);
   $("#googleBtn").onclick = async () => {
-    const { error } = await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname } });
+    const { error } = await sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + "/" } });
     if (error) showErr($("#err"), "Google sign-in is not available right now. Please try again in a moment.");
   };
   let mail = "";
