@@ -18,6 +18,12 @@
         .pcn-msg.user { background: #12a150; color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
         
         /* Suggested Prompt Chips */
+        .pcn-promo { margin-top: 18px; padding: 16px; border-radius: 16px; background: #eef7f2; border: 1px solid #cfe6d8; color: #10201a; }
+        .pcn-promo .pp-h { display: flex; gap: 12px; align-items: flex-start; color: #12a150; }
+        .pcn-promo .pp-h b { font-size: 19px; font-weight: 800; color: #10201a; margin-right: 8px; }
+        .pcn-promo .pp-h i { font-style: normal; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 99px; background: #19c37d; color: #04281a; vertical-align: 2px; }
+        .pcn-promo .pp-h p { margin: 4px 0 0; font-size: 14.5px; line-height: 1.4; color: #5a6b62; }
+        .pcn-promo .pp-b { display: block; margin-top: 14px; padding: 12px; border-radius: 10px; text-align: center; font-weight: 800; font-size: 15px; color: #fff; text-decoration: none; background: linear-gradient(90deg, #14a85a, #0d7a43); }
         .pcn-prompts-title { font-size: 20px; font-weight: 800; color: #10201a; margin-top: 6px; }
         .pcn-prompts { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin-top: 6px; }
         .pcn-chip .ci { margin-right: 8px; font-weight: 700; }
@@ -122,6 +128,7 @@
           <span class="pcn-close" id="pcnClose"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg></span>
         </div>
         <div class="pcn-chat-body" id="pcnMsgs">
+          <div class="pcn-promo" id="pcnPromo"><div class="pp-h"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v3M7 18v3M17 3v2M17 15v6"/><rect x="5" y="6" width="4" height="12" rx="1"/><rect x="15" y="5" width="4" height="10" rx="1"/></svg><div><b>Meet Agentic Charts</b><i>New</i><p>An AI analyst that lives in your charts.</p></div></div><a class="pp-b" href="/ai-agent-chart?s=BTC">Try It Now</a></div>
           <div class="pcn-prompts-title" id="pcnPromptTitle">Ask PCN AI</div>
           <div class="pcn-prompts" id="pcnPrompts">
             <button class="pcn-chip" id="pcnHeadChip" data-query="" style="display:none"><span class="ci" style="color:#e5484d">&#128293;</span><span id="pcnHeadTxt"></span></button>
@@ -130,7 +137,6 @@
             <button class="pcn-chip" data-query="What are the trending narratives?"><span class="ci" style="color:#6366f1">&#9993;</span>What are the trending narratives?</button>
             <button class="pcn-chip" data-query="What cryptos are showing bullish momentum?"><span class="ci" style="color:#f97316">&#8599;</span>What cryptos are showing bullish momentum?</button>
             <button class="pcn-chip" data-query="Summarize today's Fear & Greed index"><span class="ci" style="color:#a855f7">&#9719;</span>Summarize Fear &amp; Greed index</button>
-            <a class="pcn-chip" href="/ai-agent-chart?s=BTC" style="text-decoration:none;display:inline-block;border-color:#12a150;color:#12a150;font-weight:700"><span class="ci">&#9783;</span>Open AI chart</a>
           </div>
         </div>
         <div class="pcn-sheet" id="pcnSheet"><div class="pcn-sheet-in">
@@ -838,6 +844,7 @@
       var promptTitle = document.getElementById('pcnPromptTitle');
       if (prompts) prompts.style.display = 'none';
       if (promptTitle) promptTitle.style.display = 'none';
+      var promo0 = document.getElementById('pcnPromo'); if (promo0) promo0.style.display = 'none';
 
       msgs.insertAdjacentHTML('beforeend', '<div class="pcn-msg user">' + escapeHtml(text) + '</div>');
       var loadingId = 'loading-' + Date.now();
@@ -929,6 +936,7 @@
           var pr = document.getElementById('pcnPrompts'), pt = document.getElementById('pcnPromptTitle');
           if (pr) pr.style.display = '';
           if (pt) pt.style.display = '';
+          var promo1 = document.getElementById('pcnPromo'); if (promo1) promo1.style.display = '';
           m.scrollTop = 0;
         }
         document.getElementById('pcn-chat-modal').classList.add('open');
