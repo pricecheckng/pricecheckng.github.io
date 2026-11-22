@@ -208,6 +208,7 @@ async function load() {
   try { const f = await get("fx_rates?select=per_usd&currency=eq." + CUR); if (f && f[0]) fx = Number(f[0].per_usd); } catch (e) {}
   const now = Date.now();
   rows = (rows || []).filter((r) => now - new Date(r.updated_at).getTime() < (CUR === "NGN" ? STALE_MIN : 150) * 60000);
+  if (CUR !== "NGN") rows = rows.filter((r) => Number(r.ads) >= 3); // ignore prices built from 1 or 2 adverts
   rows = dropOutliers(rows); // hide stray offers more than 2% from the middle
   if (!rows.length) { $("empty").textContent = "No P2P prices for " + cname(CUR) + " right now. Another currency may have prices, or check back in a few minutes."; $("empty").hidden = false; return; }
   $("main").hidden = false;
