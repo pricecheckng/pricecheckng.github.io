@@ -1,0 +1,30 @@
+name: Set up P2P for all currencies
+# Runs sql/p2p-world.sql on the project, then fills every currency once. Safe to run again.
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply
+        env:
+          T: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          q() { curl -s -X POST "https://api.supabase.com/v1/projects/lbkpdepqymfjgmoouafv/database/query" -H "Authorization: Bearer $T" -H "Content-Type: application/json" --data "$(jq -n --arg q "$1" '{query:$q}')" ; echo; }
+          {
+            echo "## apply"; q "$(cat sql/p2p-world.sql)"
+            for k in 0 1 2 3 4 5 6 7 8 9; do echo "## fill $k"; q "select private.sync_p2p_world(true, $k)"; done
+            echo "## result"; q "select currency, count(*) rows from public.p2p_world group by 1 order by 1"
+          } 2>&1 | sed -E 's/[A-Za-z0-9_.:-]{40,}/<hidden>/g' > db-structure.txt
+          wc -c db-structure.txt
+      - name: Save
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add db-structure.txt
+          git commit -m "P2P world setup result" || exit 0
+          git pull --rebase -q
+          git push
