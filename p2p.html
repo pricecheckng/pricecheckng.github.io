@@ -40,11 +40,12 @@ h2{font-size:1.15rem;margin:28px 0 8px}
 #cps .c-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}#cps .c-h b{font-size:18px}
 #cps .c-x{border:0;background:rgba(127,127,127,.15);color:inherit;width:32px;height:32px;border-radius:50%;padding:0;display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 #cps input{width:100%;box-sizing:border-box;font:inherit;font-size:16px;padding:12px 14px;border-radius:12px;border:1px solid rgba(127,127,127,.35);background:rgba(127,127,127,.08);color:inherit;margin-bottom:8px}
-#cps .c-l{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:20px}
+#cps .c-l{position:relative;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:20px}
 #cps .c-r{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:inherit;font:inherit;text-align:left;padding:12px 10px;border-radius:12px;cursor:pointer}
 #cps .c-r.sel{background:rgba(18,161,80,.14)}#cps .c-r i{font-style:normal;font-size:24px;width:30px;text-align:center}
 #cps .c-r b{font-size:15px}#cps .c-r small{opacity:.6;font-size:13px;margin-left:6px}#cps .c-r em{margin-left:auto;color:#12a150;font-style:normal;font-weight:800}
 #cps .c-n{opacity:.6;text-align:center;padding:24px 0}
+@media (min-width:900px){#cps .c-sh{top:50%;bottom:auto;left:50%;right:auto;margin:0;width:480px;max-width:92vw;height:auto;max-height:78vh;border-radius:20px;padding-bottom:14px;transform:translate(-50%,-46%);opacity:0;transition:transform .2s ease,opacity .2s}#cps.on .c-sh{transform:translate(-50%,-50%);opacity:1}#cps .c-l{padding-bottom:6px}}
 html.dk #cps .c-sh{background:#121a15;color:#e9f1ec}html.dk #cps .c-r.sel{background:rgba(61,220,151,.14)}html.dk #cps .c-r em{color:#3ddc97}html.dk #cps input{background:#16201a;color:#e9f1ec;border-color:#2a3a31}
 @media (prefers-color-scheme:dark){html:not(.lt) #cps .c-sh{background:#121a15;color:#e9f1ec}html:not(.lt) #cps .c-r.sel{background:rgba(61,220,151,.14)}html:not(.lt) #cps .c-r em{color:#3ddc97}html:not(.lt) #cps input{background:#16201a;color:#e9f1ec;border-color:#2a3a31}}
 .box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 20px}
@@ -288,7 +289,7 @@ async function pick() {
   if (LIST.indexOf(CUR) < 0) LIST.push(CUR);
   paintBtn();
 }
-$("cb").onclick = () => { paintList(""); $("cpsQ").value = ""; $("cps").classList.add("on"); };
+$("cb").onclick = () => { paintList(""); $("cpsQ").value = ""; $("cps").classList.add("on"); const sl = document.querySelector("#cpsL .sel"); if (sl) $("cpsL").scrollTop = Math.max(0, sl.offsetTop - 120); };
 $("cps").addEventListener("click", (e) => {
   const t = e.target.closest && e.target.closest("[data-code]");
   if (t) { CUR = t.getAttribute("data-code"); $("cps").classList.remove("on"); paintBtn(); try { history.replaceState(null, "", CUR === "NGN" ? "/p2p" : "/p2p?c=" + CUR); } catch (x) {} load(); return; }
