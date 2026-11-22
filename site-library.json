@@ -18,6 +18,11 @@
    "about": "Ask questions on a live crypto chart. PCN AI reads the chart, marks support and resistance, and sets price alerts by chat."
   },
   {
+   "url": "https://pricecheckng.com.ng/ai-alerts",
+   "title": "AI Alerts",
+   "about": "Set crypto price and move alerts by chatting with PCN AI. Delivered to Telegram and push notifications."
+  },
+  {
    "url": "https://pricecheckng.com.ng/api",
    "title": "PriceCheck NG API: crypto prices in naira",
    "about": "A simple JSON API for crypto prices in naira, exchange rates and market data from PriceCheck NG."
