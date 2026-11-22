@@ -119,7 +119,7 @@ footer a{color:var(--mut)}
 
 <a class="btn" href="./">Track prices and set a free alert</a>
 <h2>How to read this</h2>
-<p><b>Buy</b> is the Naira you pay to get 1 USDT. <b>Sell</b> is the Naira you receive when you sell 1 USDT. <b>Best</b> is the single best advert at the moment. <b>Typical</b> is the middle price of the top five adverts, which is closer to what you will really get. The <b>gap</b> compares the typical buy price with the official dollar rate. P2P prices are usually higher than the official rate because of demand for dollars.</p>
+<p><b>Buy</b> is the local currency you pay to get 1 USDT. <b>Sell</b> is what you receive when you sell 1 USDT. <b>Best</b> is the single best advert at the moment. <b>Typical</b> is the middle price of the top five adverts, which is closer to what you will really get. The <b>gap</b> compares the typical buy price with the official rate of that currency. P2P prices are usually higher than the official rate because of demand for dollars.</p>
 
 <div class="warn"><b>Be careful.</b> These are adverts posted by individual traders and prices change fast. Always trade inside the exchange's escrow, never pay outside the platform, and confirm the final price and limits before you pay. Very small or very large adverts are left out, so the price you get may differ.</div>
 
@@ -171,7 +171,10 @@ function spark(h) {
     if (a.length) by[s] = a; else delete by[s];
   });
   const all = Object.values(by).flat();
-  if (all.length < 4) { svg.parentElement.parentElement.hidden = true; return; }
+  const bx = svg.parentElement, hd = bx.previousElementSibling;
+  if (bx) bx.hidden = all.length < 4;
+  if (hd) hd.hidden = all.length < 4;
+  if (all.length < 4) return;
   const t0 = Math.min(...all.map((p) => p.t)), t1 = Math.max(...all.map((p) => p.t)) || t0 + 1;
   let lo = Math.min(...all.map((p) => p.v)), hi = Math.max(...all.map((p) => p.v));
   if (hi - lo < 1) { hi += 1; lo -= 1; }
