@@ -19,11 +19,10 @@ jobs:
         run: |
           q() { curl -s -X POST "https://api.supabase.com/v1/projects/lbkpdepqymfjgmoouafv/database/query" -H "Authorization: Bearer $T" -H "Content-Type: application/json" --data "$(jq -n --arg q "$1" '{query:$q}')" ; echo; }
           {
-            echo "## extensions"; q "select extname from pg_extension order by 1"
-            echo "## tables+columns (public, private)"; q "select table_schema||'.'||table_name as t, string_agg(column_name||' '||data_type, ', ' order by ordinal_position) as cols from information_schema.columns where table_schema in ('public','private') and table_name !~ '^(coins|news|market_)' group by 1 order by 1"
-            echo "## cron jobs"; q "select jobname, schedule, left(command,400) as cmd from cron.job"
-            echo "## send_telegram"; q "select n.nspname||'.'||p.proname as fn, left(pg_get_functiondef(p.oid),3000) as def from pg_proc p join pg_namespace n on n.oid=p.pronamespace where p.proname='send_telegram'"
-            echo "## triggers on notifications"; q "select tgname, left(pg_get_triggerdef(oid),300) as d from pg_trigger where tgrelid='public.notifications'::regclass and not tgisinternal"
+            echo "## call_send_push"; q "select left(pg_get_functiondef(p.oid),2500) as def from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='private' and p.proname='call_send_push'"
+            echo "## send_daily_summaries"; q "select left(pg_get_functiondef(p.oid),3000) as def from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='private' and p.proname='send_daily_summaries'"
+            echo "## vault secret names"; q "select name from vault.secrets order by 1"
+            echo "## notifications policies"; q "select policyname, cmd from pg_policies where tablename in ('notifications','ai_feedback')"
           } 2>&1 | sed -E 's/[A-Za-z0-9_.:-]{36,}/<hidden>/g' > db-structure.txt
           wc -c db-structure.txt
       - name: Save
