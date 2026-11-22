@@ -116,7 +116,7 @@
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;'); }
   var chev = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>';
   var html = '<div class="m-sc" data-x></div><div class="m-sh" role="dialog" aria-modal="true" aria-label="Menu"><div class="m-gr"></div>' +
-    '<div class="m-h"><b class="m-hl"><img src="/logo-p.png" width="32" height="32" alt="">PriceCheck NG</b><button class="m-x" type="button" aria-label="Close" data-x><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg></button></div>';
+    '<div class="m-h"><b class="m-hl"><img src="/icon-green-192.png" width="36" height="36" alt="" style="border-radius:50%">PriceCheck NG</b><button class="m-x" type="button" aria-label="Close" data-x><svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 2l10 10M12 2L2 12"/></svg></button></div>';
   function row(r) {
     return '<a class="m-r" href="' + r[2] + '"><div><span>' + (r[4] ? '<i class="m-ci">' + (r[4] === 'al' ? BELL : SPARK) + '</i>' : '') + esc(r[0]) + (r[3] ? '<em class="m-d"></em>' : '') + '</span></div>' + chev + '</a>';
   }
