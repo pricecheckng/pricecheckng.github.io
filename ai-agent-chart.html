@@ -1130,20 +1130,25 @@ $('agNew').onclick = () => { cur = null; intro(); };
   }
   function loadImg(src) { return new Promise(function (res) { if (!src) return res(null); var im = new Image(); im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = src; }); }
   async function build() {
-    var W = 1080, pad = 36, qa = mode === 'cc' ? lastQA() : null;
+    var W = 1080, pad = 36, qa = mode === 'cc' ? (lastQA() || { q: '', a: '', empty: true }) : null;
     var shot = await loadImg(chart.snapshot(W));
-    var ci = $('pIco').querySelector('img'), coin = null;
-    if (ci && ci.src) { coin = await new Promise(function (res) { var im = new Image(); im.crossOrigin = 'anonymous'; im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = ci.src; }); }
+    var ci = $('pIco').querySelector('img'), coin = null, cand = [];
+    if (ci && ci.src) cand.push(ci.src);
+    try { var us = icoUrls(BASE()); for (var k = 0; k < us.length; k++) if (cand.indexOf(us[k]) < 0) cand.push(us[k]); } catch (e) {}
+    for (var ci2 = 0; ci2 < cand.length && !coin; ci2++) {
+      coin = await new Promise(function (res) { var im = new Image(); im.crossOrigin = 'anonymous'; im.onload = function () { res(im.naturalWidth > 1 ? im : null); }; im.onerror = function () { res(null); }; setTimeout(function () { res(null); }, 4000); im.src = cand[ci2]; });
+    }
     var brand = await loadImg('/icon-green-192.png');
     var chH = shot ? Math.round(W * shot.height / shot.width) : 520;
     var font = '-apple-system,Segoe UI,Roboto,system-ui,sans-serif';
     var meas = document.createElement('canvas').getContext('2d');
     var qLines = [], aLines = [], chatH = 0;
     if (qa) {
-      meas.font = '700 28px ' + font; qLines = wrap(meas, qa.q, W - pad * 2 - 40).slice(0, 2);
+      if (qa.empty) { qa.q = ''; qa.a = 'Ask your agent about this chart. PCN AI reads the price, trend, RSI, support and resistance, then explains what to watch next.'; }
+      meas.font = '700 28px ' + font; qLines = qa.q ? wrap(meas, qa.q, W - pad * 2 - 40).slice(0, 2) : [];
       meas.font = '400 28px ' + font; aLines = wrap(meas, qa.a, W - pad * 2 - 40);
       if (aLines.length > 11) { aLines = aLines.slice(0, 11); aLines[10] = aLines[10].replace(/\s*\S*$/, '') + '…'; }
-      chatH = 100 + qLines.length * 38 + 24 + aLines.length * 40 + 40;
+      chatH = 100 + (qLines.length ? qLines.length * 38 + 24 : -20) + 24 + aLines.length * 40 + 40;
     }
     var headH = 118, footH = 84, H = headH + chH + chatH + footH;
     var cv = document.createElement('canvas'); cv.width = W; cv.height = H;
@@ -1153,7 +1158,7 @@ $('agNew').onclick = () => { cur = null; intro(); };
     var ph = 60, pcx = pad + ph / 2, pcy = 59;
     g.save(); g.beginPath(); g.arc(pcx, pcy, ph / 2, 0, Math.PI * 2); g.closePath(); g.clip();
     if (coin) g.drawImage(coin, pad, pcy - ph / 2, ph, ph);
-    else { g.fillStyle = '#12a150'; g.fillRect(pad, pcy - ph / 2, ph, ph); g.fillStyle = '#fff'; g.font = '800 32px ' + font; g.textAlign = 'center'; g.fillText(($('pIco').textContent || '?').charAt(0), pcx, pcy + 11); }
+    else { g.fillStyle = '#12a150'; g.fillRect(pad, pcy - ph / 2, ph, ph); g.fillStyle = '#fff'; g.font = '800 32px ' + font; g.textAlign = 'center'; g.fillText((BASE() || '?').charAt(0).toUpperCase(), pcx, pcy + 11); }
     g.restore(); g.textAlign = 'left';
     var tx = pad + ph + 18;
     g.fillStyle = '#e8f1ec'; g.font = '800 38px ' + font; g.fillText($('pTxt').textContent || '', tx, 56);
@@ -1175,9 +1180,9 @@ $('agNew').onclick = () => { cur = null; intro(); };
       g.fillStyle = '#101a15'; g.fillRect(0, y, W, chatH);
       g.fillStyle = '#1e2d25'; g.fillRect(0, y, W, 2);
       g.fillStyle = '#e8f1ec'; g.font = '800 30px ' + font; g.fillText('Chat with PCN AI', pad, y + 56);
-      var yy = y + 100, bh = qLines.length * 38 + 24;
+      var yy = y + 100, bh = qLines.length ? qLines.length * 38 + 24 : -20;
       g.fillStyle = '#12a150'; var bx = pad, bw = W - pad * 2;
-      g.beginPath(); if (g.roundRect) g.roundRect(bx, yy, bw, bh, 18); else g.rect(bx, yy, bw, bh); g.fill();
+      if (qLines.length) { g.beginPath(); if (g.roundRect) g.roundRect(bx, yy, bw, bh, 18); else g.rect(bx, yy, bw, bh); g.fill(); }
       g.fillStyle = '#fff'; g.font = '700 28px ' + font;
       for (var i = 0; i < qLines.length; i++) g.fillText(qLines[i], bx + 20, yy + 38 + i * 38 - 4);
       yy += bh + 36; g.fillStyle = '#dbe8e0'; g.font = '400 28px ' + font;
@@ -1200,7 +1205,7 @@ $('agNew').onclick = () => { cur = null; intro(); };
   var LINK = 'https://pricecheckng.com.ng/ai-agent-chart';
   function save() { if (!blob) return; var a = document.createElement('a'); a.href = url; a.download = 'pricecheck-ai-chart.png'; document.body.appendChild(a); a.click(); a.remove(); msg('Image saved.'); }
   $('agShare').onclick = function () {
-    $('sxCC').disabled = !lastQA(); mode = $('sxCC').disabled ? 'co' : 'cc';
+    $('sxCC').disabled = false; mode = 'cc';
     $('sxCC').classList.toggle('on', mode === 'cc'); $('sxCO').classList.toggle('on', mode === 'co');
     $('sxBg').classList.add('on'); refresh();
   };
