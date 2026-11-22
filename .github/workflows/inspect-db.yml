@@ -19,13 +19,10 @@ jobs:
         run: |
           q() { curl -s -X POST "https://api.supabase.com/v1/projects/lbkpdepqymfjgmoouafv/database/query" -H "Authorization: Bearer $T" -H "Content-Type: application/json" --data "$(jq -n --arg q "$1" '{query:$q}')" ; echo; }
           {
-            echo "## p2p columns"; q "select table_name, column_name, data_type from information_schema.columns where table_schema='public' and table_name in ('p2p_rates','p2p_history','fx_rates') order by table_name, ordinal_position"
-            echo "## p2p distinct values"; q "select 'rates' t, source, side, count(*) n, max(updated_at) last from public.p2p_rates group by source, side order by source, side"
-            echo "## p2p history size"; q "select count(*) n, min(at) first, max(at) last from public.p2p_history"
-            echo "## fx currencies"; q "select count(*) n, string_agg(currency, ',' order by currency) cur from public.fx_rates"
-            echo "## cron jobs"; q "select jobname, schedule, left(command,150) cmd from cron.job order by jobname"
-            echo "## functions mentioning p2p"; q "select n.nspname, p.proname from pg_proc p join pg_namespace n on n.oid=p.pronamespace where pg_get_functiondef(p.oid) ilike '%p2p_rates%' and n.nspname in ('public','private')"
-          } 2>&1 | sed -E 's/[A-Za-z0-9_.:-]{36,}/<hidden>/g' > db-structure.txt
+            echo "## sync_p2p"; q "select pg_get_functiondef('private.sync_p2p'::regproc) d"
+            echo "## sync_p2p_extra"; q "select pg_get_functiondef('private.sync_p2p_extra'::regproc) d"
+            echo "## p2p_rates currencies"; q "select currency, count(*) n from public.p2p_rates group by 1"
+          } 2>&1 | sed -E 's/[A-Za-z0-9_.:-]{40,}/<hidden>/g' > db-structure.txt
           wc -c db-structure.txt
       - name: Save
         run: |
