@@ -123,7 +123,7 @@
   TOP.forEach(function (r) { html += row(r); });
   html += '<div style="height:6px"></div>';
   GROUPS.forEach(function (g) {
-    html += '<div class="m-g' + (g.open ? ' open' : '') + '"><button type="button" class="m-gh" aria-expanded="' + (g.open ? 'true' : 'false') + '"><span>' + (g.ic ? '<img src="/logo-p.png" width="24" height="24" alt="" style="display:block;border-radius:6px">' : '') + esc(g.t) + (g.rows.some(function (r) { return r[3]; }) ? '<em class="m-d"></em>' : '') + '</span><i>' + chev + '</i></button><div class="m-gb">' + g.rows.map(row).join('') + '</div></div>';
+    html += '<div class="m-g' + (g.open ? ' open' : '') + '"><button type="button" class="m-gh" aria-expanded="' + (g.open ? 'true' : 'false') + '"><span>' + (g.ic ? '<img src="/icon-green-192.png" width="26" height="26" alt="" style="display:block;border-radius:50%">' : '') + esc(g.t) + (g.rows.some(function (r) { return r[3]; }) ? '<em class="m-d"></em>' : '') + '</span><i>' + chev + '</i></button><div class="m-gb">' + g.rows.map(row).join('') + '</div></div>';
   });
   AFTER.forEach(function (r) { html += row(r); });
   html += '<button type="button" class="m-lo" id="mLo" hidden>Log out</button>';
