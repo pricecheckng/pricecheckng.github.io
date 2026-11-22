@@ -1128,6 +1128,9 @@ $('agNew').onclick = () => { cur = null; intro(); };
   async function build() {
     var W = 1080, pad = 36, qa = mode === 'cc' ? lastQA() : null;
     var shot = await loadImg(chart.snapshot(W));
+    var ci = $('pIco').querySelector('img'), coin = null;
+    if (ci && ci.src) { coin = await new Promise(function (res) { var im = new Image(); im.crossOrigin = 'anonymous'; im.onload = function () { res(im); }; im.onerror = function () { res(null); }; im.src = ci.src; }); }
+    var brand = await loadImg('/icon-green-192.png');
     var chH = shot ? Math.round(W * shot.height / shot.width) : 520;
     var font = '-apple-system,Segoe UI,Roboto,system-ui,sans-serif';
     var meas = document.createElement('canvas').getContext('2d');
@@ -1143,12 +1146,26 @@ $('agNew').onclick = () => { cur = null; intro(); };
     var g = cv.getContext('2d');
     g.fillStyle = '#0b120e'; g.fillRect(0, 0, W, H);
     g.textBaseline = 'alphabetic';
-    g.fillStyle = '#16c784'; g.font = '800 30px ' + font; g.fillText('PriceCheck NG', pad, 52);
-    g.fillStyle = '#e8f1ec'; g.font = '800 40px ' + font; g.fillText(($('pTxt').textContent || '') + '  ' + ($('tfTxt').textContent || ''), pad, 100);
-    g.textAlign = 'right'; g.fillStyle = '#8aa396'; g.font = '600 26px ' + font; g.fillText(($('exBtn').firstChild ? $('exBtn').firstChild.textContent : '').trim(), W - pad, 52);
-    g.fillStyle = '#e8f1ec'; g.font = '800 40px ' + font; g.fillText($('px').textContent || '', W - pad, 100);
+    var ph = 60, pcx = pad + ph / 2, pcy = 59;
+    g.save(); g.beginPath(); g.arc(pcx, pcy, ph / 2, 0, Math.PI * 2); g.closePath(); g.clip();
+    if (coin) g.drawImage(coin, pad, pcy - ph / 2, ph, ph);
+    else { g.fillStyle = '#12a150'; g.fillRect(pad, pcy - ph / 2, ph, ph); g.fillStyle = '#fff'; g.font = '800 32px ' + font; g.textAlign = 'center'; g.fillText(($('pIco').textContent || '?').charAt(0), pcx, pcy + 11); }
+    g.restore(); g.textAlign = 'left';
+    var tx = pad + ph + 18;
+    g.fillStyle = '#e8f1ec'; g.font = '800 38px ' + font; g.fillText($('pTxt').textContent || '', tx, 56);
+    var pw = g.measureText($('pTxt').textContent || '').width;
+    g.fillStyle = '#8aa396'; g.font = '600 26px ' + font;
+    g.fillText(($('exBtn').firstChild ? $('exBtn').firstChild.textContent : '').trim() + '  ·  ' + ($('tfTxt').textContent || ''), tx, 92);
+    g.textAlign = 'right'; g.fillStyle = '#e8f1ec'; g.font = '800 40px ' + font; g.fillText($('px').textContent || '', W - pad, 66);
+    g.textAlign = 'left';
     g.textAlign = 'left';
     if (shot) g.drawImage(shot, 0, headH, W, chH);
+    var pxv = parseFloat(($('px').textContent || '').replace(/,/g, '')), pcv = parseFloat(($('chg').textContent || '').replace('%', ''));
+    if (isFinite(pxv) && isFinite(pcv)) {
+      var dv = pxv * pcv / (100 + pcv), up = pcv >= 0, f2 = function (n) { return n.toLocaleString('en', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+      g.fillStyle = up ? '#16c784' : '#ea3943'; g.font = '700 28px ui-monospace,Menlo,Consolas,monospace';
+      g.fillText(f2(pxv) + '  ' + (up ? '+' : '-') + f2(Math.abs(dv)) + ' (' + (up ? '+' : '-') + Math.abs(pcv).toFixed(2) + '%)', pad, headH + 44);
+    }
     var y = headH + chH;
     if (qa) {
       g.fillStyle = '#101a15'; g.fillRect(0, y, W, chatH);
@@ -1164,7 +1181,8 @@ $('agNew').onclick = () => { cur = null; intro(); };
     }
     g.fillStyle = '#12a150'; g.fillRect(0, H - footH, W, footH);
     g.fillStyle = '#fff'; g.font = '700 26px ' + font; g.textAlign = 'center';
-    g.fillText('AI chart analysis on pricecheckng.com.ng/ai-agent-chart', W / 2, H - footH / 2 + 9);
+    g.fillText('AI chart analysis on pricecheckng.com.ng/ai-agent-chart', W / 2 + 30, H - footH / 2 + 9);
+    if (brand) { var bs = 52, bxx = pad, byy = H - footH / 2 - bs / 2; g.save(); g.beginPath(); g.arc(bxx + bs / 2, byy + bs / 2, bs / 2, 0, Math.PI * 2); g.closePath(); g.clip(); g.drawImage(brand, bxx, byy, bs, bs); g.restore(); g.beginPath(); g.arc(bxx + bs / 2, byy + bs / 2, bs / 2, 0, Math.PI * 2); g.lineWidth = 3; g.strokeStyle = '#fff'; g.stroke(); }
     return new Promise(function (res) { cv.toBlob(function (b) { res(b); }, 'image/png'); });
   }
   async function refresh() {
