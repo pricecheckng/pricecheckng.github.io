@@ -1666,13 +1666,13 @@ async function priceCardBlob(c, sym, second, d, sp) {
       : { bg: "#ffffff", tx: "#111827", sub: "#6b7280", p2: "#4b5563", bd: "#e5e7eb", gr: "#eef0f3", bx: "#f6f7f9", fb: "#f3f4f6", ft: "#374151", upB: "#dcf5e5", upT: "#15803d", dnB: "#fdecec", dnT: "#dc2626", ref: "#9ca3af", dot: "#ffffff", coin: "#e8f7ee", G: "#16a34a", R: "#dc2626", wm: "#111827" };
     const green = "#0b7a4b", G = T.G, R = T.R, up = d.c !== "down";
     const load = (src) => new Promise((ok) => { const im = new Image(); im.crossOrigin = "anonymous"; im.onload = () => ok(im); im.onerror = () => ok(null); im.src = src; setTimeout(() => ok(null), 4000); });
-    const [logoP, coinImg] = await Promise.all([load("logo-p.png"), c.id === "bitcoin" ? Promise.resolve(null) : (c.image_url ? load(c.image_url) : Promise.resolve(null))]);
+    const [logoP, coinImg] = await Promise.all([load("icon-green-192.png"), c.id === "bitcoin" ? Promise.resolve(null) : (c.image_url ? load(c.image_url) : Promise.resolve(null))]);
     const rr = (px, py, w, h, r) => { x.beginPath(); x.roundRect ? x.roundRect(px, py, w, h, r) : x.rect(px, py, w, h); };
     x.fillStyle = T.bg; x.fillRect(0, 0, W, H);
     // header
     const hg = x.createLinearGradient(0, 0, W, 0); hg.addColorStop(0, "#0b7a4b"); hg.addColorStop(1, "#0a6a41");
     x.fillStyle = hg; x.fillRect(0, 0, W, 150);
-    if (logoP) x.drawImage(logoP, 56, 38, 74, 74);
+    if (logoP) { x.save(); x.beginPath(); x.arc(93, 75, 37, 0, Math.PI * 2); x.closePath(); x.clip(); x.drawImage(logoP, 56, 38, 74, 74); x.restore(); }
     x.fillStyle = "#fff"; x.textBaseline = "middle"; x.textAlign = "left"; x.font = `800 54px ${F}`;
     x.fillText("PriceCheck NG", logoP ? 146 : 60, 77);
     x.textAlign = "right"; x.font = `500 32px ${F}`; x.globalAlpha = 0.9;
@@ -1737,7 +1737,7 @@ async function priceCardBlob(c, sym, second, d, sp) {
     x.save(); x.globalAlpha = 0.4; x.textAlign = "right"; x.fillStyle = T.wm; x.font = `700 28px ${F}`;
     const wmx = bx + bw - 26, wmy = by + 34, tw = x.measureText("PriceCheck NG").width;
     x.fillText("PriceCheck NG", wmx, wmy);
-    if (logoP) { x.globalAlpha = 0.9; const t = document.createElement("canvas"); t.width = t.height = 64; const q = t.getContext("2d"); q.drawImage(logoP, 0, 0, 64, 64); q.globalCompositeOperation = "source-in"; if (!dk) { q.fillStyle = "#07672f"; q.fillRect(0, 0, 64, 64); } x.drawImage(t, wmx - tw - 44, wmy - 20, 38, 38); }
+    if (logoP) { x.globalAlpha = 0.95; x.save(); x.beginPath(); x.arc(wmx - tw - 25, wmy - 1, 19, 0, Math.PI * 2); x.closePath(); x.clip(); x.drawImage(logoP, wmx - tw - 44, wmy - 20, 38, 38); x.restore(); }
     x.restore(); x.textAlign = "left";
     // stats
     const stat = (px, label, val) => { x.fillStyle = T.bx; rr(px, 1150, (W - 120 - 24) / 2, 112, 22); x.fill(); x.fillStyle = T.sub; x.font = `500 30px ${F}`; x.fillText(label, px + 28, 1186); x.fillStyle = T.tx; x.font = `800 42px ${F}`; x.fillText(val, px + 28, 1230); };

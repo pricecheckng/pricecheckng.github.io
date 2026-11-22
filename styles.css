@@ -354,8 +354,8 @@ html.dk .cp-tabs { background: #0e1511; }
 .cps button{min-height:32px;font-size:.85rem;border-radius:9px}
 .cpb{padding:0 12px}
 
-.cpwm{background:url(logo-p.png) center/contain no-repeat;opacity:.65}
-html:not(.dk) .cpwm{opacity:1;background:#07672f;-webkit-mask:url(logo-p.png) center/contain no-repeat;mask:url(logo-p.png) center/contain no-repeat}
+.cpwm{background:url(icon-green-192.png) center/cover no-repeat;border-radius:50%;opacity:.9}
+html:not(.dk) .cpwm{opacity:1}
 
 .cpa{display:flex;align-items:center;justify-content:center;min-width:44px;height:40px;padding:0 12px;border-radius:12px;border:0;background:#f1f3f5;color:inherit;font:inherit;cursor:pointer;-webkit-tap-highlight-color:transparent}
 html.dk .cpa{background:#162a20}
