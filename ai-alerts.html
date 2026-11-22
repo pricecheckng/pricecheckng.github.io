@@ -30,6 +30,26 @@
   .sg{display:flex;align-items:center;gap:14px;width:100%;margin:0 0 10px;padding:14px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-weight:600;font-size:15px;line-height:1.45;font-family:inherit;text-align:left;cursor:pointer}
   .sg .ic{color:var(--acc);flex:none;display:inline-flex}.sg span{flex:1}.sg .ch{color:var(--mut);flex:none}
   .act{margin:14px 4px 0;font-size:13.5px;color:var(--mut)}.act a{color:var(--hd);font-weight:700;text-decoration:none}.act small{display:block;margin-top:3px;font-size:12px}
+
+  #st{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;display:none;-webkit-overflow-scrolling:touch}#st.on{display:block}
+  #st .in{max-width:640px;margin:0 auto;padding:0 16px 40px}
+  #st .th{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;align-items:center;justify-content:center;height:56px}
+  #st .th b{font-size:18px;font-weight:800}#st .x{position:absolute;right:0;top:10px;width:36px;height:36px;border:0;background:none;color:var(--mut);cursor:pointer}
+  #st .x svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+  #st h4{margin:18px 0 8px;font-size:17px;font-weight:800;display:flex;align-items:center;justify-content:space-between}#st h4 small{font-size:13px;font-weight:600;color:var(--mut)}
+  .seg{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--card)}
+  .seg button{flex:1;border:0;border-radius:9px;padding:10px 6px;background:none;color:var(--mut);font-weight:700;font-size:14px;font-family:inherit;cursor:pointer}
+  .seg button.on{background:var(--bg);color:var(--txt);box-shadow:0 0 0 1.5px var(--hd) inset}
+  .fld{width:100%;border:0;border-radius:12px;background:var(--card);color:var(--txt);font-family:inherit;font-size:15.5px;line-height:1.45;padding:14px;outline:none}
+  textarea.fld{min-height:130px;resize:vertical}
+  .hint{margin:6px 2px 0;font-size:12.5px;line-height:1.45;color:var(--mut)}
+  .dl{display:flex;flex-wrap:wrap;gap:14px 22px}.tg{display:inline-flex;align-items:center;gap:10px;font-size:15px;font-weight:600;cursor:pointer;background:none;border:0;color:var(--txt);font-family:inherit;padding:0}
+  .sw{width:46px;height:26px;border-radius:99px;background:#5b6a62;position:relative;transition:.15s;flex:none}.sw::after{content:"";position:absolute;left:3px;top:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.15s}
+  .tg.on .sw{background:var(--hd)}.tg.on .sw::after{left:23px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .err{color:#ef4444;font-size:13.5px;margin:12px 2px 0;min-height:18px}
+  .btn{display:block;width:100%;border:0;border-radius:12px;padding:15px;font-weight:800;font-size:16px;font-family:inherit;cursor:pointer;margin-top:12px}
+  .btn.p{background:linear-gradient(90deg,#14a85a,#0d7a43);color:#fff}.btn.p[disabled]{opacity:.6}.btn.c{background:var(--card);color:var(--txt)}
   nav{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);background:var(--bg);border-top:1px solid var(--line);padding:6px 0 max(6px,env(safe-area-inset-bottom))}
   nav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--mut);text-decoration:none;padding:4px 0}
   nav a svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -56,6 +76,32 @@
   <div class="act" id="act"></div>
 </div>
 
+
+<div id="st" role="dialog" aria-modal="true" aria-label="Alert Settings"><div class="in">
+  <div class="th"><b>Alert Settings</b><button class="x" id="stx" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <h4>Alert Type</h4>
+  <div class="seg" id="sType"><button type="button" data-v="sched" class="on">Scheduled AI summary</button><button type="button" data-v="price">Price or move</button></div>
+  <div id="sSched">
+    <h4>Model</h4>
+    <div class="seg" id="sModel"><button type="button" data-v="quick" class="on">Quick</button><button type="button" data-v="pro">Pro</button><button type="button" data-v="deep">Deep</button></div>
+    <p class="hint">Quick is the fastest. Deep thinks longer and checks more.</p>
+    <h4>Title <small id="tC">0/200</small></h4>
+    <textarea class="fld" id="sTitle" rows="2" maxlength="200" placeholder="Name this alert"></textarea>
+    <h4>Prompt <small id="pC">0/5000</small></h4>
+    <textarea class="fld" id="sPrompt" maxlength="5000" placeholder="What should PCN AI write for you each time?"></textarea>
+    <p class="hint">PCN AI answers this using live prices, Fear &amp; Greed, news and web search, then sends it to you.</p>
+    <h4>Deliver to</h4>
+    <div class="dl"><button type="button" class="tg on" data-ch="telegram"><span class="sw"></span>Telegram</button><button type="button" class="tg on" data-ch="push"><span class="sw"></span>Push</button><button type="button" class="tg" data-ch="web"><span class="sw"></span>In the app</button></div>
+    <p class="hint">By selecting an option, you consent to us sending you a notification via that channel.</p>
+    <h4>Frequency</h4>
+    <div class="seg" id="sFreq"><button type="button" data-v="once" class="on">One time</button><button type="button" data-v="daily">Daily</button><button type="button" data-v="weekly">Weekly</button></div>
+    <h4>Alert Time <small id="tz">GMT+1</small></h4>
+    <div class="row2"><input class="fld" id="sDate" type="date"><input class="fld" id="sTime" type="time"></div>
+    <p class="err" id="sErr"></p>
+    <button class="btn p" id="sGo" type="button">Create</button>
+    <button class="btn c" id="sNo" type="button">Cancel</button>
+  </div>
+</div></div>
 <nav aria-label="Main">
   <a href="/#market"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Market</a>
   <a href="/#portfolio"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-9-9v9z"/><path d="M15 3.5A9 9 0 0 1 20.5 9H15z"/></svg>Portfolio</a>
@@ -68,20 +114,64 @@
 import { SUPABASE_URL as U, SUPABASE_KEY as K } from "./config.js";
 var $ = function (i) { return document.getElementById(i); };
 function open(text, send) { location.href = "/?pcnq=" + encodeURIComponent(text) + (send ? "&go=1" : "&go=0"); }
-$("create").onclick = function () { open("Alert me when ", false); };
 $("inf").onclick = function () { $("tip").classList.toggle("on"); };
 
 var bell = '<svg viewBox="0 0 24 24"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>';
 var chev = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>';
+var SUGG = [
+  { t: "What are the most important news in crypto over the past 24h?", p: "Summarize the 5 most important and interesting crypto developments from the past 24 hours. For each item, include 1 sentence on what happened and 1 sentence on why it matters. Keep it short, plain and easy to read.", f: "daily" },
+  { t: "Why did Bitcoin's price move by more than 2% in the past hour?", p: "Check Bitcoin's price move in the past hour. If it moved by more than 2%, explain the most likely reasons using live price data and the latest news. If it did not, say so in one line.", f: "daily" },
+  { t: "What is the market sentiment today?", p: "Tell me the current crypto market sentiment: the Fear & Greed index, Bitcoin dominance, and whether the market is up or down in the last 24 hours. End with one short sentence on what it may mean.", f: "daily" }
+];
+var QUICK = ["Alert me when Bitcoin moves up 2%", "Alert me when Bitcoin moves down 5%"];
 function cards(px) {
-  var list = ["Alert me when Bitcoin moves up 2%", "Alert me when Bitcoin moves down 5%", "Alert me when ETH moves up 3%"];
-  if (px > 0) { var t = px * 1.05, r = t >= 1000 ? Math.round(t / 500) * 500 : Math.round(t); list.splice(1, 0, "Alert me when Bitcoin reaches $" + r.toLocaleString("en-US")); }
-  $("sg").innerHTML = list.slice(0, 4).map(function (t) {
-    return '<button type="button" class="sg" data-t="' + t.replace(/"/g, "&quot;") + '"><span class="ic">' + bell + '</span><span>' + t + '</span><span class="ch">' + chev + '</span></button>';
-  }).join("");
+  var q = QUICK.slice();
+  if (px > 0) { var t = px * 1.05, r = t >= 1000 ? Math.round(t / 500) * 500 : Math.round(t); q.splice(1, 0, "Alert me when Bitcoin reaches $" + r.toLocaleString("en-US")); }
+  var one = function (t, k, i) { return '<button type="button" class="sg" data-k="' + k + '" data-i="' + i + '"><span class="ic">' + bell + '</span><span>' + t + '</span><span class="ch">' + chev + '</span></button>'; };
+  $("sg").innerHTML = SUGG.map(function (x, i) { return one(x.t, "s", i); }).join("") + q.map(function (t) { return one(t, "q", t); }).join("");
 }
 cards(0);
-$("sg").onclick = function (e) { var b = e.target.closest(".sg"); if (b) open(b.getAttribute("data-t"), true); };
+$("sg").onclick = function (e) {
+  var b = e.target.closest(".sg"); if (!b) return;
+  if (b.getAttribute("data-k") === "s") openSettings(SUGG[Number(b.getAttribute("data-i"))]); else open(b.getAttribute("data-i"), true);
+};
+/* ---- Alert Settings sheet ---- */
+var st = { type: "sched", model: "quick", freq: "once", ch: { telegram: 1, push: 1, web: 0 } };
+function segSet(id, v) { Array.prototype.forEach.call($(id).children, function (b) { b.classList.toggle("on", b.getAttribute("data-v") === v); }); }
+function cnt() { $("tC").textContent = $("sTitle").value.length + "/200"; $("pC").textContent = $("sPrompt").value.length + "/5000"; }
+function pad(n) { return (n < 10 ? "0" : "") + n; }
+function openSettings(x) {
+  x = x || {};
+  $("sTitle").value = x.t || ""; $("sPrompt").value = x.p || ""; st.freq = x.f || "once"; segSet("sFreq", st.freq); st.type = "sched"; segSet("sType", "sched"); $("sSched").style.display = "";
+  var d = new Date(Date.now() + 15 * 60000); d.setSeconds(0, 0); d.setMinutes(Math.ceil(d.getMinutes() / 5) * 5);
+  $("sDate").value = d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); $("sTime").value = pad(d.getHours()) + ":" + pad(d.getMinutes());
+  var o = -d.getTimezoneOffset(), a = Math.abs(o); $("tz").textContent = "GMT" + (o >= 0 ? "+" : "-") + Math.floor(a / 60) + (a % 60 ? ":" + pad(a % 60) : "");
+  $("sErr").textContent = ""; cnt(); $("st").classList.add("on"); document.body.style.overflow = "hidden"; $("st").scrollTop = 0;
+}
+function closeSettings() { $("st").classList.remove("on"); document.body.style.overflow = ""; }
+$("create").onclick = function () { openSettings({}); };
+$("stx").onclick = closeSettings; $("sNo").onclick = closeSettings;
+$("sType").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; if (b.getAttribute("data-v") === "price") { closeSettings(); open("Alert me when ", false); } };
+$("sModel").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; st.model = b.getAttribute("data-v"); segSet("sModel", st.model); };
+$("sFreq").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; st.freq = b.getAttribute("data-v"); segSet("sFreq", st.freq); };
+Array.prototype.forEach.call(document.querySelectorAll(".tg"), function (b) { b.onclick = function () { var c = b.getAttribute("data-ch"); st.ch[c] = st.ch[c] ? 0 : 1; b.classList.toggle("on", !!st.ch[c]); }; });
+$("sTitle").oninput = cnt; $("sPrompt").oninput = cnt;
+$("sGo").onclick = function () {
+  var err = $("sErr"), title = $("sTitle").value.trim(), prompt = $("sPrompt").value.trim();
+  if (!title) return void (err.textContent = "Add a title.");
+  if (!prompt) return void (err.textContent = "Add a prompt.");
+  if (!st.ch.telegram && !st.ch.push && !st.ch.web) return void (err.textContent = "Choose where to send it.");
+  var when = new Date($("sDate").value + "T" + $("sTime").value);
+  if (isNaN(when.getTime())) return void (err.textContent = "Pick a date and time.");
+  if (st.freq === "once" && when.getTime() < Date.now() - 60000) return void (err.textContent = "Pick a time in the future.");
+  var tok = token(); if (!tok) { err.innerHTML = 'Please <a href="/#account" style="color:var(--hd);font-weight:700">sign in</a> first.'; return; }
+  err.textContent = ""; $("sGo").disabled = true;
+  fetch(U + "/rest/v1/rpc/create_ai_schedule", { method: "POST", headers: { apikey: K, Authorization: "Bearer " + tok, "Content-Type": "application/json" },
+    body: JSON.stringify({ p_title: title, p_prompt: prompt, p_model: st.model, p_channels: Object.keys(st.ch).filter(function (k) { return st.ch[k]; }), p_freq: st.freq, p_run_at: when.toISOString(), p_tz: (Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC") }) })
+    .then(function (r) { return r.json().then(function (j) { return { ok: r.ok, j: j }; }); })
+    .then(function (r) { $("sGo").disabled = false; if (!r.ok) { err.textContent = (r.j && /limit/i.test(r.j.message || "")) ? "You have reached your limit of scheduled alerts. Delete one first." : "Could not save the alert. Please try again."; return; } closeSettings(); loadCount(); })
+    .catch(function () { $("sGo").disabled = false; err.textContent = "No internet. Please try again."; });
+};
 var H0 = { apikey: K };
 fetch(U + "/rest/v1/coins?select=price_usd&id=eq.bitcoin", { headers: H0 }).then(function (r) { return r.json(); }).then(function (l) { if (l && l[0] && Number(l[0].price_usd) > 0) cards(Number(l[0].price_usd)); }).catch(function () {});
 
@@ -89,15 +179,16 @@ function token() {
   try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^sb-.*-auth-token$/.test(k)) { var v = JSON.parse(localStorage.getItem(k)); var s = v && (v.access_token ? v : v.currentSession); if (s && s.access_token) return s.access_token; } } } catch (e) {}
   return null;
 }
-var tk = token();
-if (!tk) { $("act").innerHTML = 'Active alerts: sign in to see yours. <a href="/#account">Sign in</a>'; }
-else {
+function loadCount() {
+  var tk = token();
+  if (!tk) { $("act").innerHTML = 'Active alerts: sign in to see yours. <a href="/#account">Sign in</a>'; return; }
   var H = { apikey: K, Authorization: "Bearer " + tk };
-  var cnt = function (t) { return fetch(U + "/rest/v1/" + t + "?select=id&status=eq.active", { headers: H }).then(function (r) { return r.json(); }).then(function (a) { return Array.isArray(a) ? a.length : 0; }).catch(function () { return 0; }); };
-  Promise.all([cnt("price_alerts"), cnt("percent_alerts"), cnt("portfolio_alerts")]).then(function (c) {
-    $("act").innerHTML = "Active alerts: " + (c[0] + c[1] + c[2]) + "/40" + ' · <a href="/#alerts">View</a><small>Coin ' + c[0] + "/20 · Move " + c[1] + "/10 · Portfolio " + c[2] + "/10</small>";
+  var cnt2 = function (t) { return fetch(U + "/rest/v1/" + t + "?select=id&status=eq.active", { headers: H }).then(function (r) { return r.json(); }).then(function (a) { return Array.isArray(a) ? a.length : 0; }).catch(function () { return 0; }); };
+  Promise.all([cnt2("price_alerts"), cnt2("percent_alerts"), cnt2("portfolio_alerts")]).then(function (c) {
+    $("act").innerHTML = "Active alerts: " + (c[0] + c[1] + c[2]) + '/40 \u00b7 <a href="/#alerts">View</a><small>Coin ' + c[0] + "/20 \u00b7 Move " + c[1] + "/10 \u00b7 Portfolio " + c[2] + "/10</small>";
   });
 }
+loadCount();
 </script>
 </body>
 </html>
