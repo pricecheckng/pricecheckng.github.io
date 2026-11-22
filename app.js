@@ -2977,14 +2977,7 @@ async function renderAlerts() {
   acctCss();
   await loadPlan();
   if (!$("#alerts")) {
-    view.innerHTML = `<section class="page"><h1>Alerts</h1><div id="pushCard"></div><div id="tgTip"></div><button class="btn" type="button" id="newAlert">+ New alert</button><div style="height:14px"></div><div id="alerts" class="list">${skeleton(3)}</div></section>${footer()}`;
-    renderPushCard($("#pushCard"));
-    $("#newAlert").onclick = newAlertSheet;
-    sb.from("telegram_links").select("chat_id").eq("user_id", state.user?.id || "00000000-0000-0000-0000-000000000000").limit(1).maybeSingle().then(({ data }) => {
-      const t = $("#tgTip");
-      return;
-      t.innerHTML = `<a href="#account" class="ac-tip"><span class="ac-tip-ic">✈</span><span><b>Don't want to miss an alert?</b><br>Connect Telegram and your alerts will arrive there too.</span><span class="ac-chev">${acIco("chev")}</span></a>`;
-    });
+    view.innerHTML = `<section class="page"><h1>Alerts</h1><div id="alerts" class="list">${skeleton(3)}</div></section>${footer()}`;
   }
   const [pa, po, pp, pt] = await Promise.all([
     sb
@@ -3009,7 +3002,7 @@ async function renderAlerts() {
   );
   lastAlertItems = items;
   if (!items.length) {
-    box.innerHTML = emptyBox("No alerts yet", "Tap + New alert, or open any coin and tap Set price alert.");
+    box.innerHTML = emptyBox("No alerts yet", "Open any coin and tap Set price alert, or use AI Alerts from the menu.");
     return;
   }
   const pfActive = (po.data || []).filter((a) => a.status === "active").length;

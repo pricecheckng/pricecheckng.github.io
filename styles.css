@@ -384,3 +384,13 @@ html.dk .cw .buy{border-color:#22c55e;color:#4ade80}
   #lin .lhd .hc.c{min-width:68px}
 }
 }
+
+@media (min-width: 960px) {
+  main:has(#alerts) { max-width: 1100px; }
+  main:has(#alerts) .page h1 { font-size: 2rem; margin: 10px 0 18px; }
+  #alerts.list { display: grid; grid-template-columns: 1fr 1fr; border-radius: 20px; }
+  #alerts.list > p, #alerts.list > div:last-child:not(.alert) { grid-column: 1 / -1; }
+  #alerts.list > .alert { padding: 16px 20px; border-bottom: 1px solid var(--line); }
+  #alerts.list > .alert:nth-child(even) { border-right: 1px solid var(--line); }
+  #alerts.list > .alert .meta b { font-size: 1.02rem; }
+}
