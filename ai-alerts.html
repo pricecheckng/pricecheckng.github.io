@@ -50,6 +50,15 @@
   .err{color:#ef4444;font-size:13.5px;margin:12px 2px 0;min-height:18px}
   .btn{display:block;width:100%;border:0;border-radius:12px;padding:15px;font-weight:800;font-size:16px;font-family:inherit;cursor:pointer;margin-top:12px}
   .btn.p{background:linear-gradient(90deg,#14a85a,#0d7a43);color:#fff}.btn.p[disabled]{opacity:.6}.btn.c{background:var(--card);color:var(--txt)}
+
+  #cr{position:fixed;inset:0;z-index:60;background:var(--bg);overflow-y:auto;display:none}#cr.on{display:block}
+  #cr .in{max-width:640px;margin:0 auto;padding:0 16px 40px}
+  #cr .th{position:relative;display:flex;align-items:center;justify-content:center;height:56px}#cr .th b{font-size:18px;font-weight:800}
+  #cr .x{position:absolute;right:0;top:10px;width:36px;height:36px;border:0;background:none;color:var(--mut);cursor:pointer}#cr .x svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+  .opt{display:flex;align-items:center;gap:14px;width:100%;margin:14px 0 0;padding:16px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--txt);font-family:inherit;text-align:left;cursor:pointer}
+  .opt .oi{flex:none;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(18,161,80,.14);color:var(--hd)}.opt .oi svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+  .opt .ot{flex:1;min-width:0}.opt b{font-size:17px;font-weight:800;margin-right:8px}.opt .rc{display:inline-block;padding:2px 10px;border-radius:99px;font-size:12.5px;font-weight:700;color:#fff;background:linear-gradient(90deg,#14a85a,#0d7a43);vertical-align:2px}
+  .opt p{margin:4px 0 0;font-size:14.5px;line-height:1.45;color:var(--mut)}.opt .ch{flex:none;color:var(--mut);display:inline-flex}
   nav{position:fixed;left:0;right:0;bottom:0;display:grid;grid-template-columns:repeat(5,1fr);background:var(--bg);border-top:1px solid var(--line);padding:6px 0 max(6px,env(safe-area-inset-bottom))}
   nav a{display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;color:var(--mut);text-decoration:none;padding:4px 0}
   nav a svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -77,6 +86,12 @@
 </div>
 
 
+
+<div id="cr" role="dialog" aria-modal="true" aria-label="Create Alert"><div class="in">
+  <div class="th"><b>Create Alert</b><button class="x" id="crx" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+  <button type="button" class="opt" id="crChat"><span class="oi"><svg viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L3 21l1.9-5.4A8 8 0 1 1 21 12z"/></svg></span><span class="ot"><b>In Chat</b><span class="rc">Recommended</span><p>Describe what you want. We&rsquo;ll set it up.</p></span><span class="ch"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+  <button type="button" class="opt" id="crMan"><span class="oi"><svg viewBox="0 0 24 24"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h6"/></svg></span><span class="ot"><b>Manual Setup</b><p>Choose conditions, timing, and delivery.</p></span><span class="ch"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></span></button>
+</div></div>
 <div id="st" role="dialog" aria-modal="true" aria-label="Alert Settings"><div class="in">
   <div class="th"><b>Alert Settings</b><button class="x" id="stx" type="button" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <h4>Alert Type</h4>
@@ -149,7 +164,11 @@ function openSettings(x) {
   $("sErr").textContent = ""; cnt(); $("st").classList.add("on"); document.body.style.overflow = "hidden"; $("st").scrollTop = 0;
 }
 function closeSettings() { $("st").classList.remove("on"); document.body.style.overflow = ""; }
-$("create").onclick = function () { openSettings({}); };
+$("create").onclick = function () { $("cr").classList.add("on"); document.body.style.overflow = "hidden"; };
+function closeCr() { $("cr").classList.remove("on"); document.body.style.overflow = ""; }
+$("crx").onclick = closeCr;
+$("crChat").onclick = function () { closeCr(); open("Alert me when ", false); };
+$("crMan").onclick = function () { closeCr(); openSettings({}); };
 $("stx").onclick = closeSettings; $("sNo").onclick = closeSettings;
 $("sType").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; if (b.getAttribute("data-v") === "price") { closeSettings(); open("Alert me when ", false); } };
 $("sModel").onclick = function (e) { var b = e.target.closest("button"); if (!b) return; st.model = b.getAttribute("data-v"); segSet("sModel", st.model); };
