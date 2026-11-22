@@ -19,7 +19,9 @@ jobs:
         run: |
           q() { curl -s -X POST "https://api.supabase.com/v1/projects/lbkpdepqymfjgmoouafv/database/query" -H "Authorization: Bearer $T" -H "Content-Type: application/json" --data "$(jq -n --arg q "$1" '{query:$q}')" ; echo; }
           {
-            echo "## exchanges per currency"; q "select currency, count(distinct source) exchanges, string_agg(distinct source, ',' order by source) names from public.p2p_world where updated_at > now() - interval '3 hours' group by currency order by 2 desc, 1"
+            echo "## SEK rows"; q "select source, side, best, typical, ads, updated_at from public.p2p_world where currency='SEK' order by source, side"
+            echo "## GHS rows"; q "select source, side, best, typical, ads from public.p2p_world where currency='GHS' order by source, side"
+            echo "## exchanges per currency"; q "select currency, count(distinct source) exchanges, string_agg(distinct source, ',' order by source) names, count(*) filter (where side='buy') buys, count(*) filter (where side='sell') sells from public.p2p_world where updated_at > now() - interval '3 hours' group by currency order by 2 desc, 1"
           } 2>&1 | sed -E 's/[A-Za-z0-9_.:-]{40,}/<hidden>/g' > db-structure.txt
           wc -c db-structure.txt
       - name: Save
