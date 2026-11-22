@@ -34,6 +34,21 @@
         .pcn-chat-form textarea { width: 100%; box-sizing: border-box; border: 0; outline: none; resize: none; background: transparent; color: inherit; font: inherit; font-size: 16px; line-height: 1.4; min-height: 52px; max-height: 140px; padding: 2px 2px; }
         .pcn-row { display: flex; align-items: center; gap: 8px; }
         .pcn-row .sp { flex: 1; }
+        .pcn-mic { display: none; width: 42px; height: 36px; border: 1px solid #d5e0da; border-radius: 10px; background: transparent; color: #12a150; align-items: center; justify-content: center; cursor: pointer; }
+        .pcn-mic.rec { background: #ea3943; border-color: #ea3943; color: #fff; }
+        .pcn-chat-form.hasmic .pcn-mic { display: inline-flex; }
+        .pcn-chat-form.hasmic.empty .pcn-go { display: none; }
+        .pcn-note { display: none; font-size: 13px; color: #5a6b62; padding: 0 2px; }
+        .pcn-note.on { display: block; }
+        #pcnRec { display: none; align-items: center; gap: 10px; min-height: 52px; }
+        .pcn-chat-form.recing #pcnRec { display: flex; }
+        .pcn-chat-form.recing #pcnInput, .pcn-chat-form.recing .pcn-row { display: none; }
+        #pcnRec button { width: 36px; height: 36px; border-radius: 10px; border: 1px solid #d5e0da; background: transparent; color: inherit; font-size: 17px; cursor: pointer; flex: none; }
+        #pcnRec #pcnRecOk { background: #12a150; border-color: #12a150; color: #fff; font-weight: 800; }
+        .pcn-chat-form.wait #pcnRecOk { opacity: .5; }
+        #pcnRec .wv { flex: 1; height: 30px; display: flex; align-items: center; gap: 3px; overflow: hidden; }
+        #pcnRec .wv i { flex: 1; min-width: 2px; max-width: 5px; border-radius: 2px; background: #12a150; height: 3px; opacity: .9; }
+        #pcnRec .tm { font-size: 13px; color: #5a6b62; min-width: 34px; text-align: right; font-variant-numeric: tabular-nums; }
         .pcn-go { width: 42px; height: 36px; border: 0; border-radius: 10px; background: #12a150; color: #fff; font-size: 18px; font-weight: 800; cursor: pointer; }
         .pcn-close { cursor: pointer; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; margin-right: -6px; }
         #pcn-chat-modal.typing { align-items: flex-start; }
@@ -155,11 +170,13 @@
           <div class="pcn-libwrap" id="pcnSrcList"></div>
         </div></div>
         <form class="pcn-chat-form" id="pcnForm">
+          <div class="pcn-note" id="pcnMicNote"></div>
           <textarea id="pcnInput" rows="2" placeholder="Ask PCN AI" required autocomplete="off"></textarea>
           <div class="pcn-row">
             <button type="button" class="pcn-mode" id="pcnMode">Quick &#9662;</button>
             <button type="button" class="pcn-lib" id="pcnLib" aria-label="Question ideas">{ }</button>
             <span class="sp"></span>
+            <button type="button" class="pcn-mic" id="pcnMic" aria-label="Speak your question"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
             <button type="submit" class="pcn-go" aria-label="Send">&#10148;</button>
           </div>
         </form>
@@ -907,6 +924,48 @@
       ta.addEventListener('keydown', function (e) {
         if (e.key === 'Enter' && !e.shiftKey && !('ontouchstart' in window)) { e.preventDefault(); document.getElementById('pcnForm').requestSubmit(); }
       });
+    })();
+
+    /* voice input (microphone), like the AI chart chat */
+    (function () {
+      var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      var f = document.getElementById('pcnForm'), mic = document.getElementById('pcnMic'), inp = document.getElementById('pcnInput'), nt = document.getElementById('pcnMicNote');
+      function sync() { f.classList.toggle('empty', !inp.value.trim() && !f.classList.contains('recing')); }
+      inp.addEventListener('input', sync);
+      f.addEventListener('submit', function () { setTimeout(sync, 80); });
+      if (!SR) { sync(); return; }
+      f.classList.add('hasmic'); sync();
+      var recBox = document.createElement('div'); recBox.id = 'pcnRec';
+      recBox.innerHTML = '<button type="button" id="pcnRecX" aria-label="Cancel">\u2715</button><div class="wv" id="pcnRecWv"></div><span class="tm" id="pcnRecT">0:00</span><button type="button" id="pcnRecOk" aria-label="Done">\u2713</button>';
+      f.insertBefore(recBox, f.firstChild);
+      var wv = document.getElementById('pcnRecWv'), bars = [], i;
+      for (i = 0; i < 34; i++) { var b = document.createElement('i'); wv.appendChild(b); bars.push(b); }
+      var rec = null, base = '', t0 = 0, tick = null, lastVoice = 0, keep = true, wait = false, txt = '';
+      function note(t) { nt.textContent = t; nt.classList.add('on'); setTimeout(function () { nt.classList.remove('on'); }, 2800); }
+      function draw() {
+        var s2 = Math.floor((Date.now() - t0) / 1000);
+        document.getElementById('pcnRecT').textContent = wait ? '' : Math.floor(s2 / 60) + ':' + ('0' + (s2 % 60)).slice(-2);
+        var loud = Date.now() - lastVoice < 700;
+        bars.forEach(function (bb, k) { var h = wait ? 4 + 5 * (1 + Math.sin(Date.now() / 220 + k / 2)) : (loud ? 4 + Math.random() * 22 : 3 + Math.random() * 3); bb.style.height = h + 'px'; });
+      }
+      function close() { clearInterval(tick); f.classList.remove('recing', 'wait'); wait = false; mic.classList.remove('rec'); rec = null; sync(); inp.dispatchEvent(new Event('input')); }
+      function start() {
+        rec = new SR(); rec.lang = 'en-NG'; rec.interimResults = true; rec.continuous = true;
+        base = inp.value ? inp.value.trim() + ' ' : ''; keep = true; txt = '';
+        rec.onspeechstart = function () { lastVoice = Date.now(); };
+        rec.onresult = function (e) { lastVoice = Date.now(); var t = ''; for (var k = 0; k < e.results.length; k++) t += e.results[k][0].transcript; txt = t; };
+        rec.onerror = function (e) {
+          keep = false;
+          if (e.error === 'not-allowed' || e.error === 'service-not-allowed') note('Allow the microphone for this site to talk to PCN AI');
+          else if (e.error === 'no-speech') note('I did not hear anything, try again');
+          else if (e.error !== 'aborted') note('Voice did not work, try typing');
+        };
+        rec.onend = function () { if (keep && txt) inp.value = (base + txt).slice(0, 400); close(); };
+        try { rec.start(); t0 = Date.now(); lastVoice = 0; f.classList.add('recing'); f.classList.remove('empty'); clearInterval(tick); tick = setInterval(draw, 90); draw(); } catch (e) { close(); }
+      }
+      mic.onclick = function () { if (!rec) start(); };
+      document.getElementById('pcnRecX').onclick = function () { keep = false; try { rec && rec.abort(); } catch (e) {} close(); };
+      document.getElementById('pcnRecOk').onclick = function () { if (!rec) return; wait = true; f.classList.add('wait'); try { rec.stop(); } catch (e) { close(); } };
     })();
 
     // Handle Form Submit
