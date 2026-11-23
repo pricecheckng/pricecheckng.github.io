@@ -819,6 +819,13 @@
       setMagnet: function (v) { magnet = !!v; }, setEmoji: function (e) { emojiSel = e; }, setText: function (i, t) { if (DR[i]) { DR[i].txt = t; emitDraw(); draw(); } }, deleteAt: function (i) { if (DR[i]) { DR.splice(i, 1); sel = -1; emitDraw(); draw(); } },
       setInds: function (a) { a = a || []; inds = a.filter(function (k) { return IND_META[k]; }); subs = a.filter(function (k) { return SUB_META[k]; }); subSync(); size(); }, indMeta: (function () { var o = {}, k; for (k in IND_META) o[k] = IND_META[k]; for (k in SUB_META) o[k] = SUB_META[k]; return o; })(), subIds: Object.keys(SUB_META),
       setType: function (t) { ctype = t; draw(); }, getType: function () { return ctype; }, setColors: function (u, d) { if (u) C.up = u; if (d) C.dn = d; draw(); },
+      candles: function () { return D.c; },
+      showRange: function (i0, i1, ms) {   // glide the view so candles i0..i1 fill the chart
+        var n = D.c.length; if (!n) return; i0 = Math.max(0, Math.min(i0, n - 1)); i1 = Math.max(i0, Math.min(i1, n - 1));
+        var pad = Math.max(3, Math.round((i1 - i0) * 0.18)), vis = i1 - i0 + 1 + pad * 2, tb = Math.max(2, Math.min(40, plotW() / vis)), ts = i0 - pad;
+        var b0 = V.bw, s0 = V.start, t0 = Date.now(), dur = ms == null ? 600 : ms; zoomed = true;
+        (function stepA() { var k = dur ? Math.min(1, (Date.now() - t0) / dur) : 1, e = 1 - Math.pow(1 - k, 3); V.bw = b0 + (tb - b0) * e; V.start = s0 + (ts - s0) * e; clampView(); draw(); if (k < 1) requestAnimationFrame(stepA); })();
+      },
       pan: function (dir) { V.start += dir * (plotW() / V.bw) * 0.5; clampView(); draw(); },
       panOk: function () { var n = D.c.length, vis = plotW() / V.bw; return [V.start > -vis * 0.6 + 0.5, V.start < Math.max(0, n - vis * 0.4) - 0.5]; },
       undo: function () { if (hist.length < 2) return false; redoS.push(hist.pop()); applyHist(hist[hist.length - 1]); return true; },

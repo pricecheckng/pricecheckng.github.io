@@ -330,6 +330,7 @@
     <div class="hpr"><b>mark what matters</b><button type="button" data-q="Mark the support and resistance.">"Mark the support and resistance." <span>&rarr; key levels drawn in seconds</span></button></div>
     <div class="hpr"><b>draw the range</b><button type="button" data-q="Draw the current range.">"Draw the current range." <span>&rarr; the high and low box on your chart</span></button></div>
     <div class="hpr"><b>add indicators</b><button type="button" data-q="Add the 50 and 200 averages.">"Add the 50 and 200 averages." <span>&rarr; moving averages added and on</span></button></div>
+    <div class="hpr"><b>jump anywhere</b><button type="button" data-q="Zoom in on the crash.">"Zoom in on the crash." <span>&rarr; the chart glides to the biggest drop</span></button></div>
     <div class="hpr"><b>find a setup</b><button type="button" data-q="Outline the upside and downside levels">"Outline the upside and downside levels" <span>&rarr; where it could go either way</span></button></div>
     <div class="hpr"><b>clean up</b><button type="button" data-q="Clear the lines you drew.">"Clear the lines you drew." <span>&rarr; the chart is clean again</span></button></div>
   </div>
@@ -395,7 +396,7 @@ setTimeout(function(){var d=document.getElementById('dtools');if(d)d.classList.a
   }, 7000);
 })();
 </script>
-<script src="pcnchart.js?v=170"></script>
+<script src="pcnchart.js?v=171"></script>
 <script src="chart-ex.js?v=172"></script>
 <script type="module">
 import { ICONS } from "./chart-icons.js?v=167";
@@ -1357,6 +1358,38 @@ async function chartAction(q, box) {
   const draw = /\b(draw|mark|plot|show|add|put|highlight|outline|turn on)\b/.test(t);
   const readChart = () => stg(box, 'eye', 'read_chart', 'read the current view and drawings', () => chart.count(), n => n + ' drawing' + (n === 1 ? '' : 's'), null, 320);
   const readData = () => stg(box, 'eye', 'read_data', 'loaded the requested history', () => nC, n => n + ' candles', null, 300);
+  if (/\b(zoom|jump|go to|take me|focus|show me|scroll)\b/.test(t) && /(crash|drop|dump|fall|decline|sell ?off|rally|pump|rise|bounce|recovery|low|bottom|high|top|peak|last\s+\d*\s*(candle|bar|hour|day|week|month)s?|start|beginning|latest|now|today|yesterday)/.test(t)) {
+    const cs = lastD.candles, n = cs.length; if (n < 5) return null;
+    const dt = n > 1 ? (cs[1].t - cs[0].t) : 14400000, fmtT = ms => new Date(ms).toLocaleString('en', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+    let i0 = 0, i1 = n - 1, what = '', info = '';
+    const lastM = t.match(/last\s+(\d+)?\s*(candle|bar|hour|day|week|month)s?/);
+    if (/(crash|drop|dump|fall|decline|sell ?off)/.test(t)) {
+      let pk = 0, best = 0, bi0 = 0, bi1 = 0;
+      for (let i = 1; i < n; i++) { if (cs[i].h > cs[pk].h) pk = i; const dd = (cs[pk].h - cs[i].l) / cs[pk].h; if (dd > best) { best = dd; bi0 = pk; bi1 = i; } }
+      i0 = bi0; i1 = Math.min(n - 1, bi1 + Math.round((bi1 - bi0) * 0.25)); what = 'the biggest drop';
+      info = 'It fell ' + (best * 100).toFixed(1) + '% from ' + fmt(cs[bi0].h) + ' (' + fmtT(cs[bi0].t) + ') to ' + fmt(cs[bi1].l) + ' (' + fmtT(cs[bi1].t) + ') over ' + (bi1 - bi0 + 1) + ' candles.';
+    } else if (/(rally|pump|rise|bounce|recovery)/.test(t)) {
+      let tr = 0, best = 0, bi0 = 0, bi1 = 0;
+      for (let i = 1; i < n; i++) { if (cs[i].l < cs[tr].l) tr = i; const up = (cs[i].h - cs[tr].l) / cs[tr].l; if (up > best) { best = up; bi0 = tr; bi1 = i; } }
+      i0 = bi0; i1 = bi1; what = 'the biggest rally';
+      info = 'It rose ' + (best * 100).toFixed(1) + '% from ' + fmt(cs[bi0].l) + ' (' + fmtT(cs[bi0].t) + ') to ' + fmt(cs[bi1].h) + ' (' + fmtT(cs[bi1].t) + ') over ' + (bi1 - bi0 + 1) + ' candles.';
+    } else if (/(low|bottom)/.test(t)) {
+      let m = 0; for (let i = 1; i < n; i++) if (cs[i].l < cs[m].l) m = i;
+      i0 = Math.max(0, m - 12); i1 = Math.min(n - 1, m + 12); what = 'the lowest point'; info = 'The low is ' + fmt(cs[m].l) + ' on ' + fmtT(cs[m].t) + '.';
+    } else if (/(high|top|peak)/.test(t)) {
+      let m = 0; for (let i = 1; i < n; i++) if (cs[i].h > cs[m].h) m = i;
+      i0 = Math.max(0, m - 12); i1 = Math.min(n - 1, m + 12); what = 'the highest point'; info = 'The high is ' + fmt(cs[m].h) + ' on ' + fmtT(cs[m].t) + '.';
+    } else if (lastM || /(today|yesterday|now|latest)/.test(t)) {
+      let cnt = 30;
+      if (lastM) { const k = parseInt(lastM[1] || '1', 10), u = lastM[2]; cnt = u === 'candle' || u === 'bar' ? k : Math.round(k * ({ hour: 3600000, day: 86400000, week: 604800000, month: 2592000000 }[u]) / dt); }
+      else if (/today/.test(t)) cnt = Math.round(86400000 / dt); else if (/yesterday/.test(t)) cnt = Math.round(172800000 / dt); else cnt = 24;
+      cnt = Math.max(8, Math.min(n, cnt)); i0 = n - cnt; i1 = n - 1; what = 'the latest ' + cnt + ' candles'; info = 'It covers ' + fmtT(cs[i0].t) + ' to ' + fmtT(cs[i1].t) + '.';
+    } else { i0 = 0; i1 = Math.min(n - 1, 40); what = 'the start of the data'; info = 'It starts on ' + fmtT(cs[0].t) + '.'; }
+    await readChart(); await readData();
+    await stg(box, 'eye', 'set_view', 'changed view: range', () => { chart.showRange(i0, i1, 650); return 1; }, () => 'ok', null, 850);
+    await shotStep(box);
+    return '<p>I zoomed the ' + TFN[interval] + ' chart to ' + what + '. ' + info + '</p><div class="ag-note">Pinch or drag to move around. Tap the reset button on the chart to see the latest candles again. Not financial advice.</div>';
+  }
   if (/\b(clear|remove|erase|delete)\b/.test(t) && /(draw|line|level|mark)/.test(t)) {
     await readChart(); const n = await stg(box, 'pen', 'clear_lines', 'removed the lines the agent drew', () => chart.clearAI(), n => n + ' removed');
     return '<p>' + (n ? 'Done. I removed the lines I drew. Your own drawings are still there.' : 'I have no lines on the chart right now. Your own drawings stay until you delete them.') + '</p>';
