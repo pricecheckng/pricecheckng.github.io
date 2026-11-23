@@ -215,6 +215,8 @@ function toast(msg) {
 /* ---------- sheet ---------- */
 function openSheet(html) {
   $("#sheetBody").innerHTML = html;
+  $("#sheetWrap").classList.remove("nt-wrap");
+  document.querySelectorAll(".nt-sheet").forEach((x) => x.classList.remove("nt-sheet"));
   $("#sheetWrap").hidden = false;
   document.body.classList.add("noscroll");
 }
@@ -222,6 +224,8 @@ function closeSheet() {
   $("#sheetWrap").hidden = true;
   $("#sheetBody").innerHTML = "";
   document.body.classList.remove("noscroll");
+  $("#sheetWrap").classList.remove("nt-wrap");
+  document.querySelectorAll(".nt-sheet").forEach((x) => x.classList.remove("nt-sheet"));
 }
 document.addEventListener("click", (e) => {
   if (e.target.closest("[data-close]")) closeSheet();
@@ -4146,7 +4150,7 @@ try {
 /* ---------- bell: red dot + notification list ---------- */
 (function bellInit() {
   const st = document.createElement("style");
-  st.textContent = `.bellbtn{position:relative}.bellbtn.has-new::after{content:"";position:absolute;top:7px;right:8px;width:11px;height:11px;border-radius:50%;background:#e53935;border:2px solid #0b7a4b}.nt-item{padding:12px 0;border-bottom:1px solid rgba(128,128,128,.2)}.nt-item b{display:block}.nt-item.new b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#e53935;margin-right:8px}.nt-item p{margin:4px 0 0;white-space:pre-line}.nt-item small{display:block;opacity:.6;margin-top:4px}.nt-list{margin-bottom:12px}.nt-tabs{display:flex;gap:6px;margin:4px 0 8px}.nt-tabs button{flex:1;position:relative;font:inherit;font-weight:700;padding:10px;border-radius:12px;border:1px solid rgba(128,128,128,.3);background:none;color:inherit;cursor:pointer}.nt-tabs button.on{background:#0b7a4b;border-color:#0b7a4b;color:#fff}.nt-tabs button.dot::after{content:"";position:absolute;top:8px;right:10px;width:8px;height:8px;border-radius:50%;background:#e53935}.nt-panel[hidden]{display:none}`;
+  st.textContent = `.bellbtn{position:relative}.bellbtn.has-new::after{content:"";position:absolute;top:7px;right:8px;width:11px;height:11px;border-radius:50%;background:#e53935;border:2px solid #0b7a4b}.nt-item{padding:12px 0;border-bottom:1px solid rgba(128,128,128,.2)}.nt-item b{display:block}.nt-item.new b::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#e53935;margin-right:8px}.nt-item p{margin:4px 0 0;white-space:pre-line}.nt-item small{display:block;opacity:.6;margin-top:4px}.nt-list{margin-bottom:12px}.nt-tabs{display:flex;gap:6px;margin:4px 0 8px}.nt-tabs button{flex:1;position:relative;font:inherit;font-weight:700;padding:10px;border-radius:12px;border:1px solid rgba(128,128,128,.3);background:none;color:inherit;cursor:pointer}.nt-tabs button.on{background:#0b7a4b;border-color:#0b7a4b;color:#fff}.nt-tabs button.dot::after{content:"";position:absolute;top:8px;right:10px;width:8px;height:8px;border-radius:50%;background:#e53935}.nt-panel[hidden]{display:none}.nt-sheet{height:min(82dvh,680px)}.nt-item.clip p{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}.nt-item.clip::after{content:"Tap to read more";display:block;font-size:11.5px;font-weight:700;color:#0b7a4b;margin-top:4px;cursor:pointer}@media(min-width:900px){.nt-wrap{align-items:flex-start!important;justify-content:flex-end!important;padding:60px 28px 0!important}.nt-wrap .scrim{background:transparent}.nt-sheet{width:420px;max-width:420px;height:min(640px,calc(100dvh - 90px));border-radius:18px;box-shadow:0 18px 50px rgba(0,0,0,.45);border:1px solid rgba(128,128,128,.25);animation:fade .15s ease}.nt-sheet .grab{display:none}}`;
   document.head.appendChild(st);
   const setDot = (n) => document.querySelectorAll(".bellbtn").forEach((b) => b.classList.toggle("has-new", n > 0));
   // News: the dot also shows when there is a headline newer than the last one this person opened.
@@ -4212,6 +4216,7 @@ try {
           `<div class="nt-panel" id="ntPanelW"${startNews ? "" : " hidden"}><div class="nt-list" id="ntNews"><p class="muted">Loading…</p></div><a class="btn ghost" href="news">See all news</a></div>`
       );
       const tabs = $("#ntTabs");
+      if (tabs) { const sh = tabs.closest(".sheet"); if (sh) { sh.classList.add("nt-sheet"); if (sh.parentElement) sh.parentElement.classList.add("nt-wrap"); } }
       if (tabs)
         tabs.onclick = (ev) => {
           const t = ev.target.closest("button");
@@ -4246,6 +4251,10 @@ try {
           : `<p class="muted">No news yet.</p>`;
         if (items[0]) seenSet(items[0].published_at);
         newsNew = false;
+      }
+      if (box) {
+        box.querySelectorAll(".nt-item").forEach((it) => { const pp = it.querySelector("p"); if (pp && pp.textContent.length > 170) it.classList.add("clip"); });
+        box.onclick = (ev) => { const it = ev.target.closest(".nt-item.clip"); if (it) it.classList.remove("clip"); };
       }
       if (signed) {
         await sb.rpc("mark_notifications_seen");
