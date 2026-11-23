@@ -1364,13 +1364,13 @@ async function chartAction(q, box) {
     let i0 = 0, i1 = n - 1, what = '', info = '';
     const lastM = t.match(/last\s+(\d+)?\s*(candle|bar|hour|day|week|month)s?/);
     if (/(crash|drop|dump|fall|decline|sell ?off)/.test(t)) {
-      const W = Math.max(12, Math.min(60, Math.round(n / 8)));   // a crash is a sharp move, so look inside short windows
+      const W = Math.max(8, Math.min(30, Math.round(259200000 / dt)));   // about 3 days: a crash is a fast move   // a crash is a sharp move, so look inside short windows
       let best = 0, bi0 = 0, bi1 = 0;
       for (let s = 0; s < n - 1; s++) { let pk = s; for (let j = s + 1; j < Math.min(n, s + W); j++) { if (cs[j].h > cs[pk].h) pk = j; const dd = (cs[pk].h - cs[j].l) / cs[pk].h; if (dd > best) { best = dd; bi0 = pk; bi1 = j; } } }
-      i0 = bi0; i1 = Math.min(n - 1, bi1 + Math.round((bi1 - bi0) * 0.25)); what = 'the sharpest drop';
+      i0 = bi0; i1 = Math.min(n - 1, bi1 + Math.max(6, Math.round((bi1 - bi0) * 0.8))); what = 'the sharpest drop';
       info = 'It fell ' + (best * 100).toFixed(1) + '% from ' + fmt(cs[bi0].h) + ' (' + fmtT(cs[bi0].t) + ') to ' + fmt(cs[bi1].l) + ' (' + fmtT(cs[bi1].t) + ') over ' + (bi1 - bi0 + 1) + ' candles.';
     } else if (/(rally|pump|rise|bounce|recovery)/.test(t)) {
-      const W = Math.max(12, Math.min(60, Math.round(n / 8)));
+      const W = Math.max(8, Math.min(30, Math.round(259200000 / dt)));   // about 3 days: a crash is a fast move
       let best = 0, bi0 = 0, bi1 = 0;
       for (let s = 0; s < n - 1; s++) { let tr = s; for (let j = s + 1; j < Math.min(n, s + W); j++) { if (cs[j].l < cs[tr].l) tr = j; const up = (cs[j].h - cs[tr].l) / cs[tr].l; if (up > best) { best = up; bi0 = tr; bi1 = j; } } }
       i0 = bi0; i1 = bi1; what = 'the sharpest rally';
