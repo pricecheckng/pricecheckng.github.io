@@ -1389,9 +1389,12 @@ async function chartAction(q, box) {
     } else { i0 = 0; i1 = Math.min(n - 1, 40); what = 'the start of the data'; info = 'It starts on ' + fmtT(cs[0].t) + '.'; }
     await readChart(); await readData();
     await stg(box, 'eye', 'set_view', 'changed view: range', () => { chart.showRange(i0, i1, 650); return 1; }, () => 'ok', null, 850);
+    let wLo = Infinity, wHi = -Infinity; for (let i = i0; i <= i1; i++) { if (cs[i].l < wLo) wLo = cs[i].l; if (cs[i].h > wHi) wHi = cs[i].h; }
     await shotStep(box);
+    const seen = await stg(box, 'eye', 'read_chart', 'read the chart back to check the zoom', () => ({ hi: chart.vis(wHi) === 0, lo: chart.vis(wLo) === 0 }), r => (r && r.hi && r.lo ? 'high and low visible' : 'part of the range is outside the view'), null, 300);
+    const qc = seen && seen.hi && seen.lo ? '<p>The screenshot passes the quality check: the chart is zoomed to ' + what + ', the high at ' + fmt(wHi) + ' and the low at ' + fmt(wLo) + ' are both visible, and the candles after it are still in frame.</p>' : '<p>Quality check: part of this move is still outside the view, so pinch to zoom out a little.</p>';
     setTimeout(() => { try { setOpen(false); setTimeout(() => { if (chart.showRange) chart.showRange(i0, i1, 0); }, 120); } catch (e) {} }, 1500);   // fold the chat away so the zoomed chart is fully visible
-    return '<p>I zoomed the ' + TFN[interval] + ' chart to ' + what + '. ' + info + '</p><div class="ag-note">Pinch or drag to move around. Tap the reset button on the chart to see the latest candles again. Open the chat bar to read this again. Not financial advice.</div>';
+    return qc + '<p>I zoomed the ' + TFN[interval] + ' chart to ' + what + '. ' + info + '</p><div class="ag-note">Pinch or drag to move around. Tap the reset button on the chart to see the latest candles again. Open the chat bar to read this again. Not financial advice.</div>';
   }
   if (/\b(clear|remove|erase|delete)\b/.test(t) && /(draw|line|level|mark)/.test(t)) {
     await readChart(); const n = await stg(box, 'pen', 'clear_lines', 'removed the lines the agent drew', () => chart.clearAI(), n => n + ' removed');
