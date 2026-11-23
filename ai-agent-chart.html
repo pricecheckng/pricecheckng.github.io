@@ -331,6 +331,7 @@
     <div class="hpr"><b>draw the range</b><button type="button" data-q="Draw the current range.">"Draw the current range." <span>&rarr; the high and low box on your chart</span></button></div>
     <div class="hpr"><b>add indicators</b><button type="button" data-q="Add the 50 and 200 averages.">"Add the 50 and 200 averages." <span>&rarr; moving averages added and on</span></button></div>
     <div class="hpr"><b>jump anywhere</b><button type="button" data-q="Zoom in on the crash.">"Zoom in on the crash." <span>&rarr; the chart glides to the sharpest drop (say "latest crash" for the most recent one)</span></button></div>
+    <div class="hpr"><b>compare venues</b><button type="button" data-q="Overlay Bybit">"Overlay Bybit." <span>&rarr; a second exchange drawn over your chart in percent</span></button></div>
     <div class="hpr"><b>find a setup</b><button type="button" data-q="Outline the upside and downside levels">"Outline the upside and downside levels" <span>&rarr; where it could go either way</span></button></div>
     <div class="hpr"><b>clean up</b><button type="button" data-q="Clear the lines you drew.">"Clear the lines you drew." <span>&rarr; the chart is clean again</span></button></div>
   </div>
@@ -396,7 +397,7 @@ setTimeout(function(){var d=document.getElementById('dtools');if(d)d.classList.a
   }, 7000);
 })();
 </script>
-<script src="pcnchart.js?v=171"></script>
+<script src="pcnchart.js?v=172"></script>
 <script src="chart-ex.js?v=172"></script>
 <script type="module">
 import { ICONS } from "./chart-icons.js?v=167";
@@ -1399,6 +1400,24 @@ async function chartAction(q, box) {
     const qc = seen && seen.hi && seen.lo ? '<p>The screenshot passes the quality check: the chart is zoomed to ' + what + ', the high at ' + fmt(wHi) + ' and the low at ' + fmt(wLo) + ' are both visible, and the candles after it are still in frame.</p>' : '<p>Quality check: part of this move is still outside the view, so pinch to zoom out a little.</p>';
     setTimeout(() => { try { setOpen(false); setTimeout(() => { if (chart.showRange) chart.showRange(i0, i1, 0); }, 120); } catch (e) {} }, 1500);   // fold the chat away so the zoomed chart is fully visible
     return qc + '<p>I zoomed the ' + TFN[interval] + ' chart to ' + what + '. ' + info + '</p><div class="ag-note">Pinch or drag to move around. Tap the reset button on the chart to see the latest candles again. Open the chat bar to read this again. Not financial advice.</div>';
+  }
+  const exNames = Object.keys(EXN), exHit = exNames.filter(k => new RegExp('\\b' + k + '\\b').test(t))[0];
+  if (/\b(remove|clear|hide|stop|turn off)\b/.test(t) && /(overlay|compar)/.test(t) && chart.hasOverlay && chart.hasOverlay()) {
+    chart.setOverlay(null); return '<p>Done. The comparison line is removed.</p>';
+  }
+  if (/\b(overlay|compare|comparison|versus|vs)\b/.test(t) && exHit && chart.setOverlay) {
+    if (exHit === exch && mt === 'spot') return '<p>You are already looking at ' + EXN[exHit] + '. Pick another exchange to compare with, for example "Overlay ' + (exch === 'bybit' ? 'OKX' : 'Bybit') + '".</p>';
+    const OA = window.PCNEX && window.PCNEX[exHit];
+    if (!OA || !OA.candles) return '<p>I cannot load ' + EXN[exHit] + ' candles here yet. Try Bybit, OKX, Bitget, Gate or MEXC.</p>';
+    await readChart();
+    const cs0 = await stg(box, 'pulse', 'load_venue', 'loaded ' + EXN[exHit] + ' ' + BASE() + ' ' + TFN[interval] + ' candles', () => OA.candles(BASE(), interval), r => (r ? r.length : 0) + ' candles');
+    if (!cs0 || cs0.length < 5) return '<p>' + EXN[exHit] + ' did not return ' + BASE() + ' candles for this timeframe. It may not list it. Try another exchange.</p>';
+    await stg(box, 'pen', 'create', 'added ' + EXN[exHit] + ' as a comparison line', () => { chart.setScale({ mode: 'percent' }); chart.setOverlay({ cs: cs0, name: EXN[exHit], col: '#a21caf' }); return 1; }, () => 'percent scale', null, 600);
+    await shotStep(box);
+    const st = await stg(box, 'eye', 'read_chart', 'read the chart back to check the overlay', () => chart.ovStats(), r => (r ? 'both lines visible' : 'no overlap'), null, 300);
+    if (!st) { chart.setOverlay(null); return '<p>The two exchanges do not share candles in this view, so I removed the overlay.</p>'; }
+    const gap = st.b - st.a, sg = v => (v > 0 ? '+' : '') + v.toFixed(2) + '%';
+    return '<p>The screenshot passes the quality check: both lines start level at the left edge, and the chart is in percent so the two venues can be compared fairly.</p><p>' + EXN[exch] + ' ' + BASE() + ' is ' + sg(st.a) + ' over this view and ' + EXN[exHit] + ' is ' + sg(st.b) + '. ' + EXN[exHit] + (gap < 0 ? ' trails by ' : ' leads by ') + Math.abs(gap).toFixed(2) + ' percentage points.</p><div class="ag-note">Say "Remove the overlay" to take it off. Not financial advice.</div>';
   }
   if (/\b(clear|remove|erase|delete)\b/.test(t) && /(draw|line|level|mark)/.test(t)) {
     await readChart(); const n = await stg(box, 'pen', 'clear_lines', 'removed the lines the agent drew', () => chart.clearAI(), n => n + ' removed');

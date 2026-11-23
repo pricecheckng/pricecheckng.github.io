@@ -10,7 +10,7 @@
     [mc, rc].forEach(function (c) { c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block'; });
     mainEl.appendChild(mc); rsiEl.appendChild(rc);
     var mx = mc.getContext('2d'), rx = rc.getContext('2d');
-    var D = { c: [], ma50: [], ma200: [], rsi: [], levels: [] };   // ma/rsi arrays aligned to candles (null when none)
+    var D = { c: [], ma50: [], ma200: [], rsi: [], levels: [], ov: null, ovm: null };   // ma/rsi arrays aligned to candles (null when none)
     var V = { start: 0, bw: 7 };                                    // start = index of left-most bar (float), bw = px per bar
     var W = 0, H = 0, RH = 0, AX = 58, cross = null, hov = null;
     var tz = opts.tz || undefined;
@@ -501,6 +501,8 @@
       var T = function (v) { return md === 'log' ? Math.log(Math.max(v, 1e-12)) : md === 'percent' ? (v / base - 1) * 100 : md === 'index' ? v / base * 100 : v; };
       var TI = function (t) { return md === 'log' ? Math.exp(t) : md === 'percent' ? base * (1 + t / 100) : md === 'index' ? base * t / 100 : t; };
       for (i = s; i <= e; i++) { var k = D.c[i], th = T(k.h), tl = T(k.l); if (th > hi) hi = th; if (tl < lo) lo = tl; if (k.v > vmax) vmax = k.v; }
+      var OA = null, ovTag = null;   // comparison overlay: rebased so it starts level with the candles at the left edge of the view
+      if (D.ov) { var ob = null, oq; for (oq = s; oq <= e; oq++) if (D.ov[oq] != null) { ob = D.ov[oq]; break; } if (ob) { var ofc = base / ob; OA = function (j) { return D.ov[j] == null ? null : D.ov[j] * ofc; }; for (oq = s; oq <= e; oq++) { var ov0 = OA(oq); if (ov0 != null) { var otv = T(ov0); if (otv > hi) hi = otv; if (otv < lo) lo = otv; } } } }
       var pad = (hi - lo) * 0.08 || Math.abs(hi) * 0.01 || 1; hi += pad; lo -= pad;
       if (manualR) { if (manualR.md !== md) manualR = null; else { hi = manualR.hi; lo = manualR.lo; } }
       lastR = { hi: hi, lo: lo, h: PH - volH - 6, md: md };
@@ -574,6 +576,12 @@
         for (var j = Math.max(0, s - 1); j <= Math.min(n - 1, e + 1); j++) { if (a[j] == null) continue; var xx = xOf(j), yy = py(a[j]); if (!started) { mx.moveTo(xx, yy); started = true; } else mx.lineTo(xx, yy); }
         mx.stroke();
       });
+      if (OA && D.ovm) {
+        var og = false, olast = -1; mx.save(); mx.beginPath(); mx.rect(0, 0, plotW(), PH - volH); mx.clip(); mx.strokeStyle = D.ovm.col; mx.lineWidth = 2; mx.lineJoin = 'round'; mx.beginPath();
+        for (var oj = Math.max(0, s - 1); oj <= Math.min(n - 1, e + 1); oj++) { var ovv = OA(oj); if (ovv == null) continue; var ox = xOf(oj), oy = py(ovv); if (!og) { mx.moveTo(ox, oy); og = true; } else mx.lineTo(ox, oy); olast = oj; }
+        mx.stroke(); mx.restore();
+        if (olast >= 0) { var oyy = Math.max(10, Math.min(PH - volH - 10, py(OA(olast)))), opc = (OA(olast) / base - 1) * 100, otx = (opc > 0 ? '+' : '') + opc.toFixed(2) + '%', ow = W - plotW() - 2; ovTag = { y: oyy, t: otx, w: ow }; }
+      }
       inds.forEach(function (id) {
         var r = iCalc(id), j, lj; mx.save(); mx.beginPath(); mx.rect(0, 0, plotW(), PH - volH); mx.clip();
         if (r.fill) { var fa = r.lines[r.fill[0]].a, fb = r.lines[r.fill[1]].a; mx.beginPath(); var st = false; for (j = Math.max(0, s - 1); j <= Math.min(n - 1, e + 1); j++) { if (fa[j] == null) continue; if (!st) { mx.moveTo(xOf(j), py(fa[j])); st = true; } else mx.lineTo(xOf(j), py(fa[j])); } for (j = Math.min(n - 1, e + 1); j >= Math.max(0, s - 1); j--) { if (fb[j] == null) continue; mx.lineTo(xOf(j), py(fb[j])); } mx.closePath(); mx.fillStyle = IND_META[id][1] + '22'; mx.fill(); }
@@ -675,6 +683,7 @@
       if (SC.lastLine) { var yll = Math.max(1, Math.min(PH - 1, yl)); mx.setLineDash([3, 3]); mx.strokeStyle = upL ? C.up : C.dn; mx.beginPath(); mx.moveTo(0, yll); mx.lineTo(plotW(), yll); mx.stroke(); mx.setLineDash([]); }
       var hasCd = SC.countdown && iv, cdTxt = '';
       if (hasCd) { var rem = Math.max(0, last.t + stepMs() - Date.now()) / 1000, hh2 = Math.floor(rem / 3600), mm2 = Math.floor(rem % 3600 / 60), ss2 = Math.floor(rem % 60), z2 = function (x) { return (x < 10 ? '0' : '') + x; }; cdTxt = (hh2 ? z2(hh2) + ':' : '') + z2(mm2) + ':' + z2(ss2); }
+      if (ovTag) { mx.fillStyle = D.ovm.col; mx.fillRect(plotW() + 1, ovTag.y - 9, ovTag.w, 18); mx.fillStyle = '#fff'; mx.font = '700 10px system-ui,sans-serif'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(ovTag.t, plotW() + 3, ovTag.y); }
       { var ylt = Math.max(9, Math.min(PH - (hasCd ? 23 : 9), yl)); mx.fillStyle = upL ? C.up : C.dn; mx.fillRect(plotW(), ylt - 9, AX, hasCd ? 32 : 18); mx.fillStyle = '#04100a'; mx.textAlign = 'left'; mx.textBaseline = 'middle'; mx.fillText(lab(last.c), plotW() + 6, ylt); if (hasCd) mx.fillText(cdTxt, plotW() + 6, ylt + 14); }
       if (scanX != null) { var sg0 = mx.createLinearGradient(scanX - 46, 0, scanX, 0); sg0.addColorStop(0, 'rgba(22,199,132,0)'); sg0.addColorStop(1, 'rgba(22,199,132,.16)'); mx.fillStyle = sg0; mx.fillRect(Math.max(0, scanX - 46), 0, Math.min(46, scanX), PH); mx.strokeStyle = 'rgba(22,199,132,.95)'; mx.lineWidth = 1.5; mx.setLineDash([]); mx.beginPath(); mx.moveTo(scanX, 0); mx.lineTo(scanX, PH); mx.stroke(); }
       if (flashP != null && sc) { var fy = sc.py(flashP), fk = (performance.now() - flashT) / 1900, fa = Math.max(0, 1 - fk) * (0.55 + 0.45 * Math.sin(fk * 26)); if (fy >= 0 && fy <= PH && fk < 1) { mx.save(); mx.fillStyle = 'rgba(255,214,102,' + (fa * 0.22).toFixed(3) + ')'; mx.fillRect(0, fy - 9, plotW(), 18); mx.strokeStyle = 'rgba(255,214,102,' + Math.min(1, fa + 0.25).toFixed(3) + ')'; mx.lineWidth = 2.5; mx.setLineDash([]); mx.beginPath(); mx.moveTo(0, fy); mx.lineTo(plotW(), fy); mx.stroke(); mx.restore(); } }
@@ -796,7 +805,7 @@
 
     return {
       setData: function (d, interval) {
-        iv = interval || iv; D.c = d.candles || []; D.levels = d.levels || [];
+        iv = interval || iv; D.c = d.candles || []; D.levels = d.levels || []; if (D.ov && D.ov.length !== D.c.length) { D.ov = null; D.ovm = null; }
         var fill = function (arr) { var o = new Array(D.c.length).fill(null), m = {}; (arr || []).forEach(function (p) { if (p) m[p.t] = p.v; }); D.c.forEach(function (c, i) { if (m[c.t] != null) o[i] = m[c.t]; }); return o; };
         D.ma50 = fill(d.sma50); D.ma200 = fill(d.sma200); D.rsi = fill(d.rsi14);
         cross = null; size(); fit(); draw();
@@ -820,6 +829,16 @@
       setInds: function (a) { a = a || []; inds = a.filter(function (k) { return IND_META[k]; }); subs = a.filter(function (k) { return SUB_META[k]; }); subSync(); size(); }, indMeta: (function () { var o = {}, k; for (k in IND_META) o[k] = IND_META[k]; for (k in SUB_META) o[k] = SUB_META[k]; return o; })(), subIds: Object.keys(SUB_META),
       setType: function (t) { ctype = t; draw(); }, getType: function () { return ctype; }, setColors: function (u, d) { if (u) C.up = u; if (d) C.dn = d; draw(); },
       candles: function () { return D.c; },
+      setOverlay: function (o) {
+        if (!o || !o.cs || !o.cs.length) { D.ov = null; D.ovm = null; draw(); return; }
+        var m = {}; o.cs.forEach(function (k) { m[k.t] = k.c; });
+        D.ov = D.c.map(function (k) { return m[k.t] != null ? m[k.t] : null; }); D.ovm = { name: String(o.name || '').slice(0, 7), col: o.col || '#a21caf' }; draw();
+      },
+      hasOverlay: function () { return !!D.ov; },
+      ovStats: function () {
+        if (!D.ov || !D.c.length) return null; var r = range(), s = r[0], i, last = -1, ob = null; for (i = s; i < D.c.length; i++) if (D.ov[i] != null) { if (ob == null) ob = D.ov[i]; last = i; }
+        if (ob == null || last < 0) return null; var b = D.c[s].c; return { a: (D.c[D.c.length - 1].c / b - 1) * 100, b: (D.ov[last] / ob - 1) * 100 };
+      },
       showRange: function (i0, i1, ms) {   // glide the view so candles i0..i1 fill the chart
         var n = D.c.length; if (!n) return; i0 = Math.max(0, Math.min(i0, n - 1)); i1 = Math.max(i0, Math.min(i1, n - 1));
         var pad = Math.max(3, Math.round((i1 - i0) * 0.18)), vis = i1 - i0 + 1 + pad * 2, tb = Math.max(2, Math.min(40, plotW() / vis)), ts = i0 - pad;
