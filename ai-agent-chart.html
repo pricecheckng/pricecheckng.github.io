@@ -330,7 +330,7 @@
     <div class="hpr"><b>mark what matters</b><button type="button" data-q="Mark the support and resistance.">"Mark the support and resistance." <span>&rarr; key levels drawn in seconds</span></button></div>
     <div class="hpr"><b>draw the range</b><button type="button" data-q="Draw the current range.">"Draw the current range." <span>&rarr; the high and low box on your chart</span></button></div>
     <div class="hpr"><b>add indicators</b><button type="button" data-q="Add the 50 and 200 averages.">"Add the 50 and 200 averages." <span>&rarr; moving averages added and on</span></button></div>
-    <div class="hpr"><b>jump anywhere</b><button type="button" data-q="Zoom in on the crash.">"Zoom in on the crash." <span>&rarr; the chart glides to the sharpest drop</span></button></div>
+    <div class="hpr"><b>jump anywhere</b><button type="button" data-q="Zoom in on the crash.">"Zoom in on the crash." <span>&rarr; the chart glides to the sharpest drop (say "latest crash" for the most recent one)</span></button></div>
     <div class="hpr"><b>find a setup</b><button type="button" data-q="Outline the upside and downside levels">"Outline the upside and downside levels" <span>&rarr; where it could go either way</span></button></div>
     <div class="hpr"><b>clean up</b><button type="button" data-q="Clear the lines you drew.">"Clear the lines you drew." <span>&rarr; the chart is clean again</span></button></div>
   </div>
@@ -1366,14 +1366,18 @@ async function chartAction(q, box) {
     if (/(crash|drop|dump|fall|decline|sell ?off)/.test(t)) {
       const W = Math.max(8, Math.min(30, Math.round(259200000 / dt)));   // about 3 days: a crash is a fast move   // a crash is a sharp move, so look inside short windows
       let best = 0, bi0 = 0, bi1 = 0;
-      for (let s = 0; s < n - 1; s++) { let pk = s; for (let j = s + 1; j < Math.min(n, s + W); j++) { if (cs[j].h > cs[pk].h) pk = j; const dd = (cs[pk].h - cs[j].l) / cs[pk].h; if (dd > best) { best = dd; bi0 = pk; bi1 = j; } } }
-      i0 = bi0; i1 = Math.min(n - 1, bi1 + Math.max(6, Math.round((bi1 - bi0) * 0.8))); what = 'the sharpest drop';
+      const evs = [];
+      for (let s = 0; s < n - 1; s++) { let pk = s, sb = 0, s0 = s, s1 = s; for (let j = s + 1; j < Math.min(n, s + W); j++) { if (cs[j].h > cs[pk].h) pk = j; const dd = (cs[pk].h - cs[j].l) / cs[pk].h; if (dd > sb) { sb = dd; s0 = pk; s1 = j; } if (dd > best) { best = dd; bi0 = pk; bi1 = j; } } evs.push([sb, s0, s1]); }
+      if (/(latest|recent|last|newest)/.test(t)) { const thr = Math.max(0.03, best * 0.5); for (let k = evs.length - 1; k >= 0; k--) if (evs[k][0] >= thr) { best = evs[k][0]; bi0 = evs[k][1]; bi1 = evs[k][2]; break; } }
+      i0 = bi0; i1 = Math.min(n - 1, bi1 + Math.max(6, Math.round((bi1 - bi0) * 0.8))); what = /(latest|recent|last|newest)/.test(t) ? 'the latest big drop' : 'the sharpest drop';
       info = 'It fell ' + (best * 100).toFixed(1) + '% from ' + fmt(cs[bi0].h) + ' (' + fmtT(cs[bi0].t) + ') to ' + fmt(cs[bi1].l) + ' (' + fmtT(cs[bi1].t) + ') over ' + (bi1 - bi0 + 1) + ' candles.';
     } else if (/(rally|pump|rise|bounce|recovery)/.test(t)) {
       const W = Math.max(8, Math.min(30, Math.round(259200000 / dt)));   // about 3 days: a crash is a fast move
       let best = 0, bi0 = 0, bi1 = 0;
-      for (let s = 0; s < n - 1; s++) { let tr = s; for (let j = s + 1; j < Math.min(n, s + W); j++) { if (cs[j].l < cs[tr].l) tr = j; const up = (cs[j].h - cs[tr].l) / cs[tr].l; if (up > best) { best = up; bi0 = tr; bi1 = j; } } }
-      i0 = bi0; i1 = bi1; what = 'the sharpest rally';
+      const evs = [];
+      for (let s = 0; s < n - 1; s++) { let tr = s, sb = 0, s0 = s, s1 = s; for (let j = s + 1; j < Math.min(n, s + W); j++) { if (cs[j].l < cs[tr].l) tr = j; const up = (cs[j].h - cs[tr].l) / cs[tr].l; if (up > sb) { sb = up; s0 = tr; s1 = j; } if (up > best) { best = up; bi0 = tr; bi1 = j; } } evs.push([sb, s0, s1]); }
+      if (/(latest|recent|last|newest)/.test(t)) { const thr = Math.max(0.03, best * 0.5); for (let k = evs.length - 1; k >= 0; k--) if (evs[k][0] >= thr) { best = evs[k][0]; bi0 = evs[k][1]; bi1 = evs[k][2]; break; } }
+      i0 = bi0; i1 = bi1; what = /(latest|recent|last|newest)/.test(t) ? 'the latest big rally' : 'the sharpest rally';
       info = 'It rose ' + (best * 100).toFixed(1) + '% from ' + fmt(cs[bi0].l) + ' (' + fmtT(cs[bi0].t) + ') to ' + fmt(cs[bi1].h) + ' (' + fmtT(cs[bi1].t) + ') over ' + (bi1 - bi0 + 1) + ' candles.';
     } else if (/(low|bottom)/.test(t)) {
       let m = 0; for (let i = 1; i < n; i++) if (cs[i].l < cs[m].l) m = i;
