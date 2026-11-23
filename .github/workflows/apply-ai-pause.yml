@@ -1,0 +1,28 @@
+name: Enable pause for scheduled AI alerts
+# Runs sql/ai-schedules-pause.sql. Safe to run again.
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply
+        env:
+          T: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          q() { curl -s -X POST "https://api.supabase.com/v1/projects/lbkpdepqymfjgmoouafv/database/query" -H "Authorization: Bearer $T" -H "Content-Type: application/json" --data "$(jq -n --arg q "$1" '{query:$q}')" ; echo; }
+          {
+            echo "## apply"; q "$(cat sql/ai-schedules-pause.sql)"
+          } 2>&1 | sed -E 's/[A-Za-z0-9_.:-]{40,}/<hidden>/g' > db-structure.txt
+          wc -c db-structure.txt
+      - name: Save
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add db-structure.txt
+          git commit -m "Pause setup result" || exit 0
+          git pull --rebase -q
+          git push

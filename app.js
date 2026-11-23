@@ -2981,7 +2981,7 @@ async function renderAlerts() {
   if (!$("#alerts")) {
     view.innerHTML = `<section class="page"><h1>Alerts</h1><div id="alerts" class="list">${skeleton(3)}</div></section>${footer()}`;
   }
-  const [pa, po, pp, pt] = await Promise.all([
+  const [pa, po, pp, pt, ps] = await Promise.all([
     sb
       .from("price_alerts")
       .select("id,target_price,currency,direction,status,created_at,triggered_at,coins(name,symbol,image_url)")
@@ -2992,6 +2992,7 @@ async function renderAlerts() {
       .select("id,pct,base_price,direction,status,created_at,triggered_at,coins(name,symbol,image_url)")
       .order("created_at", { ascending: false }),
     sb.from("token_alerts").select("id,chain,symbol,name,target_price,direction,status,created_at,triggered_at").order("created_at", { ascending: false }),
+    sb.from("ai_schedules").select("id,title,freq,run_at,status,last_run_at,created_at").order("created_at", { ascending: false }),
   ]);
   const box = $("#alerts");
   if (!box) return;
@@ -2999,7 +3000,7 @@ async function renderAlerts() {
     box.innerHTML = emptyBox("Could not load alerts", "Check your connection and try again.");
     return;
   }
-  const items = [...(pa.data || []).map((a) => ({ kind: "price", a })), ...(po.data || []).map((a) => ({ kind: "portfolio", a })), ...(pp.data || []).map((a) => ({ kind: "percent", a })), ...(pt.data || []).map((a) => ({ kind: "token", a }))].sort(
+  const items = [...(pa.data || []).map((a) => ({ kind: "price", a })), ...(po.data || []).map((a) => ({ kind: "portfolio", a })), ...(pp.data || []).map((a) => ({ kind: "percent", a })), ...(pt.data || []).map((a) => ({ kind: "token", a })), ...(ps.data || []).map((a) => ({ kind: "sched", a }))].sort(
     (x, y) => new Date(y.a.created_at) - new Date(x.a.created_at)
   );
   lastAlertItems = items;
@@ -3015,11 +3016,27 @@ async function renderAlerts() {
     items
       .map(({ kind, a }) => {
         const when = a.status === "triggered" ? `Triggered ${ago(a.triggered_at)}` : `Created ${ago(a.created_at)}`;
+        const del = `<button class="link" data-act="delete" data-aid="${a.id}" data-kind="${kind}">Delete</button>`;
         const act =
-          a.status === "active"
-            ? `<button class="link" data-act="cancel" data-aid="${a.id}" data-kind="${kind}">Cancel</button>`
-            : `<button class="link" data-act="delete" data-aid="${a.id}" data-kind="${kind}">Delete</button>`;
+          kind === "sched"
+            ? (a.status === "active"
+                ? `<button class="link" data-act="pause" data-aid="${a.id}" data-kind="${kind}">Pause</button>`
+                : a.status === "paused"
+                  ? `<button class="link" data-act="resume" data-aid="${a.id}" data-kind="${kind}">Resume</button>`
+                  : "") + del
+            : a.status === "active"
+              ? `<button class="link" data-act="cancel" data-aid="${a.id}" data-kind="${kind}">Cancel</button>`
+              : del;
         const chip = `<span class="chip ${a.status}">${a.status[0].toUpperCase() + a.status.slice(1)}</span>`;
+        if (kind === "sched") {
+          const fq = a.freq === "daily" ? "Every day" : a.freq === "weekly" ? "Every week" : "Once";
+          const nx = a.status === "active" ? ` · next ${new Date(a.run_at).toLocaleString([], { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}` : a.status === "paused" ? " · paused" : "";
+          return `<div class="alert">
+            <div class="logo" aria-hidden="true" style="display:flex;align-items:center;justify-content:center;background:#effcf3;border-radius:50%;font-size:20px;width:40px;height:40px">🤖</div>
+            <div class="meta"><b>${esc(a.title)}</b><span>AI alert · ${fq}${nx}${a.last_run_at ? " · last sent " + ago(a.last_run_at) : ""}</span></div>
+            <div class="acts">${chip}${act}</div>
+          </div>`;
+        }
         if (kind === "portfolio") {
           return `<div class="alert">
             <div class="logo" aria-hidden="true" style="display:flex;align-items:center;justify-content:center;background:#effcf3;border-radius:50%;font-size:20px;width:40px;height:40px">📊</div>
@@ -3061,7 +3078,12 @@ async function renderAlerts() {
     if (!b) return;
     const aid = b.dataset.aid;
     const kind = b.dataset.kind;
-    const table = kind === "portfolio" ? "portfolio_alerts" : kind === "percent" ? "percent_alerts" : kind === "token" ? "token_alerts" : "price_alerts";
+    const table = kind === "portfolio" ? "portfolio_alerts" : kind === "percent" ? "percent_alerts" : kind === "token" ? "token_alerts" : kind === "sched" ? "ai_schedules" : "price_alerts";
+    if (b.dataset.act === "pause" || b.dataset.act === "resume") {
+      const { error: er } = await sb.rpc("set_ai_schedule_status", { p_id: aid, p_status: b.dataset.act === "pause" ? "paused" : "active" });
+      if (er) return toast(/past/i.test(er.message || "") ? "That time has passed. Delete it and create a new one." : "Could not change it. Please try again.");
+      return renderAlerts();
+    }
     if (b.dataset.act === "cancel") {
       const { error: er } =
         kind === "percent" ? await sb.from(table).delete().eq("id", aid) : await sb.from(table).update({ status: "cancelled" }).eq("id", aid);
