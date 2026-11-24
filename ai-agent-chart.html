@@ -261,7 +261,7 @@
 #dtools{opacity:0}#dtools.rdy{opacity:1;transition:opacity .18s}
 
 /* desktop: chart on the left, chat docked on the right (like CoinMarketCap) */
-@media (min-width:1000px){
+@media (min-width:900px){
   #vChart:not([style*="none"]){display:grid!important;grid-template-columns:minmax(0,1fr) 420px;grid-template-rows:auto auto minmax(0,1fr) auto auto;min-height:0}
   #vChart>.info,#vChart>.leg,#vChart>#main,#vChart>#rsiWrap,#vChart>#subWrap{grid-column:1}
   #vChart>.info{grid-row:1}#vChart>.leg{grid-row:2}#vChart>#main{grid-row:3;flex:none;min-height:0}#vChart>#rsiWrap{grid-row:4}#vChart>#subWrap{grid-row:5}
@@ -277,7 +277,7 @@
 }
 
 #mkTick,.tfi{display:none}
-@media (min-width:1000px){
+@media (min-width:900px){
   #mkTick{display:flex;gap:22px;align-items:center;padding:6px 20px;font-size:12px;color:var(--mut);border-bottom:1px solid var(--line);background:var(--panel);overflow:hidden;white-space:nowrap}
   #mkTick b{color:var(--txt);font-weight:700;margin-left:6px}#mkTick .u{color:#16c784}#mkTick .d{color:#ea3943}#mkTick .ti{font-weight:800;color:var(--txt)}
   .tfi{display:inline-block;background:none;border:0;color:var(--mut);font:inherit;font-size:13px;font-weight:700;padding:6px 8px;border-radius:8px;cursor:pointer}.tfi:hover{color:var(--txt)}.tfi.on{color:var(--acc);background:rgba(47,214,138,.12)}
@@ -285,7 +285,7 @@
 }
 
 #agTabs,#agWl{display:none}
-@media (min-width:1000px){
+@media (min-width:900px){
   #agTabs{display:flex;gap:18px;padding:10px 16px 0;border-bottom:1px solid var(--line);flex:none}
   #agTabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);font:inherit;font-size:13px;font-weight:700;padding:4px 0 9px;cursor:pointer}
   #agTabs button.on{color:var(--txt);border-bottom-color:var(--acc)}
@@ -1143,7 +1143,7 @@ function md(t) {
 }
 function setFull(f) { agent.classList.toggle('full', f); if (f) setOpen(true); $('agFull').innerHTML = f ? '<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5\"/></svg>' : '<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5\"/></svg>'; setTimeout(() => chart.resize(), 50); msgsEl.scrollTop = msgsEl.scrollHeight; }
 $('agFull').onclick = () => setFull(!agent.classList.contains('full'));
-const DESK = () => !!(window.matchMedia && matchMedia('(min-width:1000px)').matches);
+const DESK = () => !!(window.matchMedia && matchMedia('(min-width:900px)').matches);
 setTimeout(() => { if (DESK()) setOpen(true); }, 0);
 window.addEventListener('resize', () => { if (DESK() && !agent.classList.contains('open')) setOpen(true); });
 function setOpen(o) { if (DESK()) o = true; if (!o) { agent.classList.remove('full'); } agent.classList.toggle('open', o); $('vChart').classList.toggle('agopen', o); if (o && !msgsEl.children.length) intro(); setTimeout(() => chart.resize(), 50); }
