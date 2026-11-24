@@ -331,6 +331,7 @@
     <div class="hpr"><b>draw the range</b><button type="button" data-q="Draw the current range.">"Draw the current range." <span>&rarr; the high and low box on your chart</span></button></div>
     <div class="hpr"><b>add indicators</b><button type="button" data-q="Add the 50 and 200 averages.">"Add the 50 and 200 averages." <span>&rarr; moving averages added and on</span></button></div>
     <div class="hpr"><b>jump anywhere</b><button type="button" data-q="Zoom in on the crash.">"Zoom in on the crash." <span>&rarr; the chart glides to the sharpest drop (say "latest crash" for the most recent one)</span></button></div>
+    <div class="hpr"><b>explain any mark</b><button type="button" data-q="Why did you draw these lines?">"Why did you draw these lines?" <span>&rarr; each level explained from the candles</span></button></div>
     <div class="hpr"><b>compare venues</b><button type="button" data-q="Overlay Bybit">"Overlay Bybit." <span>&rarr; a second exchange drawn over your chart in percent</span></button></div>
     <div class="hpr"><b>find a setup</b><button type="button" data-q="Outline the upside and downside levels">"Outline the upside and downside levels" <span>&rarr; where it could go either way</span></button></div>
     <div class="hpr"><b>clean up</b><button type="button" data-q="Clear the lines you drew.">"Clear the lines you drew." <span>&rarr; the chart is clean again</span></button></div>
@@ -1359,6 +1360,33 @@ async function chartAction(q, box) {
   const draw = /\b(draw|mark|plot|show|add|put|highlight|outline|turn on)\b/.test(t);
   const readChart = () => stg(box, 'eye', 'read_chart', 'read the current view and drawings', () => chart.count(), n => n + ' drawing' + (n === 1 ? '' : 's'), null, 320);
   const readData = () => stg(box, 'eye', 'read_data', 'loaded the requested history', () => nC, n => n + ' candles', null, 300);
+  if (/\b(why|explain|reason|meaning|mean|means|what does|what is|what are)\b/.test(t) && /(line|level|mark|support|resistance|drew|draw|average|\bma\b|\bma ?\d)/.test(t) && /(you|your|this|that|these|those|the (line|level|mark|support|resistance)s?)/.test(t) && !/\b(zoom|jump|overlay|compare)\b/.test(t)) {
+    const cs = lastD.candles, n = cs.length; if (n < 20) return null;
+    const dtm = cs[1].t - cs[0].t, fmtT = ms => new Date(ms).toLocaleString('en', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
+    const mAvg = k => { if (n < k) return null; let sm = 0; for (let i = n - k; i < n; i++) sm += cs[i].c; return sm / k; };
+    const pm = t.replace(/,/g, '').match(/\b(\d{2,7}(?:\.\d+)?)\b/), want = pm ? parseFloat(pm[1]) : null;
+    const wantMA = (t.match(/\b(50|200)\b/) || [])[1], isMA = /(average|\bma\b|moving)/.test(t) || (wantMA && !want);
+    await readChart();
+    let out = [];
+    await stg(box, 'pulse', 'explain', 'looked up why each mark is there', () => 1, () => 'from the candles', null, 700);
+    if (isMA) {
+      [50, 200].filter(k => !wantMA || +wantMA === k).forEach(k => { const v = mAvg(k); if (v == null) return; out.push('<p><b>' + k + ' moving average (' + fmt(v) + ').</b> It is the average closing price of the last ' + k + ' ' + TFN[interval] + ' candles. Price is ' + (px >= v ? 'above' : 'below') + ' it by ' + Math.abs((px / v - 1) * 100).toFixed(1) + '%, so ' + (px >= v ? 'buyers have been in control over that stretch. Traders often watch it as a floor.' : 'sellers have been in control over that stretch. Traders often watch it as a ceiling.') + '</p>'); });
+      if (!out.length) return '<p>There is not enough history loaded for that average yet. Try a shorter one or load more candles.</p>';
+    } else {
+      let L = lv.slice(); if (!L.length) return '<p>There are no marked levels on this chart right now. Say "Mark the key levels" and I will draw them, then you can ask why.</p>';
+      L.sort((a, b) => Math.abs(a.price - (want == null ? px : want)) - Math.abs(b.price - (want == null ? px : want)));
+      L = L.slice(0, want != null ? 1 : 3);
+      L.forEach(l => {
+        const tol = l.price * 0.004; let tc = 0, f = -1, la = -1;
+        for (let i = 0; i < n; i++) if (cs[i].l - tol <= l.price && cs[i].h + tol >= l.price && (Math.abs(cs[i].h - l.price) <= tol * 1.5 || Math.abs(cs[i].l - l.price) <= tol * 1.5)) { tc++; if (f < 0) f = i; la = i; }
+        const res = l.price >= px, gap = Math.abs((l.price / px - 1) * 100).toFixed(1);
+        out.push('<p><b>' + (res ? 'Resistance' : 'Support') + ' at ' + fmt(l.price) + '.</b> Price turned around near this level ' + (tc > 1 ? tc + ' times' : 'at least once') + (f >= 0 ? ', first around ' + fmtT(cs[f].t) + ' and most recently around ' + fmtT(cs[la].t) : '') + '. ' + (res ? 'It sits ' + gap + '% above the price now, so it is where rises have tended to stall. A close above it would be a stronger sign.' : 'It sits ' + gap + '% below the price now, so it is where drops have tended to stop. A close below it would be a weaker sign.') + '</p>');
+      });
+      if (want != null && Math.abs(L[0].price / want - 1) > 0.02) out.unshift('<p>I have no mark near ' + fmt(want) + ', so here is the closest one.</p>');
+      chart.flash && L.forEach(l => { try { chart.flash(l.price); } catch (e) {} });
+    }
+    return out.join('') + '<div class="ag-note">Levels come from past swings, not predictions. Not financial advice.</div>';
+  }
   if (/\b(zoom|jump|go to|take me|focus|show me|scroll)\b/.test(t) && /(crash|drop|dump|fall|decline|sell ?off|rally|pump|rise|bounce|recovery|low|bottom|high|top|peak|last\s+\d*\s*(candle|bar|hour|day|week|month)s?|start|beginning|latest|now|today|yesterday)/.test(t)) {
     const cs = lastD.candles, n = cs.length; if (n < 5) return null;
     const dt = n > 1 ? (cs[1].t - cs[0].t) : 14400000, fmtT = ms => new Date(ms).toLocaleString('en', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', hour12: false });
