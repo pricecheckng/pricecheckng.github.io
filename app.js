@@ -3426,63 +3426,67 @@ async function paintPortfolioHistory(liveTotal) {
       <div style="margin-top:12px"><button class="ac-btn" type="button" data-export="portfolio">⬇ Portfolio CSV</button></div></div>`;
     return;
   }
-  const W = 320, H = 130, P = 8;
-  const vs = pts.map((p) => p.v);
-  let lo = Math.min(...vs), hi = Math.max(...vs);
-  if (hi === lo) { hi += 1; lo -= 1; }
-  const x = (i) => P + (i * (W - 2 * P)) / (pts.length - 1);
-  const y = (v) => H - P - ((v - lo) / (hi - lo)) * (H - 2 * P);
-  const line = pts.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(p.v).toFixed(1)}`).join(" ");
-  const area = `${line} L${x(pts.length - 1).toFixed(1)} ${H - P} L${x(0).toFixed(1)} ${H - P} Z`;
   lastHistoryPts = pts;
-  const first = pts[0], last = pts[pts.length - 1];
-  const chgPct = first.v > 0 ? ((last.v - first.v) / first.v) * 100 : 0;
-  const d = chg(chgPct);
+  const RNG = { "24h": 1, "1W": 7, "1M": 30, "1Y": 365, All: 99999 }, RLAB = { "24h": "24 hours", "1W": "7 days", "1M": "30 days", "1Y": "1 year", All: "all time" };
   const fd = (s) => new Date(s + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" });
   const fdLong = (s) => new Date(s + "T00:00:00").toLocaleDateString(undefined, { weekday: "short", day: "numeric", month: "short", year: "numeric" });
   const fxRate = state.fx[state.cur];
   const second = (usd) => (fxRate ? fmtLocal(usd * fxRate, state.cur) : "");
-  box.innerHTML = `<div class="cp-card"><div style="display:flex;align-items:center;gap:10px"><h3 style="margin:0;flex:1">Value history</h3>${d ? `<span class="cp-pill ${d.c}">${d.t}</span>` : ""}</div>
-    <div class="cp-read" id="pfRead"></div>
-    <svg class="cp-svg" id="pfSvg" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Portfolio value over time. Touch and drag to see the value on any day." style="margin-top:6px;color:#0b7d4d"><path d="${area}" fill="currentColor" opacity=".12"/><path d="${line}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><line id="pfCur" x1="0" x2="0" y1="${P}" y2="${H - P}" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0" /><circle id="pfDot" cx="${x(pts.length - 1).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="3.5" fill="currentColor" style="transition:r .12s"/></svg>
-    <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-top:6px" class="muted"><span>${fd(first.day)} · ${esc(fmtUsd(first.v))}</span><span>${fd(last.day)} · ${esc(fmtUsd(last.v))}</span></div>
-    <p class="muted" style="margin:8px 0 0;font-size:.78rem">Touch and drag along the line to see your value on any day. Shows up to the last 1 year. Saved once a day, in USD. Today's point uses live prices.</p>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="ac-btn" type="button" data-export="portfolio">⬇ Portfolio CSV</button><button class="ac-btn" type="button" data-export="history">⬇ History CSV</button></div></div>`;
-
-  // ---- touch / drag scrubbing ----
-  const svg = box.querySelector("#pfSvg"), rd = box.querySelector("#pfRead"), cur = box.querySelector("#pfCur"), dot = box.querySelector("#pfDot");
-  const paintRead = (i, live) => {
-    const p = pts[i], c = first.v > 0 ? ((p.v - first.v) / first.v) * 100 : 0, cc = chg(c);
-    const s2 = second(p.v);
-    rd.innerHTML = `<b>${esc(fmtUsd(p.v))}${s2 ? ` <span style="font-size:1rem;font-weight:600">· ${esc(s2)}</span>` : ""}</b><span>${live ? "Today (live)" : esc(fdLong(p.day))}${i > 0 ? ` · ${esc(cc.t)} since ${esc(fd(first.day))}` : ""}</span>`;
+  const short = (v) => (v >= 1e6 ? (v / 1e6).toFixed(2) + "M" : v >= 1e4 ? (v / 1e3).toFixed(1) + "K" : v >= 100 ? Math.round(v).toLocaleString("en-US") : v.toFixed(2));
+  const render = (rk) => {
+    pf.rng = rk;
+    const cutoff = new Date(Date.now() - RNG[rk] * 864e5).toISOString().slice(0, 10);
+    let v = pts.filter((p) => p.day >= cutoff);
+    if (v.length < 2) v = pts.slice(-2);
+    if (rk === "24h") v = pts.slice(-2);
+    const W = 320, H = 150, P = 10, RW = 46;
+    const vs = v.map((p) => p.v);
+    let lo = Math.min(...vs), hi = Math.max(...vs);
+    if (hi === lo) { hi += 1; lo -= 1; }
+    const padv = (hi - lo) * 0.12; hi += padv; lo -= padv;
+    const PW = W - RW;
+    const x = (i) => P + (i * (PW - 2 * P)) / (v.length - 1);
+    const y = (n) => H - P - ((n - lo) / (hi - lo)) * (H - 2 * P);
+    const first = v[0], last = v[v.length - 1];
+    const up = last.v >= first.v, col = up ? "#16a34a" : "#ea3943";
+    const chgPct = first.v > 0 ? ((last.v - first.v) / first.v) * 100 : 0, d = chg(chgPct);
+    const line = v.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(p.v).toFixed(1)}`).join(" ");
+    const area = `${line} L${x(v.length - 1).toFixed(1)} ${H - P} L${x(0).toFixed(1)} ${H - P} Z`;
+    const ticks = [hi - padv, (hi + lo) / 2, lo + padv].map((t) => `<line x1="0" x2="${PW}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" stroke="currentColor" opacity=".09"/><text x="${W - 2}" y="${(y(t) + 4).toFixed(1)}" text-anchor="end" font-size="10.5" fill="currentColor" opacity=".6">${short(t)}</text>`).join("");
+    box.innerHTML = `<div class="cp-card"><h3 style="margin:0 0 4px">Value history</h3>
+      <div class="cp-read" id="pfRead"></div>
+      <div class="cpt"><div class="cpr" role="group" aria-label="Range">${Object.keys(RNG).map((k) => `<button type="button" data-pr="${k}" aria-pressed="${k === rk}">${k}</button>`).join("")}</div></div>
+      <svg class="cp-svg" id="pfSvg" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Portfolio value over time. Touch and drag to see the value on any day." style="margin-top:8px;color:inherit;touch-action:pan-y"><defs><linearGradient id="pfG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".32"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${ticks}<line x1="0" x2="${PW}" y1="${y(first.v).toFixed(1)}" y2="${y(first.v).toFixed(1)}" stroke="currentColor" stroke-dasharray="3 4" opacity=".35"/><path d="${area}" fill="url(#pfG)"/><path d="${line}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><line id="pfCur" x1="0" x2="0" y1="${P}" y2="${H - P}" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0"/><circle id="pfDot" cx="${x(v.length - 1).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="3.5" fill="${col}"/></svg>
+      <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-top:4px;padding-right:${Math.round((RW / W) * 100)}%" class="muted"><span>${fd(first.day)}</span><span>${v.length > 2 ? fd(v[Math.floor(v.length / 2)].day) : ""}</span><span>${fd(last.day)}</span></div>
+      <p class="muted" style="margin:8px 0 0;font-size:.78rem">Touch and drag along the line to see your value on any day. Saved once a day, in USD. Today's point uses live prices.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="ac-btn" type="button" data-export="portfolio">⬇ Portfolio CSV</button><button class="ac-btn" type="button" data-export="history">⬇ History CSV</button></div></div>`;
+    box.querySelectorAll("[data-pr]").forEach((b) => (b.onclick = () => render(b.dataset.pr)));
+    const svg = box.querySelector("#pfSvg"), rd = box.querySelector("#pfRead"), cur = box.querySelector("#pfCur"), dot = box.querySelector("#pfDot");
+    const paintRead = (i, live) => {
+      const p = v[i], c = first.v > 0 ? ((p.v - first.v) / first.v) * 100 : 0, cc = chg(c), s2 = second(p.v);
+      rd.innerHTML = `<b>${esc(fmtUsd(p.v))}${s2 ? ` <span style="font-size:1rem;font-weight:600">· ${esc(s2)}</span>` : ""}</b><span><span class="${up ? "up" : "down"}" style="font-weight:700;color:${i > 0 ? (c >= 0 ? "#16a34a" : "#ea3943") : "inherit"}">${i > 0 || live ? (live ? `${up ? "▲" : "▼"} ${esc(d.t.replace("+", ""))}` : esc(cc.t)) : ""}</span> ${live ? "over " + RLAB[rk] : "on " + esc(fdLong(p.day))}</span>`;
+    };
+    let lastIdx = v.length - 1;
+    const show = (i, live) => {
+      dot.setAttribute("cx", x(i).toFixed(1)); dot.setAttribute("cy", y(v[i].v).toFixed(1));
+      cur.setAttribute("x1", x(i).toFixed(1)); cur.setAttribute("x2", x(i).toFixed(1)); cur.setAttribute("opacity", live ? "0" : ".6");
+      dot.setAttribute("r", live ? "3.5" : "5"); paintRead(i, live);
+    };
+    const pick = (ev) => {
+      const r = svg.getBoundingClientRect(), vx = ((ev.clientX - r.left) / r.width) * W;
+      const i = Math.min(v.length - 1, Math.max(0, Math.round(((vx - P) / (PW - 2 * P)) * (v.length - 1))));
+      if (i !== lastIdx) { lastIdx = i; try { navigator.vibrate && navigator.vibrate(6); } catch (_) {} }
+      show(i, i === v.length - 1 && false);
+    };
+    const end = () => { lastIdx = v.length - 1; show(lastIdx, true); };
+    svg.addEventListener("pointerdown", (e) => { try { svg.setPointerCapture(e.pointerId); } catch (_) {} pick(e); });
+    svg.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse" && e.buttons === 0) { pick(e); return; } if (svg.hasPointerCapture && svg.hasPointerCapture(e.pointerId)) pick(e); });
+    svg.addEventListener("pointerup", end);
+    svg.addEventListener("pointercancel", end);
+    svg.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") end(); });
+    show(lastIdx, true);
   };
-  let lastIdx = pts.length - 1;
-  const show = (i, live) => {
-    dot.setAttribute("cx", x(i).toFixed(1));
-    dot.setAttribute("cy", y(pts[i].v).toFixed(1));
-    cur.setAttribute("x1", x(i).toFixed(1));
-    cur.setAttribute("x2", x(i).toFixed(1));
-    cur.setAttribute("opacity", live ? "0" : ".6");
-    dot.setAttribute("r", live ? "3.5" : "5");
-    paintRead(i, live);
-  };
-  const pick = (ev) => {
-    const r = svg.getBoundingClientRect();
-    const vx = ((ev.clientX - r.left) / r.width) * W;
-    const i = Math.min(pts.length - 1, Math.max(0, Math.round(((vx - P) / (W - 2 * P)) * (pts.length - 1))));
-    if (i !== lastIdx) {
-      lastIdx = i;
-      try { navigator.vibrate && navigator.vibrate(6); } catch (_) {}
-    }
-    show(i, false);
-  };
-  const end = () => { lastIdx = pts.length - 1; show(lastIdx, true); };
-  svg.addEventListener("pointerdown", (e) => { try { svg.setPointerCapture(e.pointerId); } catch (_) {} pick(e); });
-  svg.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse" && e.buttons === 0) { pick(e); return; } if (svg.hasPointerCapture && svg.hasPointerCapture(e.pointerId)) pick(e); });
-  svg.addEventListener("pointerup", end);
-  svg.addEventListener("pointercancel", end);
-  svg.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") end(); });
-  show(lastIdx, true);
+  render(pf.rng && RNG[pf.rng] ? pf.rng : "1M");
 }
 
 async function onPortfolioClick(e) {
