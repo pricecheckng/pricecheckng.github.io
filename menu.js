@@ -29,7 +29,7 @@
       ['Treasuries', 'Which companies and countries hold crypto', 'treasuries']
     ]},
     { t: 'P2P & Currency', rows: [
-      ['USDT P2P rates', 'Naira prices on Bybit, OKX and Bitget', 'p2p'],
+      ['USDT P2P rates', 'Live prices in 50+ currencies', 'p2p'],
       ['Is my P2P rate fair?', 'Check an agent\'s USDT rate', 'p2p-check'],
       ['Converter', 'Naira to crypto and back', 'converter'],
       ['Profit calculator', 'Work out your gain or loss', 'profit-calculator'],
