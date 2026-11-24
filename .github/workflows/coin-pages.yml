@@ -15,6 +15,8 @@ jobs:
           node-version: 20
       - name: Generate coin pages and sitemap
         run: node scripts/gen-coin-pages.mjs
+      - name: Generate AI chart pages
+        run: node scripts/gen-chart-pages.mjs
       - name: Commit changes
         run: |
           git config user.name "github-actions"
