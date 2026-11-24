@@ -275,6 +275,14 @@
   .top{padding:10px 20px}
   .info{padding:6px 20px 8px!important}
 }
+
+#mkTick,.tfi{display:none}
+@media (min-width:1000px){
+  #mkTick{display:flex;gap:22px;align-items:center;padding:6px 20px;font-size:12px;color:var(--mut);border-bottom:1px solid var(--line);background:var(--panel);overflow:hidden;white-space:nowrap}
+  #mkTick b{color:var(--txt);font-weight:700;margin-left:6px}#mkTick .u{color:#16c784}#mkTick .d{color:#ea3943}#mkTick .ti{font-weight:800;color:var(--txt)}
+  .tfi{display:inline-block;background:none;border:0;color:var(--mut);font:inherit;font-size:13px;font-weight:700;padding:6px 8px;border-radius:8px;cursor:pointer}.tfi:hover{color:var(--txt)}.tfi.on{color:var(--acc);background:rgba(47,214,138,.12)}
+  #tfBtn{display:none}
+}
 </style>
 </head>
 <body>
@@ -1710,6 +1718,27 @@ try {
   });
 } catch (e) { console.error('pcn menu stars', e); }
 try{requestAnimationFrame(function(){var d=document.getElementById('dtools');if(d)d.classList.add('rdy')})}catch(_){}
+
+/* desktop extras: market strip on top and one-tap timeframes */
+(function () {
+  const app = document.getElementById('app'), top = document.querySelector('.top'); if (!app || !top) return;
+  const strip = document.createElement('div'); strip.id = 'mkTick'; app.insertBefore(strip, top);
+  const money = n => { n = Number(n); return n >= 1e12 ? '$' + (n / 1e12).toFixed(2) + 'T' : n >= 1e9 ? '$' + (n / 1e9).toFixed(2) + 'B' : '$' + Math.round(n).toLocaleString('en-US'); };
+  fetch(SUPABASE_URL + '/rest/v1/market_global?select=*&id=eq.1', { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }).then(r => r.json()).then(rows => {
+    const d = rows && rows[0]; if (!d) return; const ch = Number(d.cap_change_24h), a = ['<span class="ti">Agentic Charts</span>'];
+    if (Number(d.market_cap) > 0) a.push('Market Cap<b>' + money(d.market_cap) + '</b>' + (isFinite(ch) ? ' <span class="' + (ch >= 0 ? 'u' : 'd') + '">' + (ch >= 0 ? '▲ ' : '▼ ') + Math.abs(ch).toFixed(2) + '%</span>' : ''));
+    if (Number(d.volume_24h) > 0) a.push('24h Vol<b>' + money(d.volume_24h) + '</b>');
+    if (Number(d.btc_dom) > 0) a.push('BTC Dominance<b>' + Number(d.btc_dom).toFixed(1) + '%</b>');
+    if (d.fng_value != null) a.push('Fear & Greed<b>' + d.fng_value + (d.fng_label ? ' ' + d.fng_label : '') + '</b>');
+    strip.innerHTML = a.join('<span></span>');
+  }).catch(() => {});
+  const dd = document.getElementById('tfBtn') && document.getElementById('tfBtn').parentNode; if (!dd) return;
+  const box = document.createElement('span'); box.style.cssText = 'display:inline-flex;gap:2px';
+  [['15m', '15m'], ['1h', '1h'], ['4h', '4h'], ['1d', 'D'], ['1w', 'W']].forEach(x => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tfi'; b.dataset.i = x[0]; b.textContent = x[1]; b.onclick = () => { const m = document.querySelector('#tfMenu .tf[data-i="' + x[0] + '"]'); if (m) m.click(); sync(); }; box.appendChild(b); });
+  dd.parentNode.insertBefore(box, dd.nextSibling);
+  const sync = () => box.querySelectorAll('.tfi').forEach(b => b.classList.toggle('on', b.dataset.i === interval));
+  sync(); setInterval(sync, 700);
+})();
 </script>
 </body>
 </html>
