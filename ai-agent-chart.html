@@ -424,7 +424,7 @@ const QT = () => mt === 'spot' ? SQ() : ((pinfo[symbol] && pinfo[symbol].q) || (
 const BASE = () => mt === 'spot' ? symbol : ((pinfo[symbol] && pinfo[symbol].base) || symbol.split(/[-_]/)[0].replace(/(USDT|USDC|USD)$/, ''));
 const LBL = () => mt === 'spot' ? symbol + '/' + SQ() : ((pinfo[symbol] && pinfo[symbol].label) || symbol) + (mt === 'perp' ? ' Perp' : '');
 let meta = {};                       // symbol -> {name, img}
-const sg = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch (_) { return d; } };
+const sg = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (_) { return d; } };
 const ss = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
 const fmt = n => n >= 100 ? n.toLocaleString('en-US', { maximumFractionDigits: 2 }) : n >= 1 ? n.toFixed(3) : n.toPrecision(4);
 let loadMs = 0; let lastD = null; let lastPx = '', dayOpen = null, source = '', ws = null, wsTimer = 0, poll = 0, token = 0;
