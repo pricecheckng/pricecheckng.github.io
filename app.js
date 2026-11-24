@@ -3443,27 +3443,26 @@ async function paintPortfolioHistory(liveTotal) {
     if (v.length < 2) v = pts.slice(Math.max(0, endIdx - 1), endIdx + 1);
     if (rk === "24h") v = pts.slice(Math.max(0, endIdx - 1), endIdx + 1);
     if (v.length < 2) { endIdx = Math.min(pts.length - 1, 1); v = pts.slice(0, endIdx + 1); }
-    const W = 320, H = 150, P = 10, RW = 46;
+    const W = 600, H = 400, P = 6, RW = 0, T = 16, PBt = 372;
     const vs = v.map((p) => p.v);
     let lo = Math.min(...vs), hi = Math.max(...vs);
     if (hi === lo) { hi += 1; lo -= 1; }
     const padv = (hi - lo) * 0.12; hi += padv; lo -= padv;
     const PW = W - RW;
     const x = (i) => P + (i * (PW - 2 * P)) / (v.length - 1);
-    const y = (n) => H - P - ((n - lo) / (hi - lo)) * (H - 2 * P);
+    const y = (n) => PBt - ((n - lo) / (hi - lo)) * (PBt - T);
     const first = v[0], last = v[v.length - 1];
     const up = last.v >= first.v, col = up ? "#16a34a" : "#ea3943";
     const chgPct = first.v > 0 ? ((last.v - first.v) / first.v) * 100 : 0, d = chg(chgPct);
     const line = v.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)} ${y(p.v).toFixed(1)}`).join(" ");
-    const area = `${line} L${x(v.length - 1).toFixed(1)} ${H - P} L${x(0).toFixed(1)} ${H - P} Z`;
-    const ticks = [hi - padv, (hi + lo) / 2, lo + padv].map((t) => `<line x1="0" x2="${PW}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" stroke="currentColor" opacity=".09"/><text x="${W - 2}" y="${(y(t) + 4).toFixed(1)}" text-anchor="end" font-size="10.5" fill="currentColor" opacity=".6">${short(t)}</text>`).join("");
+    const area = `${line} L${x(v.length - 1).toFixed(1)} ${PBt} L${x(0).toFixed(1)} ${PBt} Z`;
+    const ticks = [hi - padv, (hi + lo) / 2, lo + padv].map((t) => `<line x1="0" x2="${PW}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" stroke="#94a3b8" stroke-opacity=".16"/><text x="${W - 6}" y="${(y(t) - 6).toFixed(1)}" text-anchor="end" font-size="27" fill="#94a3b8">${short(t)}</text>`).join("");
     box.innerHTML = `<div class="cp-card"><h3 style="margin:0 0 4px">Value history</h3>
       <div class="cp-read" id="pfRead"></div>
       <div class="cpt"><div class="cpr" role="group" aria-label="Range">${Object.keys(RNG).map((k) => `<button type="button" data-pr="${k}" aria-pressed="${k === rk}">${k}</button>`).join("")}</div></div>
-      <div style="position:relative"><div style="position:absolute;right:${Math.round((RW / W) * 100) + 3}%;bottom:14%;display:flex;align-items:center;gap:5px;opacity:.7;pointer-events:none"><span class="cpwm" style="width:22px;height:22px;display:block"></span><span style="font-weight:700;font-size:.78rem;letter-spacing:-.2px;opacity:.65">PriceCheck NG</span></div>
-      <svg class="cp-svg" id="pfSvg" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Portfolio value over time. Touch and drag to see the value on any day." style="margin-top:8px;color:inherit;touch-action:pan-y;user-select:none;-webkit-user-select:none"><defs><linearGradient id="pfG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".32"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${ticks}<line x1="0" x2="${PW}" y1="${y(first.v).toFixed(1)}" y2="${y(first.v).toFixed(1)}" stroke="currentColor" stroke-dasharray="3 4" opacity=".35"/><path d="${area}" fill="url(#pfG)"/><path d="${line}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><line id="pfCur" x1="0" x2="0" y1="${P}" y2="${H - P}" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0"/><circle id="pfDot" cx="${x(v.length - 1).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="3.5" fill="${col}"/></svg></div>
-      <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-top:4px;padding-right:${Math.round((RW / W) * 100)}%" class="muted"><span>${fd(first.day)}</span><span>${v.length > 2 ? fd(v[Math.floor(v.length / 2)].day) : ""}</span><span>${fd(last.day)}</span></div>
-      <p class="muted" style="margin:8px 0 0;font-size:.78rem">Drag the chart sideways to move through time. Press and hold, then slide, to read your value on any day. Saved once a day, in USD. Today's point uses live prices.</p>
+      <div style="position:relative;margin-top:8px;border:1px solid rgba(148,163,184,.3);border-radius:6px;overflow:hidden"><div style="position:absolute;right:8px;bottom:8%;display:flex;align-items:center;gap:5px;opacity:.7;pointer-events:none"><span class="cpwm" style="width:24px;height:24px;display:block"></span><span style="font-weight:700;font-size:.8rem;letter-spacing:-.2px;opacity:.65">PriceCheck NG</span></div>
+      <svg class="cp-svg" id="pfSvg" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Portfolio value over time. Touch and drag to see the value on any day." style="display:block;width:100%;height:auto;color:inherit;touch-action:pan-y;user-select:none;-webkit-user-select:none"><defs><linearGradient id="pfG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".32"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${ticks}<line x1="0" x2="${PW}" y1="${y(first.v).toFixed(1)}" y2="${y(first.v).toFixed(1)}" stroke="currentColor" stroke-dasharray="6 8" opacity=".5"/><path d="${area}" fill="url(#pfG)"/><path d="${line}" fill="none" stroke="${col}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/><line id="pfCur" x1="0" x2="0" y1="${T}" y2="${PBt}" stroke="currentColor" stroke-width="1.5" stroke-dasharray="5 5" opacity="0"/><circle id="pfDot" cx="${x(v.length - 1).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="7" fill="${col}"/></svg></div>
+      <div style="display:flex;justify-content:space-between;font-size:1rem;margin-top:8px;padding:0 6px" class="muted"><span>${fd(first.day)}</span><span>${v.length > 2 ? fd(v[Math.floor(v.length / 2)].day) : ""}</span><span>${fd(last.day)}</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="ac-btn" type="button" data-export="portfolio">⬇ Portfolio CSV</button><button class="ac-btn" type="button" data-export="history">⬇ History CSV</button></div></div>`;
     box.querySelectorAll("[data-pr]").forEach((b) => (b.onclick = () => render(b.dataset.pr)));
     const svg = box.querySelector("#pfSvg"), rd = box.querySelector("#pfRead"), cur = box.querySelector("#pfCur"), dot = box.querySelector("#pfDot");
@@ -3475,7 +3474,7 @@ async function paintPortfolioHistory(liveTotal) {
     const show = (i, live) => {
       dot.setAttribute("cx", x(i).toFixed(1)); dot.setAttribute("cy", y(v[i].v).toFixed(1));
       cur.setAttribute("x1", x(i).toFixed(1)); cur.setAttribute("x2", x(i).toFixed(1)); cur.setAttribute("opacity", live ? "0" : ".6");
-      dot.setAttribute("r", live ? "3.5" : "5"); paintRead(i, live);
+      dot.setAttribute("r", live ? "7" : "10"); paintRead(i, live);
     };
     const pick = (ev) => {
       const r = svg.getBoundingClientRect(), vx = ((ev.clientX - r.left) / r.width) * W;
