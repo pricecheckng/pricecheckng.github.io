@@ -259,6 +259,22 @@
 .info .st b{display:block;font-size:12px;color:var(--txt);font-weight:700;margin-top:1px}
 .info.hvm .sub,.info.hvm .st{display:none}
 #dtools{opacity:0}#dtools.rdy{opacity:1;transition:opacity .18s}
+
+/* desktop: chart on the left, chat docked on the right (like CoinMarketCap) */
+@media (min-width:1000px){
+  #vChart:not([style*="none"]){display:grid!important;grid-template-columns:minmax(0,1fr) 420px;grid-template-rows:auto auto minmax(0,1fr) auto auto;min-height:0}
+  #vChart>.info,#vChart>.leg,#vChart>#main,#vChart>#rsiWrap,#vChart>#subWrap{grid-column:1}
+  #vChart>.info{grid-row:1}#vChart>.leg{grid-row:2}#vChart>#main{grid-row:3;flex:none;min-height:0}#vChart>#rsiWrap{grid-row:4}#vChart>#subWrap{grid-row:5}
+  #vChart.agopen #rsiWrap{display:block}
+  #vChart>#agent{grid-column:2;grid-row:1/-1;height:auto!important;border-top:0;border-left:1px solid var(--line);border-radius:0;min-height:0}
+  #agent .aghandle,#agFull,#agClose,#agUp{display:none!important}
+  #agent.full{position:relative;left:auto;right:auto;top:auto;bottom:auto;box-shadow:none;border:0;border-left:1px solid var(--line);border-radius:0}
+  #agent .aghead{padding:12px 16px 8px}
+  #agMsgs{padding:0 16px 8px}
+  .tabbar{max-width:none}
+  .top{padding:10px 20px}
+  .info{padding:6px 20px 8px!important}
+}
 </style>
 </head>
 <body>
@@ -1100,7 +1116,10 @@ function md(t) {
 }
 function setFull(f) { agent.classList.toggle('full', f); if (f) setOpen(true); $('agFull').innerHTML = f ? '<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5\"/></svg>' : '<svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.8\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5\"/></svg>'; setTimeout(() => chart.resize(), 50); msgsEl.scrollTop = msgsEl.scrollHeight; }
 $('agFull').onclick = () => setFull(!agent.classList.contains('full'));
-function setOpen(o) { if (!o) { agent.classList.remove('full'); } agent.classList.toggle('open', o); $('vChart').classList.toggle('agopen', o); if (o && !msgsEl.children.length) intro(); setTimeout(() => chart.resize(), 50); }
+const DESK = () => !!(window.matchMedia && matchMedia('(min-width:1000px)').matches);
+setTimeout(() => { if (DESK()) setOpen(true); }, 0);
+window.addEventListener('resize', () => { if (DESK() && !agent.classList.contains('open')) setOpen(true); });
+function setOpen(o) { if (DESK()) o = true; if (!o) { agent.classList.remove('full'); } agent.classList.toggle('open', o); $('vChart').classList.toggle('agopen', o); if (o && !msgsEl.children.length) intro(); setTimeout(() => chart.resize(), 50); }
 const SUGG = [['Analyze', ['What is the current trend?', 'Where are support and resistance?', 'Is RSI overbought or oversold?', 'Summarize this chart']], ['Find a setup', ['What is the current setup?', 'Outline the upside and downside levels', 'Is price above or below the moving averages?']], ['Add to chart', ['Mark the support and resistance.', 'Draw the current range.', 'Add the 50 and 200 averages.', 'Clear the lines you drew.']]];
 function intro() { msgsEl.innerHTML = '<div class="ag-a"><p>Ask me about the chart you are looking at. I read its price, trend, RSI and support and resistance.</p></div><div class="ag-chips"></div>'; const c = msgsEl.querySelector('.ag-chips'); c.className = 'ag-sug'; SUGG.forEach(g => { c.insertAdjacentHTML('beforeend', '<div class="ag-grp">' + g[0] + '</div>'); const r = document.createElement('div'); r.className = 'ag-row'; g[1].forEach(q => { const b = document.createElement('button'); b.type = 'button'; b.textContent = q; b.onclick = () => ask(q); r.appendChild(b); }); c.appendChild(r); }); }
 // saved chats (this phone only)
