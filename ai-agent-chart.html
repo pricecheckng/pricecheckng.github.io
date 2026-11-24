@@ -1419,7 +1419,8 @@ async function chartAction(q, box) {
     const gap = st.b - st.a, sg = v => (v > 0 ? '+' : '') + v.toFixed(2) + '%';
     return '<p>The screenshot passes the quality check: both lines start level at the left edge, and the chart is in percent so the two venues can be compared fairly.</p><p>' + EXN[exch] + ' ' + BASE() + ' is ' + sg(st.a) + ' over this view and ' + EXN[exHit] + ' is ' + sg(st.b) + '. ' + EXN[exHit] + (gap < 0 ? ' trails by ' : ' leads by ') + Math.abs(gap).toFixed(2) + ' percentage points.</p><div class="ag-note">Say "Remove the overlay" to take it off. Not financial advice.</div>';
   }
-  if (/\b(clear|remove|erase|delete)\b/.test(t) && /(draw|line|level|mark)/.test(t)) {
+  if (/\b(clear|remove|erase|delete)\b/.test(t) && /(draw|line|level|mark|everything|\ball\b)/.test(t)) {
+    if (/(everything|\ball\b)/.test(t) && chart.hasOverlay && chart.hasOverlay()) chart.setOverlay(null);
     await readChart(); const n = await stg(box, 'pen', 'clear_lines', 'removed the lines the agent drew', () => chart.clearAI(), n => n + ' removed');
     return '<p>' + (n ? 'Done. I removed the lines I drew. Your own drawings are still there.' : 'I have no lines on the chart right now. Your own drawings stay until you delete them.') + '</p>';
   }
