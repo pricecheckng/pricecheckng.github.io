@@ -283,6 +283,15 @@
   .tfi{display:inline-block;background:none;border:0;color:var(--mut);font:inherit;font-size:13px;font-weight:700;padding:6px 8px;border-radius:8px;cursor:pointer}.tfi:hover{color:var(--txt)}.tfi.on{color:var(--acc);background:rgba(47,214,138,.12)}
   #tfBtn{display:none}
 }
+
+#agTabs,#agWl{display:none}
+@media (min-width:1000px){
+  #agTabs{display:flex;gap:18px;padding:10px 16px 0;border-bottom:1px solid var(--line);flex:none}
+  #agTabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--mut);font:inherit;font-size:13px;font-weight:700;padding:4px 0 9px;cursor:pointer}
+  #agTabs button.on{color:var(--txt);border-bottom-color:var(--acc)}
+  #agent.wl #agWl{display:block;flex:1;min-height:0;overflow-y:auto}
+  #agent.wl .aghead,#agent.wl #agMsgs,#agent.wl #agForm,#agent.wl #agModeMenu{display:none!important}
+}
 </style>
 </head>
 <body>
@@ -310,6 +319,8 @@
   <div id="rsiWrap"><span class="lbl">RSI 14</span><div class="c" id="cRsi"></div></div><div id="subWrap" style="display:none"></div>
   <div id="agent">
     <div class="aghandle" id="agHandle"><i></i></div>
+    <div id="agTabs"><button type="button" class="on" data-t="c">Chat</button><button type="button" data-t="w">Watchlist</button></div>
+    <div id="agWl"></div>
     <div class="aghead"><span class="agt">Chat with PCN AI <button type="button" id="agHelp" aria-label="What can PCN AI do?">?</button></span><span><button id="agShare" aria-label="Share"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg></button><button id="agNew" aria-label="New chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12v5a3 3 0 0 1-3 3H9l-5 3V7a3 3 0 0 1 3-3h6"/><path d="M18 3v6M15 6h6"/></svg></button><button id="agHist" aria-label="Past chats"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></svg></button><button id="agFull" aria-label="Full screen"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button><button id="agClose" aria-label="Hide chat"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></span></div>
     <div id="agMsgs"></div>
     <div id="agModeMenu"><button data-m="quick">Quick<small>Short answer, uses your Quick questions</small></button><button data-m="pro">Pro<small>More detail, uses your Pro questions</small></button><button data-m="deep">Deep<small>Full analysis with news, uses your Deep questions</small></button></div>
@@ -1063,13 +1074,21 @@ function showView(v) {
   if (v === 'vWatch') { renderWatch(); wlTimer = setInterval(renderWatch, 8000); }
 }
 document.querySelectorAll('.tb').forEach(b => b.onclick = () => showView(b.dataset.v));
+
+document.querySelectorAll('#agTabs button').forEach(b => b.onclick = () => {
+  const w = b.dataset.t === 'w'; agent.classList.toggle('wl', w);
+  document.querySelectorAll('#agTabs button').forEach(x => x.classList.toggle('on', x === b));
+  clearInterval(wlTimer); wlTimer = 0;
+  if (w) { renderWatch(); wlTimer = setInterval(renderWatch, 8000); }
+});
 const wprev = {};
 async function renderWatch() {
-  const box = $('wlist'); favs = sg('pcn_chart_favs', []);
+  const inPanel = agent.classList.contains('wl'), box = inPanel ? $('agWl') : $('wlist'); favs = sg('pcn_chart_favs', []);
   if (!favs.length) { box.innerHTML = '<div class="empty">Your watchlist is empty.<br>Tap the star next to a pair in the pair list to add it here.</div><button class="addb" id="wAdd">Add pairs</button>'; $('wAdd').onclick = () => { showView('vChart'); $('pairBtn').click(); }; return; }
   let tk = {};
   try { const r = await fetch('https://api.binance.com/api/v3/ticker/24hr?symbols=' + encodeURIComponent(JSON.stringify(favs.map(s => s + 'USDT')))); (await r.json()).forEach(t => tk[t.symbol] = t); } catch (_) {}
-  if (!$('vWatch') || $('vWatch').style.display === 'none') return;
+  if (!inPanel && (!$('vWatch') || $('vWatch').style.display === 'none')) return;
+  if (inPanel && !agent.classList.contains('wl')) return;
   box.innerHTML = '';
   favs.forEach(sym => {
     const t = tk[sym + 'USDT'], p = t ? +t.lastPrice : null, c = t ? +t.priceChangePercent : null;
