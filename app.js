@@ -3433,12 +3433,16 @@ async function paintPortfolioHistory(liveTotal) {
   const fxRate = state.fx[state.cur];
   const second = (usd) => (fxRate ? fmtLocal(usd * fxRate, state.cur) : "");
   const short = (v) => (v >= 1e6 ? (v / 1e6).toFixed(2) + "M" : v >= 1e4 ? (v / 1e3).toFixed(1) + "K" : v >= 100 ? Math.round(v).toLocaleString("en-US") : v.toFixed(2));
-  const render = (rk) => {
+  const dayMs = (d) => new Date(d + "T00:00:00").getTime();
+  const render = (rk, endIdx) => {
     pf.rng = rk;
-    const cutoff = new Date(Date.now() - RNG[rk] * 864e5).toISOString().slice(0, 10);
-    let v = pts.filter((p) => p.day >= cutoff);
-    if (v.length < 2) v = pts.slice(-2);
-    if (rk === "24h") v = pts.slice(-2);
+    if (endIdx == null || endIdx > pts.length - 1) endIdx = pts.length - 1;
+    const atEnd = endIdx === pts.length - 1;
+    const endDay = pts[endIdx].day, cutoff = new Date(dayMs(endDay) - RNG[rk] * 864e5 + 36e5).toISOString().slice(0, 10);
+    let v = pts.slice(0, endIdx + 1).filter((p) => p.day >= cutoff);
+    if (v.length < 2) v = pts.slice(Math.max(0, endIdx - 1), endIdx + 1);
+    if (rk === "24h") v = pts.slice(Math.max(0, endIdx - 1), endIdx + 1);
+    if (v.length < 2) { endIdx = Math.min(pts.length - 1, 1); v = pts.slice(0, endIdx + 1); }
     const W = 320, H = 150, P = 10, RW = 46;
     const vs = v.map((p) => p.v);
     let lo = Math.min(...vs), hi = Math.max(...vs);
@@ -3457,15 +3461,15 @@ async function paintPortfolioHistory(liveTotal) {
       <div class="cp-read" id="pfRead"></div>
       <div class="cpt"><div class="cpr" role="group" aria-label="Range">${Object.keys(RNG).map((k) => `<button type="button" data-pr="${k}" aria-pressed="${k === rk}">${k}</button>`).join("")}</div></div>
       <div style="position:relative"><div style="position:absolute;right:${Math.round((RW / W) * 100) + 3}%;bottom:14%;display:flex;align-items:center;gap:5px;opacity:.7;pointer-events:none"><span class="cpwm" style="width:22px;height:22px;display:block"></span><span style="font-weight:700;font-size:.78rem;letter-spacing:-.2px;opacity:.65">PriceCheck NG</span></div>
-      <svg class="cp-svg" id="pfSvg" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Portfolio value over time. Touch and drag to see the value on any day." style="margin-top:8px;color:inherit;touch-action:pan-y"><defs><linearGradient id="pfG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".32"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${ticks}<line x1="0" x2="${PW}" y1="${y(first.v).toFixed(1)}" y2="${y(first.v).toFixed(1)}" stroke="currentColor" stroke-dasharray="3 4" opacity=".35"/><path d="${area}" fill="url(#pfG)"/><path d="${line}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><line id="pfCur" x1="0" x2="0" y1="${P}" y2="${H - P}" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0"/><circle id="pfDot" cx="${x(v.length - 1).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="3.5" fill="${col}"/></svg></div>
+      <svg class="cp-svg" id="pfSvg" viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Portfolio value over time. Touch and drag to see the value on any day." style="margin-top:8px;color:inherit;touch-action:pan-y;user-select:none;-webkit-user-select:none"><defs><linearGradient id="pfG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${col}" stop-opacity=".32"/><stop offset="1" stop-color="${col}" stop-opacity="0"/></linearGradient></defs>${ticks}<line x1="0" x2="${PW}" y1="${y(first.v).toFixed(1)}" y2="${y(first.v).toFixed(1)}" stroke="currentColor" stroke-dasharray="3 4" opacity=".35"/><path d="${area}" fill="url(#pfG)"/><path d="${line}" fill="none" stroke="${col}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><line id="pfCur" x1="0" x2="0" y1="${P}" y2="${H - P}" stroke="currentColor" stroke-width="1" stroke-dasharray="3 3" opacity="0"/><circle id="pfDot" cx="${x(v.length - 1).toFixed(1)}" cy="${y(last.v).toFixed(1)}" r="3.5" fill="${col}"/></svg></div>
       <div style="display:flex;justify-content:space-between;font-size:.8rem;margin-top:4px;padding-right:${Math.round((RW / W) * 100)}%" class="muted"><span>${fd(first.day)}</span><span>${v.length > 2 ? fd(v[Math.floor(v.length / 2)].day) : ""}</span><span>${fd(last.day)}</span></div>
-      <p class="muted" style="margin:8px 0 0;font-size:.78rem">Touch and drag along the line to see your value on any day. Saved once a day, in USD. Today's point uses live prices.</p>
+      <p class="muted" style="margin:8px 0 0;font-size:.78rem">Drag the chart sideways to move through time. Press and hold, then slide, to read your value on any day. Saved once a day, in USD. Today's point uses live prices.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="ac-btn" type="button" data-export="portfolio">⬇ Portfolio CSV</button><button class="ac-btn" type="button" data-export="history">⬇ History CSV</button></div></div>`;
     box.querySelectorAll("[data-pr]").forEach((b) => (b.onclick = () => render(b.dataset.pr)));
     const svg = box.querySelector("#pfSvg"), rd = box.querySelector("#pfRead"), cur = box.querySelector("#pfCur"), dot = box.querySelector("#pfDot");
     const paintRead = (i, live) => {
       const p = v[i], c = first.v > 0 ? ((p.v - first.v) / first.v) * 100 : 0, cc = chg(c), s2 = second(p.v);
-      rd.innerHTML = `<b>${esc(fmtUsd(p.v))}${s2 ? ` <span style="font-size:1rem;font-weight:600">· ${esc(s2)}</span>` : ""}</b><span><span class="${up ? "up" : "down"}" style="font-weight:700;color:${i > 0 ? (c >= 0 ? "#16a34a" : "#ea3943") : "inherit"}">${i > 0 || live ? (live ? `${up ? "▲" : "▼"} ${esc(d.t.replace("+", ""))}` : esc(cc.t)) : ""}</span> ${live ? "over " + RLAB[rk] : "on " + esc(fdLong(p.day))}</span>`;
+      rd.innerHTML = `<b>${esc(fmtUsd(p.v))}${s2 ? ` <span style="font-size:1rem;font-weight:600">· ${esc(s2)}</span>` : ""}</b><span><span class="${up ? "up" : "down"}" style="font-weight:700;color:${i > 0 ? (c >= 0 ? "#16a34a" : "#ea3943") : "inherit"}">${i > 0 || live ? (live ? `${up ? "▲" : "▼"} ${esc(d.t.replace("+", ""))}` : esc(cc.t)) : ""}</span> ${live ? "over " + RLAB[rk] + (atEnd ? "" : " to " + esc(fd(endDay))) : "on " + esc(fdLong(p.day))}</span>`;
     };
     let lastIdx = v.length - 1;
     const show = (i, live) => {
@@ -3477,14 +3481,36 @@ async function paintPortfolioHistory(liveTotal) {
       const r = svg.getBoundingClientRect(), vx = ((ev.clientX - r.left) / r.width) * W;
       const i = Math.min(v.length - 1, Math.max(0, Math.round(((vx - P) / (PW - 2 * P)) * (v.length - 1))));
       if (i !== lastIdx) { lastIdx = i; try { navigator.vibrate && navigator.vibrate(6); } catch (_) {} }
-      show(i, i === v.length - 1 && false);
+      show(i, false);
     };
     const end = () => { lastIdx = v.length - 1; show(lastIdx, true); };
-    svg.addEventListener("pointerdown", (e) => { try { svg.setPointerCapture(e.pointerId); } catch (_) {} pick(e); });
-    svg.addEventListener("pointermove", (e) => { if (e.pointerType === "mouse" && e.buttons === 0) { pick(e); return; } if (svg.hasPointerCapture && svg.hasPointerCapture(e.pointerId)) pick(e); });
-    svg.addEventListener("pointerup", end);
-    svg.addEventListener("pointercancel", end);
-    svg.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") end(); });
+    box._pf = { rk, endIdx, vlen: v.length, W, P, PW, pick, end, svg, render };
+    if (!box._pfWired) {
+      box._pfWired = true;
+      let st = null;
+      box.addEventListener("pointerdown", (e) => {
+        const m = box._pf; if (!m || !e.target.closest || !e.target.closest("#pfSvg")) return;
+        st = { x0: e.clientX, end0: m.endIdx, moved: false, scrub: false, id: e.pointerId };
+        st.t = setTimeout(() => { if (st && !st.moved) { st.scrub = true; try { navigator.vibrate && navigator.vibrate(10); } catch (_) {} box._pf.pick(e); } }, 260);
+        if (e.pointerType === "mouse") { try { box.setPointerCapture(e.pointerId); } catch (_) {} }
+      });
+      box.addEventListener("pointermove", (e) => {
+        const m = box._pf; if (!m) return;
+        if (!st) { if (e.pointerType === "mouse" && e.target.closest && e.target.closest("#pfSvg")) m.pick(e); return; }
+        const dx = e.clientX - st.x0;
+        if (st.scrub) { m.pick(e); return; }
+        if (!st.moved && Math.abs(dx) > 8) { st.moved = true; clearTimeout(st.t); try { box.setPointerCapture(e.pointerId); } catch (_) {} }
+        if (st.moved) {
+          const r = m.svg.getBoundingClientRect(), stepPx = (r.width * ((m.PW - 2 * m.P) / (m.vlen - 1))) / m.W;
+          const ne = Math.max(1, Math.min(pts.length - 1, st.end0 - Math.round(dx / Math.max(4, stepPx))));
+          if (ne !== box._pf.endIdx) { try { navigator.vibrate && navigator.vibrate(4); } catch (_) {} m.render(m.rk, ne); }
+        }
+      });
+      const up = () => { if (!st) return; clearTimeout(st.t); const was = st.scrub; st = null; if (was && box._pf) box._pf.end(); };
+      box.addEventListener("pointerup", up);
+      box.addEventListener("pointercancel", up);
+      box.addEventListener("pointerleave", (e) => { if (e.pointerType === "mouse") { if (box._pf && !st) box._pf.end(); } });
+    }
     show(lastIdx, true);
   };
   render(pf.rng && RNG[pf.rng] ? pf.rng : "1M");
