@@ -255,7 +255,7 @@ async function load() {
     '<tr><td class="nm"><span class="av" style="background:' + (COL[s] || "#888") + '">' + (NAMES[s] || s).charAt(0) + logo(s) + '</span><b class="xn">' + (NAMES[s] || s) + "</b></td>" +
     cell(src[s].buy, "bp", s === bestBuy) + cell(src[s].sell, "sp", s === bestSell) + "</tr>";
   const gapTxt = fx && avg ? "Official " + CUR + " rate <b>" + N(fx) + "</b> · P2P " + (avg >= fx ? "+" : "−") + Math.abs(((avg / fx) - 1) * 100).toFixed(1) + "%" : "";
-  $("snap").innerHTML = '<div class="sh"><b>USDT / ' + CUR + '</b><span class="live"><i></i>Live · ' + ago(newest) + '</span><button type="button" class="shr" id="shr" aria-label="Share"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg></button></div>" +
+  $("snap").innerHTML = '<div class="sh"><b>USDT / ' + CUR + '</b><span class="live"><i></i>Live · ' + ago(newest) + '</span><button type="button" class="shr" id="shr" aria-label="Share"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg></button></div>' +
     "<table><tr><th>Exchange</th><th>Buy</th><th>Sell</th></tr>" + names.map(row).join("") + "</table>" +
     '<div class="ft"><span>' + gapTxt + "</span><span>pricecheckng.com.ng</span></div>";
   const lu = CUR === "NGN" ? src.luno : null;
