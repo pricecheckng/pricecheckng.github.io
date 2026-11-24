@@ -10,6 +10,7 @@
     [mc, rc].forEach(function (c) { c.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block'; });
     mainEl.appendChild(mc); rsiEl.appendChild(rc);
     var mx = mc.getContext('2d'), rx = rc.getContext('2d');
+    var PIN = null;
     var D = { c: [], ma50: [], ma200: [], rsi: [], levels: [], ov: null, ovm: null };   // ma/rsi arrays aligned to candles (null when none)
     var V = { start: 0, bw: 7 };                                    // start = index of left-most bar (float), bw = px per bar
     var W = 0, H = 0, RH = 0, AX = 58, cross = null, hov = null;
@@ -809,6 +810,7 @@
         var fill = function (arr) { var o = new Array(D.c.length).fill(null), m = {}; (arr || []).forEach(function (p) { if (p) m[p.t] = p.v; }); D.c.forEach(function (c, i) { if (m[c.t] != null) o[i] = m[c.t]; }); return o; };
         D.ma50 = fill(d.sma50); D.ma200 = fill(d.sma200); D.rsi = fill(d.rsi14);
         cross = null; size(); fit(); draw();
+        if (PIN && Date.now() - PIN.t < 45000 && PIN.n === D.c.length) this.showRange(PIN.i0, PIN.i1, 0, true);   // a data refresh must not undo a zoom the agent just made
       },
       tick: function (k) {   // live candle update: {t,o,h,l,c,v}. Replaces the newest candle or appends a new one; MAs and RSI follow.
         var n = D.c.length; if (!n) return;
@@ -839,7 +841,8 @@
         if (!D.ov || !D.c.length) return null; var r = range(), s = r[0], i, last = -1, ob = null; for (i = s; i < D.c.length; i++) if (D.ov[i] != null) { if (ob == null) ob = D.ov[i]; last = i; }
         if (ob == null || last < 0) return null; var b = D.c[s].c; return { a: (D.c[D.c.length - 1].c / b - 1) * 100, b: (D.ov[last] / ob - 1) * 100 };
       },
-      showRange: function (i0, i1, ms) {   // glide the view so candles i0..i1 fill the chart
+      showRange: function (i0, i1, ms, keep) {
+        if (!keep) PIN = { i0: i0, i1: i1, n: D.c.length, t: Date.now() };   // glide the view so candles i0..i1 fill the chart
         var n = D.c.length; if (!n) return; i0 = Math.max(0, Math.min(i0, n - 1)); i1 = Math.max(i0, Math.min(i1, n - 1));
         var pad = Math.max(3, Math.round((i1 - i0) * 0.18)), vis = i1 - i0 + 1 + pad * 2, tb = Math.max(2, Math.min(40, plotW() / vis)), ts = i0 - pad;
         var b0 = V.bw, s0 = V.start, t0 = Date.now(), dur = ms == null ? 600 : ms; zoomed = true;
