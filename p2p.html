@@ -50,7 +50,7 @@ html.dk #cps .c-sh{background:#121a15;color:#e9f1ec}html.dk #cps .c-r.sel{backgr
 @media (prefers-color-scheme:dark){html:not(.lt) #cps .c-sh{background:#121a15;color:#e9f1ec}html:not(.lt) #cps .c-r.sel{background:rgba(61,220,151,.14)}html:not(.lt) #cps .c-r em{color:#3ddc97}html:not(.lt) #cps input{background:#16201a;color:#e9f1ec;border-color:#2a3a31}}
 .box{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px 20px}
 .btn{display:block;box-shadow:0 6px 18px rgba(11,125,77,.3);text-align:center;background:var(--g);color:#fff;font-weight:800;text-decoration:none;border-radius:14px;padding:14px;margin-top:18px}
-.wa{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:#25d366;color:#fff!important;font-weight:800;font-size:.9rem;text-decoration:none;border-radius:999px;padding:9px 16px}
+.sh .live{margin-left:auto}.shr{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;margin-left:8px;border-radius:50%;border:0;background:rgba(128,128,128,.16);color:inherit;cursor:pointer;flex:none;-webkit-tap-highlight-color:transparent}.shr:active{opacity:.6}.wa-x{display:inline-flex;align-items:center;gap:8px;margin-top:12px;background:#25d366;color:#fff!important;font-weight:800;font-size:.9rem;text-decoration:none;border-radius:999px;padding:9px 16px}
 .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .links a{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;color:var(--ink);text-decoration:none;font-size:.9rem}
 .note{color:var(--mut);font-size:.85rem;margin-top:14px}
@@ -108,7 +108,6 @@ h2{font-size:1.3rem}
 #main>#inst{grid-column:1;grid-row:3}
 #main>h2{grid-column:2;grid-row:1;margin:0 0 10px;align-self:start}
 #main>.box{grid-column:2;grid-row:1;margin-top:40px;align-self:start}
-#main>.wa{grid-column:2;grid-row:2;justify-self:start;margin-top:18px}
 .snap{padding:22px 24px 18px;border-radius:24px}
 .snap th{font-size:.78rem;padding:8px 0}
 .snap td{padding:16px 0 16px 12px}
@@ -139,7 +138,6 @@ main>p,main>.warn,main>.links,main>.note{max-width:900px}
   <div class="snap" id="snap"></div>
   <p class="note" id="upd"></p>
   <div id="inst"></div>
-  <a class="wa" id="wa" href="#" target="_blank" rel="noopener">Share on WhatsApp</a>
 
   <h2>Last 24 hours (cost to buy 1 USDT)</h2>
   <div class="box"><svg id="spark" viewBox="0 0 300 90" preserveAspectRatio="none"></svg><div class="leg" id="leg"></div></div>
@@ -257,7 +255,7 @@ async function load() {
     '<tr><td class="nm"><span class="av" style="background:' + (COL[s] || "#888") + '">' + (NAMES[s] || s).charAt(0) + logo(s) + '</span><b class="xn">' + (NAMES[s] || s) + "</b></td>" +
     cell(src[s].buy, "bp", s === bestBuy) + cell(src[s].sell, "sp", s === bestSell) + "</tr>";
   const gapTxt = fx && avg ? "Official " + CUR + " rate <b>" + N(fx) + "</b> · P2P " + (avg >= fx ? "+" : "−") + Math.abs(((avg / fx) - 1) * 100).toFixed(1) + "%" : "";
-  $("snap").innerHTML = '<div class="sh"><b>USDT / ' + CUR + '</b><span class="live"><i></i>Live · ' + ago(newest) + "</span></div>" +
+  $("snap").innerHTML = '<div class="sh"><b>USDT / ' + CUR + '</b><span class="live"><i></i>Live · ' + ago(newest) + '</span><button type="button" class="shr" id="shr" aria-label="Share"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="2.6"/><circle cx="6" cy="12" r="2.6"/><circle cx="18" cy="19" r="2.6"/><path d="M8.3 10.8l7.4-4.4M8.3 13.2l7.4 4.4"/></svg></button></div>" +
     "<table><tr><th>Exchange</th><th>Buy</th><th>Sell</th></tr>" + names.map(row).join("") + "</table>" +
     '<div class="ft"><span>' + gapTxt + "</span><span>pricecheckng.com.ng</span></div>";
   const lu = CUR === "NGN" ? src.luno : null;
@@ -267,7 +265,11 @@ async function load() {
   // share
   const first = buys[0] ? src[buys[0]].buy : null;
   const txt = "USDT to " + (CUR === "NGN" ? "Naira" : cname(CUR)) + " P2P today" + (first ? ": buy from " + N(first.typical) : "") + ". Compare exchanges live: https://pricecheckng.com.ng/p2p" + (CUR === "NGN" ? "" : "?c=" + CUR);
-  $("wa").href = "https://wa.me/?text=" + encodeURIComponent(txt);
+  $("shr").onclick = function () {
+    var url = "https://pricecheckng.com.ng/p2p" + (CUR === "NGN" ? "" : "?c=" + CUR), body = txt.split(". Compare")[0] + ".";
+    if (navigator.share) { navigator.share({ title: "USDT P2P rates", text: body, url: url }).catch(function () {}); return; }
+    try { navigator.clipboard.writeText(body + " " + url).then(function () { alert("Link copied"); }); } catch (e) { window.open("https://wa.me/?text=" + encodeURIComponent(txt), "_blank"); }
+  };
 
   try {
     const since = new Date(now - 24 * 3600 * 1000).toISOString();
