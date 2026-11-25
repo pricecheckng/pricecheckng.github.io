@@ -812,6 +812,10 @@
         cross = null; size(); fit(); draw();
         if (PIN && Date.now() - PIN.t < 45000 && PIN.n === D.c.length) this.showRange(PIN.i0, PIN.i1, 0, true);   // a data refresh must not undo a zoom the agent just made
       },
+      setCrossT: function (t) {   // show the crosshair at a time (used to link several charts); does not call onHover
+        if (!D.c.length) return; if (t == null) { cross = null; draw(); return; }
+        var i = Math.round(tIdx(t)); cross = (i >= 0 && i < D.c.length) ? i : null; draw();
+      },
       tick: function (k) {   // live candle update: {t,o,h,l,c,v}. Replaces the newest candle or appends a new one; MAs and RSI follow.
         var n = D.c.length; if (!n) return;
         var lastC = D.c[n - 1], follow = V.start + plotW() / V.bw >= n - 1;

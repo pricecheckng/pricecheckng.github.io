@@ -53,6 +53,7 @@
     { t: 'PCN AI', ic: 1, rows: [
       ['Ask PCN AI', '', '#pcnai'],
       ['AI Analysis', '', '/ai-agent-chart?s=BTC'],
+      ['Multi-chart', '', '/multi-chart'],
       ['AI Alerts', '', '/ai-alerts']
     ]}
   ];

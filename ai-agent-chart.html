@@ -433,7 +433,7 @@ setTimeout(function(){var d=document.getElementById('dtools');if(d)d.classList.a
   }, 7000);
 })();
 </script>
-<script src="pcnchart.js?v=174"></script>
+<script src="pcnchart.js?v=175"></script>
 <script src="chart-ex.js?v=172"></script>
 <script type="module">
 import { ICONS } from "./chart-icons.js?v=167";
@@ -1749,7 +1749,7 @@ try{requestAnimationFrame(function(){var d=document.getElementById('dtools');if(
     if (Number(d.volume_24h) > 0) a.push('24h Vol<b>' + money(d.volume_24h) + '</b>');
     if (Number(d.btc_dom) > 0) a.push('BTC Dominance<b>' + Number(d.btc_dom).toFixed(1) + '%</b>');
     if (d.fng_value != null) a.push('Fear & Greed<b>' + d.fng_value + (d.fng_label ? ' ' + d.fng_label : '') + '</b>');
-    strip.innerHTML = a.join('<span></span>');
+    strip.innerHTML = a.join('<span></span>') + '<a href="/multi-chart" style="margin-left:auto;color:var(--acc);font-weight:700;text-decoration:none">▦ Multi-chart</a>';
   }).catch(() => {});
   const dd = document.getElementById('tfBtn') && document.getElementById('tfBtn').parentNode; if (!dd) return;
   const box = document.createElement('span'); box.style.cssText = 'display:inline-flex;gap:2px';

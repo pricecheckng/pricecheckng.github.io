@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Multi-Chart: Compare Exchanges Side by Side | PriceCheck NG</title>
+<meta name="description" content="Watch up to four live crypto charts at once. Pick a coin, exchange and timeframe for each chart and link the crosshair to compare Binance, Bybit, OKX and more side by side.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://pricecheckng.com.ng/multi-chart">
+<meta name="theme-color" content="#0b7a4b">
+<link rel="icon" type="image/png" href="/icon-green-192.png">
+<style>
+:root{--bg:#0a110d;--panel:#101a14;--line:#1e2d25;--txt:#e6f2ea;--mut:#8aa396;--acc:#16c784;--dn:#ea3943}
+*{box-sizing:border-box}html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--txt);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column}
+button,input,select{font:inherit;color:inherit}
+.bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#0b7a4b;flex:none;flex-wrap:wrap}
+.bar a.back{color:#fff;text-decoration:none;font-weight:700;display:flex;align-items:center;gap:6px}
+.bar a.back img{width:26px;height:26px;border-radius:50%}
+.bar h1{font-size:15px;margin:0 6px 0 4px;color:#fff;font-weight:800}
+.seg{display:inline-flex;background:rgba(0,0,0,.25);border-radius:10px;padding:2px}
+.seg button{background:none;border:0;border-radius:8px;padding:5px 10px;cursor:pointer;color:#d8f3e4;font-weight:700;display:flex;align-items:center}
+.seg button.on{background:#fff;color:#0b7a4b}
+.lnk{display:flex;align-items:center;gap:6px;color:#fff;font-weight:600;font-size:13px;cursor:pointer;margin-left:auto}
+.lnk input{accent-color:#fff;width:16px;height:16px}
+.grid{flex:1;min-height:0;display:grid;gap:6px;padding:6px}
+.l1{grid-template-columns:1fr}.l2{grid-template-columns:1fr 1fr}.l4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.pane{background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+.ph{display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.ph input.sy{width:74px;background:#0a110d;border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-weight:800;text-transform:uppercase}
+.ph select{background:#0a110d;border:1px solid var(--line);border-radius:8px;padding:5px 6px;font-weight:600}
+.tfs{display:inline-flex;gap:1px}.tfs button{background:none;border:0;color:var(--mut);padding:5px 7px;border-radius:7px;font-weight:700;cursor:pointer;font-size:13px}
+.tfs button.on{color:var(--acc);background:rgba(22,199,132,.13)}
+.pp{margin-left:auto;text-align:right;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pp small{display:block;font-size:11.5px;font-weight:700}
+.up{color:var(--acc)}.dn{color:var(--dn)}
+.cm{flex:1;min-height:0;position:relative}.cm .mn{position:absolute;inset:0}
+.msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:20px;color:var(--mut);pointer-events:none;z-index:2}
+.wm{position:absolute;right:66px;bottom:12px;display:flex;align-items:center;gap:5px;opacity:.55;pointer-events:none;font-weight:700;font-size:12px;z-index:1}
+.wm i{width:18px;height:18px;border-radius:50%;background:url(/icon-green-192.png) center/cover}
+@media (max-width:899px){
+  body{height:auto;min-height:100%}.grid{display:block;height:auto}.pane{height:360px;margin-bottom:6px}
+  .lnk{margin-left:0}
+}
+</style>
+</head>
+<body>
+<div class="bar">
+  <a class="back" href="/ai-agent-chart"><img src="/icon-green-192.png" alt=""><span>Back</span></a>
+  <h1>Multi-chart</h1>
+  <div class="seg" id="lay" role="group" aria-label="Layout">
+    <button type="button" data-n="1" aria-label="One chart"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="16" height="12" rx="2"/></svg></button>
+    <button type="button" data-n="2" aria-label="Two charts"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M9 1v12"/></svg></button>
+    <button type="button" data-n="4" aria-label="Four charts"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M9 1v12M1 7h16"/></svg></button>
+  </div>
+  <label class="lnk"><input type="checkbox" id="link" checked> Link crosshair</label>
+</div>
+<div class="grid l4" id="grid"></div>
+<script src="pcnchart.js?v=175"></script>
+<script src="chart-ex.js?v=172"></script>
+<script type="module">
+import { SUPABASE_URL, SUPABASE_KEY } from '/config.js';
+window.PCNEX_PROXY = { url: SUPABASE_URL + '/functions/v1/pcn-ex', key: SUPABASE_KEY };
+const EXN = { binance: 'Binance', okx: 'OKX', bybit: 'Bybit', bitget: 'Bitget', mexc: 'MEXC', gate: 'Gate', aster: 'Aster', coinbase: 'Coinbase' };
+const TFS = [['15m', '15m'], ['1h', '1h'], ['4h', '4h'], ['1d', 'D'], ['1w', 'W']];
+const $ = (s, r) => (r || document).querySelector(s);
+const DEF = [{ s: 'BTC', e: 'binance', i: '4h' }, { s: 'BTC', e: 'bybit', i: '4h' }, { s: 'ETH', e: 'binance', i: '4h' }, { s: 'SOL', e: 'okx', i: '1d' }];
+let cfg = { n: 4, link: true, panes: DEF.map(p => Object.assign({}, p)) };
+try { const j = JSON.parse(localStorage.getItem('pcn_multi') || 'null'); if (j && j.panes && j.panes.length === 4) cfg = j; } catch (_) {}
+const qs = new URLSearchParams(location.search);
+if (qs.get('s')) { cfg.panes[0].s = qs.get('s').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12) || cfg.panes[0].s; }
+const save = () => { try { localStorage.setItem('pcn_multi', JSON.stringify(cfg)); } catch (_) {} };
+const fmt = n => { n = Number(n); return n >= 1000 ? n.toLocaleString('en-US', { maximumFractionDigits: 2 }) : n >= 1 ? n.toFixed(3) : n >= 0.01 ? n.toFixed(5) : n.toPrecision(4); };
+
+const panes = [];
+let syncing = false;
+function crossAll(from, c) {
+  if (!cfg.link || syncing) return; syncing = true;
+  try { panes.forEach(p => { if (p !== from && p.on) p.chart.setCrossT(c ? c.t : null); }); } catch (_) {}
+  syncing = false;
+}
+async function fetchC(P) {
+  if (P.e === 'binance') {
+    const r = await fetch(`${SUPABASE_URL}/functions/v1/pcn-chart?symbol=${encodeURIComponent(P.s)}&interval=${P.i}&limit=500&tz=UTC`);
+    const d = await r.json(); if (!r.ok || d.error) throw new Error('missing'); return d.candles;
+  }
+  const A = window.PCNEX[P.e]; if (!A) throw new Error('missing');
+  return A.candles(P.s, P.i);
+}
+function makePane(k) {
+  const P = cfg.panes[k], el = document.createElement('div'); el.className = 'pane';
+  el.innerHTML = `<div class="ph"><input class="sy" maxlength="12" value="${P.s}" aria-label="Coin" spellcheck="false" autocapitalize="characters"><select aria-label="Exchange">${Object.keys(EXN).map(x => `<option value="${x}"${x === P.e ? ' selected' : ''}>${EXN[x]}</option>`).join('')}</select><span class="tfs">${TFS.map(t => `<button type="button" data-i="${t[0]}"${t[0] === P.i ? ' class="on"' : ''}>${t[1]}</button>`).join('')}</span><span class="pp"><span class="px">…</span><small class="ch"></small></span></div><div class="cm"><div class="mn"></div><div class="msg">Loading…</div><div class="wm"><i></i>PriceCheck NG</div></div>`;
+  const rsi = document.createElement('div'); rsi.style.cssText = 'display:none;height:0';
+  el.appendChild(rsi);
+  const st = { el, k, on: true, token: 0, timer: 0 };
+  st.chart = new window.PCNChart($('.mn', el), rsi, { tz: 'UTC', onHover: c => crossAll(st, c) });
+  const msg = t => { const m = $('.msg', el); m.textContent = t || ''; m.style.display = t ? 'flex' : 'none'; };
+  async function load(first) {
+    const my = ++st.token; if (first) msg('Loading…');
+    try {
+      const cs = await fetchC(P); if (my !== st.token) return;
+      if (!cs || cs.length < 5) throw new Error('empty');
+      if (first || st.sig !== P.s + P.e + P.i) { st.chart.setData({ candles: cs, sma50: [], sma200: [], rsi14: [], levels: [] }, P.i); st.sig = P.s + P.e + P.i; }
+      st.chart.tick(Object.assign({}, cs[cs.length - 1]));
+      const last = cs[cs.length - 1], dayAgo = last.t - 864e5; let ref = cs[0]; for (let i = cs.length - 1; i >= 0; i--) if (cs[i].t <= dayAgo) { ref = cs[i]; break; }
+      const pc = ref.c ? (last.c / ref.c - 1) * 100 : 0;
+      $('.px', el).textContent = fmt(last.c); const c = $('.ch', el); c.textContent = (pc >= 0 ? '▲ ' : '▼ ') + Math.abs(pc).toFixed(2) + '%'; c.className = 'ch ' + (pc >= 0 ? 'up' : 'dn');
+      msg('');
+    } catch (e) { if (my === st.token) msg(P.s + ' is not available on ' + EXN[P.e] + ' for this timeframe. Pick another coin or exchange.'); }
+  }
+  st.load = load;
+  const sy = $('.sy', el);
+  const setSym = () => { const v = sy.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (!v) { sy.value = P.s; return; } if (v !== P.s) { P.s = v; save(); st.sig = ''; load(true); } sy.value = v; };
+  sy.addEventListener('keydown', e => { if (e.key === 'Enter') { sy.blur(); } });
+  sy.addEventListener('change', setSym); sy.addEventListener('focus', () => sy.select());
+  $('select', el).onchange = e => { P.e = e.target.value; save(); st.sig = ''; load(true); };
+  el.querySelectorAll('.tfs button').forEach(b => b.onclick = () => { P.i = b.dataset.i; el.querySelectorAll('.tfs button').forEach(x => x.classList.toggle('on', x === b)); save(); st.sig = ''; load(true); });
+  st.timer = setInterval(() => { if (!document.hidden && st.on) load(false); }, 20000 + k * 1500);
+  setTimeout(() => load(true), k * 250);
+  return st;
+}
+const grid = $('#grid');
+for (let k = 0; k < 4; k++) { const p = makePane(k); panes.push(p); grid.appendChild(p.el); }
+function layout() {
+  grid.className = 'grid l' + cfg.n;
+  panes.forEach((p, k) => { p.on = k < cfg.n; p.el.style.display = p.on ? '' : 'none'; });
+  document.querySelectorAll('#lay button').forEach(b => b.classList.toggle('on', +b.dataset.n === cfg.n));
+  requestAnimationFrame(() => panes.forEach(p => { if (p.on) { try { p.chart.resize(); } catch (_) {} } }));
+}
+document.querySelectorAll('#lay button').forEach(b => b.onclick = () => { cfg.n = +b.dataset.n; save(); layout(); });
+$('#link').checked = !!cfg.link; $('#link').onchange = e => { cfg.link = e.target.checked; save(); if (!cfg.link) panes.forEach(p => { try { p.chart.setCrossT(null); } catch (_) {} }); };
+window.addEventListener('resize', () => panes.forEach(p => { if (p.on) { try { p.chart.resize(); } catch (_) {} } }));
+if (window.innerWidth < 900 && cfg.n === 4 && !localStorage.getItem('pcn_multi')) cfg.n = 2;
+layout();
+</script>
+</body>
+</html>
