@@ -98,7 +98,12 @@ function makePane(k) {
   async function load(first) {
     const my = ++st.token; if (first) msg('Loading…');
     try {
-      const cs = await fetchC(P); if (my !== st.token) return;
+      let cs, er;
+      for (let n = 0; n < 3 && !cs; n++) {
+        try { cs = await fetchC(P); } catch (e) { er = e; if (my !== st.token) return; if (n < 2) await new Promise(r => setTimeout(r, 1500 * (n + 1))); if (my !== st.token) return; }
+      }
+      if (!cs) throw er || new Error('failed');
+      if (my !== st.token) return;
       if (!cs || cs.length < 5) throw new Error('empty');
       if (first || st.sig !== P.s + P.e + P.i) { st.chart.setData({ candles: cs, sma50: [], sma200: [], rsi14: [], levels: [] }, P.i); st.sig = P.s + P.e + P.i; }
       st.chart.tick(Object.assign({}, cs[cs.length - 1]));
@@ -106,7 +111,7 @@ function makePane(k) {
       const pc = ref.c ? (last.c / ref.c - 1) * 100 : 0;
       $('.px', el).textContent = fmt(last.c); const c = $('.ch', el); c.textContent = (pc >= 0 ? '▲ ' : '▼ ') + Math.abs(pc).toFixed(2) + '%'; c.className = 'ch ' + (pc >= 0 ? 'up' : 'dn');
       msg('');
-    } catch (e) { if (my === st.token) msg(P.s + ' is not available on ' + EXN[P.e] + ' for this timeframe. Pick another coin or exchange.'); }
+    } catch (e) { if (my === st.token) { msg(P.s + ' could not load from ' + EXN[P.e] + '. Tap here to try again, or pick another coin or exchange.'); const m = $('.msg', el); m.style.pointerEvents = 'auto'; m.style.cursor = 'pointer'; m.onclick = () => { m.onclick = null; m.style.pointerEvents = 'none'; load(true); }; } }
   }
   st.load = load;
   const sy = $('.sy', el);
@@ -116,7 +121,7 @@ function makePane(k) {
   $('select', el).onchange = e => { P.e = e.target.value; save(); st.sig = ''; load(true); };
   el.querySelectorAll('.tfs button').forEach(b => b.onclick = () => { P.i = b.dataset.i; el.querySelectorAll('.tfs button').forEach(x => x.classList.toggle('on', x === b)); save(); st.sig = ''; load(true); });
   st.timer = setInterval(() => { if (!document.hidden && st.on) load(false); }, 20000 + k * 1500);
-  setTimeout(() => load(true), k * 250);
+  setTimeout(() => load(true), k * 400);
   return st;
 }
 const grid = $('#grid');
