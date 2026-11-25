@@ -4924,3 +4924,9 @@ try {
     if (btn) btn.click();
   });
 })();
+
+// keep the box you are typing in visible when the keyboard opens (also in desktop-site mode on phones)
+document.addEventListener("focusin", (e) => {
+  const t = e.target;
+  if (t && t.matches && t.matches("input,textarea,select") && t.closest && t.closest(".sheet")) setTimeout(() => { try { t.scrollIntoView({ block: "center", behavior: "smooth" }); } catch (_) {} }, 320);
+});
