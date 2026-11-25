@@ -31,7 +31,7 @@ button,input,select{font:inherit;color:inherit}
 .ph select{background:#0a110d;border:1px solid var(--line);border-radius:8px;padding:5px 6px;font-weight:600}
 .tfs{display:inline-flex;gap:1px}.tfs button{background:none;border:0;color:var(--mut);padding:5px 7px;border-radius:7px;font-weight:700;cursor:pointer;font-size:13px}
 .tfs button.on{color:var(--acc);background:rgba(22,199,132,.13)}
-.pp{margin-left:auto;text-align:right;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.mv{display:inline-flex;gap:2px;margin-left:auto}.mv button{background:rgba(255,255,255,.07);border:0;border-radius:7px;color:var(--txt);width:30px;height:28px;cursor:pointer;font-size:12px}.pp{text-align:right;font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pp small{display:block;font-size:11.5px;font-weight:700}
 .up{color:var(--acc)}.dn{color:var(--dn)}
 .cm{flex:1;min-height:0;position:relative}.cm .mn{position:absolute;inset:0}
@@ -89,7 +89,7 @@ async function fetchC(P) {
 }
 function makePane(k) {
   const P = cfg.panes[k], el = document.createElement('div'); el.className = 'pane';
-  el.innerHTML = `<div class="ph"><input class="sy" maxlength="12" value="${P.s}" aria-label="Coin" spellcheck="false" autocapitalize="characters"><select aria-label="Exchange">${Object.keys(EXN).map(x => `<option value="${x}"${x === P.e ? ' selected' : ''}>${EXN[x]}</option>`).join('')}</select><span class="tfs">${TFS.map(t => `<button type="button" data-i="${t[0]}"${t[0] === P.i ? ' class="on"' : ''}>${t[1]}</button>`).join('')}</span><span class="pp"><span class="px">…</span><small class="ch"></small></span></div><div class="cm"><div class="mn"></div><div class="msg">Loading…</div><div class="wm"><i></i>PriceCheck NG</div></div>`;
+  el.innerHTML = `<div class="ph"><input class="sy" maxlength="12" value="${P.s}" aria-label="Coin" spellcheck="false" autocapitalize="characters"><select aria-label="Exchange">${Object.keys(EXN).map(x => `<option value="${x}"${x === P.e ? ' selected' : ''}>${EXN[x]}</option>`).join('')}</select><span class="tfs">${TFS.map(t => `<button type="button" data-i="${t[0]}"${t[0] === P.i ? ' class="on"' : ''}>${t[1]}</button>`).join('')}</span><span class="mv"><button type="button" class="up2" aria-label="Move chart up">▲</button><button type="button" class="dn2" aria-label="Move chart down">▼</button></span><span class="pp"><span class="px">…</span><small class="ch"></small></span></div><div class="cm"><div class="mn"></div><div class="msg">Loading…</div><div class="wm"><i></i>PriceCheck NG</div></div>`;
   const rsi = document.createElement('div'); rsi.style.cssText = 'display:none;height:0';
   el.appendChild(rsi);
   const st = { el, k, on: true, token: 0, timer: 0 };
@@ -120,7 +120,8 @@ function makePane(k) {
   sy.addEventListener('change', setSym); sy.addEventListener('focus', () => sy.select());
   $('select', el).onchange = e => { P.e = e.target.value; save(); st.sig = ''; load(true); };
   el.querySelectorAll('.tfs button').forEach(b => b.onclick = () => { P.i = b.dataset.i; el.querySelectorAll('.tfs button').forEach(x => x.classList.toggle('on', x === b)); save(); st.sig = ''; load(true); });
-  st.timer = setInterval(() => { if (!document.hidden && st.on) load(false); }, 20000 + k * 1500);
+  const mv = d => { const i = panes.indexOf(st), j = i + d; if (j < 0 || j > 3) return; [panes[i], panes[j]] = [panes[j], panes[i]]; [cfg.panes[i], cfg.panes[j]] = [cfg.panes[j], cfg.panes[i]]; panes.forEach(p => grid.appendChild(p.el)); save(); layout(); st.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); };
+  $('.up2', el).onclick = () => mv(-1); $('.dn2', el).onclick = () => mv(1);
   setTimeout(() => load(true), k * 400);
   return st;
 }
@@ -137,6 +138,7 @@ $('#link').checked = !!cfg.link; $('#link').onchange = e => { cfg.link = e.targe
 window.addEventListener('resize', () => panes.forEach(p => { if (p.on) { try { p.chart.resize(); } catch (_) {} } }));
 if (window.innerWidth < 900 && cfg.n === 4 && !localStorage.getItem('pcn_multi')) cfg.n = 2;
 layout();
+setInterval(() => { if (!document.hidden) panes.forEach(p => { if (p.on) p.load(false); }); }, 6000);
 </script>
 </body>
 </html>
