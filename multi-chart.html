@@ -23,7 +23,13 @@ button,input,select{font:inherit;color:inherit}
 .seg button.on{background:#fff;color:#0b7a4b}
 .lnk{display:flex;align-items:center;gap:6px;color:#fff;font-weight:600;font-size:13px;cursor:pointer;margin-left:auto}
 .lnk input{accent-color:#fff;width:16px;height:16px}
-.grid{flex:1;min-height:0;display:grid;gap:6px;padding:6px}
+.wrap{flex:1;min-height:0;display:flex}
+.tb{flex:none;display:flex;flex-direction:column;gap:2px;padding:6px 4px;background:var(--panel);border-right:1px solid var(--line);overflow-y:auto}
+.tb button{width:38px;height:36px;flex:none;background:none;border:0;border-radius:9px;color:var(--mut);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.tb button svg{width:22px;height:22px}.tb button.on{color:var(--acc);background:rgba(22,199,132,.15)}.tb button.dis{opacity:.35}
+.tb i{display:block;height:1px;background:var(--line);margin:4px 6px;flex:none}
+.pane.cur{border-color:#2f6f50}
+.grid{flex:1;min-width:0;min-height:0;display:grid;gap:6px;padding:6px}
 .lg1{grid-template-columns:1fr}.lc2{grid-template-columns:1fr 1fr}.lr2{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
 .lt3{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr}.lt3 .pane:first-child{grid-row:1/3}
 .lg4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}.lg6{grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr}.lg8{grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr}
@@ -52,6 +58,7 @@ button,input,select{font:inherit;color:inherit}
 .wm i{width:18px;height:18px;border-radius:50%;background:url(/icon-green-192.png) center/cover}
 .sh,.dn-b{display:none}
 @media (max-width:899px){
+  .wrap{display:block}.tb{flex-direction:row;position:sticky;top:0;z-index:30;overflow-x:auto;overflow-y:hidden;border-right:0;border-bottom:1px solid var(--line);padding:4px 6px}.tb i{width:1px;height:22px;margin:7px 4px}
   .sh{display:block;position:absolute;inset:0;z-index:3;touch-action:pan-y}.sh span{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.55);color:#cfe;font-size:11.5px;padding:3px 8px;border-radius:12px}
   .pane.act .sh{display:none}.pane.act{border-color:var(--acc)}
   .pane.act .dn-b{display:block;position:absolute;right:8px;top:8px;z-index:4;background:var(--acc);color:#062;border:0;border-radius:14px;font-weight:800;padding:6px 14px}
@@ -68,10 +75,11 @@ button,input,select{font:inherit;color:inherit}
   <div class="lp" id="lp"><h4>Layout</h4><div class="lgrid" id="lgrid"><button type="button" data-l="g1" aria-label="One chart"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/></svg></button><button type="button" data-l="c2" aria-label="Two side by side"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M9 1v12"/></svg></button><button type="button" data-l="r2" aria-label="Two stacked"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M1 7h16"/></svg></button><button type="button" data-l="t3" aria-label="Three"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M11 1v12M11 7h6"/></svg></button><button type="button" data-l="g4" aria-label="Four"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M9 1v12M1 7h16"/></svg></button><button type="button" data-l="g6" aria-label="Six"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M6.7 1v12M11.3 1v12M1 7h16"/></svg></button><button type="button" data-l="g8" aria-label="Eight"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M5 1v12M9 1v12M13 1v12M1 7h16"/></svg></button></div><h4>Sync in layout</h4>
   <label class="sw">Coin<input type="checkbox" id="sSym"></label><label class="sw">Timeframe<input type="checkbox" id="sInt"></label><label class="sw">Crosshair<input type="checkbox" id="link" checked></label></div></div>
 </div>
-<div class="grid lg4" id="grid"></div>
+<div class="wrap"><div class="tb" id="tb" role="toolbar" aria-label="Drawing tools"></div><div class="grid lg4" id="grid"></div></div>
 <script src="pcnchart.js?v=175"></script>
 <script src="chart-ex.js?v=172"></script>
 <script type="module">
+import { ICONS } from '/chart-icons.js?v=167';
 import { SUPABASE_URL, SUPABASE_KEY } from '/config.js';
 window.PCNEX_PROXY = { url: SUPABASE_URL + '/functions/v1/pcn-ex', key: SUPABASE_KEY };
 const EXN = { binance: 'Binance', okx: 'OKX', bybit: 'Bybit', bitget: 'Bitget', mexc: 'MEXC', gate: 'Gate', aster: 'Aster', coinbase: 'Coinbase' };
@@ -111,7 +119,14 @@ function makePane(k) {
   const act = on => { el.classList.toggle('act', on); };
   $('.sh', el).addEventListener('click', () => { panes.forEach(p => p.el.classList.remove('act')); act(true); });
   $('.dn-b', el).addEventListener('click', () => act(false));
-  st.chart = new window.PCNChart($('.mn', el), rsi, { tz: 'UTC', onHover: c => crossAll(st, c) });
+  st.act = act;
+  const DKM = 'pcn_multi_draw';
+  const loadD = () => { try { const m = JSON.parse(localStorage.getItem(DKM) || '{}'); st.chart.setDrawings(m[P.s] || []); } catch (_) { st.chart.setDrawings([]); } };
+  st.loadD = loadD;
+  st.chart = new window.PCNChart($('.mn', el), rsi, { tz: 'UTC', onHover: c => crossAll(st, c), onHist: () => paintTb(), onTool: t => { if (st === cur) paintTb(t); },
+    onDraw: a => { try { const m = JSON.parse(localStorage.getItem(DKM) || '{}'); if (a.length) m[P.s] = a; else delete m[P.s]; localStorage.setItem(DKM, JSON.stringify(m)); } catch (_) {} } });
+  loadD();
+  el.addEventListener('pointerdown', () => setCur(st), true);
   const msg = t => { const m = $('.msg', el); m.textContent = t || ''; m.style.display = t ? 'flex' : 'none'; };
   async function load(first) {
     const my = ++st.token; if (first) msg('Loading…');
@@ -133,7 +148,7 @@ function makePane(k) {
   }
   st.load = load;
   const sy = $('.sy', el);
-  const setSym = () => { const v = sy.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (!v) { sy.value = P.s; return; } if (v !== P.s) { P.s = v; save(); st.sig = ''; load(true); if (cfg.sym) panes.forEach(p => { if (p !== st) { p.P.s = v; p.el.querySelector('.sy').value = v; p.sig = ''; p.load(true); } }); } sy.value = v; };
+  const setSym = () => { const v = sy.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (!v) { sy.value = P.s; return; } if (v !== P.s) { P.s = v; save(); st.sig = ''; loadD(); load(true); if (cfg.sym) panes.forEach(p => { if (p !== st) { p.P.s = v; p.el.querySelector('.sy').value = v; p.sig = ''; p.loadD(); p.load(true); } }); } sy.value = v; };
   sy.addEventListener('keydown', e => { if (e.key === 'Enter') { sy.blur(); } });
   sy.addEventListener('change', setSym); sy.addEventListener('focus', () => sy.select());
   $('select', el).onchange = e => { P.e = e.target.value; save(); st.sig = ''; load(true); };
@@ -141,6 +156,27 @@ function makePane(k) {
   return st;
 }
 const grid = $('#grid');
+let cur = null, tool = 'cursor', mag = false, hid = false, lck = false;
+function setCur(p) { if (cur === p) return; cur = p; panes.forEach(x => x.el.classList.toggle('cur', x === p)); paintTb(); }
+const TB = [['cursor', 'cur_cross', 'Cursor'], ['trend', 'trend', 'Trend line'], ['hline', 'hline', 'Horizontal line'], ['fib', 'fib', 'Fib retracement'], ['sh_rect', 'sh_rect', 'Rectangle'], ['brush', 'brush', 'Brush'], ['ruler', 'ruler', 'Measure'], '|', ['magnet', 'magnet', 'Magnet'], ['undo', 'undo', 'Undo'], ['redo', 'redo', 'Redo'], ['hide', 'eye', 'Hide drawings'], ['lock', 'unlock', 'Lock drawings'], ['clear', 'layers', 'Remove drawings']];
+$('#tb').innerHTML = TB.map(t => t === '|' ? '<i></i>' : `<button type="button" data-t="${t[0]}" aria-label="${t[2]}" title="${t[2]}">${ICONS[t[1]] || t[2][0]}</button>`).join('');
+function paintTb(t) {
+  if (t) tool = t; const c = cur && cur.chart; if (!c) return;
+  $('#tb').querySelectorAll('button').forEach(b => { const k = b.dataset.t;
+    if (k === 'undo') b.classList.toggle('dis', !c.canUndo()); else if (k === 'redo') b.classList.toggle('dis', !c.canRedo());
+    else if (k === 'magnet') b.classList.toggle('on', mag); else if (k === 'hide') { b.classList.toggle('on', hid); b.innerHTML = ICONS[hid ? 'eyeoff' : 'eye']; } else if (k === 'lock') { b.classList.toggle('on', lck); b.innerHTML = ICONS[lck ? 'lock' : 'unlock']; }
+    else if (k !== 'clear') b.classList.toggle('on', k === tool); });
+}
+$('#tb').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return; const k = b.dataset.t; if (!cur) setCur(panes[0]); const c = cur.chart;
+  if (k === 'undo') c.undo(); else if (k === 'redo') c.redo();
+  else if (k === 'magnet') { mag = !mag; panes.forEach(p => p.chart.setMagnet(mag)); }
+  else if (k === 'hide') { hid = !hid; panes.forEach(p => p.chart.setHidden(hid)); }
+  else if (k === 'lock') { lck = !lck; panes.forEach(p => p.chart.setLocked(lck)); }
+  else if (k === 'clear') { c.clearDrawings(); }
+  else { panes.forEach(p => { if (p !== cur) p.chart.setTool('cursor'); }); if (k !== 'cursor') cur.act(true); c.setTool(tool === k && k !== 'cursor' ? 'cursor' : k); }
+  paintTb();
+});
 document.addEventListener('touchstart', e => { panes.forEach(p => { if (p.el.classList.contains('act') && !p.el.contains(e.target)) p.el.classList.remove('act'); }); }, { passive: true });
 for (let k = 0; k < 8; k++) { const p = makePane(k); panes.push(p); grid.appendChild(p.el); }
 function layout() {
@@ -155,11 +191,12 @@ document.querySelectorAll('#lgrid button').forEach(b => b.onclick = () => { cfg.
 const lp = $('#lp'); $('#layBtn').onclick = e => { e.stopPropagation(); lp.classList.toggle('open'); };
 lp.addEventListener('click', e => e.stopPropagation()); document.addEventListener('click', () => lp.classList.remove('open'));
 $('#link').checked = !!cfg.link; $('#link').onchange = e => { cfg.link = e.target.checked; save(); if (!cfg.link) panes.forEach(p => { try { p.chart.setCrossT(null); } catch (_) {} }); };
-$('#sSym').checked = !!cfg.sym; $('#sSym').onchange = e => { cfg.sym = e.target.checked; save(); if (cfg.sym) { const v = cfg.panes[0].s; panes.forEach(p => { if (p.P.s !== v) { p.P.s = v; p.el.querySelector('.sy').value = v; p.sig = ''; if (p.on) p.load(true); } }); } };
+$('#sSym').checked = !!cfg.sym; $('#sSym').onchange = e => { cfg.sym = e.target.checked; save(); if (cfg.sym) { const v = cfg.panes[0].s; panes.forEach(p => { if (p.P.s !== v) { p.P.s = v; p.el.querySelector('.sy').value = v; p.sig = ''; p.loadD(); if (p.on) p.load(true); } }); } };
 $('#sInt').checked = !!cfg.int; $('#sInt').onchange = e => { cfg.int = e.target.checked; save(); if (cfg.int) { const v = cfg.panes[0].i; panes.forEach(p => { if (p.P.i !== v) { p.P.i = v; p.el.querySelectorAll('.tfs button').forEach(x => x.classList.toggle('on', x.dataset.i === v)); p.sig = ''; if (p.on) p.load(true); } }); } };
 window.addEventListener('resize', () => panes.forEach(p => { if (p.on) { try { p.chart.resize(); } catch (_) {} } }));
 if (window.innerWidth < 900 && !localStorage.getItem('pcn_multi')) cfg.lay = 'c2';
 layout();
+setCur(panes[0]);
 setInterval(() => { if (!document.hidden) panes.forEach(p => { if (p.on && p.did) p.load(false); }); }, 6000);
 </script>
 </body>
