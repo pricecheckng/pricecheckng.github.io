@@ -297,6 +297,7 @@ async function loadPopular() {
 // Home page: a calm, closable hint for signed-in people who have not connected Telegram yet.
 async function tgHomeTip() {
   try {
+    return;   // removed: the Telegram hint on the home page (Telegram is in the menu)
     if (!state.user) return;
     let hide = 0;
     try { hide = Number(localStorage.getItem("pc_tg_hide") || 0); } catch (_) {}
