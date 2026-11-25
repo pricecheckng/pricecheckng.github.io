@@ -24,7 +24,19 @@ button,input,select{font:inherit;color:inherit}
 .lnk{display:flex;align-items:center;gap:6px;color:#fff;font-weight:600;font-size:13px;cursor:pointer;margin-left:auto}
 .lnk input{accent-color:#fff;width:16px;height:16px}
 .grid{flex:1;min-height:0;display:grid;gap:6px;padding:6px}
-.l1{grid-template-columns:1fr}.l2{grid-template-columns:1fr 1fr}.l4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}
+.lg1{grid-template-columns:1fr}.lc2{grid-template-columns:1fr 1fr}.lr2{grid-template-columns:1fr;grid-template-rows:1fr 1fr}
+.lt3{grid-template-columns:2fr 1fr;grid-template-rows:1fr 1fr}.lt3 .pane:first-child{grid-row:1/3}
+.lg4{grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr}.lg6{grid-template-columns:repeat(3,1fr);grid-template-rows:1fr 1fr}.lg8{grid-template-columns:repeat(4,1fr);grid-template-rows:1fr 1fr}
+.lay{position:relative;margin-left:auto}.lay>button{background:rgba(0,0,0,.25);border:0;border-radius:10px;color:#fff;font-weight:700;padding:6px 12px;cursor:pointer;display:flex;align-items:center;gap:6px}
+.lp{display:none;position:absolute;right:0;top:calc(100% + 6px);width:290px;background:#fff;color:#16231b;border-radius:14px;padding:12px;z-index:50;box-shadow:0 12px 40px rgba(0,0,0,.45)}.lp.open{display:block}
+.lp h4{margin:0 0 8px;font-size:11px;letter-spacing:.05em;color:#6b7f73;text-transform:uppercase}
+.lgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.lgrid button{background:#f1f5f2;border:2px solid transparent;border-radius:10px;height:44px;cursor:pointer;color:#16231b;display:flex;align-items:center;justify-content:center}
+.lgrid button.on{border-color:#0b7a4b;color:#0b7a4b;background:#e3f6ec}
+.sw{display:flex;align-items:center;justify-content:space-between;padding:8px 0;font-weight:600;font-size:14px;cursor:pointer}
+.sw input{appearance:none;width:40px;height:22px;border-radius:12px;background:#c9d4cd;position:relative;cursor:pointer;margin:0;transition:.15s}
+.sw input::after{content:"";position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s}
+.sw input:checked{background:#0b7a4b}.sw input:checked::after{left:20px}
 .pane{background:var(--panel);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
 .ph{display:flex;align-items:center;gap:6px;padding:6px 8px;border-bottom:1px solid var(--line);flex-wrap:wrap}
 .ph input.sy{width:74px;background:#0a110d;border:1px solid var(--line);border-radius:8px;padding:5px 8px;font-weight:800;text-transform:uppercase}
@@ -44,7 +56,7 @@ button,input,select{font:inherit;color:inherit}
   .pane.act .sh{display:none}.pane.act{border-color:var(--acc)}
   .pane.act .dn-b{display:block;position:absolute;right:8px;top:8px;z-index:4;background:var(--acc);color:#062;border:0;border-radius:14px;font-weight:800;padding:6px 14px}
   body{height:auto;min-height:100%}.grid{display:block;height:auto}.pane{height:360px;margin-bottom:6px}
-  .lnk{margin-left:0}
+  
 }
 </style>
 </head>
@@ -52,14 +64,11 @@ button,input,select{font:inherit;color:inherit}
 <div class="bar">
   <a class="back" href="/ai-agent-chart"><img src="/icon-green-192.png" alt=""><span>Back</span></a>
   <h1>Multi-chart</h1>
-  <div class="seg" id="lay" role="group" aria-label="Layout">
-    <button type="button" data-n="1" aria-label="One chart"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="16" height="12" rx="2"/></svg></button>
-    <button type="button" data-n="2" aria-label="Two charts"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M9 1v12"/></svg></button>
-    <button type="button" data-n="4" aria-label="Four charts"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M9 1v12M1 7h16"/></svg></button>
-  </div>
-  <label class="lnk"><input type="checkbox" id="link" checked> Link crosshair</label>
+  <div class="lay"><button type="button" id="layBtn"><svg width="18" height="14" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M9 1v12M1 7h16"/></svg>Layout ▾</button>
+  <div class="lp" id="lp"><h4>Layout</h4><div class="lgrid" id="lgrid"><button type="button" data-l="g1" aria-label="One chart"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/></svg></button><button type="button" data-l="c2" aria-label="Two side by side"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M9 1v12"/></svg></button><button type="button" data-l="r2" aria-label="Two stacked"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M1 7h16"/></svg></button><button type="button" data-l="t3" aria-label="Three"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M11 1v12M11 7h6"/></svg></button><button type="button" data-l="g4" aria-label="Four"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M9 1v12M1 7h16"/></svg></button><button type="button" data-l="g6" aria-label="Six"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M6.7 1v12M11.3 1v12M1 7h16"/></svg></button><button type="button" data-l="g8" aria-label="Eight"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M5 1v12M9 1v12M13 1v12M1 7h16"/></svg></button></div><h4>Sync in layout</h4>
+  <label class="sw">Coin<input type="checkbox" id="sSym"></label><label class="sw">Timeframe<input type="checkbox" id="sInt"></label><label class="sw">Crosshair<input type="checkbox" id="link" checked></label></div></div>
 </div>
-<div class="grid l4" id="grid"></div>
+<div class="grid lg4" id="grid"></div>
 <script src="pcnchart.js?v=175"></script>
 <script src="chart-ex.js?v=172"></script>
 <script type="module">
@@ -68,9 +77,11 @@ window.PCNEX_PROXY = { url: SUPABASE_URL + '/functions/v1/pcn-ex', key: SUPABASE
 const EXN = { binance: 'Binance', okx: 'OKX', bybit: 'Bybit', bitget: 'Bitget', mexc: 'MEXC', gate: 'Gate', aster: 'Aster', coinbase: 'Coinbase' };
 const TFS = [['15m', '15m'], ['1h', '1h'], ['4h', '4h'], ['1d', 'D'], ['1w', 'W']];
 const $ = (s, r) => (r || document).querySelector(s);
+const DEF2 = [{ s: 'BNB', e: 'mexc', i: '4h' }, { s: 'XRP', e: 'gate', i: '4h' }, { s: 'DOGE', e: 'bitget', i: '4h' }, { s: 'ADA', e: 'mexc', i: '1d' }];
+const LN = { g1: 1, c2: 2, r2: 2, t3: 3, g4: 4, g6: 6, g8: 8 };
 const DEF = [{ s: 'BTC', e: 'binance', i: '4h' }, { s: 'BTC', e: 'bybit', i: '4h' }, { s: 'ETH', e: 'binance', i: '4h' }, { s: 'SOL', e: 'okx', i: '1d' }];
-let cfg = { n: 4, link: true, panes: DEF.map(p => Object.assign({}, p)) };
-try { const j = JSON.parse(localStorage.getItem('pcn_multi') || 'null'); if (j && j.panes && j.panes.length === 4) cfg = j; } catch (_) {}
+let cfg = { lay: 'g4', n: 4, link: true, sym: false, int: false, panes: DEF.concat(DEF2).map(p => Object.assign({}, p)) };
+try { const j = JSON.parse(localStorage.getItem('pcn_multi') || 'null'); if (j && j.panes) { if (j.panes.length < 8) j.panes = j.panes.concat(DEF2.map(p => Object.assign({}, p))).slice(0, 8); if (!j.lay) j.lay = j.n === 1 ? 'g1' : j.n === 2 ? 'c2' : 'g4'; cfg = j; } } catch (_) {}
 const qs = new URLSearchParams(location.search);
 if (qs.get('s')) { cfg.panes[0].s = qs.get('s').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 12) || cfg.panes[0].s; }
 const save = () => { try { localStorage.setItem('pcn_multi', JSON.stringify(cfg)); } catch (_) {} };
@@ -96,7 +107,7 @@ function makePane(k) {
   el.innerHTML = `<div class="ph"><input class="sy" maxlength="12" value="${P.s}" aria-label="Coin" spellcheck="false" autocapitalize="characters"><select aria-label="Exchange">${Object.keys(EXN).map(x => `<option value="${x}"${x === P.e ? ' selected' : ''}>${EXN[x]}</option>`).join('')}</select><span class="tfs">${TFS.map(t => `<button type="button" data-i="${t[0]}"${t[0] === P.i ? ' class="on"' : ''}>${t[1]}</button>`).join('')}</span><span class="pp"><span class="px">…</span><small class="ch"></small></span></div><div class="cm"><div class="mn"></div><div class="msg">Loading…</div><div class="sh"><span>Tap chart to move or zoom</span></div><button type="button" class="dn-b">Done</button><div class="wm"><i></i>PriceCheck NG</div></div>`;
   const rsi = document.createElement('div'); rsi.style.cssText = 'display:none;height:0';
   el.appendChild(rsi);
-  const st = { el, k, on: true, token: 0, timer: 0 };
+  const st = { el, k, P, on: false, did: false, token: 0 };
   const act = on => { el.classList.toggle('act', on); };
   $('.sh', el).addEventListener('click', () => { panes.forEach(p => p.el.classList.remove('act')); act(true); });
   $('.dn-b', el).addEventListener('click', () => act(false));
@@ -122,29 +133,34 @@ function makePane(k) {
   }
   st.load = load;
   const sy = $('.sy', el);
-  const setSym = () => { const v = sy.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (!v) { sy.value = P.s; return; } if (v !== P.s) { P.s = v; save(); st.sig = ''; load(true); } sy.value = v; };
+  const setSym = () => { const v = sy.value.toUpperCase().replace(/[^A-Z0-9]/g, ''); if (!v) { sy.value = P.s; return; } if (v !== P.s) { P.s = v; save(); st.sig = ''; load(true); if (cfg.sym) panes.forEach(p => { if (p !== st) { p.P.s = v; p.el.querySelector('.sy').value = v; p.sig = ''; p.load(true); } }); } sy.value = v; };
   sy.addEventListener('keydown', e => { if (e.key === 'Enter') { sy.blur(); } });
   sy.addEventListener('change', setSym); sy.addEventListener('focus', () => sy.select());
   $('select', el).onchange = e => { P.e = e.target.value; save(); st.sig = ''; load(true); };
-  el.querySelectorAll('.tfs button').forEach(b => b.onclick = () => { P.i = b.dataset.i; el.querySelectorAll('.tfs button').forEach(x => x.classList.toggle('on', x === b)); save(); st.sig = ''; load(true); });
-  setTimeout(() => load(true), k * 400);
+  el.querySelectorAll('.tfs button').forEach(b => b.onclick = () => { P.i = b.dataset.i; el.querySelectorAll('.tfs button').forEach(x => x.classList.toggle('on', x === b)); save(); st.sig = ''; load(true); if (cfg.int) panes.forEach(p => { if (p !== st) { p.P.i = P.i; p.el.querySelectorAll('.tfs button').forEach(x => x.classList.toggle('on', x.dataset.i === P.i)); p.sig = ''; p.load(true); } }); });
   return st;
 }
 const grid = $('#grid');
 document.addEventListener('touchstart', e => { panes.forEach(p => { if (p.el.classList.contains('act') && !p.el.contains(e.target)) p.el.classList.remove('act'); }); }, { passive: true });
-for (let k = 0; k < 4; k++) { const p = makePane(k); panes.push(p); grid.appendChild(p.el); }
+for (let k = 0; k < 8; k++) { const p = makePane(k); panes.push(p); grid.appendChild(p.el); }
 function layout() {
-  grid.className = 'grid l' + cfg.n;
-  panes.forEach((p, k) => { p.on = k < cfg.n; p.el.style.display = p.on ? '' : 'none'; });
-  document.querySelectorAll('#lay button').forEach(b => b.classList.toggle('on', +b.dataset.n === cfg.n));
+  const L = LN[cfg.lay] ? cfg.lay : 'g4'; cfg.n = LN[L];
+  grid.className = 'grid l' + L;
+  let w = 0;
+  panes.forEach((p, k) => { p.on = k < cfg.n; p.el.style.display = p.on ? '' : 'none'; if (p.on && !p.did) { p.did = true; setTimeout(() => p.load(true), 300 * w++); } });
+  document.querySelectorAll('#lgrid button').forEach(b => b.classList.toggle('on', b.dataset.l === L));
   requestAnimationFrame(() => panes.forEach(p => { if (p.on) { try { p.chart.resize(); } catch (_) {} } }));
 }
-document.querySelectorAll('#lay button').forEach(b => b.onclick = () => { cfg.n = +b.dataset.n; save(); layout(); });
+document.querySelectorAll('#lgrid button').forEach(b => b.onclick = () => { cfg.lay = b.dataset.l; save(); layout(); });
+const lp = $('#lp'); $('#layBtn').onclick = e => { e.stopPropagation(); lp.classList.toggle('open'); };
+lp.addEventListener('click', e => e.stopPropagation()); document.addEventListener('click', () => lp.classList.remove('open'));
 $('#link').checked = !!cfg.link; $('#link').onchange = e => { cfg.link = e.target.checked; save(); if (!cfg.link) panes.forEach(p => { try { p.chart.setCrossT(null); } catch (_) {} }); };
+$('#sSym').checked = !!cfg.sym; $('#sSym').onchange = e => { cfg.sym = e.target.checked; save(); if (cfg.sym) { const v = cfg.panes[0].s; panes.forEach(p => { if (p.P.s !== v) { p.P.s = v; p.el.querySelector('.sy').value = v; p.sig = ''; if (p.on) p.load(true); } }); } };
+$('#sInt').checked = !!cfg.int; $('#sInt').onchange = e => { cfg.int = e.target.checked; save(); if (cfg.int) { const v = cfg.panes[0].i; panes.forEach(p => { if (p.P.i !== v) { p.P.i = v; p.el.querySelectorAll('.tfs button').forEach(x => x.classList.toggle('on', x.dataset.i === v)); p.sig = ''; if (p.on) p.load(true); } }); } };
 window.addEventListener('resize', () => panes.forEach(p => { if (p.on) { try { p.chart.resize(); } catch (_) {} } }));
-if (window.innerWidth < 900 && cfg.n === 4 && !localStorage.getItem('pcn_multi')) cfg.n = 2;
+if (window.innerWidth < 900 && !localStorage.getItem('pcn_multi')) cfg.lay = 'c2';
 layout();
-setInterval(() => { if (!document.hidden) panes.forEach(p => { if (p.on) p.load(false); }); }, 6000);
+setInterval(() => { if (!document.hidden) panes.forEach(p => { if (p.on && p.did) p.load(false); }); }, 6000);
 </script>
 </body>
 </html>
