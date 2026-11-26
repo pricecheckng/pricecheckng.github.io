@@ -378,7 +378,7 @@ G('lnBg').onclick = e => { if (e.target === G('lnBg')) G('lnBg').classList.remov
 G('zoBtn').innerHTML = ICONS.zoomout; G('zoBtn').onclick = () => { chart.resetView(); chart.toLatest(); };
 const IND = ['ma50', 'ma200', 'rsi', 'levels', 'hl'];
 const indCount = () => IND.filter(k => SET[k]).length;
-function delPaint() { const dr = chart.inDraft && chart.inDraft(); G('delS').style.display = (dr || chart.hasSelection()) ? 'block' : 'none'; G('delS').textContent = dr ? 'Cancel the drawing in progress' : 'Remove selected drawing'; const d = chart.count(), n = indCount(); G('delD').textContent = 'Remove ' + d + ' drawing' + (d === 1 ? '' : 's'); G('delI').textContent = 'Remove ' + n + ' indicator' + (n === 1 ? '' : 's'); G('delB').textContent = 'Remove ' + d + ' drawing' + (d === 1 ? '' : 's') + ' & ' + n + ' indicator' + (n === 1 ? '' : 's'); G('delD').disabled = !d; G('delI').disabled = !n; G('delB').disabled = !d && !n; }
+function delPaint() { const dr = chart.inDraft && chart.inDraft(); G('delS').style.display = (dr || chart.hasSelection()) ? 'block' : 'none'; G('delS').textContent = dr ? 'Cancel the drawing in progress' : 'Remove selected drawing'; const d = chart.count(); G('delD').textContent = 'Remove ' + d + ' drawing' + (d === 1 ? '' : 's'); G('delD').disabled = !d; }
 const delDraw = () => { chart.clearDrawings(); };
 const delInd = () => { tmpLv = false; IND.forEach(k => setSet(k, false)); };
 G('dDel').onclick = () => { delPaint(); G('delBg').classList.add('on'); };
