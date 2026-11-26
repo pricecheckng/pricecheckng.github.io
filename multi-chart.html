@@ -147,6 +147,15 @@ button,input,select{font:inherit;color:inherit}
 #pmenu{position:fixed;z-index:60;display:none;background:#101a15;border:1px solid var(--line);border-radius:12px;padding:6px;min-width:150px;max-height:70vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 #pmenu.on{display:block}#pmenu button{display:flex;width:100%;gap:10px;align-items:center;background:none;border:0;color:var(--txt);font:inherit;font-size:14px;padding:9px 12px;border-radius:8px;cursor:pointer;text-align:left}#pmenu button:hover,#pmenu button.on{background:#1b2e24;color:var(--acc2)}#pmenu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
 #sheetBg .row .ico{width:30px;height:30px}
+#gbar{display:flex;align-items:center;gap:4px;padding:5px 8px;background:var(--panel);border-bottom:1px solid var(--line);overflow-x:auto;position:sticky;top:0;z-index:40;white-space:nowrap;scrollbar-width:none}
+#gbar::-webkit-scrollbar{display:none}#gbar i{width:1px;height:22px;background:var(--line);margin:0 4px;flex:none}
+#gbar .gb{flex:none;background:#101a15;border:1px solid var(--line);border-radius:10px;color:var(--txt);font:inherit;font-weight:700;font-size:14px;padding:6px 11px;display:inline-flex;align-items:center;gap:7px;cursor:pointer}
+#gbar .gb .ico{width:22px;height:22px}#gbar .gb small{color:var(--mut);font-size:10px}
+#gbar .gi{flex:none;width:34px;height:34px;background:none;border:0;color:var(--mut);display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}#gbar .gi svg{width:21px;height:21px}#gbar .gi.dis{opacity:.3;pointer-events:none}
+#gsel{margin-left:auto;color:var(--mut);font-size:12px;flex:none;padding-left:8px}
+.ph .pairb,.ph .exb,.ph .tfb2,.ph .hs{display:none}
+.ph .pl{font-weight:800;font-size:13px;white-space:nowrap}.ph .pl small{color:var(--mut);font-weight:600;margin-left:4px}
+@media (max-width:899px){#dtools{top:48px!important}}
 </style>
 </head>
 <body>
@@ -157,6 +166,7 @@ button,input,select{font:inherit;color:inherit}
   <div class="lp" id="lp"><h4>Layout</h4><div class="lgrid" id="lgrid"><button type="button" data-l="g1" aria-label="One chart"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/></svg></button><button type="button" data-l="c2" aria-label="Two side by side"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M9 1v12"/></svg></button><button type="button" data-l="r2" aria-label="Two stacked"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M1 7h16"/></svg></button><button type="button" data-l="t3" aria-label="Three"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M11 1v12M11 7h6"/></svg></button><button type="button" data-l="g4" aria-label="Four"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M9 1v12M1 7h16"/></svg></button><button type="button" data-l="g6" aria-label="Six"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M6.7 1v12M11.3 1v12M1 7h16"/></svg></button><button type="button" data-l="g8" aria-label="Eight"><svg width="22" height="17" viewBox="0 0 18 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="16" height="12" rx="2"/><path d="M5 1v12M9 1v12M13 1v12M1 7h16"/></svg></button></div><h4>Sync in layout</h4>
   <label class="sw">Coin<input type="checkbox" id="sSym"></label><label class="sw">Timeframe<input type="checkbox" id="sInt"></label><label class="sw">Crosshair<input type="checkbox" id="link" checked></label></div></div>
 </div>
+<div id="gbar"><button type="button" id="gpair" class="gb"></button><button type="button" id="gex" class="gb"></button><button type="button" id="gtf" class="gb"></button><i></i><button type="button" id="gct" class="gi"></button><i></i><button type="button" id="gub" class="gi dis"></button><button type="button" id="grb" class="gi dis"></button><i></i><button type="button" id="gfs" class="gi"></button><button type="button" id="gsn" class="gi"></button><span id="gsel"></span></div>
 <div class="wrap" id="main"><div id="dtools" role="toolbar" aria-label="Drawing tools">
       <button type="button" id="curBtn" data-tool="cursor" class="on" aria-label="Cursor"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v6M12 15v6M3 12h6M15 12h6"/></svg></button>
       <button type="button" id="lnBtn" data-tool="line" aria-label="Lines"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 17.5l11-11"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="5" r="2"/></svg></button>
@@ -210,7 +220,7 @@ async function fetchC(P) {
 }
 function makePane(k) {
   const P = cfg.panes[k], el = document.createElement('div'); el.className = 'pane';
-  el.innerHTML = `<div class="ph"><button type="button" class="pairb"><span class="ico"></span><span class="pt"></span><small>▾</small></button><button type="button" class="exb"></button><button type="button" class="tfb2"></button><input class="sy" maxlength="12" value="${P.s}" aria-label="Coin" spellcheck="false" autocapitalize="characters"><select aria-label="Exchange">${Object.keys(EXN).map(x => `<option value="${x}"${x === P.e ? ' selected' : ''}>${EXN[x]}</option>`).join('')}</select><span class="tfs">${TFS.map(t => `<button type="button" data-i="${t[0]}"${t[0] === P.i ? ' class="on"' : ''}>${t[1]}</button>`).join('')}</span><span class="hs"><button type="button" class="hb ctb" aria-label="Chart type"></button><button type="button" class="hb ub dis" aria-label="Undo"></button><button type="button" class="hb rb dis" aria-label="Redo"></button><button type="button" class="hb fsb" aria-label="Full screen"></button><button type="button" class="hb snb" aria-label="Screenshot"></button></span><span class="pp"><span class="px">…</span><small class="ch"></small></span></div><div class="cm"><div class="mn"></div><div class="msg">Loading…</div><div class="sh"><span>Tap chart to move or zoom</span></div><button type="button" class="dn-b">Done</button><div class="wm"><i></i>PriceCheck NG</div></div>`;
+  el.innerHTML = `<div class="ph"><span class="pl"></span><button type="button" class="pairb"><span class="ico"></span><span class="pt"></span><small>▾</small></button><button type="button" class="exb"></button><button type="button" class="tfb2"></button><input class="sy" maxlength="12" value="${P.s}" aria-label="Coin" spellcheck="false" autocapitalize="characters"><select aria-label="Exchange">${Object.keys(EXN).map(x => `<option value="${x}"${x === P.e ? ' selected' : ''}>${EXN[x]}</option>`).join('')}</select><span class="tfs">${TFS.map(t => `<button type="button" data-i="${t[0]}"${t[0] === P.i ? ' class="on"' : ''}>${t[1]}</button>`).join('')}</span><span class="hs"><button type="button" class="hb ctb" aria-label="Chart type"></button><button type="button" class="hb ub dis" aria-label="Undo"></button><button type="button" class="hb rb dis" aria-label="Redo"></button><button type="button" class="hb fsb" aria-label="Full screen"></button><button type="button" class="hb snb" aria-label="Screenshot"></button></span><span class="pp"><span class="px">…</span><small class="ch"></small></span></div><div class="cm"><div class="mn"></div><div class="msg">Loading…</div><div class="sh"><span>Tap chart to move or zoom</span></div><button type="button" class="dn-b">Done</button><div class="wm"><i></i>PriceCheck NG</div></div>`;
   const rsi = document.createElement('div'); rsi.style.cssText = 'display:none;height:0';
   el.appendChild(rsi);
   const st = { el, k, P, on: false, did: false, token: 0 };
@@ -221,25 +231,25 @@ function makePane(k) {
   const DKM = 'pcn_multi_draw';
   const loadD = () => { try { const m = JSON.parse(localStorage.getItem(DKM) || '{}'); st.chart.setDrawings(m[P.s] || []); } catch (_) { st.chart.setDrawings([]); } };
   st.loadD = loadD;
-  st.chart = new window.PCNChart($('.mn', el), rsi, { tz: 'UTC', onHover: c => crossAll(st, c), onHist: () => { st.paintHb && st.paintHb(); if (st === cur) paintHist(); }, onTool: t => { if (st === cur) paintTool(t); if (t !== 'cursor' && st === cur) act(true); }, onStage: () => { const h = document.getElementById('dhint'); h.textContent = 'Now touch where point ' + (st.chart.stage() + 1) + ' goes, then lift'; h.classList.add('on'); }, onText: (i, ty) => { const v = prompt('Text'); if (v != null && v !== '') st.chart.setText(i, v); },
+  st.chart = new window.PCNChart($('.mn', el), rsi, { tz: 'UTC', onHover: c => crossAll(st, c), onHist: () => { st.paintHb && st.paintHb(); if (st === cur) { paintHist(); try { paintG(); } catch (_) {} } }, onTool: t => { if (st === cur) paintTool(t); if (t !== 'cursor' && st === cur) act(true); }, onStage: () => { const h = document.getElementById('dhint'); h.textContent = 'Now touch where point ' + (st.chart.stage() + 1) + ' goes, then lift'; h.classList.add('on'); }, onText: (i, ty) => { const v = prompt('Text'); if (v != null && v !== '') st.chart.setText(i, v); },
     onDraw: a => { try { const m = JSON.parse(localStorage.getItem(DKM) || '{}'); if (a.length) m[P.s] = a; else delete m[P.s]; localStorage.setItem(DKM, JSON.stringify(m)); } catch (_) {} } });
   loadD(); applyAll(st);
   el.addEventListener('pointerdown', () => setCur(st), true);
   const paintHead = () => { $('.pt', el).textContent = P.s + '/' + quoteOf(P.e); $('.exb', el).innerHTML = EXN[P.e] + ' <small>▾</small>'; $('.tfb2', el).innerHTML = (TFSH[P.i] || P.i) + ' <small>▾</small>'; setIco($('.pairb .ico', el), P.s); $('.sy', el).value = P.s; $('.tfs', el).querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.i === P.i)); };
-  st.paintHead = paintHead;
+  st.paintHead = () => { paintHead(); $('.pl', el).innerHTML = P.s + '<small>' + EXN[P.e] + ' · ' + (TFSH[P.i] || P.i) + '</small>'; if (st === cur) paintG(); };
   st.setPair = (sym, ex) => { P.s = sym; if (ex) P.e = ex; $('select', el).value = P.e; save(); st.sig = ''; loadD(); paintHead(); load(true); if (cfg.sym) panes.forEach(p => { if (p !== st) { p.P.s = sym; p.sig = ''; p.loadD(); p.paintHead(); if (p.on) p.load(true); } }); };
   $('.pairb', el).onclick = e => { e.stopPropagation(); openPicker(st); };
   $('.exb', el).onclick = e => { e.stopPropagation(); popMenu(e.currentTarget, Object.keys(EXN).map(k => [k, EXN[k]]), P.e, v => { P.e = v; $('select', el).value = v; save(); st.sig = ''; paintHead(); load(true); }); };
   $('.tfb2', el).onclick = e => { e.stopPropagation(); popMenu(e.currentTarget, TFL, P.i, v => { const b = $('.tfs [data-i="' + v + '"]', el); if (b) b.click(); paintHead(); }); };
-  let ctype = 'candles'; const paintHb = () => { $('.ctb', el).innerHTML = ICONS['ct_' + ctype] || ICONS.ct_candles || 'C'; $('.ub', el).innerHTML = ICONS.undo; $('.rb', el).innerHTML = ICONS.redo; $('.fsb', el).innerHTML = ICONS.fs; $('.snb', el).innerHTML = ICONS.cam; $('.ub', el).classList.toggle('dis', !st.chart.canUndo()); $('.rb', el).classList.toggle('dis', !st.chart.canRedo()); }; st.paintHb = paintHb;
+  let ctype = 'candles'; const paintHb = () => { $('.ctb', el).innerHTML = ICONS['ct_' + ctype] || ICONS.ct_candles || 'C'; $('.ub', el).innerHTML = ICONS.undo; $('.rb', el).innerHTML = ICONS.redo; $('.fsb', el).innerHTML = ICONS.fs; $('.snb', el).innerHTML = ICONS.cam; $('.ub', el).classList.toggle('dis', !st.chart.canUndo()); $('.rb', el).classList.toggle('dis', !st.chart.canRedo()); }; st.paintHb = () => { paintHb(); if (st === cur) paintG(); };
   $('.ctb', el).onclick = e => { e.stopPropagation(); popMenu(e.currentTarget, CTL, ctype, v => { ctype = v; st.chart.setType(v); paintHb(); }); };
   $('.ub', el).onclick = () => st.chart.undo(); $('.rb', el).onclick = () => st.chart.redo();
   $('.fsb', el).onclick = () => { const f = el.requestFullscreen || el.webkitRequestFullscreen; if (f) { if (document.fullscreenElement) document.exitFullscreen(); else f.call(el); } };
   $('.snb', el).onclick = () => { const u = st.chart.snapshot(1400); if (!u) return; const a = document.createElement('a'); a.href = u; a.download = 'pricecheck-' + P.s + '-' + P.i + '.jpg'; a.click(); };
-  paintHead(); paintHb();
+  st.paintHead(); st.paintHb();
   const msg = t => { const m = $('.msg', el); m.textContent = t || ''; m.style.display = t ? 'flex' : 'none'; };
   async function load(first) {
-    const my = ++st.token; if (first) msg('Loading…'); paintHead();
+    const my = ++st.token; if (first) msg('Loading…'); st.paintHead();
     try {
       let cs, er;
       for (let n = 0; n < 3 && !cs; n++) {
@@ -532,7 +542,17 @@ const CTL = [['candles', 'Candles'], ['hollow', 'Hollow candles'], ['bars', 'Bar
 const TFL = [['15m', '15 minutes'], ['1h', '1 hour'], ['4h', '4 hours'], ['1d', '1 day'], ['1w', '1 week']];
 const TFSH = { '15m': '15m', '1h': '1h', '4h': '4h', '1d': 'D', '1w': 'W' };
 function applyAll(p) { try { p.chart.setHidden(eyeOff); p.chart.setLocked(locked); p.chart.setMagnet(magnetOn); if (p.chart.setStay) p.chart.setStay(stayOn); p.chart.setCursor(curMode); } catch (_) {} }
-function setCur(p) { cur = p; panes.forEach(x => x.el.classList.toggle('cur', x === p)); paintHist(); paintTool(); }
+function paintG() {
+  if (!cur) return; const P = cur.P, el = cur.el;
+  G('gpair').innerHTML = '<span class="ico"></span><span>' + P.s + '/' + quoteOf(P.e) + '</span><small>▾</small>'; setIco(G('gpair').querySelector('.ico'), P.s);
+  G('gex').innerHTML = EXN[P.e] + ' <small>▾</small>'; G('gtf').innerHTML = (TFSH[P.i] || P.i) + ' <small>▾</small>';
+  G('gct').innerHTML = el.querySelector('.ctb').innerHTML; G('gub').innerHTML = ICONS.undo; G('grb').innerHTML = ICONS.redo; G('gfs').innerHTML = ICONS.fs; G('gsn').innerHTML = ICONS.cam;
+  G('gub').classList.toggle('dis', !cur.chart.canUndo()); G('grb').classList.toggle('dis', !cur.chart.canRedo());
+  G('gsel').textContent = cfg.n > 1 ? 'Chart ' + (panes.indexOf(cur) + 1) + ' selected' : '';
+}
+const viaCur = (cls, id) => G(id).onclick = e => { e.stopPropagation(); if (!cur) return; const b = cur.el.querySelector(cls); b.onclick({ stopPropagation() {}, currentTarget: G(id) }); };
+viaCur('.pairb', 'gpair'); viaCur('.exb', 'gex'); viaCur('.tfb2', 'gtf'); viaCur('.ctb', 'gct'); viaCur('.ub', 'gub'); viaCur('.rb', 'grb'); viaCur('.fsb', 'gfs'); viaCur('.snb', 'gsn');
+function setCur(p) { cur = p; panes.forEach(x => x.el.classList.toggle('cur', x === p)); paintHist(); paintTool(); paintG(); }
 document.addEventListener('touchstart', e => { panes.forEach(p => { if (p.el.classList.contains('act') && !p.el.contains(e.target)) p.el.classList.remove('act'); }); }, { passive: true });
 for (let k = 0; k < 8; k++) { const p = makePane(k); panes.push(p); grid.appendChild(p.el); }
 function layout() {
