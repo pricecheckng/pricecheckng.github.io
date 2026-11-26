@@ -116,6 +116,37 @@ button,input,select{font:inherit;color:inherit}
 @media (max-width:899px){#dtools{flex-direction:row!important;position:sticky!important;top:0;z-index:30;width:auto!important;height:auto;overflow-x:auto;overflow-y:hidden;border-right:0!important;border-bottom:1px solid var(--line);padding:3px 6px;align-items:center}#dtools hr{width:0!important;height:22px;border:0!important;border-left:1px solid var(--line)!important;margin:0 4px!important}#dhint{position:fixed;top:auto!important;bottom:14px}}
 
 @media (min-width:900px){#lnSheet,#fibSheet,#prjSheet,#patSheet,#gnSheet,#curSheet,#delSheet,#gSheet{left:52px!important;right:auto!important;width:340px;bottom:auto!important;top:58px;border-radius:14px!important;max-height:calc(100vh - 80px)!important;border:1px solid var(--line)}#lnBg,#fibBg,#prjBg,#patBg,#gnBg,#curBg,#delBg,#gBg{background:transparent!important}}
+  #sheetBg { position:fixed; inset:0; background:var(--bg); z-index:20; display:none; flex-direction:column; }
+  #sheetBg.on { display:flex; }
+  .sh-top { display:flex; align-items:center; gap:10px; padding:10px 12px; }
+  .back:focus, .back:focus-visible, #typeX:focus { outline:none; box-shadow:none; }
+  .back { -webkit-tap-highlight-color:transparent; }
+  #typeX { width:36px!important; height:36px!important; border:1px solid var(--acc); padding:0; }
+  .sh-top .back { flex:none; width:42px; height:42px; border-radius:12px; border:1px solid var(--acc); background:#16241d; outline:none; -webkit-tap-highlight-color:transparent; padding:0; }
+  .sh-top .back:focus, .sh-top .back:focus-visible { outline:none; box-shadow:none; }
+  .sh-top .back svg { width:20px; height:20px; }
+  .sh-top input { height:42px; box-sizing:border-box;  flex:1; background:#16241d; border:1px solid var(--acc); border-radius:12px; color:var(--txt); font:inherit; padding:11px 12px; outline:none; }
+  .tabs { display:flex; gap:20px; padding:0 16px; border-bottom:1px solid var(--line); }
+  .tabs button, .exs button { background:none; border:0; color:var(--mut); font:inherit; font-weight:700; padding:12px 0; cursor:pointer; border-bottom:2px solid transparent; }
+  .tabs button.on { color:var(--txt); border-color:var(--acc); }
+  .exs { display:flex; gap:18px; padding:0 16px; border-bottom:1px solid var(--line); overflow-x:auto; }
+  .exs button { font-size:14px; white-space:nowrap; } .exs button.on { color:var(--txt); border-color:var(--acc); }
+  .exs button.soon { opacity:.45; cursor:default; } .exs sup { font-size:9px; margin-left:3px; color:var(--mut); }
+  #plist { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .row { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid var(--line); cursor:pointer; }
+  .row .nm { flex:1; font-weight:700; } .row .nm small { display:block; color:var(--mut); font-weight:500; font-size:12px; }
+  .row .tp { color:var(--mut); font-size:12px; } .row .st { color:var(--mut); font-size:20px; width:24px; text-align:center; } .row .st.on { color:#f5a524; }
+  .toolbar { display:flex; align-items:center; justify-content:space-between; padding:0 16px; border-bottom:1px solid var(--line); min-height:44px; }
+  .pair img, .ico { width:22px; height:22px; border-radius:50%; background:#243a2f; object-fit:cover; display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-weight:800; color:var(--mut); flex:none; }
+.ph .sy,.ph select,.ph .tfs{display:none}
+.ph{gap:4px;flex-wrap:nowrap;overflow:hidden}
+.pairb,.exb,.tfb2,.hb{flex:none;background:#101a15;border:1px solid var(--line);border-radius:10px;color:var(--txt);font:inherit;font-weight:700;font-size:13px;padding:5px 9px;display:inline-flex;align-items:center;gap:6px;cursor:pointer;white-space:nowrap}
+.pairb .ico{width:20px;height:20px}.pairb small,.exb small,.tfb2 small{color:var(--mut);font-size:9px}
+.hb{width:30px;height:30px;padding:0;justify-content:center;border:0;background:none;color:var(--mut)}.hb svg{width:19px;height:19px}.hb.dis{opacity:.3;pointer-events:none}
+.hs{margin-left:auto;display:flex;gap:0;flex:none}.pp{margin-left:6px!important}
+#pmenu{position:fixed;z-index:60;display:none;background:#101a15;border:1px solid var(--line);border-radius:12px;padding:6px;min-width:150px;max-height:70vh;overflow-y:auto;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#pmenu.on{display:block}#pmenu button{display:flex;width:100%;gap:10px;align-items:center;background:none;border:0;color:var(--txt);font:inherit;font-size:14px;padding:9px 12px;border-radius:8px;cursor:pointer;text-align:left}#pmenu button:hover,#pmenu button.on{background:#1b2e24;color:var(--acc2)}#pmenu hr{border:0;border-top:1px solid var(--line);margin:4px 0}
+#sheetBg .row .ico{width:30px;height:30px}
 </style>
 </head>
 <body>
@@ -179,7 +210,7 @@ async function fetchC(P) {
 }
 function makePane(k) {
   const P = cfg.panes[k], el = document.createElement('div'); el.className = 'pane';
-  el.innerHTML = `<div class="ph"><input class="sy" maxlength="12" value="${P.s}" aria-label="Coin" spellcheck="false" autocapitalize="characters"><select aria-label="Exchange">${Object.keys(EXN).map(x => `<option value="${x}"${x === P.e ? ' selected' : ''}>${EXN[x]}</option>`).join('')}</select><span class="tfs">${TFS.map(t => `<button type="button" data-i="${t[0]}"${t[0] === P.i ? ' class="on"' : ''}>${t[1]}</button>`).join('')}</span><span class="pp"><span class="px">…</span><small class="ch"></small></span></div><div class="cm"><div class="mn"></div><div class="msg">Loading…</div><div class="sh"><span>Tap chart to move or zoom</span></div><button type="button" class="dn-b">Done</button><div class="wm"><i></i>PriceCheck NG</div></div>`;
+  el.innerHTML = `<div class="ph"><button type="button" class="pairb"><span class="ico"></span><span class="pt"></span><small>▾</small></button><button type="button" class="exb"></button><button type="button" class="tfb2"></button><input class="sy" maxlength="12" value="${P.s}" aria-label="Coin" spellcheck="false" autocapitalize="characters"><select aria-label="Exchange">${Object.keys(EXN).map(x => `<option value="${x}"${x === P.e ? ' selected' : ''}>${EXN[x]}</option>`).join('')}</select><span class="tfs">${TFS.map(t => `<button type="button" data-i="${t[0]}"${t[0] === P.i ? ' class="on"' : ''}>${t[1]}</button>`).join('')}</span><span class="hs"><button type="button" class="hb ctb" aria-label="Chart type"></button><button type="button" class="hb ub dis" aria-label="Undo"></button><button type="button" class="hb rb dis" aria-label="Redo"></button><button type="button" class="hb fsb" aria-label="Full screen"></button><button type="button" class="hb snb" aria-label="Screenshot"></button></span><span class="pp"><span class="px">…</span><small class="ch"></small></span></div><div class="cm"><div class="mn"></div><div class="msg">Loading…</div><div class="sh"><span>Tap chart to move or zoom</span></div><button type="button" class="dn-b">Done</button><div class="wm"><i></i>PriceCheck NG</div></div>`;
   const rsi = document.createElement('div'); rsi.style.cssText = 'display:none;height:0';
   el.appendChild(rsi);
   const st = { el, k, P, on: false, did: false, token: 0 };
@@ -190,13 +221,25 @@ function makePane(k) {
   const DKM = 'pcn_multi_draw';
   const loadD = () => { try { const m = JSON.parse(localStorage.getItem(DKM) || '{}'); st.chart.setDrawings(m[P.s] || []); } catch (_) { st.chart.setDrawings([]); } };
   st.loadD = loadD;
-  st.chart = new window.PCNChart($('.mn', el), rsi, { tz: 'UTC', onHover: c => crossAll(st, c), onHist: () => { if (st === cur) paintHist(); }, onTool: t => { if (st === cur) paintTool(t); if (t !== 'cursor' && st === cur) act(true); }, onStage: () => { const h = document.getElementById('dhint'); h.textContent = 'Now touch where point ' + (st.chart.stage() + 1) + ' goes, then lift'; h.classList.add('on'); }, onText: (i, ty) => { const v = prompt('Text'); if (v != null && v !== '') st.chart.setText(i, v); },
+  st.chart = new window.PCNChart($('.mn', el), rsi, { tz: 'UTC', onHover: c => crossAll(st, c), onHist: () => { st.paintHb && st.paintHb(); if (st === cur) paintHist(); }, onTool: t => { if (st === cur) paintTool(t); if (t !== 'cursor' && st === cur) act(true); }, onStage: () => { const h = document.getElementById('dhint'); h.textContent = 'Now touch where point ' + (st.chart.stage() + 1) + ' goes, then lift'; h.classList.add('on'); }, onText: (i, ty) => { const v = prompt('Text'); if (v != null && v !== '') st.chart.setText(i, v); },
     onDraw: a => { try { const m = JSON.parse(localStorage.getItem(DKM) || '{}'); if (a.length) m[P.s] = a; else delete m[P.s]; localStorage.setItem(DKM, JSON.stringify(m)); } catch (_) {} } });
   loadD(); applyAll(st);
   el.addEventListener('pointerdown', () => setCur(st), true);
+  const paintHead = () => { $('.pt', el).textContent = P.s + '/' + quoteOf(P.e); $('.exb', el).innerHTML = EXN[P.e] + ' <small>▾</small>'; $('.tfb2', el).innerHTML = (TFSH[P.i] || P.i) + ' <small>▾</small>'; setIco($('.pairb .ico', el), P.s); $('.sy', el).value = P.s; $('.tfs', el).querySelectorAll('button').forEach(x => x.classList.toggle('on', x.dataset.i === P.i)); };
+  st.paintHead = paintHead;
+  st.setPair = (sym, ex) => { P.s = sym; if (ex) P.e = ex; $('select', el).value = P.e; save(); st.sig = ''; loadD(); paintHead(); load(true); if (cfg.sym) panes.forEach(p => { if (p !== st) { p.P.s = sym; p.sig = ''; p.loadD(); p.paintHead(); if (p.on) p.load(true); } }); };
+  $('.pairb', el).onclick = e => { e.stopPropagation(); openPicker(st); };
+  $('.exb', el).onclick = e => { e.stopPropagation(); popMenu(e.currentTarget, Object.keys(EXN).map(k => [k, EXN[k]]), P.e, v => { P.e = v; $('select', el).value = v; save(); st.sig = ''; paintHead(); load(true); }); };
+  $('.tfb2', el).onclick = e => { e.stopPropagation(); popMenu(e.currentTarget, TFL, P.i, v => { const b = $('.tfs [data-i="' + v + '"]', el); if (b) b.click(); paintHead(); }); };
+  let ctype = 'candles'; const paintHb = () => { $('.ctb', el).innerHTML = ICONS['ct_' + ctype] || ICONS.ct_candles || 'C'; $('.ub', el).innerHTML = ICONS.undo; $('.rb', el).innerHTML = ICONS.redo; $('.fsb', el).innerHTML = ICONS.fs; $('.snb', el).innerHTML = ICONS.cam; $('.ub', el).classList.toggle('dis', !st.chart.canUndo()); $('.rb', el).classList.toggle('dis', !st.chart.canRedo()); }; st.paintHb = paintHb;
+  $('.ctb', el).onclick = e => { e.stopPropagation(); popMenu(e.currentTarget, CTL, ctype, v => { ctype = v; st.chart.setType(v); paintHb(); }); };
+  $('.ub', el).onclick = () => st.chart.undo(); $('.rb', el).onclick = () => st.chart.redo();
+  $('.fsb', el).onclick = () => { const f = el.requestFullscreen || el.webkitRequestFullscreen; if (f) { if (document.fullscreenElement) document.exitFullscreen(); else f.call(el); } };
+  $('.snb', el).onclick = () => { const u = st.chart.snapshot(1400); if (!u) return; const a = document.createElement('a'); a.href = u; a.download = 'pricecheck-' + P.s + '-' + P.i + '.jpg'; a.click(); };
+  paintHead(); paintHb();
   const msg = t => { const m = $('.msg', el); m.textContent = t || ''; m.style.display = t ? 'flex' : 'none'; };
   async function load(first) {
-    const my = ++st.token; if (first) msg('Loading…');
+    const my = ++st.token; if (first) msg('Loading…'); paintHead();
     try {
       let cs, er;
       for (let n = 0; n < 3 && !cs; n++) {
@@ -385,6 +428,109 @@ function emojiPicker() {
   G('gL').querySelectorAll('[data-e]').forEach(b => b.onclick = () => { chart.setEmoji(b.dataset.e); chart.setTool('emoji'); gClose(); });
 }
 G('emBtn').onclick = emojiPicker;
+
+let meta = {}; const icoOk = {}, icoBad = new Set();
+/* ---- TradFi: stocks, ETFs, metals/commodities, indices, forex listed on crypto exchanges ---- */
+const TF = {};
+const tfAdd = (k, s) => s.split(/\s+/).forEach(t => { if (t) TF[t] = k; });
+tfAdd('commodity', 'XAU XAG XPT XPD XCU COPPER SILVER GOLD USOIL UKOIL OIL WTI BRENT NATGAS NGAS NG CL HG CORN WHEAT SOYBEAN COFFEE SUGAR COCOA');
+tfAdd('index', 'NAS100 SPX500 SP500 NDX100 US30 US100 US500 US2000 JP225 KR200 AUS200 UK100 DE40 DAX40 HK50 DJ30 USDEX DXY VIX');
+tfAdd('forex', 'EURUSD GBPUSD USDJPY USDBRL AUDUSD USDCAD USDCHF NZDUSD USDCNH USDKRW EURJPY GBPJPY USDMXN USDTRY USDZAR USDINR');
+tfAdd('etf', 'QQQ SPY IWM DIA TQQQ SQQQ SOXL SOXS TLT TMF TBT TZA UVXY ARKK BITO IBIT GDX GDXJ XLE XLF XLI XLK XLP XLU XLV XLY XLB XBI EWJ EWZ EWY EWT EWH EWZS KWEB URNM SMH SOXX SPXL UPRO MAGS BOTZ DFEN KORU NCLD CONL MSTU MSFU BMNU AMZU AAPU NVDL TSLL MUU SNXX STXX KSTR FXI EEM VOO VTI GLD SLV USO UNG EIDO KODEX200 IEFA EWG EWW EWC INDA');
+tfAdd('stock', 'AAPL MSFT GOOGL GOOG AMZN NVDA META TSLA NFLX AMD INTC AVGO ORCL CRM ADBE QCOM MU AMAT ASML ARM TSM BABA PDD JD BIDU NIO COIN HOOD MSTR CRCL PLTR SOFI SHOP SNOW NET DDOG ZM UBER ABNB PYPL  MA JPM BAC GS MS WMT COST KO PEP MCD NKE DIS BA GE XOM CVX LLY PFE MRK ABBV JNJ UNH AMGN GILD REGN MRNA CVS IBM CSCO TXN LRCX KLAC MRVL SMCI DELL HPE AAL AAOI AEHR AKAM ALAB ANET APLD APP ASTS AXP AXTI BIIB BKNG BLSH BMNR BSP BTDR BWET BX BYD CBRS CEG CGNX CIEN CIFR CLSK CNPY COHR CORZ CRDO CRML CRWD CRWV CVNA CXMT DJT DKNG DRAM DUOL EBAY EQT FLEX FLNC  FWDI GEV GLW GME GPRO GTLB HANMI HIMS HUT IBKR INFQ INTU IONQ IREN ISRG JOBY KTOS LMT LRCX LULU LUNR MARA MCD MDB MELI MNST MO MP MPWR MRK MSTR MURATA NBIS NKE NOK NOW OKLO OKTA ONDS ORCL OSCR OUST PANW  PENG PEP PFE PG PLTR POET QBTS RDDT RDW RGTI RIOT RIVN RKLB ROK RTX SHAZ SHEIN  SIMO SITM SMR SNDK SNPS SONY SPOT STRC TEAM TEM TER TWLO TWST TXN UMC UNH USAR VICR VRT VST WDC WEN WUXIBIO XPEV ZS ACHR ARQQ AVAV BBAI BBSTOCK CPNG CTRA  DAL DE EXPE FDX FUTU GIGADEV HPQ ISRG JNPR KLAC LCID LYFT MAR NEE NOC OXY PINS PYPL QS SBUX SMMT  SQ  TGT TMUS TTD TTWO UAL UPST  VZ WBD WFC WBA YUM ZIM BRKB SKHYNIX SAMSUNG HYUNDAI XIAOMI TENCENT MEITUAN KUAISHOU ZHIPU MINIMAX SOFTBANK UNITREE POPMART LENOVO SENSETIME SMIC BYD NAVER KIOXIA LGELECTRONICS CATL BEIGENE AKESO ANTA BIWIN BOE CAMBRICON CITIC LAOPU MEITU OPENAI ANTHROPIC ANDURIL MOONSHOT SPCX SPACEX NVIDIA TESLA COINBASE MICROSTRATEGY');
+const TF_ALIAS = { NVIDIA: 'NVDA', TESLA: 'TSLA', COINBASE: 'COIN', MICROSTRATEGY: 'MSTR', SILVER: 'XAG', GOLD: 'XAU', COPPER: 'XCU', USOIL: 'USOIL', SPACEX: 'SPCX' };
+const TF_NAMES = { stock: 'Stocks', etf: 'ETFs', commodity: 'Commodities', index: 'Indices', forex: 'Forex' };
+function tfKind(sym) {
+  let b = String(sym || '').toUpperCase().replace(/[-_/](USDT|USDC|USD|PERP|SWAP).*$/, '');
+  if (!b) return null;
+  if (TF[b]) return [TF[b], TF_ALIAS[b] || b];
+  let m;
+  if ((m = b.match(/^(.+)STOCK$/)) && TF[m[1]]) return [TF[m[1]], m[1]];
+  if ((m = b.match(/^(.+)ON$/)) && TF[m[1]] === 'stock') return [TF[m[1]], m[1]];
+  if ((m = b.match(/^[XR](.{2,6})$/)) && (TF[m[1]] === 'stock' || TF[m[1]] === 'etf')) return [TF[m[1]], m[1]];
+  return null;
+}
+const TF_COL = { stock: '#2f6fed', etf: '#7c4dff', commodity: '#d4a017', index: '#0e9f9a', forex: '#17a34a' };
+const TF_SPECIAL = { XAU: ['Au', '#d4a017'], XAG: ['Ag', '#8f9aa5'], XPT: ['Pt', '#8aa0b8'], XPD: ['Pd', '#8d8f94'], XCU: ['Cu', '#c2703d'], COPPER: ['Cu', '#c2703d'], USOIL: ['OIL', '#3d4650'], UKOIL: ['OIL', '#3d4650'], OIL: ['OIL', '#3d4650'], WTI: ['OIL', '#3d4650'], BRENT: ['OIL', '#3d4650'], CL: ['OIL', '#3d4650'], NATGAS: ['GAS', '#e07b39'], NGAS: ['GAS', '#e07b39'], NG: ['GAS', '#e07b39'] };
+function tfBadge(el, tk) {
+  const sp = TF_SPECIAL[tk[1]]; let txt = sp ? sp[0] : tk[1].replace(/\d+$/, '').slice(0, 4); if (!sp && tk[0] === 'forex') txt = (tk[1].replace(/USD/, '') || tk[1]).slice(0, 3);
+  el.textContent = txt; el.style.background = sp ? sp[1] : TF_COL[tk[0]]; el.style.color = '#fff'; el.style.fontWeight = '800'; el.style.fontSize = txt.length > 3 ? '8px' : txt.length > 2 ? '9px' : '12px'; el.style.letterSpacing = '-.3px';
+}
+const icoDb = {};
+function dbIco(n) { if (n in icoDb) return Promise.resolve(icoDb[n]); return fetch(`${SUPABASE_URL}/rest/v1/coins?select=image_url&symbol=ilike.${encodeURIComponent(n)}&image_url=not.is.null&order=market_cap_rank.asc.nullslast&limit=1`, { headers: { apikey: SUPABASE_KEY } }).then(r => r.json()).then(a => (icoDb[n] = Array.isArray(a) && a[0] ? a[0].image_url : null)).catch(() => null); }
+function icoName(sym) { return String(sym || '').toUpperCase().replace(/^(?:1000000|100000|10000|1000|1M)(?=[A-Z])/, ''); }
+function icoUrls(sym) { const n = icoName(sym), l = n.toLowerCase(), u = [], m = meta[sym] || meta[n]; const tk = tfKind(sym); if (tk) { if (tk[0] === 'stock' || tk[0] === 'etf') u.push('https://financialmodelingprep.com/image-stock/' + tk[1] + '.png', 'https://assets.parqet.com/logos/symbol/' + tk[1] + '?format=png'); return u; } if (m && m.img) u.push(m.img); u.push('https://assets.coincap.io/assets/icons/' + l + '@2x.png', 'https://cdn.jsdelivr.net/gh/spothq/cryptocurrency-icons@1.0.0/128/color/' + l + '.png'); return u; }
+function setIco(el, sym) {
+  const n = icoName(sym); el.textContent = (n || '?')[0]; const tk = tfKind(sym);
+  if (tk && tk[0] !== 'stock' && tk[0] !== 'etf') return tfBadge(el, tk);
+  const put = u => { const im = new Image(); im.alt = ''; im.referrerPolicy = 'no-referrer'; im.style.cssText = 'width:100%;height:100%;border-radius:50%;object-fit:cover'; im.src = u; el.textContent = ''; el.appendChild(im); };
+  if (icoOk[n]) return put(icoOk[n]);
+  if (icoBad.has(n)) { if (tk) tfBadge(el, tk); return; }
+  const us = icoUrls(sym); let i = 0;
+  const m0 = meta[sym] || meta[n];
+  const viaDb = () => dbIco(n).then(u => { if (!u) return next(); const t = new Image(); t.onload = () => { if (t.naturalWidth > 1) { icoOk[n] = u; if (el.isConnected) put(u); } else next(); }; t.onerror = next; t.referrerPolicy = 'no-referrer'; t.src = u; });
+  if (!tk && !(m0 && m0.img) && /^[A-Z0-9]{1,15}$/.test(n)) viaDb(); else next();
+  function next() { if (i >= us.length) { icoBad.add(n); if (tk && el.isConnected) tfBadge(el, tk); return; } const u = us[i++], t = new Image(); t.onload = () => { if (t.naturalWidth > 1) { icoOk[n] = u; if (el.isConnected) put(u); } else next(); }; t.onerror = next; t.referrerPolicy = 'no-referrer'; t.src = u; }
+}
+function setPair() { $('pTxt').textContent = LBL(); const q2 = $('bq2'); if (q2) q2.textContent = QT(); const b2 = $('bq'); if (b2) b2.textContent = BASE(); setIco($('pIco'), BASE()); }
+const sg2 = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k)); return v == null ? d : v; } catch (_) { return d; } };
+const ss2 = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (_) {} };
+let pairsC = {}, favs = sg2('pcn_chart_favs', []), pk = null, pkEx = 'binance', ptab = 'crypto', tfSub = 'all';
+async function loadPairs(ex) {
+  if (pairsC[ex]) return pairsC[ex];
+  let rows = [];
+  try { const r = await fetch(`${SUPABASE_URL}/rest/v1/coins?select=symbol,name,image_url,market_cap_rank&market_cap_rank=not.is.null&order=market_cap_rank.asc&limit=500`, { headers: { apikey: SUPABASE_KEY } }); rows = await r.json(); } catch (_) {}
+  let ok = null;
+  if (ex !== 'binance') { try { const ck = 'pcn_pairs_' + ex, c = sg2(ck, null); if (c && Date.now() - c.t < 6 * 36e5) ok = new Set(c.s); else { ok = await window.PCNEX[ex].list(); ss2(ck, { t: Date.now(), s: [...ok] }); } } catch (_) { ok = null; } }
+  else try { const c = sg2('pcn_binance_usdt', null); if (c && Date.now() - c.t < 6 * 36e5) ok = new Set(c.s); else { const r = await fetch('https://api.binance.com/api/v3/ticker/price'); const a = await r.json(); ok = new Set(a.filter(x => x.symbol.endsWith('USDT')).map(x => x.symbol.slice(0, -4))); ss2('pcn_binance_usdt', { t: Date.now(), s: [...ok] }); } } catch (_) {}
+  const seen = new Set(), list = [];
+  (Array.isArray(rows) ? rows : []).forEach(c => { const s = String(c.symbol || '').toUpperCase(); if (!s || seen.has(s) || (ok && !ok.has(s))) return; seen.add(s); list.push({ s, name: c.name || s }); meta[s] = { name: c.name, img: c.image_url }; });
+  if (ok) [...ok].sort().forEach(s => { if (!seen.has(s)) { seen.add(s); list.push({ s, name: s }); } });
+  if (!seen.has('BTC')) list.unshift({ s: 'BTC', name: 'Bitcoin' });
+  return pairsC[ex] = list;
+}
+const quoteOf = ex => (ex !== 'binance' && window.PCNEX && window.PCNEX[ex] && window.PCNEX[ex].quote) || 'USDT';
+function paintTabs() {
+  G('tabC').classList.toggle('on', ptab === 'crypto'); G('tabT').classList.toggle('on', ptab === 'tradfi');
+  const sb = G('tfSub'); sb.style.display = ptab === 'tradfi' ? 'flex' : 'none';
+  if (ptab === 'tradfi') { const pl = pairsC[pkEx] || []; const cnt = k => pl.filter(p => { const t = tfKind(p.s); return t && (k === 'all' || t[0] === k); }).length;
+    sb.innerHTML = ['all', 'stock', 'etf', 'commodity', 'index', 'forex'].map(k => { const c = cnt(k); return c || k === 'all' ? `<button type="button" data-sub="${k}" style="flex:none;padding:7px 13px;border-radius:16px;border:1px solid ${tfSub === k ? '#16a34a' : '#243a2f'};background:${tfSub === k ? 'rgba(22,163,74,.15)' : 'none'};color:${tfSub === k ? '#16c784' : '#9fb3a8'};font:inherit;font-size:13px;font-weight:700;cursor:pointer">${k === 'all' ? 'All' : ({ stock: 'Stocks', etf: 'ETFs', commodity: 'Commodities', index: 'Indices', forex: 'Forex' })[k]} ${c}</button>` : ''; }).join('');
+    sb.querySelectorAll('[data-sub]').forEach(b => b.onclick = () => { tfSub = b.dataset.sub; paintTabs(); renderList(); }); }
+  document.querySelectorAll('#sheetBg .exs [data-ex]').forEach(b => b.classList.toggle('on', b.dataset.ex === pkEx));
+  G('shQ').placeholder = 'Search ' + EXN[pkEx] + ' pairs';
+}
+function renderList() {
+  const q = G('shQ').value.trim().toUpperCase(), box = G('plist'), pl = pairsC[pkEx];
+  if (!pl) { box.innerHTML = '<div class="empty">Loading pairs…</div>'; return; }
+  let a = pl.filter(p => { const tk = tfKind(p.s); if (ptab === 'crypto') { if (tk) return false; } else if (!tk || (tfSub !== 'all' && tk[0] !== tfSub)) return false; return !q || p.s.includes(q) || String(p.name).toUpperCase().includes(q) || (tk && tk[1].includes(q)); });
+  G('pcount').textContent = a.length + ' pairs';
+  a = [...a.filter(p => favs.includes(p.s)), ...a.filter(p => !favs.includes(p.s))].slice(0, 300);
+  box.innerHTML = a.length ? '' : '<div class="empty">No pair found on ' + EXN[pkEx] + '.</div>';
+  a.forEach(p => {
+    const r = document.createElement('div'); r.className = 'row';
+    r.innerHTML = `<span class="st${favs.includes(p.s) ? ' on' : ''}">${favs.includes(p.s) ? '&#9733;' : '&#9734;'}</span><span class="ico"></span><span class="nm">${p.s}/${quoteOf(pkEx)}<small>${String(p.name).replace(/</g, '')}</small></span><span class="tp">spot</span>`;
+    setIco(r.querySelector('.ico'), p.s);
+    r.querySelector('.st').onclick = e => { e.stopPropagation(); favs = favs.includes(p.s) ? favs.filter(x => x !== p.s) : [p.s, ...favs]; ss2('pcn_chart_favs', favs); renderList(); };
+    r.onclick = () => { G('sheetBg').classList.remove('on'); if (pk) pk.setPair(p.s, pkEx); };
+    box.appendChild(r);
+  });
+}
+async function showEx(ex) { pkEx = ex; paintTabs(); renderList(); if (!pairsC[ex]) { try { await loadPairs(ex); } catch (_) { pairsC[ex] = []; } if (pkEx === ex) { paintTabs(); renderList(); } } }
+function openPicker(pane) { pk = pane; ptab = 'crypto'; tfSub = 'all'; G('shQ').value = ''; G('sheetBg').classList.add('on'); showEx(pane.P.e); }
+G('tabC').onclick = () => { ptab = 'crypto'; paintTabs(); renderList(); };
+G('tabT').onclick = () => { ptab = 'tradfi'; tfSub = 'all'; paintTabs(); renderList(); };
+G('shBack').onclick = () => G('sheetBg').classList.remove('on'); G('shQ').oninput = renderList;
+document.querySelectorAll('#sheetBg .exs [data-ex]').forEach(b => { if (!EXN[b.dataset.ex]) b.remove(); else b.onclick = () => showEx(b.dataset.ex); });
+// small dropdown menu used by exchange / timeframe / chart type buttons
+const pm = G('pmenu'); document.addEventListener('click', () => pm.classList.remove('on'));
+function popMenu(btn, items, cur, pick) {
+  pm.innerHTML = items.map(x => x === '-' ? '<hr>' : `<button type="button" data-v="${x[0]}" class="${x[0] === cur ? 'on' : ''}">${x[2] || ''}${x[1]}</button>`).join('');
+  pm.querySelectorAll('[data-v]').forEach(b => b.onclick = e => { e.stopPropagation(); pm.classList.remove('on'); pick(b.dataset.v); });
+  const r = btn.getBoundingClientRect(); pm.classList.add('on'); pm.style.left = Math.max(6, Math.min(r.left, innerWidth - pm.offsetWidth - 6)) + 'px'; pm.style.top = (r.bottom + 4) + 'px';
+}
+const CTL = [['candles', 'Candles'], ['hollow', 'Hollow candles'], ['bars', 'Bars'], '-', ['line', 'Line'], ['linem', 'Line with markers'], ['step', 'Step line'], '-', ['area', 'Area'], ['baseline', 'Baseline'], '-', ['columns', 'Columns'], ['highlow', 'High-low'], ['heikin', 'Heikin Ashi']];
+const TFL = [['15m', '15 minutes'], ['1h', '1 hour'], ['4h', '4 hours'], ['1d', '1 day'], ['1w', '1 week']];
+const TFSH = { '15m': '15m', '1h': '1h', '4h': '4h', '1d': 'D', '1w': 'W' };
 function applyAll(p) { try { p.chart.setHidden(eyeOff); p.chart.setLocked(locked); p.chart.setMagnet(magnetOn); if (p.chart.setStay) p.chart.setStay(stayOn); p.chart.setCursor(curMode); } catch (_) {} }
 function setCur(p) { cur = p; panes.forEach(x => x.el.classList.toggle('cur', x === p)); paintHist(); paintTool(); }
 document.addEventListener('touchstart', e => { panes.forEach(p => { if (p.el.classList.contains('act') && !p.el.contains(e.target)) p.el.classList.remove('act'); }); }, { passive: true });
@@ -409,5 +555,14 @@ layout();
 setCur(panes[0]);
 setInterval(() => { if (!document.hidden) panes.forEach(p => { if (p.on && p.did) p.load(false); }); }, 6000);
 </script>
+<div id="sheetBg">
+  <div class="sh-top"><button class="back" id="shBack" aria-label="Close"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 3L5 9l6 6"/></svg></button><input id="shQ" placeholder="Search Binance pairs" autocomplete="off" autocapitalize="characters"></div>
+  <div class="tabs"><button class="on" id="tabC">Crypto</button><button id="tabT">TradFi</button></div>
+  <div id="tfSub" style="display:none;gap:8px;padding:10px 14px 4px;overflow-x:auto;white-space:nowrap"></div>
+  <div class="exs"><button data-ex="binance">Binance</button><button data-ex="okx">OKX</button><button data-ex="bybit">Bybit</button><button data-ex="aster">Aster</button><button data-ex="bitget">Bitget</button><button data-ex="gate">Gate</button><button data-ex="mexc">MEXC</button><button data-ex="coinbase">Coinbase</button><button data-ex="hyperliquid">Hyperliquid</button><button data-ex="upbit">Upbit</button></div>
+  <div class="toolbar"><span id="pcount" style="color:var(--mut);font-size:13px"></span></div>
+  <div id="plist"></div>
+  </div>
+<div id="pmenu"></div>
 </body>
 </html>
