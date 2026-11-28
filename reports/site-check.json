@@ -1,17 +1,17 @@
 {
- "when": "2026-11-28 15:17 UTC",
+ "when": "2026-11-28 15:38 UTC",
  "base": "https://pricecheckng.com.ng",
  "scope": "features",
- "pass": 21,
+ "pass": 25,
  "warn": 1,
- "fail": 0,
+ "fail": 2,
  "results": [
   {
    "group": "Features",
    "name": "Home shows live prices",
    "status": "pass",
    "detail": "",
-   "ms": 1682,
+   "ms": 2102,
    "shot": ""
   },
   {
@@ -19,7 +19,7 @@
    "name": "Bitcoin page shows a price and chart",
    "status": "pass",
    "detail": "",
-   "ms": 138,
+   "ms": 282,
    "shot": ""
   },
   {
@@ -27,7 +27,7 @@
    "name": "Converter works",
    "status": "pass",
    "detail": "",
-   "ms": 4403,
+   "ms": 5109,
    "shot": ""
   },
   {
@@ -35,7 +35,7 @@
    "name": "P2P rates load",
    "status": "pass",
    "detail": "",
-   "ms": 1514,
+   "ms": 1629,
    "shot": ""
   },
   {
@@ -43,7 +43,7 @@
    "name": "Alerts tab opens",
    "status": "pass",
    "detail": "",
-   "ms": 4693,
+   "ms": 4666,
    "shot": ""
   },
   {
@@ -51,7 +51,7 @@
    "name": "Portfolio tab opens",
    "status": "pass",
    "detail": "",
-   "ms": 4680,
+   "ms": 4642,
    "shot": ""
   },
   {
@@ -59,7 +59,7 @@
    "name": "AI tab opens",
    "status": "pass",
    "detail": "",
-   "ms": 4691,
+   "ms": 4648,
    "shot": ""
   },
   {
@@ -67,7 +67,7 @@
    "name": "Account tab opens",
    "status": "pass",
    "detail": "",
-   "ms": 4667,
+   "ms": 4663,
    "shot": ""
   },
   {
@@ -75,7 +75,7 @@
    "name": "AI chart draws candles (phone)",
    "status": "pass",
    "detail": "",
-   "ms": 7181,
+   "ms": 7439,
    "shot": ""
   },
   {
@@ -83,7 +83,7 @@
    "name": "AI chart draws candles (desktop)",
    "status": "pass",
    "detail": "",
-   "ms": 7168,
+   "ms": 7132,
    "shot": ""
   },
   {
@@ -91,7 +91,7 @@
    "name": "Page opens with 8 charts",
    "status": "pass",
    "detail": "",
-   "ms": 20202,
+   "ms": 20199,
    "shot": ""
   },
   {
@@ -139,7 +139,7 @@
    "name": "gate chart loads BTC",
    "status": "pass",
    "detail": "",
-   "ms": 0,
+   "ms": 1,
    "shot": ""
   },
   {
@@ -163,7 +163,7 @@
    "name": "Drawing a line works and is saved",
    "status": "pass",
    "detail": "",
-   "ms": 704,
+   "ms": 742,
    "shot": ""
   },
   {
@@ -171,7 +171,7 @@
    "name": "Layout panel switches to 4 charts",
    "status": "pass",
    "detail": "",
-   "ms": 853,
+   "ms": 849,
    "shot": ""
   },
   {
@@ -179,7 +179,55 @@
    "name": "Pair picker opens and lists coins",
    "status": "pass",
    "detail": "",
-   "ms": 744,
+   "ms": 1440,
+   "shot": ""
+  },
+  {
+   "group": "Signed in",
+   "name": "Test account can sign in",
+   "status": "pass",
+   "detail": "",
+   "ms": 1838,
+   "shot": ""
+  },
+  {
+   "group": "Signed in",
+   "name": "App recognises the signed-in user",
+   "status": "fail",
+   "detail": "account tab does not show the test email",
+   "ms": 5902,
+   "shot": "shots/23.png"
+  },
+  {
+   "group": "Signed in",
+   "name": "Price alert saves and shows in Alerts",
+   "status": "fail",
+   "detail": "could not save the alert (HTTP 403)",
+   "ms": 382,
+   "shot": "shots/24.png"
+  },
+  {
+   "group": "Signed in",
+   "name": "Portfolio holding saves and shows",
+   "status": "pass",
+   "detail": "",
+   "ms": 5851,
+   "shot": ""
+  },
+  {
+   "group": "Signed in",
+   "name": "Watchlist saves",
+   "status": "pass",
+   "detail": "",
+   "ms": 250,
+   "shot": ""
+  },
+  {
+   "group": "Signed in",
+   "name": "Test data cleaned up",
+   "status": "pass",
+   "detail": "",
+   "ms": 1088,
    "shot": ""
   }
  ]
