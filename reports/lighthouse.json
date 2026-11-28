@@ -1,0 +1,125 @@
+{
+ "when": "2026-11-28 15:13 UTC",
+ "base": "https://pricecheckng.com.ng",
+ "rows": [
+  {
+   "page": "/",
+   "perf": 76,
+   "seo": 100,
+   "a11y": 96,
+   "bp": 89,
+   "lcp": "4.4 s",
+   "cls": "0.128",
+   "tbt": "0 ms",
+   "issues": [
+    "Browser errors were logged to the console",
+    "Displays images with incorrect aspect ratio",
+    "Largest Contentful Paint element",
+    "Avoid large layout shifts",
+    "Background and foreground colors do not have a sufficient contrast ratio."
+   ]
+  },
+  {
+   "page": "/bitcoin-price",
+   "perf": 72,
+   "seo": 100,
+   "a11y": 96,
+   "bp": 100,
+   "lcp": "2.6 s",
+   "cls": "0.488",
+   "tbt": "0 ms",
+   "issues": [
+    "Largest Contentful Paint element",
+    "Avoid large layout shifts",
+    "Background and foreground colors do not have a sufficient contrast ratio.",
+    "Eliminate render-blocking resources",
+    "Use efficient cache lifetimes"
+   ]
+  },
+  {
+   "page": "/bitcoin-ai-chart",
+   "perf": 95,
+   "seo": 100,
+   "a11y": 92,
+   "bp": 100,
+   "lcp": "2.4 s",
+   "cls": "0.016",
+   "tbt": "0 ms",
+   "issues": [
+    "Background and foreground colors do not have a sufficient contrast ratio.",
+    "Eliminate render-blocking resources",
+    "Network dependency tree",
+    "Render blocking requests",
+    "Serve static assets with an efficient cache policy"
+   ]
+  },
+  {
+   "page": "/p2p",
+   "perf": 70,
+   "seo": 100,
+   "a11y": 95,
+   "bp": 100,
+   "lcp": "2.4 s",
+   "cls": "0.912",
+   "tbt": "0 ms",
+   "issues": [
+    "Avoid large layout shifts",
+    "Background and foreground colors do not have a sufficient contrast ratio.",
+    "Elements with visible text labels do not have matching accessible names.",
+    "Eliminate render-blocking resources",
+    "Layout shift culprits"
+   ]
+  },
+  {
+   "page": "/converter",
+   "perf": 95,
+   "seo": 100,
+   "a11y": 95,
+   "bp": 100,
+   "lcp": "2.4 s",
+   "cls": "0.029",
+   "tbt": "0 ms",
+   "issues": [
+    "Background and foreground colors do not have a sufficient contrast ratio.",
+    "Eliminate render-blocking resources",
+    "Network dependency tree",
+    "Render blocking requests",
+    "Serve static assets with an efficient cache policy"
+   ]
+  },
+  {
+   "page": "/coins",
+   "perf": 92,
+   "seo": 100,
+   "a11y": 91,
+   "bp": 100,
+   "lcp": "2.4 s",
+   "cls": "0.099",
+   "tbt": "0 ms",
+   "issues": [
+    "Background and foreground colors do not have a sufficient contrast ratio.",
+    "Eliminate render-blocking resources",
+    "Network dependency tree",
+    "Render blocking requests",
+    "Serve static assets with an efficient cache policy"
+   ]
+  },
+  {
+   "page": "/ethereum-price",
+   "perf": 72,
+   "seo": 100,
+   "a11y": 93,
+   "bp": 100,
+   "lcp": "2.6 s",
+   "cls": "0.488",
+   "tbt": "0 ms",
+   "issues": [
+    "Largest Contentful Paint element",
+    "Avoid large layout shifts",
+    "Background and foreground colors do not have a sufficient contrast ratio.",
+    "Eliminate render-blocking resources",
+    "Use efficient cache lifetimes"
+   ]
+  }
+ ]
+}
