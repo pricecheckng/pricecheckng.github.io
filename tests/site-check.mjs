@@ -98,12 +98,12 @@ async function listUrls() {
   await feat(mob, true, 'Home shows live prices', '/', async p => { if (!await waitText(p, /(?:[₦$]\s?[\d,.]{3,}[\s\S]*){6}/, 25000)) throw new Error('no prices appeared in 25s'); });
   await feat(mob, true, 'Bitcoin page shows a price and chart', '/bitcoin-price', async p => { if (!await waitText(p, /[₦$]\s?[\d,]{4,}/, 20000)) throw new Error('no price'); });
   await feat(desk, false, 'Converter works', '/converter', async p => {
-    const inp = p.locator('input[type="number"], input[inputmode="decimal"], input[type="text"]').first();
-    if (!await inp.count()) throw new Error('no amount box found');
-    const before = await p.evaluate(() => document.body.innerText);
-    await inp.fill('250'); await sleep(2500);
-    const after = await p.evaluate(() => document.body.innerText);
-    if (before === after) throw new Error('result did not change after typing an amount');
+    const out = () => p.evaluate(() => (document.getElementById('out') || {}).textContent || '');
+    let a = ''; for (let k = 0; k < 25 && !/\d/.test(a); k++) { await sleep(600); a = await out(); }
+    if (!/\d/.test(a)) throw new Error('converter never showed a result');
+    await p.fill('#amt', '1000'); await sleep(1500); const b1 = await out();
+    await p.fill('#amt', '2000'); await sleep(1500); const b2 = await out();
+    if (b1 === b2) throw new Error('result did not change when the amount changed');
   });
   await feat(mob, true, 'P2P rates load', '/p2p', async p => { if (!await waitText(p, /[₦$]\s?[\d,.]{3,}/, 25000)) throw new Error('no P2P prices'); });
   for (const [tab, label] of [['alerts', 'Alerts tab opens'], ['portfolio', 'Portfolio tab opens'], ['pcnai', 'AI tab opens'], ['account', 'Account tab opens']]) {
