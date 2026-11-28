@@ -59,7 +59,7 @@ async function listUrls() {
   const core = all.filter(u => !/-price$|-ai-chart$|^\/category-|^\/exchange-/.test(u));
   const coin = all.filter(u => /-price$/.test(u)), chartP = all.filter(u => /-ai-chart$/.test(u)), other = all.filter(u => /^\/category-|^\/exchange-/.test(u));
   const full = SCOPE === 'full';
-  const sweep = [...new Set(['/', '/bitcoin-price', '/ai-agent-chart?s=BTC', '/multi-chart', ...(full ? core : pick(core, 45)), ...pick(coin, full ? 60 : 15), ...pick(chartP, full ? 30 : 8), ...pick(other, full ? 20 : 6)])];
+  const sweep = SCOPE === 'features' ? [] : [...new Set(['/', '/bitcoin-price', '/ai-agent-chart?s=BTC', '/multi-chart', ...(full ? core : pick(core, 45)), ...pick(coin, full ? 60 : 15), ...pick(chartP, full ? 30 : 8), ...pick(other, full ? 20 : 6)])];
   console.log('Sweep size', sweep.length, '(sitemap', all.length, 'urls)');
   const sp = await mob.newPage(); const sst = watch(sp);
   for (const u of sweep) {
@@ -156,9 +156,9 @@ async function listUrls() {
       if (n !== 4) throw new Error('expected 4 charts, found ' + n);
     }, page);
     await record('Multi-chart', 'Pair picker opens and lists coins', async () => {
-      await page.mouse.click(600, 24); await page.click('#gpair'); await sleep(2500);
-      const n = await page.evaluate(() => document.querySelectorAll('#plist .row').length);
-      if (n < 5) throw new Error('only ' + n + ' coins listed');
+      await page.mouse.click(600, 24); await page.click('#gpair'); let n = 0; for (let k = 0; k < 20 && n < 5; k++) { await sleep(700); n = await page.evaluate(() => document.querySelectorAll('#plist .row').length); }
+      const txt = await page.evaluate(() => (document.getElementById('plist') || {}).innerText || '');
+      if (n < 5) throw new Error('only ' + n + ' coins listed; list says: ' + txt.slice(0, 80));
     }, page);
     await page.close();
   }
