@@ -6,7 +6,7 @@ on:
         description: "quick (about 60 pages) or full (about 150 pages)"
         default: quick
         type: choice
-        options: [quick, full]
+        options: [quick, full, features]
   schedule:
     - cron: "0 5 * * *"
 permissions:
