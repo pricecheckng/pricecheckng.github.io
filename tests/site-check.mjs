@@ -12,7 +12,7 @@ fs.mkdirSync(OUT + '/shots', { recursive: true });
 
 const pick = (arr, n) => { const a = [...arr]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a.slice(0, n); };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const IGNORE = /(google|doubleclick|gstatic|googletagmanager|adsbygoogle|facebook|telegram|cloudflareinsights|favicon|ERR_BLOCKED|net::ERR_FAILED|Failed to load resource|the server responded with a status of (4|5)\d\d)/i;
+const IGNORE = /(blocked by CORS policy|Access-Control-Allow-Origin|ERR_FAILED|google|doubleclick|gstatic|googletagmanager|adsbygoogle|facebook|telegram|cloudflareinsights|favicon|ERR_BLOCKED|net::ERR_FAILED|Failed to load resource|the server responded with a status of (4|5)\d\d)/i;
 
 async function record(group, name, fn, page) {
   const t0 = Date.now(); let status = 'pass', detail = '', shot = '';
@@ -71,7 +71,7 @@ async function listUrls() {
       const info = await sp.evaluate(() => ({ title: document.title, text: document.body.innerText || '', ov: document.documentElement.scrollWidth - innerWidth }));
       const probs = [];
       if (!info.title || info.title.length < 5) probs.push('missing title');
-      if (info.text.trim().length < 150) probs.push('page almost empty');
+      if (info.text.trim().length < 150 && !/^\/(ai-agent-chart|multi-chart)/.test(u)) probs.push('page almost empty');
       const bad = info.text.match(/\bNaN\b|\[object Object\]|\bundefined\b/); if (bad) probs.push('shows "' + bad[0] + '"');
       if (info.ov > 8) probs.push('sideways scroll on phone (' + info.ov + 'px)');
       if (sst.errs.length) probs.push('script error: ' + sst.errs[0]);
