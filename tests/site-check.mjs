@@ -163,7 +163,6 @@ async function listUrls() {
     await page.close();
   }
 
-  await browser.close();
 
   // ---------- 3. Signed-in checks (test account) ----------
   if (process.env.TEST_EMAIL && process.env.TEST_PASS) {
@@ -203,6 +202,8 @@ async function listUrls() {
       await ctx.close();
     }
   }
+
+  await browser.close();
 
   // ---------- Report ----------
   const f = results.filter(r => r.status === 'fail'), w = results.filter(r => r.status === 'warn'), p = results.filter(r => r.status === 'pass');
