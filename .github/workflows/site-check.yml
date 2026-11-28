@@ -1,0 +1,53 @@
+name: Site check
+on:
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: "quick (about 60 pages) or full (about 150 pages)"
+        default: quick
+        type: choice
+        options: [quick, full]
+  schedule:
+    - cron: "0 5 * * *"
+permissions:
+  contents: write
+concurrency:
+  group: site-check
+  cancel-in-progress: false
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install browser
+        run: |
+          npm init -y >/dev/null
+          npm i playwright@1.49.1 >/dev/null
+          npx playwright install --with-deps chromium >/dev/null
+      - name: Test the live site
+        id: run
+        continue-on-error: true
+        env:
+          BASE: https://pricecheckng.com.ng
+          SCOPE: ${{ github.event.inputs.scope || 'quick' }}
+        run: node tests/site-check.mjs
+      - name: Save report to the website
+        run: |
+          git config user.name "site-check"
+          git config user.email "site-check@users.noreply.github.com"
+          git add reports
+          git commit -m "Site check report [skip ci]" || exit 0
+          git pull --rebase -q || true
+          git push -q || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: site-check-report
+          path: reports
+      - name: Fail the run if something failed
+        if: steps.run.outcome == 'failure'
+        run: exit 1
