@@ -1,633 +1,17 @@
 {
- "when": "2026-11-28 14:45 UTC",
+ "when": "2026-11-28 14:48 UTC",
  "base": "https://pricecheckng.com.ng",
- "scope": "quick",
- "pass": 97,
+ "scope": "features",
+ "pass": 21,
  "warn": 1,
- "fail": 1,
+ "fail": 0,
  "results": [
-  {
-   "group": "Pages",
-   "name": "/",
-   "status": "pass",
-   "detail": "",
-   "ms": 2879,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/bitcoin-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2763,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/ai-agent-chart?s=BTC",
-   "status": "pass",
-   "detail": "",
-   "ms": 2809,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/multi-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2591,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/gas",
-   "status": "pass",
-   "detail": "",
-   "ms": 2567,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/methodology",
-   "status": "pass",
-   "detail": "",
-   "ms": 2589,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/categories",
-   "status": "pass",
-   "detail": "",
-   "ms": 2578,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/compare",
-   "status": "pass",
-   "detail": "",
-   "ms": 2578,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/compare?c=bitcoin,solana",
-   "status": "pass",
-   "detail": "",
-   "ms": 2525,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/network",
-   "status": "pass",
-   "detail": "",
-   "ms": 2565,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/pulse",
-   "status": "pass",
-   "detail": "",
-   "ms": 2585,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/movers",
-   "status": "pass",
-   "detail": "",
-   "ms": 2569,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/data-sources",
-   "status": "pass",
-   "detail": "",
-   "ms": 2574,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/compare?c=dogecoin,shiba-inu",
-   "status": "pass",
-   "detail": "",
-   "ms": 2523,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/faq",
-   "status": "pass",
-   "detail": "",
-   "ms": 2572,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/treasuries",
-   "status": "pass",
-   "detail": "",
-   "ms": 2614,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/track-token",
-   "status": "pass",
-   "detail": "",
-   "ms": 2572,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/fear-greed",
-   "status": "pass",
-   "detail": "",
-   "ms": 2575,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/ai-agent-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2741,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/p2p-check",
-   "status": "pass",
-   "detail": "",
-   "ms": 2566,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/api",
-   "status": "pass",
-   "detail": "",
-   "ms": 2577,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/learn-fear-greed",
-   "status": "pass",
-   "detail": "",
-   "ms": 2583,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/news",
-   "status": "pass",
-   "detail": "",
-   "ms": 2575,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/telegram-bot",
-   "status": "pass",
-   "detail": "",
-   "ms": 2576,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/stablecoins",
-   "status": "pass",
-   "detail": "",
-   "ms": 2586,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/heatmap",
-   "status": "pass",
-   "detail": "",
-   "ms": 2579,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/coin-risk",
-   "status": "pass",
-   "detail": "",
-   "ms": 2571,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/privacy",
-   "status": "pass",
-   "detail": "",
-   "ms": 2577,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/predict",
-   "status": "pass",
-   "detail": "",
-   "ms": 2750,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/compare?c=bitcoin,ripple",
-   "status": "pass",
-   "detail": "",
-   "ms": 2575,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/profit-calculator",
-   "status": "pass",
-   "detail": "",
-   "ms": 2576,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/about",
-   "status": "pass",
-   "detail": "",
-   "ms": 2582,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/contact",
-   "status": "pass",
-   "detail": "",
-   "ms": 2568,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/learn-market-cap",
-   "status": "pass",
-   "detail": "",
-   "ms": 2599,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/glossary",
-   "status": "pass",
-   "detail": "",
-   "ms": 2579,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/coins",
-   "status": "pass",
-   "detail": "",
-   "ms": 2571,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/compare?c=ethereum,solana",
-   "status": "pass",
-   "detail": "",
-   "ms": 2525,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/exchanges",
-   "status": "pass",
-   "detail": "",
-   "ms": 2572,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/converter",
-   "status": "pass",
-   "detail": "",
-   "ms": 2621,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/compare?c=solana,cardano",
-   "status": "pass",
-   "detail": "",
-   "ms": 2524,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/market-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2566,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/compare?c=ethereum,binancecoin",
-   "status": "pass",
-   "detail": "",
-   "ms": 2525,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/widget",
-   "status": "pass",
-   "detail": "",
-   "ms": 2577,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/learn-candlesticks",
-   "status": "pass",
-   "detail": "",
-   "ms": 2577,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/ai-charts",
-   "status": "pass",
-   "detail": "",
-   "ms": 2646,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/learn-scams",
-   "status": "pass",
-   "detail": "",
-   "ms": 2569,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/p2p",
-   "status": "pass",
-   "detail": "",
-   "ms": 2575,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/terms",
-   "status": "pass",
-   "detail": "",
-   "ms": 2570,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/plume-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2593,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/uniswap-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2578,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/axie-infinity-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2651,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/litecoin-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2577,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/curve-dao-token-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2570,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/victoria-vr-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2570,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/orca-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2576,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/fx-usd-saving-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2590,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/convex-finance-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2583,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/resupply-usd-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2580,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/toshi-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2579,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/threshold-network-token-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2609,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/usd1-wlfi-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2713,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/audiera-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2570,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/canton-network-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2600,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/ether-fi-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2578,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/bittorrent-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2581,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/solana-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2573,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/1inch-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2841,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/uniswap-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2566,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/pendle-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2587,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/soon-2-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2573,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/optimism-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2574,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/exchange-bitbank",
-   "status": "pass",
-   "detail": "",
-   "ms": 2574,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/category-token-bridges",
-   "status": "pass",
-   "detail": "",
-   "ms": 2574,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/exchange-whitebit",
-   "status": "pass",
-   "detail": "",
-   "ms": 2590,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/category-meme",
-   "status": "pass",
-   "detail": "",
-   "ms": 2590,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/category-social-media",
-   "status": "pass",
-   "detail": "",
-   "ms": 2588,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/category-ai",
-   "status": "pass",
-   "detail": "",
-   "ms": 2597,
-   "shot": ""
-  },
   {
    "group": "Features",
    "name": "Home shows live prices",
    "status": "pass",
    "detail": "",
-   "ms": 2015,
+   "ms": 1977,
    "shot": ""
   },
   {
@@ -635,7 +19,7 @@
    "name": "Bitcoin page shows a price and chart",
    "status": "pass",
    "detail": "",
-   "ms": 130,
+   "ms": 292,
    "shot": ""
   },
   {
@@ -643,7 +27,7 @@
    "name": "Converter works",
    "status": "pass",
    "detail": "",
-   "ms": 2742,
+   "ms": 3151,
    "shot": ""
   },
   {
@@ -651,7 +35,7 @@
    "name": "P2P rates load",
    "status": "pass",
    "detail": "",
-   "ms": 828,
+   "ms": 1599,
    "shot": ""
   },
   {
@@ -659,7 +43,7 @@
    "name": "Alerts tab opens",
    "status": "pass",
    "detail": "",
-   "ms": 4634,
+   "ms": 4641,
    "shot": ""
   },
   {
@@ -667,7 +51,7 @@
    "name": "Portfolio tab opens",
    "status": "pass",
    "detail": "",
-   "ms": 4625,
+   "ms": 4639,
    "shot": ""
   },
   {
@@ -675,7 +59,7 @@
    "name": "AI tab opens",
    "status": "pass",
    "detail": "",
-   "ms": 4630,
+   "ms": 4662,
    "shot": ""
   },
   {
@@ -683,7 +67,7 @@
    "name": "Account tab opens",
    "status": "pass",
    "detail": "",
-   "ms": 4664,
+   "ms": 4634,
    "shot": ""
   },
   {
@@ -691,7 +75,7 @@
    "name": "AI chart draws candles (phone)",
    "status": "pass",
    "detail": "",
-   "ms": 7168,
+   "ms": 7418,
    "shot": ""
   },
   {
@@ -699,7 +83,7 @@
    "name": "AI chart draws candles (desktop)",
    "status": "pass",
    "detail": "",
-   "ms": 7176,
+   "ms": 7111,
    "shot": ""
   },
   {
@@ -707,7 +91,7 @@
    "name": "Page opens with 8 charts",
    "status": "pass",
    "detail": "",
-   "ms": 20142,
+   "ms": 20203,
    "shot": ""
   },
   {
@@ -715,7 +99,7 @@
    "name": "binance chart loads BTC",
    "status": "pass",
    "detail": "",
-   "ms": 1,
+   "ms": 0,
    "shot": ""
   },
   {
@@ -779,7 +163,7 @@
    "name": "Drawing a line works and is saved",
    "status": "pass",
    "detail": "",
-   "ms": 691,
+   "ms": 725,
    "shot": ""
   },
   {
@@ -787,16 +171,16 @@
    "name": "Layout panel switches to 4 charts",
    "status": "pass",
    "detail": "",
-   "ms": 847,
+   "ms": 855,
    "shot": ""
   },
   {
    "group": "Multi-chart",
    "name": "Pair picker opens and lists coins",
-   "status": "fail",
-   "detail": "only 0 coins listed",
-   "ms": 2587,
-   "shot": "shots/98.png"
+   "status": "pass",
+   "detail": "",
+   "ms": 738,
+   "shot": ""
   }
  ]
 }
