@@ -26,7 +26,7 @@ jobs:
       - name: Install browser
         run: |
           npm init -y >/dev/null
-          npm i playwright@1.49.1 >/dev/null
+          npm i playwright@1.49.1 lighthouse@12 chrome-launcher@1 >/dev/null
           npx playwright install --with-deps chromium >/dev/null
       - name: Test the live site
         id: run
@@ -35,6 +35,12 @@ jobs:
           BASE: https://pricecheckng.com.ng
           SCOPE: ${{ github.event.inputs.scope || 'quick' }}
         run: node tests/site-check.mjs
+      - name: Speed and SEO scores
+        if: github.event.inputs.scope != 'features'
+        continue-on-error: true
+        env:
+          BASE: https://pricecheckng.com.ng
+        run: node tests/lighthouse.mjs
       - name: Save report to the website
         run: |
           git config user.name "site-check"
