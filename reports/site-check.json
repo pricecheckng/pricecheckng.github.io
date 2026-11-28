@@ -1,17 +1,17 @@
 {
- "when": "2026-11-28 14:34 UTC",
+ "when": "2026-11-28 14:39 UTC",
  "base": "https://pricecheckng.com.ng",
  "scope": "quick",
- "pass": 86,
- "warn": 8,
- "fail": 5,
+ "pass": 89,
+ "warn": 7,
+ "fail": 3,
  "results": [
   {
    "group": "Pages",
    "name": "/",
    "status": "fail",
-   "detail": "script error: Access to fetch at 'https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000' from origin 'https://pricecheckng.com.ng' has been blocked by COR",
-   "ms": 3120,
+   "detail": "script error: WebSocket connection to 'wss://stream.binance.com/stream' failed: Error during WebSocket handshake: Unexpected response code: 451",
+   "ms": 3064,
    "shot": "shots/0.png"
   },
   {
@@ -19,87 +19,31 @@
    "name": "/bitcoin-price",
    "status": "pass",
    "detail": "",
-   "ms": 2841,
+   "ms": 2801,
    "shot": ""
   },
   {
    "group": "Pages",
    "name": "/ai-agent-chart?s=BTC",
    "status": "fail",
-   "detail": "page almost empty; script error: Access to fetch at 'https://api.binance.com/api/v3/ticker/price' from origin 'https://pricecheckng.com.ng' has been blocked by CORS policy: No 'Access-Control-A",
-   "ms": 2982,
+   "detail": "script error: WebSocket connection to 'wss://stream.binance.com:9443/ws/btcusdt@ticker' failed: Error during WebSocket handshake: Unexpected response code: 451",
+   "ms": 2965,
    "shot": "shots/2.png"
   },
   {
    "group": "Pages",
    "name": "/multi-chart",
-   "status": "fail",
-   "detail": "script error: Access to fetch at 'https://api.bybit.com/v5/market/kline?category=spot&symbol=BTCUSDT&interval=240&limit=500' from origin 'https://pricecheckng.com.ng' has bee",
-   "ms": 2700,
-   "shot": "shots/3.png"
-  },
-  {
-   "group": "Pages",
-   "name": "/ai-agent-chart",
-   "status": "fail",
-   "detail": "page almost empty; script error: Access to fetch at 'https://api.binance.com/api/v3/ticker/price' from origin 'https://pricecheckng.com.ng' has been blocked by CORS policy: No 'Access-Control-A",
-   "ms": 2633,
-   "shot": "shots/4.png"
-  },
-  {
-   "group": "Pages",
-   "name": "/compare",
    "status": "pass",
    "detail": "",
-   "ms": 2647,
+   "ms": 2669,
    "shot": ""
   },
   {
    "group": "Pages",
-   "name": "/contact",
+   "name": "/news",
    "status": "pass",
    "detail": "",
-   "ms": 2636,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/compare?c=dogecoin,shiba-inu",
-   "status": "pass",
-   "detail": "",
-   "ms": 2551,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/p2p",
-   "status": "pass",
-   "detail": "",
-   "ms": 2724,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/heatmap",
-   "status": "pass",
-   "detail": "",
-   "ms": 2622,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/categories",
-   "status": "pass",
-   "detail": "",
-   "ms": 2639,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/gas",
-   "status": "pass",
-   "detail": "",
-   "ms": 2645,
+   "ms": 2640,
    "shot": ""
   },
   {
@@ -107,119 +51,7 @@
    "name": "/network-check",
    "status": "pass",
    "detail": "",
-   "ms": 2637,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/telegram-bot",
-   "status": "pass",
-   "detail": "",
-   "ms": 2636,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/coins",
-   "status": "pass",
-   "detail": "",
-   "ms": 2626,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/methodology",
-   "status": "pass",
-   "detail": "",
-   "ms": 2865,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/compare?c=ethereum,binancecoin",
-   "status": "pass",
-   "detail": "",
-   "ms": 2542,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/compare?c=bitcoin,ripple",
-   "status": "pass",
-   "detail": "",
-   "ms": 2627,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/fear-greed",
-   "status": "pass",
-   "detail": "",
-   "ms": 2625,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/widget",
-   "status": "pass",
-   "detail": "",
-   "ms": 2641,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/treasuries",
-   "status": "pass",
-   "detail": "",
-   "ms": 2625,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/market-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2622,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/predict",
-   "status": "pass",
-   "detail": "",
-   "ms": 3099,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/p2p-check",
-   "status": "pass",
-   "detail": "",
-   "ms": 2638,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/compare?c=bitcoin,solana",
-   "status": "pass",
-   "detail": "",
-   "ms": 2543,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/learn-scams",
-   "status": "pass",
-   "detail": "",
-   "ms": 2641,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/learn-market-cap",
-   "status": "pass",
-   "detail": "",
-   "ms": 2630,
+   "ms": 2640,
    "shot": ""
   },
   {
@@ -227,7 +59,7 @@
    "name": "/data-sources",
    "status": "pass",
    "detail": "",
-   "ms": 2628,
+   "ms": 2611,
    "shot": ""
   },
   {
@@ -235,20 +67,20 @@
    "name": "/movers",
    "status": "pass",
    "detail": "",
-   "ms": 2642,
+   "ms": 2615,
    "shot": ""
   },
   {
    "group": "Pages",
-   "name": "/ai-charts",
+   "name": "/learn-scams",
    "status": "pass",
    "detail": "",
-   "ms": 2676,
+   "ms": 2635,
    "shot": ""
   },
   {
    "group": "Pages",
-   "name": "/terms",
+   "name": "/contact",
    "status": "pass",
    "detail": "",
    "ms": 2623,
@@ -256,10 +88,26 @@
   },
   {
    "group": "Pages",
+   "name": "/exchanges",
+   "status": "pass",
+   "detail": "",
+   "ms": 2626,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
    "name": "/compare?c=ethereum,solana",
    "status": "pass",
    "detail": "",
-   "ms": 2541,
+   "ms": 2618,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/compare?c=ethereum,binancecoin",
+   "status": "pass",
+   "detail": "",
+   "ms": 2533,
    "shot": ""
   },
   {
@@ -267,12 +115,52 @@
    "name": "/network",
    "status": "pass",
    "detail": "",
-   "ms": 2636,
+   "ms": 2628,
    "shot": ""
   },
   {
    "group": "Pages",
-   "name": "/track-token",
+   "name": "/compare",
+   "status": "pass",
+   "detail": "",
+   "ms": 2535,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/terms",
+   "status": "pass",
+   "detail": "",
+   "ms": 2622,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/methodology",
+   "status": "pass",
+   "detail": "",
+   "ms": 2617,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/profit-calculator",
+   "status": "pass",
+   "detail": "",
+   "ms": 2619,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/converter",
+   "status": "pass",
+   "detail": "",
+   "ms": 2615,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/faq",
    "status": "pass",
    "detail": "",
    "ms": 2638,
@@ -283,52 +171,12 @@
    "name": "/glossary",
    "status": "pass",
    "detail": "",
-   "ms": 2626,
+   "ms": 2627,
    "shot": ""
   },
   {
    "group": "Pages",
-   "name": "/faq",
-   "status": "pass",
-   "detail": "",
-   "ms": 2617,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/exchanges",
-   "status": "pass",
-   "detail": "",
-   "ms": 2672,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/learn-fear-greed",
-   "status": "pass",
-   "detail": "",
-   "ms": 2639,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/coin-risk",
-   "status": "pass",
-   "detail": "",
-   "ms": 2652,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/api",
-   "status": "pass",
-   "detail": "",
-   "ms": 2623,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/privacy",
+   "name": "/treasuries",
    "status": "pass",
    "detail": "",
    "ms": 2634,
@@ -336,34 +184,58 @@
   },
   {
    "group": "Pages",
+   "name": "/api",
+   "status": "pass",
+   "detail": "",
+   "ms": 2637,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/compare?c=dogecoin,shiba-inu",
+   "status": "pass",
+   "detail": "",
+   "ms": 2616,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/learn-market-cap",
+   "status": "pass",
+   "detail": "",
+   "ms": 2651,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/p2p-check",
+   "status": "pass",
+   "detail": "",
+   "ms": 2631,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/heatmap",
+   "status": "pass",
+   "detail": "",
+   "ms": 2624,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
    "name": "/about",
    "status": "pass",
    "detail": "",
-   "ms": 2627,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/learn-candlesticks",
-   "status": "pass",
-   "detail": "",
-   "ms": 2626,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/compare?c=solana,cardano",
-   "status": "pass",
-   "detail": "",
-   "ms": 2540,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/news",
-   "status": "pass",
-   "detail": "",
    "ms": 2620,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/track-token",
+   "status": "pass",
+   "detail": "",
+   "ms": 2623,
    "shot": ""
   },
   {
@@ -371,236 +243,12 @@
    "name": "/pulse",
    "status": "pass",
    "detail": "",
-   "ms": 2620,
+   "ms": 2622,
    "shot": ""
   },
   {
    "group": "Pages",
-   "name": "/converter",
-   "status": "pass",
-   "detail": "",
-   "ms": 2621,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/profit-calculator",
-   "status": "pass",
-   "detail": "",
-   "ms": 2639,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/utya-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2625,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/jett-crypto-2-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2646,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/venus-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2639,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/stp-network-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2633,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/proton-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2631,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/ai-analysis-token-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2621,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/monero-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2655,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/okb-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2655,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/openledger-2-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2646,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/htx-dao-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2636,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/memetoon-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2647,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/soon-2-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2665,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/dgrid-ai-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2652,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/opengradient-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2653,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/basic-attention-token-price",
-   "status": "pass",
-   "detail": "",
-   "ms": 2631,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/eigenlayer-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2630,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/lido-dao-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2626,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/sofiusd-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2628,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/ethereum-name-service-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2635,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/ethena-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2635,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/starknet-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2618,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/soon-2-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2674,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/akash-network-ai-chart",
-   "status": "pass",
-   "detail": "",
-   "ms": 2631,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/exchange-poloniex",
-   "status": "pass",
-   "detail": "",
-   "ms": 2623,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/exchange-cryptocom",
-   "status": "pass",
-   "detail": "",
-   "ms": 2630,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/category-gaming",
-   "status": "pass",
-   "detail": "",
-   "ms": 2619,
-   "shot": ""
-  },
-  {
-   "group": "Pages",
-   "name": "/exchange-deribit",
+   "name": "/coin-risk",
    "status": "pass",
    "detail": "",
    "ms": 2622,
@@ -608,26 +256,378 @@
   },
   {
    "group": "Pages",
-   "name": "/exchange-luno",
+   "name": "/categories",
    "status": "pass",
    "detail": "",
-   "ms": 2641,
+   "ms": 2631,
    "shot": ""
   },
   {
    "group": "Pages",
-   "name": "/category-ecommerce",
+   "name": "/ai-agent-chart",
+   "status": "fail",
+   "detail": "script error: WebSocket connection to 'wss://stream.binance.com:9443/ws/btcusdt@ticker' failed: Error during WebSocket handshake: Unexpected response code: 451",
+   "ms": 2706,
+   "shot": "shots/32.png"
+  },
+  {
+   "group": "Pages",
+   "name": "/compare?c=bitcoin,solana",
+   "status": "pass",
+   "detail": "",
+   "ms": 2534,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/coins",
+   "status": "pass",
+   "detail": "",
+   "ms": 2747,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/fear-greed",
+   "status": "pass",
+   "detail": "",
+   "ms": 2616,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/compare?c=solana,cardano",
+   "status": "pass",
+   "detail": "",
+   "ms": 2534,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/compare?c=bitcoin,ripple",
+   "status": "pass",
+   "detail": "",
+   "ms": 2534,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/market-chart",
+   "status": "pass",
+   "detail": "",
+   "ms": 2628,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/ai-charts",
+   "status": "pass",
+   "detail": "",
+   "ms": 2654,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/telegram-bot",
+   "status": "pass",
+   "detail": "",
+   "ms": 2629,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/learn-fear-greed",
+   "status": "pass",
+   "detail": "",
+   "ms": 2621,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/gas",
+   "status": "pass",
+   "detail": "",
+   "ms": 2624,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/privacy",
+   "status": "pass",
+   "detail": "",
+   "ms": 2624,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/p2p",
+   "status": "pass",
+   "detail": "",
+   "ms": 2619,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/widget",
+   "status": "pass",
+   "detail": "",
+   "ms": 2646,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/learn-candlesticks",
+   "status": "pass",
+   "detail": "",
+   "ms": 2621,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/predict",
+   "status": "pass",
+   "detail": "",
+   "ms": 2999,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/moolah-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2630,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/io-price",
    "status": "pass",
    "detail": "",
    "ms": 2623,
    "shot": ""
   },
   {
+   "group": "Pages",
+   "name": "/dolphin-2-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2633,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/gm-3-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2626,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/zksync-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2628,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/canton-network-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2654,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/mindwavedao-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2622,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/conflux-token-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2635,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/marscoin-4-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2635,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/sentient-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2654,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/quant-network-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2627,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/okzoo-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2632,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/ore-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2640,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/railgun-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2646,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/shuffle-2-price",
+   "status": "pass",
+   "detail": "",
+   "ms": 2635,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/terra-luna-ai-chart",
+   "status": "pass",
+   "detail": "",
+   "ms": 2624,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/arbitrum-ai-chart",
+   "status": "pass",
+   "detail": "",
+   "ms": 2630,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/ethena-ai-chart",
+   "status": "pass",
+   "detail": "",
+   "ms": 2616,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/sei-network-ai-chart",
+   "status": "pass",
+   "detail": "",
+   "ms": 2637,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/unibase-ai-chart",
+   "status": "pass",
+   "detail": "",
+   "ms": 2630,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/bitcoin-cash-sv-ai-chart",
+   "status": "pass",
+   "detail": "",
+   "ms": 2616,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/quant-network-ai-chart",
+   "status": "pass",
+   "detail": "",
+   "ms": 2614,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/avalanche-2-ai-chart",
+   "status": "pass",
+   "detail": "",
+   "ms": 2638,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/exchange-coinone",
+   "status": "pass",
+   "detail": "",
+   "ms": 2632,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/exchange-bigone",
+   "status": "pass",
+   "detail": "",
+   "ms": 2633,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/category-metaverse",
+   "status": "pass",
+   "detail": "",
+   "ms": 2633,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/exchange-bitfinex",
+   "status": "pass",
+   "detail": "",
+   "ms": 2636,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/exchange-luno",
+   "status": "pass",
+   "detail": "",
+   "ms": 2652,
+   "shot": ""
+  },
+  {
+   "group": "Pages",
+   "name": "/exchange-binance",
+   "status": "pass",
+   "detail": "",
+   "ms": 2648,
+   "shot": ""
+  },
+  {
    "group": "Features",
    "name": "Home shows live prices",
-   "status": "warn",
-   "detail": "script error: Access to fetch at 'https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000' from origin 'https://pricecheckng.com.ng' has been blocked by COR",
-   "ms": 1122,
+   "status": "pass",
+   "detail": "",
+   "ms": 1103,
    "shot": ""
   },
   {
@@ -635,7 +635,7 @@
    "name": "Bitcoin page shows a price and chart",
    "status": "pass",
    "detail": "",
-   "ms": 194,
+   "ms": 193,
    "shot": ""
   },
   {
@@ -643,7 +643,7 @@
    "name": "Converter works",
    "status": "pass",
    "detail": "",
-   "ms": 2821,
+   "ms": 2775,
    "shot": ""
   },
   {
@@ -651,64 +651,64 @@
    "name": "P2P rates load",
    "status": "pass",
    "detail": "",
-   "ms": 889,
+   "ms": 893,
    "shot": ""
   },
   {
    "group": "Features",
    "name": "Alerts tab opens",
    "status": "warn",
-   "detail": "script error: Access to fetch at 'https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000' from origin 'https://pricecheckng.com.ng' has been blocked by COR",
-   "ms": 4702,
+   "detail": "script error: WebSocket connection to 'wss://stream.binance.com/stream' failed: Error during WebSocket handshake: Unexpected response code: 451",
+   "ms": 4678,
    "shot": ""
   },
   {
    "group": "Features",
    "name": "Portfolio tab opens",
    "status": "warn",
-   "detail": "script error: Access to fetch at 'https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000' from origin 'https://pricecheckng.com.ng' has been blocked by COR",
-   "ms": 4684,
+   "detail": "script error: WebSocket connection to 'wss://stream.binance.com/stream' failed: Error during WebSocket handshake: Unexpected response code: 451",
+   "ms": 4677,
    "shot": ""
   },
   {
    "group": "Features",
    "name": "AI tab opens",
    "status": "warn",
-   "detail": "script error: Access to fetch at 'https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000' from origin 'https://pricecheckng.com.ng' has been blocked by COR",
-   "ms": 4693,
+   "detail": "script error: WebSocket connection to 'wss://stream.binance.com/stream' failed: Error during WebSocket handshake: Unexpected response code: 451",
+   "ms": 4690,
    "shot": ""
   },
   {
    "group": "Features",
    "name": "Account tab opens",
    "status": "warn",
-   "detail": "script error: Access to fetch at 'https://api.bybit.com/v5/market/instruments-info?category=spot&limit=1000' from origin 'https://pricecheckng.com.ng' has been blocked by COR",
-   "ms": 4689,
+   "detail": "script error: WebSocket connection to 'wss://stream.binance.com/stream' failed: Error during WebSocket handshake: Unexpected response code: 451",
+   "ms": 4672,
    "shot": ""
   },
   {
    "group": "Features",
    "name": "AI chart draws candles (phone)",
    "status": "warn",
-   "detail": "script error: Access to fetch at 'https://api.binance.com/api/v3/ticker/price' from origin 'https://pricecheckng.com.ng' has been blocked by CORS policy: No 'Access-Control-A",
-   "ms": 7225,
+   "detail": "script error: WebSocket connection to 'wss://stream.binance.com:9443/ws/btcusdt@ticker' failed: Error during WebSocket handshake: Unexpected response code: 451",
+   "ms": 7213,
    "shot": ""
   },
   {
    "group": "Features",
    "name": "AI chart draws candles (desktop)",
    "status": "warn",
-   "detail": "script error: Access to fetch at 'https://api.binance.com/api/v3/ticker/price' from origin 'https://pricecheckng.com.ng' has been blocked by CORS policy: No 'Access-Control-A",
-   "ms": 7253,
+   "detail": "script error: WebSocket connection to 'wss://stream.binance.com:9443/ws/btcusdt@ticker' failed: Error during WebSocket handshake: Unexpected response code: 451",
+   "ms": 7226,
    "shot": ""
   },
   {
    "group": "Multi-chart",
    "name": "Page opens with 8 charts",
-   "status": "fail",
-   "detail": "script error: Access to fetch at 'https://api.bybit.com/v5/market/kline?category=spot&symbol=BTCUSDT&interval=240&limit=500' from origin 'https://pricecheckng.com.ng' has bee",
-   "ms": 20514,
-   "shot": "shots/87.png"
+   "status": "pass",
+   "detail": "",
+   "ms": 20231,
+   "shot": ""
   },
   {
    "group": "Multi-chart",
@@ -723,7 +723,7 @@
    "name": "okx chart loads BTC",
    "status": "pass",
    "detail": "",
-   "ms": 0,
+   "ms": 1,
    "shot": ""
   },
   {
@@ -779,7 +779,7 @@
    "name": "Drawing a line works and is saved",
    "status": "pass",
    "detail": "",
-   "ms": 734,
+   "ms": 702,
    "shot": ""
   },
   {
@@ -787,7 +787,7 @@
    "name": "Layout panel switches to 4 charts",
    "status": "pass",
    "detail": "",
-   "ms": 856,
+   "ms": 861,
    "shot": ""
   },
   {
@@ -795,7 +795,7 @@
    "name": "Pair picker opens and lists coins",
    "status": "pass",
    "detail": "",
-   "ms": 2534,
+   "ms": 2538,
    "shot": ""
   }
  ]
