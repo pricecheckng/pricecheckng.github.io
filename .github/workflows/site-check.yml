@@ -28,6 +28,15 @@ jobs:
           npm init -y >/dev/null
           npm i playwright@1.49.1 lighthouse@12 chrome-launcher@1 >/dev/null
           npx playwright install --with-deps chromium >/dev/null
+      - name: Prepare test account
+        env:
+          T: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: |
+          P="$(printf '%s' "$T" | sha256sum | cut -c1-24)Aa1!"
+          echo "::add-mask::$P"
+          echo "TEST_EMAIL=mand47910+pcn-test@gmail.com" >> "$GITHUB_ENV"
+          echo "TEST_PASS=$P" >> "$GITHUB_ENV"
+          TEST_EMAIL="mand47910+pcn-test@gmail.com" TEST_PASS="$P" bash scripts/ensure-test-user.sh
       - name: Test the live site
         id: run
         continue-on-error: true

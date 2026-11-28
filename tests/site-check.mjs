@@ -165,6 +165,45 @@ async function listUrls() {
 
   await browser.close();
 
+  // ---------- 3. Signed-in checks (test account) ----------
+  if (process.env.TEST_EMAIL && process.env.TEST_PASS) {
+    const SB = 'https://lbkpdepqymfjgmoouafv.supabase.co', KEY = 'sb_publishable_Ie4cYhH6WAuWzjG4Vb1qrA_O78ovUqJ';
+    let sess = null, H = null, uid = null;
+    await record('Signed in', 'Test account can sign in', async () => {
+      const r = await fetch(SB + '/auth/v1/token?grant_type=password', { method: 'POST', headers: { apikey: KEY, 'content-type': 'application/json' }, body: JSON.stringify({ email: process.env.TEST_EMAIL, password: process.env.TEST_PASS }) });
+      const j = await r.json(); if (!r.ok || !j.access_token) throw new Error('login failed: ' + (j.error_description || j.msg || r.status));
+      sess = j; uid = j.user.id; H = { apikey: KEY, Authorization: 'Bearer ' + j.access_token, 'content-type': 'application/json', Prefer: 'return=representation' };
+    });
+    if (sess) {
+      const rest = (m, p, b) => fetch(SB + '/rest/v1/' + p, { method: m, headers: H, body: b ? JSON.stringify(b) : undefined }).then(async r => ({ ok: r.ok, status: r.status, j: await r.json().catch(() => null) }));
+      const wipe = async () => { for (const t of ['price_alerts', 'portfolio_holdings', 'watchlist']) await rest('DELETE', `${t}?user_id=eq.${uid}`); };
+      await wipe();
+      const coin = (await rest('GET', 'coins?select=id&symbol=ilike.btc&order=market_cap_rank.asc.nullslast&limit=1')).j;
+      const coinId = coin && coin[0] && coin[0].id;
+      const sessJson = { access_token: sess.access_token, refresh_token: sess.refresh_token, expires_at: sess.expires_at, expires_in: sess.expires_in, token_type: 'bearer', user: sess.user };
+      const ctx = await newCtx(browser, true);
+      await ctx.addInitScript(([k, v]) => { try { localStorage.setItem(k, v); } catch (_) {} }, ['sb-lbkpdepqymfjgmoouafv-auth-token', JSON.stringify(sessJson)]);
+      const page = await ctx.newPage(); const st = watch(page);
+      const openTab = async tab => { await page.goto(BASE + '/', { waitUntil: 'domcontentloaded', timeout: 30000 }); await sleep(3000); await page.click(`[data-tab="${tab}"]`); await sleep(2500); return page.evaluate(() => document.body.innerText); };
+      await record('Signed in', 'App recognises the signed-in user', async () => { const t = await openTab('account'); if (!/mand47910/i.test(t)) throw new Error('account tab does not show the test email'); }, page);
+      await record('Signed in', 'Price alert saves and shows in Alerts', async () => {
+        if (!coinId) throw new Error('could not find Bitcoin in the coin list');
+        const ins = await rest('POST', 'price_alerts', { user_id: uid, coin_id: coinId, target_price: 123456.78, currency: 'usd', direction: 'above' });
+        if (!ins.ok) throw new Error('could not save the alert (HTTP ' + ins.status + ')');
+        const t = await openTab('alerts'); if (!/123,456|123456/.test(t)) throw new Error('saved alert does not appear in the Alerts tab');
+      }, page);
+      await record('Signed in', 'Portfolio holding saves and shows', async () => {
+        if (!coinId) throw new Error('could not find Bitcoin in the coin list');
+        const ins = await rest('POST', 'portfolio_holdings', { user_id: uid, coin_id: coinId, amount: 0.4321, buy_price_usd: 50000 });
+        if (!ins.ok) throw new Error('could not save the holding (HTTP ' + ins.status + ')');
+        const t = await openTab('portfolio'); if (!/0\.4321/.test(t) && !/Bitcoin|BTC/.test(t)) throw new Error('holding does not appear in the Portfolio tab');
+      }, page);
+      await record('Signed in', 'Watchlist saves', async () => { if (!coinId) throw new Error('no coin'); const ins = await rest('POST', 'watchlist', { user_id: uid, coin_id: coinId }); if (!ins.ok) throw new Error('could not save (HTTP ' + ins.status + ')'); });
+      await record('Signed in', 'Test data cleaned up', async () => { await wipe(); const c = (await rest('GET', `price_alerts?select=id&user_id=eq.${uid}`)).j; if (c && c.length) throw new Error('leftover alert rows'); });
+      await ctx.close();
+    }
+  }
+
   // ---------- Report ----------
   const f = results.filter(r => r.status === 'fail'), w = results.filter(r => r.status === 'warn'), p = results.filter(r => r.status === 'pass');
   const esc = s => String(s).replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
